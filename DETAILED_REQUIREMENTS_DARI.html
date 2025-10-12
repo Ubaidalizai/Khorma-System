@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DETAILED_REQUIREMENTS_DARI.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="%D9%81%D8%A7%DB%8C%D9%84-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D8%AA%D9%81%D8%B5%DB%8C%D9%84%DB%8C-%D8%B3%DB%8C%D8%B3%D8%AA%D9%85-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D8%AA%D8%AC%D8%A7%D8%B1%D8%AA-%D9%88-%D8%AA%D9%88%D8%B2%DB%8C%D8%B9">فایل الزامات تفصیلی سیستم مدیریت تجارت و توزیع</h1>
+<div dir="rtl" align="right">
+<h2 id="%D8%B3%DB%8C%D8%B3%D8%AA%D9%85-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D8%AA%D8%AC%D8%A7%D8%B1%D8%AA-%D9%88-%D8%AA%D9%88%D8%B2%DB%8C%D8%B9">سیستم مدیریت تجارت و توزیع</h2>
+<hr>
+<p><strong>تاریخ قرارداد:</strong> [تاریخ قرارداد]<br>
+<strong>مدت پروژه:</strong> ۲ هفته<br>
+<strong>مشتری:</strong> [نام مشتری]<br>
+<strong>توسعه‌دهنده:</strong> [نام توسعه‌دهنده/شرکت]</p>
+<hr>
+<h2 id="%DB%B1-%D9%86%D9%85%D8%A7%DB%8C-%DA%A9%D9%84%DB%8C-%D9%BE%D8%B1%D9%88%DA%98%D9%87">۱. نمای کلی پروژه</h2>
+<h3 id="%DB%B1%DB%B1-%D8%AA%D9%88%D8%B6%DB%8C%D8%AD%D8%A7%D8%AA-%D9%BE%D8%B1%D9%88%DA%98%D9%87">۱.۱ توضیحات پروژه</h3>
+<p>توسعه یک سیستم جامع مدیریت تجارت و توزیع برای کسب‌وکاری که در زمینه خرما، نخود، کیک و محصولات مشابه فعالیت می‌کند. این سیستم کل فرآیند کاری از خرید تا فروش را مدیریت می‌کند، شامل مدیریت انبار، پیگیری کارمندان، حساب‌های مشتری/تأمین‌کننده و گزارش‌گیری مالی.</p>
+<h3 id="%DB%B1%DB%B2-%D9%86%D9%88%D8%B9-%D8%B3%DB%8C%D8%B3%D8%AA%D9%85">۱.۲ نوع سیستم</h3>
+<p>برنامه کاربردی دسکتاپ/وب تک‌کاربره برای صاحب کسب‌وکار (مدیر) با کنترل کامل سیستم.</p>
+<hr>
+<h2 id="%DB%B2-%D9%85%D8%AD%D8%AF%D9%88%D8%AF%D9%87-%DA%A9%D8%A7%D8%B1">۲. محدوده کار</h2>
+<h3 id="%DB%B2%DB%B1-%D9%85%D8%A7%DA%98%D9%88%D9%84%E2%80%8C%D9%87%D8%A7%DB%8C-%D8%A7%D8%B5%D9%84%DB%8C-%D8%A8%D8%B1%D8%A7%DB%8C-%D8%AA%D9%88%D8%B3%D8%B9%D9%87">۲.۱ ماژول‌های اصلی برای توسعه</h3>
+<h4 id="%DB%B2%DB%B1%DB%B1-%D8%B3%DB%8C%D8%B3%D8%AA%D9%85-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D9%85%D9%88%D8%AC%D9%88%D8%AF%DB%8C">۲.۱.۱ سیستم مدیریت موجودی</h4>
+<p><strong>مدیریت انبار:</strong></p>
+<ul>
+<li>پیگیری کالاهای ورودی از تأمین‌کنندگان</li>
+<li>ثبت جزئیات کامل کالاهای خریداری شده</li>
+<li>طبقه‌بندی کالاها بر اساس نوع (خرما، نخود، کیک و غیره)</li>
+<li>تاریخ انقضا و شماره سریال کالاها</li>
+<li>وضعیت کالا (تازه، منجمد، خشک)</li>
+</ul>
+<p><strong>مدیریت فروشگاه:</strong></p>
+<ul>
+<li>نظارت بر کالاهای منتقل شده از انبار به فروشگاه</li>
+<li>پیگیری موجودی فروشگاه به صورت جداگانه</li>
+<li>مدیریت قفسه‌ها و مکان‌های نگهداری کالا</li>
+<li>سیستم برچسب‌گذاری و کدگذاری کالاها</li>
+</ul>
+<p><strong>پیگیری موجودی:</strong></p>
+<ul>
+<li>سطح موجودی به‌روز برای انبار و فروشگاه</li>
+<li>محاسبه خودکار موجودی بر اساس ورود و خروج</li>
+<li>هشدارهای خودکار برای موجودی کم</li>
+<li>تنظیم حداقل و حداکثر موجودی برای هر کالا</li>
+</ul>
+<p><strong>هشدارهای موجودی کم:</strong></p>
+<ul>
+<li>اعلان‌های خودکار برای کالاهای در حال تمام شدن</li>
+<li>گزارش‌های روزانه موجودی</li>
+<li>پیشنهادات خرید خودکار</li>
+</ul>
+<h4 id="%DB%B2%DB%B1%DB%B2-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D8%AE%D8%B1%DB%8C%D8%AF">۲.۱.۲ مدیریت خرید</h4>
+<p><strong>ثبت خرید:</strong></p>
+<ul>
+<li>ثبت تمام خریدهای تأمین‌کنندگان با جزئیات</li>
+<li>شماره فاکتور، تاریخ، مقدار، قیمت واحد</li>
+<li>محاسبه خودکار مجموع و مالیات</li>
+<li>ضمیمه کردن اسناد خرید (فاکتور، رسید)</li>
+</ul>
+<p><strong>مدیریت حساب تأمین‌کنندگان:</strong></p>
+<ul>
+<li>پیگیری پول بدهکار و پرداخت شده به تأمین‌کنندگان</li>
+<li>تاریخچه کامل تراکنش‌ها</li>
+<li>گزارش‌های بدهی و طلب</li>
+<li>سیستم پرداخت اقساطی</li>
+</ul>
+<p><strong>تاریخچه خرید:</strong></p>
+<ul>
+<li>تاریخچه کامل تراکنش‌ها و گزارش‌گیری</li>
+<li>تحلیل هزینه‌های خرید</li>
+<li>مقایسه قیمت‌ها از تأمین‌کنندگان مختلف</li>
+<li>گزارش‌های ماهانه و سالانه</li>
+</ul>
+<h4 id="%DB%B2%DB%B1%DB%B3-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D9%81%D8%B1%D9%88%D8%B4">۲.۱.۳ مدیریت فروش</h4>
+<p><strong>ثبت فروش:</strong></p>
+<ul>
+<li>پیگیری تمام تراکنش‌های فروش</li>
+<li>فروش نقدی و نسیه</li>
+<li>مدیریت تخفیفات و پیشنهادات ویژه</li>
+<li>سیستم بارکدخوانی برای فروش سریع</li>
+</ul>
+<p><strong>پیگیری فروش کارمندان:</strong></p>
+<ul>
+<li>نظارت بر کالاهای داده شده به کارمندان</li>
+<li>ثبت فروش‌های انجام شده توسط هر کارمند</li>
+<li>پیگیری بازگشت کالاها</li>
+<li>محاسبه کمیسیون و پاداش کارمندان</li>
+</ul>
+<p><strong>مدیریت حساب مشتریان:</strong></p>
+<ul>
+<li>پیگیری خریدهای مشتریان، پرداخت‌ها و مانده حساب</li>
+<li>سیستم اعتبارسنجی مشتریان</li>
+<li>تاریخچه کامل خرید هر مشتری</li>
+<li>مدیریت تخفیفات ویژه برای مشتریان وفادار</li>
+</ul>
+<p><strong>سیستم صورتحساب:</strong></p>
+<ul>
+<li>تولید فاکتورهای کوچک (خرده‌فروشان)</li>
+<li>تولید فاکتورهای بزرگ (مشتریان عمده)</li>
+<li>چاپ فاکتور با طراحی حرفه‌ای</li>
+<li>ارسال فاکتور از طریق ایمیل یا پیامک</li>
+</ul>
+<h4 id="%DB%B2%DB%B1%DB%B4-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D9%85%D8%A7%D9%84%DB%8C">۲.۱.۴ مدیریت مالی</h4>
+<p><strong>حساب‌های مشتریان:</strong></p>
+<ul>
+<li>پیگیری اعتبار/بدهی مشتریان</li>
+<li>مدیریت پرداخت‌های اقساطی</li>
+<li>هشدارهای بدهی معوق</li>
+<li>گزارش‌های وصول مطالبات</li>
+</ul>
+<p><strong>حساب‌های تأمین‌کنندگان:</strong></p>
+<ul>
+<li>پیگیری پرداخت‌های معوق تأمین‌کنندگان</li>
+<li>برنامه‌ریزی پرداخت‌ها</li>
+<li>مدیریت چک‌ها و اسناد پرداخت</li>
+<li>گزارش‌های بدهی به تأمین‌کنندگان</li>
+</ul>
+<p><strong>مسئولیت‌پذیری کارمندان:</strong></p>
+<ul>
+<li>پیگیری کالا و پول تحت اختیار کارمندان</li>
+<li>محاسبه موجودی تحت مسئولیت هر کارمند</li>
+<li>گزارش‌های روزانه عملکرد کارمندان</li>
+<li>سیستم تأیید و تصویب تراکنش‌ها</li>
+</ul>
+<p><strong>مدیریت هزینه‌ها:</strong></p>
+<ul>
+<li>پیگیری هزینه‌های طبقه‌بندی شده</li>
+<li>دسته‌بندی هزینه‌ها (اجاره، برق، حمل‌ونقل، غیره)</li>
+<li>بودجه‌بندی و کنترل هزینه‌ها</li>
+<li>گزارش‌گیری تفصیلی هزینه‌ها</li>
+</ul>
+<h4 id="%DB%B2%DB%B1%DB%B5-%D8%B3%DB%8C%D8%B3%D8%AA%D9%85-%DA%AF%D8%B2%D8%A7%D8%B1%D8%B4%E2%80%8C%DA%AF%DB%8C%D8%B1%DB%8C">۲.۱.۵ سیستم گزارش‌گیری</h4>
+<p><strong>گزارش‌های موجودی:</strong></p>
+<ul>
+<li>گزارش‌های موجودی انبار و فروشگاه</li>
+<li>تحلیل گردش موجودی</li>
+<li>گزارش‌های کالاهای منقضی شده</li>
+<li>پیش‌بینی نیازهای آینده</li>
+</ul>
+<p><strong>گزارش‌های فروش:</strong></p>
+<ul>
+<li>تحلیل فروش روزانه، هفتگی، ماهانه</li>
+<li>فروش بر اساس کارمند، مشتری، محصول</li>
+<li>مقایسه فروش با دوره‌های قبل</li>
+<li>پیش‌بینی فروش آینده</li>
+</ul>
+<p><strong>گزارش‌های حساب:</strong></p>
+<ul>
+<li>خلاصه مانده حساب مشتریان و تأمین‌کنندگان</li>
+<li>گزارش‌های وصول مطالبات</li>
+<li>تحلیل اعتبار مشتریان</li>
+<li>گزارش‌های پرداخت به تأمین‌کنندگان</li>
+</ul>
+<p><strong>گزارش‌های هزینه:</strong></p>
+<ul>
+<li>تفکیک هزینه‌های طبقه‌بندی شده</li>
+<li>تحلیل روند هزینه‌ها</li>
+<li>مقایسه هزینه‌ها با بودجه</li>
+<li>گزارش‌های سود و زیان</li>
+</ul>
+<p><strong>سود و زیان:</strong></p>
+<ul>
+<li>تحلیل مالی جامع</li>
+<li>محاسبه سود ناخالص و خالص</li>
+<li>تحلیل حاشیه سود محصولات</li>
+<li>گزارش‌های مالی دوره‌ای</li>
+</ul>
+<h3 id="%DB%B2%DB%B2-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D9%81%D9%86%DB%8C">۲.۲ الزامات فنی</h3>
+<p><strong>پایگاه داده:</strong></p>
+<ul>
+<li>ذخیره‌سازی امن داده‌ها با قابلیت پشتیبان‌گیری</li>
+<li>پشتیبان‌گیری خودکار روزانه</li>
+<li>بازیابی داده‌ها در صورت خرابی</li>
+<li>رمزگذاری داده‌های حساس</li>
+</ul>
+<p><strong>رابط کاربری:</strong></p>
+<ul>
+<li>داشبورد بصری و آسان برای استفاده</li>
+<li>طراحی ریسپانسیو برای دستگاه‌های مختلف</li>
+<li>منوهای ساده و منطقی</li>
+<li>راهنمای کاربری تعبیه شده</li>
+</ul>
+<p><strong>قابلیت‌های صادرات:</strong></p>
+<ul>
+<li>گزینه‌های صادرات PDF و Excel برای گزارش‌ها</li>
+<li>چاپ فاکتورها و گزارش‌ها</li>
+<li>ارسال گزارش‌ها از طریق ایمیل</li>
+<li>ذخیره گزارش‌ها در فرمت‌های مختلف</li>
+</ul>
+<p><strong>امنیت داده:</strong></p>
+<ul>
+<li>مدیریت امن داده‌ها و سیستم پشتیبان‌گیری</li>
+<li>کنترل دسترسی بر اساس نقش کاربر</li>
+<li>رمزگذاری اطلاعات حساس</li>
+<li>لاگ‌گیری فعالیت‌های کاربران</li>
+</ul>
+<hr>
+<h2 id="%DB%B3-%D8%AA%D8%AD%D9%88%DB%8C%D9%84%DB%8C%E2%80%8C%D9%87%D8%A7">۳. تحویلی‌ها</h2>
+<h3 id="%DB%B3%DB%B1-%D8%AA%D8%AD%D9%88%DB%8C%D9%84%DB%8C%E2%80%8C%D9%87%D8%A7%DB%8C-%D9%87%D9%81%D8%AA%D9%87-%D8%A7%D9%88%D9%84">۳.۱ تحویلی‌های هفته اول</h3>
+<ul>
+<li>معماری کامل سیستم و طراحی پایگاه داده</li>
+<li>ماژول اصلی مدیریت موجودی (انبار/فروشگاه)</li>
+<li>سیستم مدیریت خرید</li>
+<li>عملکرد اولیه ثبت فروش</li>
+<li>چارچوب اولیه رابط کاربری</li>
+</ul>
+<h3 id="%DB%B3%DB%B2-%D8%AA%D8%AD%D9%88%DB%8C%D9%84%DB%8C%E2%80%8C%D9%87%D8%A7%DB%8C-%D9%87%D9%81%D8%AA%D9%87-%D8%AF%D9%88%D9%85">۳.۲ تحویلی‌های هفته دوم</h3>
+<ul>
+<li>مدیریت کامل فروش با سیستم صورتحساب</li>
+<li>مدیریت حساب مشتریان و تأمین‌کنندگان</li>
+<li>سیستم پیگیری کارمندان</li>
+<li>ماژول مدیریت هزینه‌ها</li>
+<li>سیستم گزارش‌گیری جامع</li>
+<li>تست سیستم و رفع باگ‌ها</li>
+<li>مستندات کاربری و مواد آموزشی</li>
+</ul>
+<hr>
+<h2 id="%DB%B4-%D8%AC%D8%AF%D9%88%D9%84-%D8%B2%D9%85%D8%A7%D9%86%DB%8C-%D9%BE%D8%B1%D9%88%DA%98%D9%87">۴. جدول زمانی پروژه</h2>
+<table>
+<thead>
+<tr>
+<th>فاز</th>
+<th>مدت</th>
+<th>تحویلی‌ها</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>فاز ۱</strong></td>
+<td>روزهای ۱-۳</td>
+<td>طراحی سیستم، راه‌اندازی پایگاه داده، ماژول اصلی موجودی</td>
+</tr>
+<tr>
+<td><strong>فاز ۲</strong></td>
+<td>روزهای ۴-۷</td>
+<td>مدیریت خرید، ثبت فروش، رابط کاربری اولیه</td>
+</tr>
+<tr>
+<td><strong>فاز ۳</strong></td>
+<td>روزهای ۸-۱۰</td>
+<td>مدیریت حساب‌ها، پیگیری کارمندان، صورتحساب</td>
+</tr>
+<tr>
+<td><strong>فاز ۴</strong></td>
+<td>روزهای ۱۱-۱۴</td>
+<td>گزارش‌گیری، تست، مستندسازی، استقرار</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%DB%B5-%D9%85%D8%B4%D8%AE%D8%B5%D8%A7%D8%AA-%D9%81%D9%86%DB%8C">۵. مشخصات فنی</h2>
+<h3 id="%DB%B5%DB%B1-%D9%85%D8%B9%D9%85%D8%A7%D8%B1%DB%8C-%D8%B3%DB%8C%D8%B3%D8%AA%D9%85">۵.۱ معماری سیستم</h3>
+<ul>
+<li><strong>فرانت‌اند:</strong> رابط وب مدرن یا برنامه دسکتاپ</li>
+<li><strong>بک‌اند:</strong> پردازش قوی سمت سرور</li>
+<li><strong>پایگاه داده:</strong> پایگاه داده رابطه‌ای برای یکپارچگی داده</li>
+<li><strong>امنیت:</strong> دسترسی فقط برای مدیر با حفاظت اختیاری رمز عبور</li>
+</ul>
+<h3 id="%DB%B5%DB%B2-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D8%B9%D9%85%D9%84%DA%A9%D8%B1%D8%AF">۵.۲ الزامات عملکرد</h3>
+<ul>
+<li>پردازش کارآمد تا ۱۰,۰۰۰+ تراکنش</li>
+<li>به‌روزرسانی موجودی در زمان واقعی</li>
+<li>تولید سریع گزارش‌ها</li>
+<li>رابط کاربری پاسخگو</li>
+</ul>
+<h3 id="%DB%B5%DB%B3-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D8%AF%D8%A7%D8%AF%D9%87">۵.۳ مدیریت داده</h3>
+<ul>
+<li>پشتیبان‌گیری خودکار روزانه</li>
+<li>قابلیت‌های صادرات داده (Excel، PDF)</li>
+<li>اعتبارسنجی یکپارچگی داده</li>
+<li>ردپای حسابرسی برای عملیات حیاتی</li>
+</ul>
+<hr>
+<h2 id="%DB%B6-%D8%B4%D8%B1%D8%A7%DB%8C%D8%B7-%D9%BE%D8%B1%D8%AF%D8%A7%D8%AE%D8%AA">۶. شرایط پرداخت</h2>
+<h3 id="%DB%B6%DB%B1-%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D9%87-%D9%BE%D8%B1%D8%AF%D8%A7%D8%AE%D8%AA">۶.۱ برنامه پرداخت</h3>
+<ul>
+<li><strong>پرداخت اولیه:</strong> ۳۰٪ هنگام امضای قرارداد</li>
+<li><strong>نقطه عطف ۱:</strong> ۳۰٪ پس از تکمیل تحویلی‌های هفته اول</li>
+<li><strong>پرداخت نهایی:</strong> ۴۰٪ پس از تکمیل پروژه و پذیرش</li>
+</ul>
+<h3 id="%DB%B6%DB%B2-%D8%B1%D9%88%D8%B4-%D9%BE%D8%B1%D8%AF%D8%A7%D8%AE%D8%AA">۶.۲ روش پرداخت</h3>
+<p>[روش پرداخت را مشخص کنید - انتقال بانکی، پی‌پال و غیره]</p>
+<hr>
+<h2 id="%DB%B7-%D9%85%D8%B3%D8%A6%D9%88%D9%84%DB%8C%D8%AA%E2%80%8C%D9%87%D8%A7%DB%8C-%D9%85%D8%B4%D8%AA%D8%B1%DB%8C">۷. مسئولیت‌های مشتری</h2>
+<h3 id="%DB%B7%DB%B1-%D8%A7%D8%B1%D8%A7%D8%A6%D9%87-%D8%AF%D8%A7%D8%AF%D9%87">۷.۱ ارائه داده</h3>
+<ul>
+<li>ارائه داده‌های نمونه برای تست</li>
+<li>تأمین مستندات فرآیند کسب‌وکار</li>
+<li>تعریف الزامات خاص گزارش‌گیری</li>
+</ul>
+<h3 id="%DB%B7%DB%B2-%D8%A8%D8%A7%D8%B2%D8%AE%D9%88%D8%B1%D8%AF-%D9%88-%D8%AA%D8%B3%D8%AA">۷.۲ بازخورد و تست</h3>
+<ul>
+<li>مشارکت در فازهای تست</li>
+<li>ارائه بازخورد به‌موقع در مورد تحویلی‌ها</li>
+<li>تأیید الزامات سیستم و طراحی</li>
+</ul>
+<h3 id="%DB%B7%DB%B3-%D8%AF%D8%B3%D8%AA%D8%B1%D8%B3%DB%8C-%D9%88-%D9%85%D8%AD%DB%8C%D8%B7">۷.۳ دسترسی و محیط</h3>
+<ul>
+<li>تأمین دسترسی لازم به سیستم‌ها (در صورت نیاز)</li>
+<li>اطمینان از اتصال اینترنت پایدار برای سیستم مبتنی بر وب</li>
+<li>تعیین شخص تماس اصلی برای ارتباط پروژه</li>
+</ul>
+<hr>
+<h2 id="%DB%B8-%D9%85%D8%B3%D8%A6%D9%88%D9%84%DB%8C%D8%AA%E2%80%8C%D9%87%D8%A7%DB%8C-%D8%AA%D9%88%D8%B3%D8%B9%D9%87%E2%80%8C%D8%AF%D9%87%D9%86%D8%AF%D9%87">۸. مسئولیت‌های توسعه‌دهنده</h2>
+<h3 id="%DB%B8%DB%B1-%D8%A7%D8%B3%D8%AA%D8%A7%D9%86%D8%AF%D8%A7%D8%B1%D8%AF%D9%87%D8%A7%DB%8C-%D8%AA%D9%88%D8%B3%D8%B9%D9%87">۸.۱ استانداردهای توسعه</h3>
+<ul>
+<li>پیروی از بهترین شیوه‌های صنعت</li>
+<li>اطمینان از کیفیت کد و مستندسازی</li>
+<li>پیاده‌سازی مدیریت خطا و اعتبارسنجی مناسب</li>
+</ul>
+<h3 id="%DB%B8%DB%B2-%D8%A7%D8%B1%D8%AA%D8%A8%D8%A7%D8%B7%D8%A7%D8%AA">۸.۲ ارتباطات</h3>
+<ul>
+<li>ارائه به‌روزرسانی‌های منظم پیشرفت</li>
+<li>برنامه‌ریزی جلسات وضعیت هفتگی</li>
+<li>مستندسازی تمام تغییرات و تصمیمات</li>
+</ul>
+<h3 id="%DB%B8%DB%B3-%D9%BE%D8%B4%D8%AA%DB%8C%D8%A8%D8%A7%D9%86%DB%8C">۸.۳ پشتیبانی</h3>
+<ul>
+<li>ارائه ۳۰ روز پشتیبانی پس از تحویل</li>
+<li>رفع هرگونه باگ کشف شده در دوره گارانتی</li>
+<li>ارائه آموزش اولیه کاربر</li>
+</ul>
+<hr>
+<h2 id="%DB%B9-%D9%85%D8%B9%DB%8C%D8%A7%D8%B1%D9%87%D8%A7%DB%8C-%D9%BE%D8%B0%DB%8C%D8%B1%D8%B4">۹. معیارهای پذیرش</h2>
+<h3 id="%DB%B9%DB%B1-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D8%B9%D9%85%D9%84%DA%A9%D8%B1%D8%AF%DB%8C">۹.۱ الزامات عملکردی</h3>
+<ul>
+<li>تمام ماژول‌های مشخص شده طبق الزامات کار می‌کنند</li>
+<li>یکپارچگی داده در تمام عملیات حفظ می‌شود</li>
+<li>گزارش‌ها اطلاعات دقیق تولید می‌کنند</li>
+<li>رابط کاربری بصری و آسان برای استفاده است</li>
+</ul>
+<h3 id="%DB%B9%DB%B2-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D8%B9%D9%85%D9%84%DA%A9%D8%B1%D8%AF">۹.۲ الزامات عملکرد</h3>
+<ul>
+<li>سیستم در محدوده‌های زمانی قابل قبول پاسخ می‌دهد</li>
+<li>حجم داده مورد انتظار را به‌طور کارآمد مدیریت می‌کند</li>
+<li>رویه‌های پشتیبان‌گیری و بازیابی کار می‌کنند</li>
+</ul>
+<h3 id="%DB%B9%DB%B3-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D8%AA%D8%B3%D8%AA">۹.۳ الزامات تست</h3>
+<ul>
+<li>تست کامل سیستم انجام شده است</li>
+<li>تست پذیرش کاربر تکمیل شده است</li>
+<li>تمام باگ‌های حیاتی برطرف شده‌اند</li>
+</ul>
+<hr>
+<h2 id="%DB%B1%DB%B0-%D9%85%D8%AF%DB%8C%D8%B1%DB%8C%D8%AA-%D8%AA%D8%BA%DB%8C%DB%8C%D8%B1%D8%A7%D8%AA">۱۰. مدیریت تغییرات</h2>
+<h3 id="%DB%B1%DB%B0%DB%B1-%D8%AA%D8%BA%DB%8C%DB%8C%D8%B1%D8%A7%D8%AA-%D9%85%D8%AD%D8%AF%D9%88%D8%AF%D9%87">۱۰.۱ تغییرات محدوده</h3>
+<ul>
+<li>هر تغییر در محدوده باید مستند و تأیید شود</li>
+<li>کار اضافی جداگانه قیمت‌گذاری خواهد شد</li>
+<li>تنظیمات جدول زمانی ممکن است برای تغییرات محدوده مورد نیاز باشد</li>
+</ul>
+<h3 id="%DB%B1%DB%B0%DB%B2-%D9%BE%D8%B1%D9%88%D8%AA%DA%A9%D9%84-%D8%A7%D8%B1%D8%AA%D8%A8%D8%A7%D8%B7%D8%A7%D8%AA">۱۰.۲ پروتکل ارتباطات</h3>
+<ul>
+<li>تمام تغییرات باید کتبی ابلاغ شود</li>
+<li>زمان پاسخ: ۲۴ ساعت برای مسائل فوری، ۴۸ ساعت برای درخواست‌های استاندارد</li>
+</ul>
+<hr>
+<h2 id="%DB%B1%DB%B1-%DA%AF%D8%A7%D8%B1%D8%A7%D9%86%D8%AA%DB%8C-%D9%88-%D9%BE%D8%B4%D8%AA%DB%8C%D8%A8%D8%A7%D9%86%DB%8C">۱۱. گارانتی و پشتیبانی</h2>
+<h3 id="%DB%B1%DB%B1%DB%B1-%D8%AF%D9%88%D8%B1%D9%87-%DA%AF%D8%A7%D8%B1%D8%A7%D9%86%D8%AA%DB%8C">۱۱.۱ دوره گارانتی</h3>
+<ul>
+<li>۳۰ روز گارانتی بر تمام عملکردهای تحویل شده</li>
+<li>رایگان رفع باگ در دوره گارانتی</li>
+<li>بهینه‌سازی عملکرد در صورت نیاز</li>
+</ul>
+<h3 id="%DB%B1%DB%B1%DB%B2-%D9%BE%D8%B4%D8%AA%DB%8C%D8%A8%D8%A7%D9%86%DB%8C-%D9%BE%D8%B3-%D8%A7%D8%B2-%DA%AF%D8%A7%D8%B1%D8%A7%D9%86%D8%AA%DB%8C">۱۱.۲ پشتیبانی پس از گارانتی</h3>
+<ul>
+<li>با نرخ ساعتی در دسترس است</li>
+<li>زمان پاسخ: ۴۸ ساعت برای مسائل غیرحیاتی</li>
+<li>پشتیبانی اضطراری با نرخ پریمیوم در دسترس است</li>
+</ul>
+<hr>
+<h2 id="%DB%B1%DB%B2-%D9%85%D8%AD%D8%B1%D9%85%D8%A7%D9%86%DA%AF%DB%8C">۱۲. محرمانگی</h2>
+<h3 id="%DB%B1%DB%B2%DB%B1-%D8%AD%D9%81%D8%A7%D8%B8%D8%AA-%D8%A7%D8%B2-%D8%AF%D8%A7%D8%AF%D9%87">۱۲.۱ حفاظت از داده</h3>
+<ul>
+<li>تمام داده‌های مشتری محرمانه تلقی می‌شود</li>
+<li>عدم اشتراک اطلاعات کسب‌وکار با اشخاص ثالث</li>
+<li>مدیریت امن تمام داده‌ها در طول توسعه</li>
+</ul>
+<h3 id="%DB%B1%DB%B2%DB%B2-%D9%85%D8%A7%D9%84%DA%A9%DB%8C%D8%AA-%D9%81%DA%A9%D8%B1%DB%8C">۱۲.۲ مالکیت فکری</h3>
+<ul>
+<li>مشتری مالکیت داده‌های کسب‌وکار را حفظ می‌کند</li>
+<li>توسعه‌دهنده حقوق اجزای کد عمومی را حفظ می‌کند</li>
+<li>منطق کسب‌وکار سفارشی متعلق به مشتری است</li>
+</ul>
+<hr>
+<h2 id="%DB%B1%DB%B3-%D8%A8%D9%86%D8%AF%D9%87%D8%A7%DB%8C-%D9%81%D8%B3%D8%AE">۱۳. بندهای فسخ</h2>
+<h3 id="%DB%B1%DB%B3%DB%B1-%D9%81%D8%B3%D8%AE-%D8%B2%D9%88%D8%AF%D9%87%D9%86%DA%AF%D8%A7%D9%85">۱۳.۱ فسخ زودهنگام</h3>
+<ul>
+<li>هر طرف می‌تواند با اخطار کتبی ۴۸ ساعته فسخ کند</li>
+<li>پرداخت کار تکمیل شده در زمان فسخ واجب است</li>
+<li>مشتری مالک تمام تحویلی‌های تکمیل شده است</li>
+</ul>
+<h3 id="%DB%B1%DB%B3%DB%B2-%D9%82%D9%88%D9%87-%D9%82%D8%A7%D9%87%D8%B1%D9%87">۱۳.۲ قوه قاهره</h3>
+<ul>
+<li>تأخیر پروژه به دلیل شرایط خارج از کنترل</li>
+<li>بدون جریمه برای تأخیرهای ناشی از بلایای طبیعی، همه‌گیری و غیره</li>
+</ul>
+<hr>
+<h2 id="%DB%B1%DB%B4-%D8%A7%D9%85%D8%B6%D8%A7%D9%87%D8%A7">۱۴. امضاها</h2>
+<p><strong>مشتری:</strong> _________________________ <strong>تاریخ:</strong> _________</p>
+<p><strong>توسعه‌دهنده:</strong> _________________________ <strong>تاریخ:</strong> _________</p>
+<hr>
+<p><strong>نسخه قرارداد:</strong> ۱.۰<br>
+<strong>آخرین به‌روزرسانی:</strong> [تاریخ قرارداد]<br>
+<strong>تاریخ اجرا:</strong> [تاریخ قرارداد]</p>
+<hr>
+<p><em>این قرارداد نمایانگر توافق کامل بین طرفین است و تمام بحث‌ها و توافق‌های قبلی را جایگزین می‌کند.</em></p>
+<hr>
+<h2 id="%DB%B1%DB%B5-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D8%A7%D8%B6%D8%A7%D9%81%DB%8C-%D9%88-%D8%AC%D8%B2%D8%A6%DB%8C%D8%A7%D8%AA-%D9%81%D9%86%DB%8C">۱۵. الزامات اضافی و جزئیات فنی</h2>
+<h3 id="%DB%B1%DB%B5%DB%B1-%D9%88%DB%8C%DA%98%DA%AF%DB%8C%E2%80%8C%D9%87%D8%A7%DB%8C-%D8%AE%D8%A7%D8%B5-%D8%B3%DB%8C%D8%B3%D8%AA%D9%85">۱۵.۱ ویژگی‌های خاص سیستم</h3>
+<p><strong>مدیریت چندین انبار:</strong></p>
+<ul>
+<li>امکان مدیریت چندین انبار در مکان‌های مختلف</li>
+<li>انتقال کالا بین انبارها</li>
+<li>گزارش‌گیری مجزا برای هر انبار</li>
+<li>مدیریت موجودی مرکزی</li>
+</ul>
+<p><strong>سیستم بارکد و QR:</strong></p>
+<ul>
+<li>تولید و چاپ بارکد برای محصولات</li>
+<li>اسکنر بارکد برای ورود سریع داده</li>
+<li>QR کد برای اطلاعات تکمیلی محصولات</li>
+<li>مدیریت شماره سریال و کد محصولات</li>
+</ul>
+<p><strong>مدیریت قیمت‌گذاری:</strong></p>
+<ul>
+<li>قیمت‌گذاری پویا بر اساس شرایط بازار</li>
+<li>تخفیفات حجمی و فصلی</li>
+<li>قیمت‌گذاری متفاوت برای مشتریان مختلف</li>
+<li>مدیریت نرخ ارز برای خریدهای خارجی</li>
+</ul>
+<p><strong>سیستم اعلان‌ها:</strong></p>
+<ul>
+<li>اعلان‌های موجودی کم</li>
+<li>یادآوری پرداخت‌های معوق</li>
+<li>هشدارهای انقضای محصولات</li>
+<li>اعلان‌های فروش روزانه</li>
+</ul>
+<h3 id="%DB%B1%DB%B5%DB%B2-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%D8%A7%D9%85%D9%86%DB%8C%D8%AA%DB%8C">۱۵.۲ الزامات امنیتی</h3>
+<p><strong>کنترل دسترسی:</strong></p>
+<ul>
+<li>سیستم احراز هویت چندمرحله‌ای</li>
+<li>کنترل دسترسی بر اساس نقش (مدیر، کارمند، حسابدار)</li>
+<li>لاگ‌گیری کامل فعالیت‌های کاربران</li>
+<li>قفل خودکار پس از عدم فعالیت</li>
+</ul>
+<p><strong>پشتیبان‌گیری و بازیابی:</strong></p>
+<ul>
+<li>پشتیبان‌گیری خودکار هر ۶ ساعت</li>
+<li>ذخیره‌سازی پشتیبان در مکان‌های مختلف</li>
+<li>تست منظم بازیابی داده‌ها</li>
+<li>نسخه‌گیری از تغییرات مهم</li>
+</ul>
+<h3 id="%DB%B1%DB%B5%DB%B3-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%DA%AF%D8%B2%D8%A7%D8%B1%D8%B4%E2%80%8C%DA%AF%DB%8C%D8%B1%DB%8C-%D9%BE%DB%8C%D8%B4%D8%B1%D9%81%D8%AA%D9%87">۱۵.۳ الزامات گزارش‌گیری پیشرفته</h3>
+<p><strong>گزارش‌های تحلیلی:</strong></p>
+<ul>
+<li>تحلیل روند فروش و خرید</li>
+<li>پیش‌بینی تقاضا بر اساس داده‌های تاریخی</li>
+<li>تحلیل سودآوری محصولات</li>
+<li>گزارش‌های مقایسه‌ای دوره‌ای</li>
+</ul>
+<p><strong>گزارش‌های مالی:</strong></p>
+<ul>
+<li>صورت‌های مالی کامل</li>
+<li>تحلیل جریان نقدی</li>
+<li>گزارش‌های مالیاتی</li>
+<li>تحلیل بازگشت سرمایه</li>
+</ul>
+<p><strong>گزارش‌های عملیاتی:</strong></p>
+<ul>
+<li>عملکرد کارمندان</li>
+<li>کارایی انبار و فروشگاه</li>
+<li>تحلیل مشتریان</li>
+<li>گزارش‌های کیفیت محصولات</li>
+</ul>
+<h3 id="%DB%B1%DB%B5%DB%B4-%D8%A7%D9%84%D8%B2%D8%A7%D9%85%D8%A7%D8%AA-%DB%8C%DA%A9%D9%BE%D8%A7%D8%B1%DA%86%DA%AF%DB%8C">۱۵.۴ الزامات یکپارچگی</h3>
+<p><strong>یکپارچگی با سیستم‌های خارجی:</strong></p>
+<ul>
+<li>اتصال به سیستم‌های حسابداری</li>
+<li>یکپارچگی با سیستم‌های بانکی</li>
+<li>اتصال به سیستم‌های حمل‌ونقل</li>
+<li>یکپارچگی با سیستم‌های پرداخت آنلاین</li>
+</ul>
+<p><strong>API و قابلیت‌های توسعه:</strong></p>
+<ul>
+<li>API برای اتصال به سیستم‌های دیگر</li>
+<li>قابلیت توسعه و سفارشی‌سازی</li>
+<li>پلاگین‌ها و افزونه‌ها</li>
+<li>مستندات کامل API</li>
+</ul>
+<hr>
+<p><em>این فایل الزامات تفصیلی شامل تمام جزئیات فنی و عملکردی مورد نیاز برای توسعه سیستم مدیریت تجارت و توزیع است.</em></p>
+</div>
+
+</body>
+</html>
