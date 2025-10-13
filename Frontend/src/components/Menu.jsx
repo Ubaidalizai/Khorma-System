@@ -96,7 +96,6 @@ function Toggle({ id }) {
 
 function List({ children, id, className = "", parent }) {
   const containerParent = document.querySelector(`.${parent}`) || document.body;
-  console.log(containerParent);
   const { openId, close } = useMenus();
   const ref = useClickOutSide(close);
 

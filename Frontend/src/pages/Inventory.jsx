@@ -1,3 +1,4 @@
+import { MdOutlineProductionQuantityLimits } from "react-icons/md";
 import { useState, useEffect } from "react";
 import {
   PlusIcon,
@@ -25,6 +26,27 @@ import TextArea from "../components/TextArea";
 import Button from "../components/Button";
 import { useForm } from "react-hook-form";
 import { pre } from "framer-motion/client";
+import Table from "../components/Table";
+import TableHeader from "../components/TableHeader";
+import TableBody from "../components/TableBody";
+import TableColumn from "../components/TableColumn";
+import TableRow from "../components/TableRow";
+import TableMenuModal from "../components/TableMenuModal";
+import Menus from "../components/Menu";
+import Confirmation from "../components/Confirmation";
+import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
+import SearchInput from "../components/SearchInput";
+const tableHeader = [
+  { title: "جنس" },
+  { title: "SKU" },
+  { title: "رده" },
+  { title: "گدام" },
+  { title: "فروشگاه" },
+  { title: "کل" },
+  { title: "قیمت" },
+  { title: "حالت" },
+  { title: "عملیات" },
+];
 const Inventory = () => {
   const { register, handleSubmit, formState } = useForm();
   const [properties, setProperties] = useState([
@@ -403,11 +425,9 @@ const Inventory = () => {
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Inventory Management
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">مدیریت موجودی</h1>
           <p className="text-gray-600 mt-2">
-            Manage warehouse and store inventory with real-time tracking
+            مدیریت کردن تمام دیتا های و نماینده گی های تان
           </p>
         </div>
         <Modal>
@@ -472,13 +492,13 @@ const Inventory = () => {
                   row={3}
                 />
               </div>
-              {/* <div className="col-span-2 flex justify-center items-center col-start-1 col-end-3 row-start-5">
-                <Button className=" bg-red-600 hover:bg-red-500 text-white">
+              <div className="col-span-2 flex justify-center items-center col-start-1 col-end-3 row-start-5">
+                <Button className="  bg-warning-orange hover:bg-warning-orange/90 text-white">
                   Cancel
                 </Button>
-              </div> */}
+              </div>
               <div className="col-span-2 flex justify-center items-center col-start-3 row-start-5">
-                <Button className=" bg-green-600 hover:bg-green-500 ">
+                <Button className=" bg-success-green hover:bg-success-green/90 ">
                   Add To Database
                 </Button>
               </div>
@@ -492,14 +512,14 @@ const Inventory = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
-            Stock Alerts
+            هشتدار موجودی
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {getLowStockAlerts().length > 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h4 className="font-semibold text-yellow-800 mb-2 flex items-center gap-2">
                   <ExclamationTriangleIcon className="h-5 w-5" />
-                  Low Stock Items ({getLowStockAlerts().length})
+                  موجودی باقی مانده ({getLowStockAlerts().length})
                 </h4>
                 <ul className="space-y-2">
                   {getLowStockAlerts().map((product) => (
@@ -520,7 +540,7 @@ const Inventory = () => {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2">
                   <XCircleIcon className="h-5 w-5" />
-                  Out of Stock ({getOutOfStockItems().length})
+                  موجودی تمام شده ({getOutOfStockItems().length})
                 </h4>
                 <ul className="space-y-2">
                   {getOutOfStockItems().map((product) => (
@@ -540,7 +560,7 @@ const Inventory = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Products</p>
+              <p className="text-sm text-gray-600">تمام اجناس</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalProducts}
               </p>
@@ -554,7 +574,7 @@ const Inventory = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Warehouse Stock</p>
+              <p className="text-sm text-gray-600">موجودی گدام</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalWarehouseStock}
               </p>
@@ -568,7 +588,7 @@ const Inventory = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Store Stock</p>
+              <p className="text-sm text-gray-600">موجودی فروشگاه</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalStoreStock}
               </p>
@@ -582,7 +602,7 @@ const Inventory = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Value</p>
+              <p className="text-sm text-gray-600">مجموع قیمت</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 ${stats.totalValue.toFixed(2)}
               </p>
@@ -606,7 +626,7 @@ const Inventory = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              All Items
+              تمام اجناس
             </button>
             <button
               onClick={() => setActiveTab("warehouse")}
@@ -617,7 +637,7 @@ const Inventory = () => {
               }`}
             >
               <BuildingOffice2Icon className="h-5 w-5" />
-              Warehouse
+              گدام
             </button>
             <button
               onClick={() => setActiveTab("store")}
@@ -628,7 +648,7 @@ const Inventory = () => {
               }`}
             >
               <BuildingStorefrontIcon className="h-5 w-5" />
-              Store
+              فروشگاه
             </button>
             <button
               onClick={() => setActiveTab("product")}
@@ -638,8 +658,8 @@ const Inventory = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <BuildingStorefrontIcon className="h-5 w-5" />
-              Product
+              <MdOutlineProductionQuantityLimits className="h-5 w-5" />
+              جنس
             </button>
           </nav>
         </div>
@@ -649,52 +669,136 @@ const Inventory = () => {
         ) : (
           <>
             {/* Filters and search */}
-            <div className="p-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search products by name, SKU, or category..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="in stock">In Stock</option>
-                    <option value="low stock">Low Stock</option>
-                    <option value="out of stock">Out of Stock</option>
-                  </select>
-                  <button
-                    onClick={() =>
-                      setProducts(
-                        products.map((p) => ({
-                          ...p,
-                          lastUpdated: new Date().toISOString(),
-                        }))
-                      )
-                    }
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <ArrowPathIcon className="h-5 w-5" />
-                    Refresh
-                  </button>
-                </div>
-              </div>
-            </div>
-
             {/* Products table */}
             <div className="overflow-x-auto -mx-6 px-6">
-              <table className="min-w-full divide-y divide-gray-200">
+              <Table
+                firstRow={
+                  <div className="w-full flex ">
+                    <div className=" flex-1  flex justify-start items-end">
+                      <SearchInput placeholder="جستجو کنید" />
+                    </div>
+                    <div className=" flex justify-end flex-2">
+                      <div className=" w-[50%]">
+                        <Select
+                          defaultSelected="فلتر کنید"
+                          id=""
+                          options={[
+                            { value: "همه" },
+                            { value: "گدام" },
+                            { value: "جنس" },
+                            { value: "حالت" },
+                          ]}
+                        ></Select>
+                      </div>
+                    </div>
+                  </div>
+                }
+              >
+                <TableHeader headerData={tableHeader} />
+
+                <TableBody>
+                  {filteredProducts.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="9"
+                        className="px-6 py-12 text-center text-gray-500"
+                      >
+                        <div className="flex flex-col items-center">
+                          <BuildingStorefrontIcon className="h-12 w-12 text-gray-400 mb-3" />
+                          <p className="text-lg font-medium">
+                            هیچ نوع جنسی یافت نشد
+                          </p>
+                          <p className="text-sm">
+                            گوشش کنید که از جستجو و یا فلتر کردن استفاده کنید
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProducts.map((filter) => (
+                      <TableRow key={filter.id}>
+                        <TableColumn>{filter.name}</TableColumn>
+                        <TableColumn>{filter.sku}</TableColumn>
+                        <TableColumn>{filter.category}</TableColumn>
+                        <TableColumn className="text-purple-600">
+                          {filter.warehouseStock}
+                        </TableColumn>
+                        <TableColumn className="text-green-600">
+                          {filter.storeStock}
+                        </TableColumn>
+                        <TableColumn>
+                          {filter.warehouseStock + filter.storeStock}
+                        </TableColumn>
+                        <TableColumn>{filter.unitPrice}</TableColumn>
+                        <TableColumn>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                              filter.status
+                            )}`}
+                          >
+                            {filter.status}
+                          </span>
+                        </TableColumn>
+                        <TableColumn
+                          className={`${
+                            "itemavs" +
+                            new Date(filter.expiryDate).getMilliseconds() +
+                            filter?.id
+                          } relative`}
+                        >
+                          <TableMenuModal>
+                            <Menus>
+                              <Menus.Menu>
+                                <Menus.Toggle id={filter?.id} />
+                                <Menus.List
+                                  parent={
+                                    "itemavs" +
+                                    new Date(
+                                      filter.expiryDate
+                                    ).getMilliseconds() +
+                                    filter?.id
+                                  }
+                                  id={filter?.id}
+                                  className="bg-white rounded-lg shadow-xl"
+                                >
+                                  <TableMenuModal.Open opens="deplicate">
+                                    <Menus.Button icon={<HiSquare2Stack />}>
+                                      نمایش
+                                    </Menus.Button>
+                                  </TableMenuModal.Open>
+
+                                  <TableMenuModal.Open opens="edit">
+                                    <Menus.Button icon={<HiPencil />}>
+                                      ویرایش
+                                    </Menus.Button>
+                                  </TableMenuModal.Open>
+
+                                  <TableMenuModal.Open opens="delete">
+                                    <Menus.Button icon={<HiTrash />}>
+                                      حذف
+                                    </Menus.Button>
+                                  </TableMenuModal.Open>
+                                </Menus.List>
+                              </Menus.Menu>
+
+                              <TableMenuModal.Window
+                                name="delete"
+                                className={""}
+                              >
+                                <Confirmation type="delete" />
+                              </TableMenuModal.Window>
+                              <TableMenuModal.Window name="edit" className={``}>
+                                <Confirmation type="edit" />
+                              </TableMenuModal.Window>
+                            </Menus>
+                          </TableMenuModal>
+                        </TableColumn>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              {/* <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -825,7 +929,7 @@ const Inventory = () => {
                     ))
                   )}
                 </tbody>
-              </table>
+              </table> */}
             </div>
           </>
         )}
@@ -835,63 +939,43 @@ const Inventory = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <ArrowPathIcon className="h-6 w-6 text-amber-600" />
-          Recent Stock Transfers
+          انتقالات اخیر موجودی
         </h3>
         <div className="overflow-x-auto -mx-6 px-6">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Product
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Quantity
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  From
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  To
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Date & Time
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Performed By
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {transferHistory.slice(0, 5).map((transfer) => (
-                <tr key={transfer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {transfer.productName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {transfer.quantity} units
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    <span className="inline-flex items-center gap-1">
-                      <BuildingOffice2Icon className="h-4 w-4" />
-                      {transfer.from}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    <span className="inline-flex items-center gap-1">
-                      <BuildingStorefrontIcon className="h-4 w-4" />
-                      {transfer.to}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(transfer.date).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {transfer.performedBy}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table>
+            <TableHeader
+              headerData={[
+                { title: "جنس" },
+                { title: "فرستنده" },
+                { title: "گیرنده" },
+                { title: "تاریخ" },
+                { title: "اجرا کننده" },
+              ]}
+            >
+              <TableBody>
+                {transferHistory.slice(0, 1).map((transfer) => {
+                  return (
+                    <TableRow>
+                      <TableColumn>{transfer.productName} units</TableColumn>
+                      <TableColumn>
+                        {" "}
+                        <BuildingOffice2Icon className="h-4 w-4" />
+                        {transfer.from}
+                      </TableColumn>
+                      <TableColumn>
+                        <BuildingStorefrontIcon className="h-4 w-4" />
+                        {transfer.to}
+                      </TableColumn>
+                      <TableColumn>
+                        {new Date(transfer.date).toLocaleString()}
+                      </TableColumn>
+                      <TableColumn>{transfer.performedBy}</TableColumn>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </TableHeader>
+          </Table>
         </div>
       </div>
 

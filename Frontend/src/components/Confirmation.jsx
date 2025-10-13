@@ -8,22 +8,32 @@ import Button from "./Button";
 
 function Confirmation({ type, handleClick, handleCancel }) {
   return (
-    <div class="flex flex-col bg-white w-82 h-52 rounded-md py-4 px-6 border border-slate-100">
+    <div class="flex flex-col bg-white w-100 h-82 rounded-md py-4 px-6 border border-slate-100">
       <div className=" flex-3 relative ">
         {type === "delete" ? (
           <BsFillTrashFill
-            size={70}
-            className=" text-red-300 absolute left-2/4 -translate-x-2/4"
+            size={40}
+            className="  text-red-300 absolute left-2/4 -translate-x-2/4"
           />
         ) : (
           <BsInfoCircle
-            size={70}
+            size={40}
             className=" text-slate-200 absolute left-2/4 -translate-x-2/4"
           />
         )}
+        <p className=" text-xl text-center absolute top-2/4 ">
+          آیا شما مطمین هستید که این فایل را
+          {type === "delete" ? "حذف" : "ویرایش"} را کنید؟
+        </p>
       </div>
-      <div class=" flex-1 flex justify-around items-center py-3">
+      <div class=" flex-1 flex justify-around items-center gap-3 py-3">
         <Button
+          onClick={handleClick}
+          className={`${
+            type === "delete"
+              ? " bg-warning-orange hover:bg-warning-orange/90"
+              : " bg-success-green hover:bg-success-green/90"
+          }`}
           icon={
             type === "delete" ? (
               <BiTrashAlt className="text-red-400" />
@@ -34,7 +44,13 @@ function Confirmation({ type, handleClick, handleCancel }) {
         >
           {type === "delete" ? "بلی، حذف کنید" : "بلی ویرایش کنید"}
         </Button>
-        <Button icon={<GiCancel />}>نه کنسل کنید</Button>
+        <Button
+          onClick={handleCancel}
+          className={` bg-red-500`}
+          icon={<GiCancel className=" text-green-500" />}
+        >
+          نه کنسل کنید
+        </Button>
       </div>
     </div>
   );

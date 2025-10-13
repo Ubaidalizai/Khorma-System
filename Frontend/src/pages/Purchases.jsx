@@ -16,6 +16,8 @@ import {
   BanknotesIcon,
   ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
+import Modal from "../components/Modal";
+import Button from "../components/Button";
 
 const Purchases = () => {
   // Search and filter states
@@ -294,7 +296,9 @@ const Purchases = () => {
       (!dateRange.start || purchase.purchaseDate >= dateRange.start) &&
       (!dateRange.end || purchase.purchaseDate <= dateRange.end);
 
-    return matchesSearch && matchesStatus && matchesSupplier && matchesDateRange;
+    return (
+      matchesSearch && matchesStatus && matchesSupplier && matchesDateRange
+    );
   });
 
   // Calculate statistics
@@ -345,7 +349,8 @@ const Purchases = () => {
       subtotal: parseFloat(totals.subtotal),
       taxAmount: parseFloat(totals.taxAmount),
       totalAmount: parseFloat(totals.total),
-      amountPaid: newPurchase.paymentStatus === "paid" ? parseFloat(totals.total) : 0,
+      amountPaid:
+        newPurchase.paymentStatus === "paid" ? parseFloat(totals.total) : 0,
       amountOwed:
         newPurchase.paymentStatus === "paid" ? 0 : parseFloat(totals.total),
       status: newPurchase.paymentStatus === "paid" ? "completed" : "pending",
@@ -435,95 +440,98 @@ const Purchases = () => {
   };
 
   return (
-    <div className='space-y-6 w-full max-w-full overflow-x-hidden'>
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
-            Purchase Management
-          </h1>
-          <p className='text-gray-600 mt-2'>
-            Track purchases, manage suppliers, and monitor payments
+          <h1 className="text-3xl font-bold text-gray-900">مدیریت خرید</h1>
+          <p className="text-gray-600 mt-2">
+            پیدا کردن خرید، مدیریت تامین کننده ها و مانتور کردن پرداخت ها
           </p>
         </div>
-        <div className='flex gap-3'>
-          <button className='bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2'>
-            <DocumentArrowDownIcon className='h-5 w-5' />
-            Export
-          </button>
-          <button
-            onClick={() => setShowAddPurchaseModal(true)}
-            className='bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2'
-          >
-            <PlusIcon className='h-5 w-5' />
-            New Purchase
-          </button>
+        <div className="flex w-[300px] gap-3">
+          <Modal>
+            <Modal.Toggle id="export">
+              <Button className=" bg-success-green">خروجی</Button>
+            </Modal.Toggle>
+            <Modal.Window name="export">
+              <div className="w-[400px] h-[300px] bg-white"></div>
+            </Modal.Window>
+          </Modal>
+          <Modal>
+            <Modal.Toggle id="addPurchase">
+              <Button className=" bg-deepdate-400">اضافه کردن خرید</Button>
+            </Modal.Toggle>
+            <Modal.Window name="addPurchase">
+              <div className="w-[400px] h-[300px] bg-white"></div>
+            </Modal.Window>
+          </Modal>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>Total Purchases</p>
-              <p className='text-2xl font-bold text-gray-900 mt-1'>
+              <p className="text-sm text-gray-600">Total Purchases</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalPurchases}
               </p>
             </div>
-            <div className='bg-blue-100 p-3 rounded-lg'>
-              <ClipboardDocumentListIcon className='h-6 w-6 text-blue-600' />
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>Total Amount</p>
-              <p className='text-2xl font-bold text-gray-900 mt-1'>
+              <p className="text-sm text-gray-600">Total Amount</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 ${stats.totalAmount.toFixed(2)}
               </p>
             </div>
-            <div className='bg-purple-100 p-3 rounded-lg'>
-              <CurrencyDollarIcon className='h-6 w-6 text-purple-600' />
+            <div className="bg-purple-100 p-3 rounded-lg">
+              <CurrencyDollarIcon className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>Amount Paid</p>
-              <p className='text-2xl font-bold text-green-600 mt-1'>
+              <p className="text-sm text-gray-600">Amount Paid</p>
+              <p className="text-2xl font-bold text-green-600 mt-1">
                 ${stats.totalPaid.toFixed(2)}
               </p>
             </div>
-            <div className='bg-green-100 p-3 rounded-lg'>
-              <BanknotesIcon className='h-6 w-6 text-green-600' />
+            <div className="bg-green-100 p-3 rounded-lg">
+              <BanknotesIcon className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>Amount Owed</p>
-              <p className='text-2xl font-bold text-red-600 mt-1'>
+              <p className="text-sm text-gray-600">Amount Owed</p>
+              <p className="text-2xl font-bold text-red-600 mt-1">
                 ${stats.totalOwed.toFixed(2)}
               </p>
             </div>
-            <div className='bg-red-100 p-3 rounded-lg'>
-              <DocumentTextIcon className='h-6 w-6 text-red-600' />
+            <div className="bg-red-100 p-3 rounded-lg">
+              <DocumentTextIcon className="h-6 w-6 text-red-600" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200'>
-        <div className='border-b border-gray-200'>
-          <nav className='flex -mb-px'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("purchases")}
               className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
@@ -532,7 +540,7 @@ const Purchases = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <ClipboardDocumentListIcon className='h-5 w-5' />
+              <ClipboardDocumentListIcon className="h-5 w-5" />
               Purchases
             </button>
             <button
@@ -543,7 +551,7 @@ const Purchases = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <UserGroupIcon className='h-5 w-5' />
+              <UserGroupIcon className="h-5 w-5" />
               Suppliers ({suppliers.length})
             </button>
             <button
@@ -554,7 +562,7 @@ const Purchases = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <ChartBarIcon className='h-5 w-5' />
+              <ChartBarIcon className="h-5 w-5" />
               Payment History
             </button>
           </nav>
@@ -562,38 +570,38 @@ const Purchases = () => {
 
         {/* Purchases Tab */}
         {activeTab === "purchases" && (
-          <div className='p-6'>
+          <div className="p-6">
             {/* Filters */}
-            <div className='mb-6 space-y-4'>
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-                <div className='relative'>
-                  <MagnifyingGlassIcon className='absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400' />
+            <div className="mb-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
-                    type='text'
-                    placeholder='Search purchases...'
+                    type="text"
+                    placeholder="Search purchases..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className='w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                    className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>
 
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 >
-                  <option value='all'>All Status</option>
-                  <option value='paid'>Paid</option>
-                  <option value='partial'>Partial Payment</option>
-                  <option value='pending'>Pending Payment</option>
+                  <option value="all">All Status</option>
+                  <option value="paid">Paid</option>
+                  <option value="partial">Partial Payment</option>
+                  <option value="pending">Pending Payment</option>
                 </select>
 
                 <select
                   value={filterSupplier}
                   onChange={(e) => setFilterSupplier(e.target.value)}
-                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 >
-                  <option value='all'>All Suppliers</option>
+                  <option value="all">All Suppliers</option>
                   {suppliers.map((supplier) => (
                     <option key={supplier.id} value={supplier.company}>
                       {supplier.company}
@@ -603,64 +611,64 @@ const Purchases = () => {
 
                 <button
                   onClick={() => setShowSupplierModal(true)}
-                  className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2'
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
                 >
-                  <PlusIcon className='h-5 w-5' />
+                  <PlusIcon className="h-5 w-5" />
                   Add Supplier
                 </button>
               </div>
             </div>
 
             {/* Purchases Table */}
-            <div className='overflow-x-auto -mx-6 px-6'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
+            <div className="overflow-x-auto -mx-6 px-6">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Invoice #
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Date
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Supplier
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Product
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Quantity
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Total Amount
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Paid
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Owed
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Payment
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {filteredPurchases.length === 0 ? (
                     <tr>
                       <td
-                        colSpan='10'
-                        className='px-6 py-12 text-center text-gray-500'
+                        colSpan="10"
+                        className="px-6 py-12 text-center text-gray-500"
                       >
-                        <div className='flex flex-col items-center'>
-                          <ClipboardDocumentListIcon className='h-12 w-12 text-gray-400 mb-3' />
-                          <p className='text-lg font-medium'>
+                        <div className="flex flex-col items-center">
+                          <ClipboardDocumentListIcon className="h-12 w-12 text-gray-400 mb-3" />
+                          <p className="text-lg font-medium">
                             No purchases found
                           </p>
-                          <p className='text-sm'>
+                          <p className="text-sm">
                             Try adjusting your search or filters
                           </p>
                         </div>
@@ -668,32 +676,32 @@ const Purchases = () => {
                     </tr>
                   ) : (
                     filteredPurchases.map((purchase) => (
-                      <tr key={purchase.id} className='hover:bg-gray-50'>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                      <tr key={purchase.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {purchase.invoiceNumber}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(purchase.purchaseDate).toLocaleDateString()}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {purchase.supplier}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {purchase.product}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {purchase.quantity}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                           ${purchase.totalAmount.toFixed(2)}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                           ${purchase.amountPaid.toFixed(2)}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">
                           ${purchase.amountOwed.toFixed(2)}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
                               purchase.paymentStatus
@@ -702,27 +710,27 @@ const Purchases = () => {
                             {purchase.paymentStatus}
                           </span>
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
-                          <div className='flex space-x-2'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
                             <button
                               onClick={() => {
                                 setSelectedPurchase(purchase);
                                 setShowDetailsModal(true);
                               }}
-                              className='text-blue-600 hover:text-blue-900'
-                              title='View Details'
+                              className="text-blue-600 hover:text-blue-900"
+                              title="View Details"
                             >
-                              <EyeIcon className='h-5 w-5' />
+                              <EyeIcon className="h-5 w-5" />
                             </button>
                             <button
                               onClick={() => {
                                 setSelectedPurchase(purchase);
                                 setShowEditModal(true);
                               }}
-                              className='text-amber-600 hover:text-amber-900'
-                              title='Edit Purchase'
+                              className="text-amber-600 hover:text-amber-900"
+                              title="Edit Purchase"
                             >
-                              <PencilIcon className='h-5 w-5' />
+                              <PencilIcon className="h-5 w-5" />
                             </button>
                             {purchase.amountOwed > 0 && (
                               <button
@@ -730,18 +738,18 @@ const Purchases = () => {
                                   setSelectedPurchase(purchase);
                                   setShowPaymentModal(true);
                                 }}
-                                className='text-green-600 hover:text-green-900'
-                                title='Add Payment'
+                                className="text-green-600 hover:text-green-900"
+                                title="Add Payment"
                               >
-                                <BanknotesIcon className='h-5 w-5' />
+                                <BanknotesIcon className="h-5 w-5" />
                               </button>
                             )}
                             <button
                               onClick={() => handleDeletePurchase(purchase.id)}
-                              className='text-red-600 hover:text-red-900'
-                              title='Delete Purchase'
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete Purchase"
                             >
-                              <TrashIcon className='h-5 w-5' />
+                              <TrashIcon className="h-5 w-5" />
                             </button>
                           </div>
                         </td>
@@ -756,77 +764,77 @@ const Purchases = () => {
 
         {/* Suppliers Tab */}
         {activeTab === "suppliers" && (
-          <div className='p-6'>
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {suppliers.map((supplier) => (
                 <div
                   key={supplier.id}
-                  className='bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow'
+                  className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
                 >
-                  <div className='flex items-start justify-between mb-4'>
-                    <div className='flex items-center gap-3'>
-                      <div className='bg-amber-100 p-3 rounded-full'>
-                        <UserGroupIcon className='h-6 w-6 text-amber-600' />
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-amber-100 p-3 rounded-full">
+                        <UserGroupIcon className="h-6 w-6 text-amber-600" />
                       </div>
                       <div>
-                        <h3 className='text-lg font-semibold text-gray-900'>
+                        <h3 className="text-lg font-semibold text-gray-900">
                           {supplier.name}
                         </h3>
-                        <p className='text-sm text-gray-600'>
+                        <p className="text-sm text-gray-600">
                           {supplier.company}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className='space-y-3'>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Total Purchases:</span>
-                      <span className='font-semibold text-gray-900'>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Total Purchases:</span>
+                      <span className="font-semibold text-gray-900">
                         {supplier.totalPurchases}
                       </span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Total Amount:</span>
-                      <span className='font-semibold text-gray-900'>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Total Amount:</span>
+                      <span className="font-semibold text-gray-900">
                         ${supplier.totalAmount.toLocaleString()}
                       </span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Amount Paid:</span>
-                      <span className='font-semibold text-green-600'>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Amount Paid:</span>
+                      <span className="font-semibold text-green-600">
                         ${supplier.amountPaid.toLocaleString()}
                       </span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Amount Owed:</span>
-                      <span className='font-semibold text-red-600'>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Amount Owed:</span>
+                      <span className="font-semibold text-red-600">
                         ${supplier.amountOwed.toLocaleString()}
                       </span>
                     </div>
-                    <div className='pt-3 border-t border-gray-200'>
-                      <div className='flex justify-between text-xs text-gray-500'>
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="flex justify-between text-xs text-gray-500">
                         <span>Credit Limit:</span>
                         <span>${supplier.creditLimit.toLocaleString()}</span>
                       </div>
-                      <div className='flex justify-between text-xs text-gray-500 mt-1'>
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
                         <span>Payment Terms:</span>
                         <span>{supplier.paymentTerms}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className='mt-4 flex gap-2'>
+                  <div className="mt-4 flex gap-2">
                     <button
                       onClick={() => {
                         setSelectedSupplier(supplier);
                         setShowDetailsModal(true);
                       }}
-                      className='flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200'
+                      className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                     >
                       View Details
                     </button>
-                    <button className='flex-1 px-3 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700'>
+                    <button className="flex-1 px-3 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700">
                       Contact
                     </button>
                   </div>
@@ -838,56 +846,56 @@ const Purchases = () => {
 
         {/* Payment History Tab */}
         {activeTab === "history" && (
-          <div className='p-6'>
-            <div className='overflow-x-auto -mx-6 px-6'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
+          <div className="p-6">
+            <div className="overflow-x-auto -mx-6 px-6">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Date
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Invoice #
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Supplier
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Amount
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Method
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Reference
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Notes
                     </th>
                   </tr>
                 </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {paymentHistory.map((payment) => (
-                    <tr key={payment.id} className='hover:bg-gray-50'>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                    <tr key={payment.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(payment.paymentDate).toLocaleDateString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {payment.invoiceNumber}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {payment.supplier}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                         ${payment.amount.toFixed(2)}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
                         {payment.paymentMethod.replace("_", " ")}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {payment.reference}
                       </td>
-                      <td className='px-6 py-4 text-sm text-gray-500'>
+                      <td className="px-6 py-4 text-sm text-gray-500">
                         {payment.notes}
                       </td>
                     </tr>
@@ -901,27 +909,27 @@ const Purchases = () => {
 
       {/* Add Purchase Modal */}
       {showAddPurchaseModal && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'>
-            <div className='p-6 border-b border-gray-200 flex justify-between items-center'>
-              <h2 className='text-2xl font-bold text-gray-900'>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
                 Add New Purchase
               </h2>
               <button
                 onClick={() => setShowAddPurchaseModal(false)}
-                className='text-gray-500 hover:text-gray-700'
+                className="text-gray-500 hover:text-gray-700"
               >
-                <XMarkIcon className='h-6 w-6' />
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <div className='p-6'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Invoice Number *
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newPurchase.invoiceNumber}
                     onChange={(e) =>
                       setNewPurchase({
@@ -929,17 +937,17 @@ const Purchases = () => {
                         invoiceNumber: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='INV-2024-001'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="INV-2024-001"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Purchase Date *
                   </label>
                   <input
-                    type='date'
+                    type="date"
                     value={newPurchase.purchaseDate}
                     onChange={(e) =>
                       setNewPurchase({
@@ -947,12 +955,12 @@ const Purchases = () => {
                         purchaseDate: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Supplier *
                   </label>
                   <select
@@ -963,9 +971,9 @@ const Purchases = () => {
                         supplier: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
-                    <option value=''>Select supplier</option>
+                    <option value="">Select supplier</option>
                     {suppliers.map((supplier) => (
                       <option key={supplier.id} value={supplier.company}>
                         {supplier.company}
@@ -975,11 +983,11 @@ const Purchases = () => {
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Product *
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newPurchase.product}
                     onChange={(e) =>
                       setNewPurchase({
@@ -987,17 +995,17 @@ const Purchases = () => {
                         product: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='Product name'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="Product name"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Quantity *
                   </label>
                   <input
-                    type='number'
+                    type="number"
                     value={newPurchase.quantity}
                     onChange={(e) =>
                       setNewPurchase({
@@ -1005,18 +1013,18 @@ const Purchases = () => {
                         quantity: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='0'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Unit Price ($) *
                   </label>
                   <input
-                    type='number'
-                    step='0.01'
+                    type="number"
+                    step="0.01"
                     value={newPurchase.unitPrice}
                     onChange={(e) =>
                       setNewPurchase({
@@ -1024,18 +1032,18 @@ const Purchases = () => {
                         unitPrice: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='0.00'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0.00"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tax (%)
                   </label>
                   <input
-                    type='number'
-                    step='0.01'
+                    type="number"
+                    step="0.01"
                     value={newPurchase.tax}
                     onChange={(e) =>
                       setNewPurchase({
@@ -1043,18 +1051,18 @@ const Purchases = () => {
                         tax: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='0'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Discount ($)
                   </label>
                   <input
-                    type='number'
-                    step='0.01'
+                    type="number"
+                    step="0.01"
                     value={newPurchase.discount}
                     onChange={(e) =>
                       setNewPurchase({
@@ -1062,18 +1070,18 @@ const Purchases = () => {
                         discount: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='0.00'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0.00"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Shipping Cost ($)
                   </label>
                   <input
-                    type='number'
-                    step='0.01'
+                    type="number"
+                    step="0.01"
                     value={newPurchase.shippingCost}
                     onChange={(e) =>
                       setNewPurchase({
@@ -1081,13 +1089,13 @@ const Purchases = () => {
                         shippingCost: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='0.00'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0.00"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Payment Method *
                   </label>
                   <select
@@ -1098,17 +1106,17 @@ const Purchases = () => {
                         paymentMethod: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
-                    <option value='cash'>Cash</option>
-                    <option value='bank_transfer'>Bank Transfer</option>
-                    <option value='check'>Check</option>
-                    <option value='credit'>Credit</option>
+                    <option value="cash">Cash</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="check">Check</option>
+                    <option value="credit">Credit</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Payment Status *
                   </label>
                   <select
@@ -1119,16 +1127,16 @@ const Purchases = () => {
                         paymentStatus: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
-                    <option value='pending'>Pending</option>
-                    <option value='partial'>Partial Payment</option>
-                    <option value='paid'>Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="partial">Partial Payment</option>
+                    <option value="paid">Paid</option>
                   </select>
                 </div>
 
-                <div className='md:col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Notes
                   </label>
                   <textarea
@@ -1139,52 +1147,52 @@ const Purchases = () => {
                         notes: e.target.value,
                       })
                     }
-                    rows='3'
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='Additional notes...'
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="Additional notes..."
                   ></textarea>
                 </div>
               </div>
 
               {/* Purchase Summary */}
               {newPurchase.quantity > 0 && newPurchase.unitPrice > 0 && (
-                <div className='mt-6 p-4 bg-gray-50 rounded-lg'>
-                  <h3 className='text-lg font-semibold text-gray-900 mb-3'>
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
                     Purchase Summary
                   </h3>
-                  <div className='space-y-2'>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Subtotal:</span>
-                      <span className='font-semibold text-gray-900'>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-semibold text-gray-900">
                         ${calculatePurchaseTotals().subtotal}
                       </span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">
                         Tax ({newPurchase.tax}%):
                       </span>
-                      <span className='font-semibold text-gray-900'>
+                      <span className="font-semibold text-gray-900">
                         ${calculatePurchaseTotals().taxAmount}
                       </span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Discount:</span>
-                      <span className='font-semibold text-red-600'>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Discount:</span>
+                      <span className="font-semibold text-red-600">
                         -${newPurchase.discount}
                       </span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Shipping:</span>
-                      <span className='font-semibold text-gray-900'>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Shipping:</span>
+                      <span className="font-semibold text-gray-900">
                         ${newPurchase.shippingCost}
                       </span>
                     </div>
-                    <div className='pt-2 border-t border-gray-300'>
-                      <div className='flex justify-between'>
-                        <span className='font-bold text-gray-900'>
+                    <div className="pt-2 border-t border-gray-300">
+                      <div className="flex justify-between">
+                        <span className="font-bold text-gray-900">
                           Total Amount:
                         </span>
-                        <span className='text-xl font-bold text-amber-600'>
+                        <span className="text-xl font-bold text-amber-600">
                           ${calculatePurchaseTotals().total}
                         </span>
                       </div>
@@ -1193,16 +1201,16 @@ const Purchases = () => {
                 </div>
               )}
             </div>
-            <div className='p-6 border-t border-gray-200 flex justify-end gap-4'>
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
               <button
                 onClick={() => setShowAddPurchaseModal(false)}
-                className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50'
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddPurchase}
-                className='px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700'
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
               >
                 Add Purchase
               </button>
@@ -1213,27 +1221,27 @@ const Purchases = () => {
 
       {/* Add Supplier Modal */}
       {showSupplierModal && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
-            <div className='p-6 border-b border-gray-200 flex justify-between items-center'>
-              <h2 className='text-2xl font-bold text-gray-900'>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
                 Add New Supplier
               </h2>
               <button
                 onClick={() => setShowSupplierModal(false)}
-                className='text-gray-500 hover:text-gray-700'
+                className="text-gray-500 hover:text-gray-700"
               >
-                <XMarkIcon className='h-6 w-6' />
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <div className='p-6'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Contact Name *
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newSupplier.name}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1241,17 +1249,17 @@ const Purchases = () => {
                         name: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='Ahmed Hassan'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="Ahmed Hassan"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Company Name *
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newSupplier.company}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1259,17 +1267,17 @@ const Purchases = () => {
                         company: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='Company Name Ltd'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="Company Name Ltd"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email
                   </label>
                   <input
-                    type='email'
+                    type="email"
                     value={newSupplier.email}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1277,17 +1285,17 @@ const Purchases = () => {
                         email: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='email@example.com'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="email@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Phone *
                   </label>
                   <input
-                    type='tel'
+                    type="tel"
                     value={newSupplier.phone}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1295,17 +1303,17 @@ const Purchases = () => {
                         phone: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='+93 700 123 456'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="+93 700 123 456"
                   />
                 </div>
 
-                <div className='md:col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Address
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newSupplier.address}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1313,17 +1321,17 @@ const Purchases = () => {
                         address: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='City, Country'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="City, Country"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tax ID
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newSupplier.taxId}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1331,17 +1339,17 @@ const Purchases = () => {
                         taxId: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='TIN-12345'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="TIN-12345"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Bank Account
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newSupplier.bankAccount}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1349,17 +1357,17 @@ const Purchases = () => {
                         bankAccount: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='Account number'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="Account number"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Credit Limit ($)
                   </label>
                   <input
-                    type='number'
+                    type="number"
                     value={newSupplier.creditLimit}
                     onChange={(e) =>
                       setNewSupplier({
@@ -1367,13 +1375,13 @@ const Purchases = () => {
                         creditLimit: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='0'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Payment Terms (days)
                   </label>
                   <select
@@ -1384,17 +1392,17 @@ const Purchases = () => {
                         paymentTerms: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
-                    <option value='15'>15 days</option>
-                    <option value='30'>30 days</option>
-                    <option value='45'>45 days</option>
-                    <option value='60'>60 days</option>
+                    <option value="15">15 days</option>
+                    <option value="30">30 days</option>
+                    <option value="45">45 days</option>
+                    <option value="60">60 days</option>
                   </select>
                 </div>
 
-                <div className='md:col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Notes
                   </label>
                   <textarea
@@ -1405,23 +1413,23 @@ const Purchases = () => {
                         notes: e.target.value,
                       })
                     }
-                    rows='3'
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-                    placeholder='Additional notes...'
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="Additional notes..."
                   ></textarea>
                 </div>
               </div>
             </div>
-            <div className='p-6 border-t border-gray-200 flex justify-end gap-4'>
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
               <button
                 onClick={() => setShowSupplierModal(false)}
-                className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50'
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddSupplier}
-                className='px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700'
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
               >
                 Add Supplier
               </button>
@@ -1432,111 +1440,113 @@ const Purchases = () => {
 
       {/* Purchase Details Modal */}
       {showDetailsModal && selectedPurchase && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto'>
-            <div className='p-6 border-b border-gray-200 flex justify-between items-center'>
-              <h2 className='text-2xl font-bold text-gray-900'>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
                 Purchase Details
               </h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className='text-gray-500 hover:text-gray-700'
+                className="text-gray-500 hover:text-gray-700"
               >
-                <XMarkIcon className='h-6 w-6' />
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <div className='p-6'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Invoice Number
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     {selectedPurchase.invoiceNumber}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Purchase Date
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
-                    {new Date(selectedPurchase.purchaseDate).toLocaleDateString()}
+                  <p className="text-lg font-semibold text-gray-900">
+                    {new Date(
+                      selectedPurchase.purchaseDate
+                    ).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Supplier
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     {selectedPurchase.supplier}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Product
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     {selectedPurchase.product}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Quantity
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     {selectedPurchase.quantity} units
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Unit Price
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     ${selectedPurchase.unitPrice}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Subtotal
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     ${selectedPurchase.subtotal.toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Tax
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     ${selectedPurchase.tax.toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Discount
                   </h3>
-                  <p className='text-lg font-semibold text-red-600'>
+                  <p className="text-lg font-semibold text-red-600">
                     -${selectedPurchase.discount.toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Shipping Cost
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     ${selectedPurchase.shippingCost.toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Total Amount
                   </h3>
-                  <p className='text-2xl font-bold text-amber-600'>
+                  <p className="text-2xl font-bold text-amber-600">
                     ${selectedPurchase.totalAmount.toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Payment Status
                   </h3>
                   <span
@@ -1548,51 +1558,51 @@ const Purchases = () => {
                   </span>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Amount Paid
                   </h3>
-                  <p className='text-lg font-semibold text-green-600'>
+                  <p className="text-lg font-semibold text-green-600">
                     ${selectedPurchase.amountPaid.toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Amount Owed
                   </h3>
-                  <p className='text-lg font-semibold text-red-600'>
+                  <p className="text-lg font-semibold text-red-600">
                     ${selectedPurchase.amountOwed.toFixed(2)}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Payment Method
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900 capitalize'>
+                  <p className="text-lg font-semibold text-gray-900 capitalize">
                     {selectedPurchase.paymentMethod.replace("_", " ")}
                   </p>
                 </div>
                 <div>
-                  <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Created By
                   </h3>
-                  <p className='text-lg font-semibold text-gray-900'>
+                  <p className="text-lg font-semibold text-gray-900">
                     {selectedPurchase.createdBy}
                   </p>
                 </div>
                 {selectedPurchase.notes && (
-                  <div className='md:col-span-2'>
-                    <h3 className='text-sm font-medium text-gray-500 mb-1'>
+                  <div className="md:col-span-2">
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">
                       Notes
                     </h3>
-                    <p className='text-gray-900'>{selectedPurchase.notes}</p>
+                    <p className="text-gray-900">{selectedPurchase.notes}</p>
                   </div>
                 )}
               </div>
             </div>
-            <div className='p-6 border-t border-gray-200 flex justify-end'>
+            <div className="p-6 border-t border-gray-200 flex justify-end">
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className='px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700'
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
               >
                 Close
               </button>

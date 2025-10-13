@@ -34,14 +34,26 @@ function Product({ properties }) {
         firstRow={
           <div className=" w-full flex  justify-between ">
             <div className=" w-[300px]">
-              <SearchInput />
+              <SearchInput placeholder="جستجو کنید" />
+            </div>
+            <div className=" w-[300px]">
+              <Select
+                id="sort"
+                name="sort"
+                options={[
+                  { value: "نام جنس" },
+                  { value: "واحد جنس" },
+                  { value: "همه" },
+                  { value: "واحد" },
+                ]}
+              />
             </div>
           </div>
         }
       >
         <TableHeader headerData={headers} />
         <TableBody>
-          {properties.map((el) => (
+          {properties?.map((el) => (
             <TableRow>
               <TableColumn>{el?.id}</TableColumn>
               <TableColumn>{el?.date}</TableColumn>

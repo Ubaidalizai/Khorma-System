@@ -1,14 +1,21 @@
+import { useState } from "react";
 import { RiArrowDownSLine } from "react-icons/ri";
-import { BiDownArrow } from "react-icons/bi";
-import React, { useState } from "react";
 import { useClickOutSide } from "../hooks/useClickOutSide";
 
-function Select({ label, error, id, options, register, name }) {
+function Select({
+  label,
+  error,
+  id,
+  options,
+  register,
+  name,
+  defaultSelected,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState("");
   const ref = useClickOutSide(() => setIsOpen(false));
-  const filteredOptions = options.filter((opt) =>
+  const filteredOptions = options?.filter((opt) =>
     opt.value.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -31,7 +38,9 @@ function Select({ label, error, id, options, register, name }) {
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full bg-transparent capitalize  placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-4 py-2 md:py-[14px] transition duration-300 ease focus:outline-none hover:border-slate-300 shadow-sm focus:shadow cursor-pointer flex justify-between items-center`}
       >
-        <span>{selected || "Select an option"}</span>
+        <span className=" text-lg font-medium">
+          {selected || defaultSelected || "انتخاب نکردید"}
+        </span>
         <RiArrowDownSLine
           className={` ${
             isOpen ? " rotate-180" : ""

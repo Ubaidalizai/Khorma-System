@@ -6,8 +6,20 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
+import Table from "../components/Table";
+import TableHeader from "./../components/TableHeader";
+import TableBody from "./../components/TableBody";
+import TableRow from "./../components/TableRow";
+import TableColumn from "./../components/TableColumn";
 
 const Dashboard = () => {
+  const headers = [
+    { title: "نوع" },
+    { title: "محصول" },
+    { title: "تعداد" },
+    { title: "مبلغ" },
+    { title: "زمان" },
+  ];
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalSales: 0,
@@ -63,42 +75,19 @@ const Dashboard = () => {
   }, []);
 
   const StatCard = ({ title, value, icon: Icon, color, change }) => (
-    <div
-      className="card hover-lift"
-      style={{
-        background:
-          "linear-gradient(135deg, var(--beige-light), var(--surface))",
-        borderLeft: "4px solid var(--primary-brown)",
-        padding: "var(--space-6)",
-      }}
-    >
+    <div className="card hover-lift group relative overflow-hidden">
       <div className="flex items-center justify-between">
         <div style={{ textAlign: "right" }}>
-          <p
-            className="font-medium"
-            style={{
-              fontSize: "var(--body-small)",
-              color: "var(--text-medium)",
-              marginBottom: "var(--space-2)",
-            }}
-          >
+          <p className="text-sm font-medium text-muted-foreground mb-1">
             {title}
           </p>
-          <p
-            className="font-bold"
-            style={{
-              fontSize: "var(--h1-size)",
-              color: "var(--text-dark)",
-            }}
-          >
-            {value}
-          </p>
+          <p className="text-3xl font-bold text-foreground">{value}</p>
           {change && (
             <p
-              className="text-sm"
+              className="text-sm mt-2 font-medium"
               style={{
-                marginTop: "var(--space-1)",
-                color: change > 0 ? "var(--success-green)" : "var(--error-red)",
+                color:
+                  change > 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-1))",
               }}
             >
               {change > 0 ? "+" : ""}
@@ -106,10 +95,14 @@ const Dashboard = () => {
             </p>
           )}
         </div>
-        <div className="p-3 rounded-full" style={{ backgroundColor: color }}>
+        <div
+          className="p-3 rounded-full transition-transform group-hover:scale-110"
+          style={{ backgroundColor: color }}
+        >
           <Icon className="h-8 w-8 text-white" />
         </div>
       </div>
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 
@@ -198,57 +191,28 @@ const Dashboard = () => {
           </h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>نوع</th>
-                <th>محصول</th>
-                <th>تعداد</th>
-                <th>مبلغ</th>
-                <th>زمان</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTransactions.map((transaction) => (
-                <tr key={transaction.id}>
-                  <td>
-                    <span
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      style={{
-                        backgroundColor:
-                          transaction.type === "Sale"
-                            ? "var(--success-light)"
-                            : "var(--info-light)",
-                        color:
-                          transaction.type === "Sale"
-                            ? "var(--success-green)"
-                            : "var(--info-blue)",
-                      }}
-                    >
-                      {transaction.type === "Sale" ? (
-                        <CheckCircleIcon className="w-3 h-3 ml-1" />
-                      ) : (
-                        <ShoppingCartIcon className="w-3 h-3 ml-1" />
-                      )}
-                      {transaction.type === "Sale" ? "فروش" : "خرید"}
-                    </span>
-                  </td>
-                  <td style={{ color: "var(--text-dark)" }}>
-                    {transaction.product}
-                  </td>
-                  <td style={{ color: "var(--text-dark)" }}>
-                    {transaction.quantity}
-                  </td>
-                  <td style={{ color: "var(--text-dark)" }}>
-                    {transaction.amount.toLocaleString()} تومان
-                  </td>
-                  <td style={{ color: "var(--text-medium)" }}>
-                    {transaction.time}
-                  </td>
-                </tr>
+          <Table>
+            <TableHeader headerData={headers} />
+            <TableBody>
+              {recentTransactions.map((tra) => (
+                <TableRow key={tra.id}>
+                  <TableColumn
+                    className={`${
+                      tra.type === "Purchase"
+                        ? " text-orange-300"
+                        : "text-green-400"
+                    }`}
+                  >
+                    {tra.type}
+                  </TableColumn>
+                  <TableColumn>{tra.product}</TableColumn>
+                  <TableColumn>{tra.quantity}</TableColumn>
+                  <TableColumn>{tra.amount}</TableColumn>
+                  <TableColumn>{tra.time}</TableColumn>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 

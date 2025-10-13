@@ -2,8 +2,8 @@ import React from "react";
 
 function TableHeader({ headerData }) {
   return (
-    <thead className={` w-full  h-12`}>
-      <tr className=" bg-dategold-400 bg-slate-100 text-slate-700  ">
+    <thead className={` w-full  h-12 rounded-sm`}>
+      <tr className=" bg-dategold-300 text-slate-200 divide-x-1 divide-slate-200/20">
         {headerData.map((header) => (
           <th
             key={header.title}
