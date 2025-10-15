@@ -38,7 +38,7 @@ function Select({
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full bg-transparent capitalize  placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-4 py-2 md:py-[14px] transition duration-300 ease focus:outline-none hover:border-slate-300 shadow-sm focus:shadow cursor-pointer flex justify-between items-center`}
       >
-        <span className=" text-lg font-medium">
+        <span className=" text-[16px] font-[400]">
           {selected || defaultSelected || "انتخاب نکردید"}
         </span>
         <RiArrowDownSLine

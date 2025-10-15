@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   CubeIcon,
   ShoppingCartIcon,
@@ -11,6 +12,8 @@ import TableHeader from "./../components/TableHeader";
 import TableBody from "./../components/TableBody";
 import TableRow from "./../components/TableRow";
 import TableColumn from "./../components/TableColumn";
+import { TrendingDown, TrendingUp } from "lucide-react";
+import { formatCurrency } from "./../utilies/helper";
 
 const Dashboard = () => {
   const headers = [
@@ -74,37 +77,75 @@ const Dashboard = () => {
     ]);
   }, []);
 
-  const StatCard = ({ title, value, icon: Icon, color, change }) => (
-    <div className="card hover-lift group relative overflow-hidden">
-      <div className="flex items-center justify-between">
-        <div style={{ textAlign: "right" }}>
-          <p className="text-sm font-medium text-muted-foreground mb-1">
-            {title}
-          </p>
-          <p className="text-3xl font-bold text-foreground">{value}</p>
-          {change && (
-            <p
-              className="text-sm mt-2 font-medium"
-              style={{
-                color:
-                  change > 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-1))",
-              }}
-            >
-              {change > 0 ? "+" : ""}
-              {change}% از ماه گذشته
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    color = "#6366F1",
+    change,
+  }) => {
+    const isPositive = change > 0;
+    return (
+      <motion.div
+        whileHover={{ y: -4 }}
+        className="relative overflow-hidden  rounded-2xl bg-white dark:bg-neutral-900 p-5 shadow-sm transition-all hover:shadow-lg border border-neutral-100 dark:border-neutral-800"
+      >
+        <div className="flex w-full h-full  flex-col items-center  justify-between">
+          {/* Icon Container */}
+          <div
+            className="p-4   rounded-2xl shadow-inner flex items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${color}33, ${color}99)`,
+            }}
+          >
+            <Icon
+              className="h-8 w-8 text-white drop-shadow-sm"
+              style={{ color }}
+            />
+          </div>
+
+          {/* Left content */}
+          <div className="flex flex-col">
+            <p className="text-sm text-center font-medium text-neutral-500 dark:text-neutral-400">
+              {title}
             </p>
-          )}
+            <h3 className="mt-1 text-center text-3xl font-semibold text-slate-700 dark:text-white">
+              {value}
+            </h3>
+
+            {change && (
+              <div
+                className={`mt-2 text-center  w-full  flex items-center gap-1 text-sm font-medium ${
+                  isPositive
+                    ? "text-green-500 dark:text-green-400"
+                    : "text-red-500 dark:text-red-400"
+                }`}
+              >
+                <div className=" flex">
+                  {isPositive ? (
+                    <TrendingUp size={24} />
+                  ) : (
+                    <TrendingDown size={24} />
+                  )}
+                  <span className="">
+                    {isPositive ? "+" : ""}%{change} از ماه قبل
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Subtle hover glow */}
         <div
-          className="p-3 rounded-full transition-transform group-hover:scale-110"
-          style={{ backgroundColor: color }}
-        >
-          <Icon className="h-8 w-8 text-white" />
-        </div>
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-    </div>
-  );
+          className="absolute  inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at top right, ${color}22, transparent 70%)`,
+          }}
+        />
+      </motion.div>
+    );
+  };
 
   return (
     <div
@@ -151,14 +192,14 @@ const Dashboard = () => {
         />
         <StatCard
           title="کل فروش‌ها"
-          value={`${stats.totalSales.toLocaleString()} تومان`}
+          value={formatCurrency(stats.totalSales)}
           icon={CurrencyDollarIcon}
           color="var(--success-green)"
           change={12.5}
         />
         <StatCard
           title="کل خریدها"
-          value={`${stats.totalPurchases.toLocaleString()} تومان`}
+          value={formatCurrency(stats.totalPurchases)}
           icon={ShoppingCartIcon}
           color="var(--amber)"
           change={-2.1}

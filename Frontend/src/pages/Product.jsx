@@ -14,9 +14,12 @@ import Input from "../components/Input";
 import Select from "../components/Select";
 import NumberInput from "../components/NumberInput";
 import TextArea from "../components/TextArea";
-import { motion } from "framer-motion";
+// removed unused motion import
 import Confirmation from "../components/Confirmation";
 import { useState } from "react";
+import { createPortal } from "react-dom";
+import GloableModal from "../components/GloableModal";
+import EditProduct from "../components/EditProduct";
 const headers = [
   { title: "نمبر مسلسل" },
   { title: "تاریخ" },
@@ -27,7 +30,15 @@ const headers = [
   { title: "عملیات" },
 ];
 
-function Product({ properties }) {
+function Product({ properties: productList }) {
+  const [items, setItems] = useState(productList || []);
+  const [isEditable, setIsEditable] = useState(false);
+  const [selectedPro, setSelectedPro] = useState(null);
+  const handleDelete = (item) => {
+    // perform delete
+    setItems((curr) => curr.filter((i) => i.id !== item.id));
+  };
+
   return (
     <section className="w-full">
       <Table
@@ -53,67 +64,87 @@ function Product({ properties }) {
       >
         <TableHeader headerData={headers} />
         <TableBody>
-          {properties?.map((el) => (
-            <TableRow>
+          {items?.map((el) => (
+            <TableRow key={el.id}>
               <TableColumn>{el?.id}</TableColumn>
               <TableColumn>{el?.date}</TableColumn>
               <TableColumn>{el?.itemName}</TableColumn>
               <TableColumn>{el?.unit}</TableColumn>
               <TableColumn>{el?.minQuantity}</TableColumn>
               <TableColumn>{el?.description}</TableColumn>
-              <div
-                className={`${
-                  "itemavs" + el?.id + new Date(el?.date).getMilliseconds()
-                } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
-              >
-                <div
-                  className={`  w-full h-full flex justify-center items-center`}
+              <TableColumn>
+                <span
+                  className={`${
+                    "itemavs" + el?.id + new Date(el?.date).getMilliseconds()
+                  } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
                 >
-                  <TableMenuModal>
-                    <Menus>
-                      <Menus.Menu>
-                        <Menus.Toggle id={el?.id} />
-                        <Menus.List
-                          parent={
-                            "itemavs" +
-                            el?.id +
-                            new Date(el?.date).getMilliseconds()
-                          }
-                          id={el?.id}
-                          className="bg-white rounded-lg shadow-xl"
-                        >
-                          <TableMenuModal.Open opens="deplicate">
-                            <Menus.Button icon={<HiSquare2Stack />}>
-                              نمایش
-                            </Menus.Button>
-                          </TableMenuModal.Open>
+                  <div
+                    className={`  w-full h-full flex justify-center items-center`}
+                  >
+                    <TableMenuModal>
+                      <Menus>
+                        <Menus.Menu>
+                          <Menus.Toggle id={el?.id} />
+                          <Menus.List
+                            parent={
+                              "itemavs" +
+                              el?.id +
+                              new Date(el?.date).getMilliseconds()
+                            }
+                            id={el?.id}
+                            className="bg-white rounded-lg shadow-xl"
+                          >
+                            <TableMenuModal.Open opens="deplicate">
+                              <Menus.Button icon={<HiSquare2Stack />}>
+                                نمایش
+                              </Menus.Button>
+                            </TableMenuModal.Open>
 
-                          <TableMenuModal.Open opens="edit">
-                            <Menus.Button icon={<HiPencil />}>
-                              ویرایش
-                            </Menus.Button>
-                          </TableMenuModal.Open>
+                            <TableMenuModal.Open opens="edit">
+                              <Menus.Button icon={<HiPencil />}>
+                                ویرایش
+                              </Menus.Button>
+                            </TableMenuModal.Open>
 
-                          <TableMenuModal.Open opens="delete">
-                            <Menus.Button icon={<HiTrash />}>حذف</Menus.Button>
-                          </TableMenuModal.Open>
-                        </Menus.List>
-                      </Menus.Menu>
+                            <TableMenuModal.Open opens="delete">
+                              <Menus.Button icon={<HiTrash />}>
+                                حذف
+                              </Menus.Button>
+                            </TableMenuModal.Open>
+                          </Menus.List>
+                        </Menus.Menu>
 
-                      <TableMenuModal.Window name="delete" className={""}>
-                        <Confirmation type="delete" />
-                      </TableMenuModal.Window>
-                      <TableMenuModal.Window name="edit" className={``}>
-                        <Confirmation type="edit" />
-                      </TableMenuModal.Window>
-                    </Menus>
-                  </TableMenuModal>
-                </div>
-              </div>
+                        <TableMenuModal.Window name="delete" className={""}>
+                          <Confirmation
+                            type="delete"
+                            handleClick={() => handleDelete(el)}
+                            handleCancel={() => {}}
+                          />
+                        </TableMenuModal.Window>
+                        <TableMenuModal.Window name="edit" className={``}>
+                          <Confirmation
+                            type="edit"
+                            handleClick={() => {
+                              /* implement edit confirmation behavior */
+                              // For demonstration we simply update the description
+                              setSelectedPro(el);
+                              setIsEditable(true);
+                            }}
+                            handleCancel={() => {}}
+                          />
+                        </TableMenuModal.Window>
+                      </Menus>
+                    </TableMenuModal>
+                  </div>
+                </span>
+              </TableColumn>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      <GloableModal open={isEditable} setOpen={setIsEditable}>
+        <EditProduct productId={selectedPro?.id} />
+      </GloableModal>
     </section>
   );
 }

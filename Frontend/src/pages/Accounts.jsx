@@ -270,11 +270,9 @@ const Accounts = () => {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Account Management
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">مدیریت حسابات</h1>
           <p className="text-gray-600 mt-2">
-            Track suppliers, employees, expenses, and payments
+            ردیابی تهیه کننده ها، کارمندان، مصارف و پرداخت ها
           </p>
         </div>
         {activeTab === "expenses" && (
@@ -295,7 +293,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Suppliers</p>
+                  <p className="text-sm text-gray-600">مجموعه تهیه کننده ها</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {supplierStats.totalSuppliers}
                   </p>
@@ -308,7 +306,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Amount Paid</p>
+                  <p className="text-sm text-gray-600">مبلغ پرداخت شده</p>
                   <p className="text-2xl font-bold text-green-600 mt-1">
                     ${supplierStats.totalPaid.toLocaleString()}
                   </p>
@@ -321,7 +319,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Amount Owed</p>
+                  <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
                   <p className="text-2xl font-bold text-red-600 mt-1">
                     ${supplierStats.totalOwed.toLocaleString()}
                   </p>
@@ -334,7 +332,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Active Suppliers</p>
+                  <p className="text-sm text-gray-600">تهیه کننده فعال</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {supplierStats.activeSuppliers}
                   </p>
@@ -352,7 +350,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Employees</p>
+                  <p className="text-sm text-gray-600">تعداد کارمندان</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {employeeStats.totalEmployees}
                   </p>
@@ -365,7 +363,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Salaries</p>
+                  <p className="text-sm text-gray-600">مجموعه معاشات</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${employeeStats.totalSalary.toLocaleString()}
                   </p>
@@ -378,7 +376,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Goods Given</p>
+                  <p className="text-sm text-gray-600">اجناس فروختده شده</p>
                   <p className="text-2xl font-bold text-amber-600 mt-1">
                     ${employeeStats.totalGoodsGiven.toLocaleString()}
                   </p>
@@ -391,7 +389,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Cash Pending</p>
+                  <p className="text-sm text-gray-600">مبالغ معلق</p>
                   <p className="text-2xl font-bold text-red-600 mt-1">
                     ${employeeStats.totalCashPending.toLocaleString()}
                   </p>
@@ -409,7 +407,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Expenses</p>
+                  <p className="text-sm text-gray-600">مجموعه مصارف</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${expenseStats.totalExpenses.toLocaleString()}
                   </p>
@@ -422,7 +420,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">This Month</p>
+                  <p className="text-sm text-gray-600">این ماه</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${expenseStats.thisMonthExpenses.toLocaleString()}
                   </p>
@@ -435,7 +433,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Categories</p>
+                  <p className="text-sm text-gray-600">کتگوری</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {expenseStats.categoriesUsed}
                   </p>
@@ -448,7 +446,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Budget</p>
+                  <p className="text-sm text-gray-600">مجموع سرمایه</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${expenseStats.totalBudget.toLocaleString()}
                   </p>
@@ -466,7 +464,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Payments</p>
+                  <p className="text-sm text-gray-600">مجموع پرداخت ها</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {paymentStats.totalPayments}
                   </p>
@@ -492,7 +490,7 @@ const Accounts = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Received</p>
+                  <p className="text-sm text-gray-600">مجموع دریافتی</p>
                   <p className="text-2xl font-bold text-green-600 mt-1">
                     ${paymentStats.totalReceived.toLocaleString()}
                   </p>
@@ -541,7 +539,7 @@ const Accounts = () => {
               }`}
             >
               <BuildingOfficeIcon className="h-5 w-5" />
-              Supplier Accounts
+              حساب تهیه کننده
             </button>
             <button
               onClick={() => setActiveTab("employees")}
@@ -552,7 +550,7 @@ const Accounts = () => {
               }`}
             >
               <UserIcon className="h-5 w-5" />
-              Employee Accountability
+              جوابگویی کارمند
             </button>
             <button
               onClick={() => setActiveTab("expenses")}
@@ -563,7 +561,7 @@ const Accounts = () => {
               }`}
             >
               <TagIcon className="h-5 w-5" />
-              Expense Management
+              مدیریت مصارف
             </button>
             <button
               onClick={() => setActiveTab("payments")}
@@ -574,7 +572,7 @@ const Accounts = () => {
               }`}
             >
               <BanknotesIcon className="h-5 w-5" />
-              Payment Tracking
+              ردیابی پرداختی
             </button>
           </nav>
         </div>

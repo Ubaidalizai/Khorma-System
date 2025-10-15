@@ -1,29 +1,56 @@
-import { useState, useEffect } from "react";
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  DocumentArrowDownIcon,
-  XMarkIcon,
-  BuildingOfficeIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  ChartBarIcon,
-  DocumentTextIcon,
-  CalendarIcon,
   BanknotesIcon,
+  ChartBarIcon,
   ClipboardDocumentListIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
-import Modal from "../components/Modal";
+import { useState } from "react";
+import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import Button from "../components/Button";
+import Modal from "../components/Modal";
+import Select from "../components/Select";
+import Table from "../components/Table";
+import Confirmation from "./../components/Confirmation";
+import Menus from "./../components/Menu";
+import SearchInput from "./../components/SearchInput";
+import TableBody from "./../components/TableBody";
+import TableColumn from "./../components/TableColumn";
+import TableHeader from "./../components/TableHeader";
+import TableMenuModal from "./../components/TableMenuModal";
+import TableRow from "./../components/TableRow";
 
+const tableHeader = [
+  { title: "نمبر فاکتور" },
+  { title: "تاریخ" },
+  { title: "تهیه کننده" },
+  { title: "جنس" },
+  { title: "مقدار" },
+  { title: "قیمت مجموعی" },
+  { title: "پرداخت شده" },
+  { title: "باقی مانده" },
+  { title: "پرداخت" },
+  { title: "عملیات" },
+];
+const historyHeader = [
+  { title: "تاریخ" },
+  { title: "نمبر فاکتور" },
+  { title: "تهیه کننده" },
+  { title: "مبلغ" },
+  { title: "میتود" },
+  { title: "مراجعه" },
+  { title: "یادداشت" },
+];
 const Purchases = () => {
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
+
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatusOpen, setFilterStatusOpen] = useState(false);
   const [filterSupplier, setFilterSupplier] = useState("all");
+  const [filterSupplierOpen, setFilterSupplierOpen] = useState("all");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [activeTab, setActiveTab] = useState("purchases"); // 'purchases', 'suppliers', 'history'
 
@@ -474,7 +501,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Purchases</p>
+              <p className="text-sm text-gray-600">مجموع خرید</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalPurchases}
               </p>
@@ -488,7 +515,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Amount</p>
+              <p className="text-sm text-gray-600">مجموع کل</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 ${stats.totalAmount.toFixed(2)}
               </p>
@@ -502,7 +529,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Amount Paid</p>
+              <p className="text-sm text-gray-600">مبلغ پرداخت شده</p>
               <p className="text-2xl font-bold text-green-600 mt-1">
                 ${stats.totalPaid.toFixed(2)}
               </p>
@@ -516,7 +543,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Amount Owed</p>
+              <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
               <p className="text-2xl font-bold text-red-600 mt-1">
                 ${stats.totalOwed.toFixed(2)}
               </p>
@@ -541,7 +568,7 @@ const Purchases = () => {
               }`}
             >
               <ClipboardDocumentListIcon className="h-5 w-5" />
-              Purchases
+              خرید
             </button>
             <button
               onClick={() => setActiveTab("suppliers")}
@@ -552,7 +579,7 @@ const Purchases = () => {
               }`}
             >
               <UserGroupIcon className="h-5 w-5" />
-              Suppliers ({suppliers.length})
+              تهیه کننده ({suppliers.length})
             </button>
             <button
               onClick={() => setActiveTab("history")}
@@ -563,7 +590,7 @@ const Purchases = () => {
               }`}
             >
               <ChartBarIcon className="h-5 w-5" />
-              Payment History
+              تاریخچه چرداخت ها
             </button>
           </nav>
         </div>
@@ -572,7 +599,7 @@ const Purchases = () => {
         {activeTab === "purchases" && (
           <div className="p-6">
             {/* Filters */}
-            <div className="mb-6 space-y-4">
+            {/* <div className="mb-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="relative">
                   <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -617,148 +644,148 @@ const Purchases = () => {
                   Add Supplier
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Purchases Table */}
-            <div className="overflow-x-auto -mx-6 px-6">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+
+            <Table
+              firstRow={
+                <div className=" w-full flex gap-1 justify-around  ">
+                  <div className="flex-1 flex items-center justify-start">
+                    <SearchInput placeholder="لطفا جستجو کنید" />
+                  </div>
+                  <div className="flex-1">
+                    <Select
+                      placeholder="تهیه کننده"
+                      options={[
+                        { value: " تمام تهیه کننده" },
+                        { value: "غذا ها" },
+                        { value: "انواع" },
+                        { value: "تعداد" },
+                        { value: "نان" },
+                      ]}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Select
+                      placeholder=" تمام حالات"
+                      options={[
+                        { value: "پرداخت شده ها" },
+                        { value: " پرداخت ها نسبی" },
+                        { value: "پرداخت ها معلق" },
+                      ]}
+                    />
+                  </div>
+                  <div className="flex-1 flex items-center">
+                    <Modal>
+                      <Modal.Toggle>
+                        <Button className="py-[14px] bg-success-green">
+                          اضافه کردن تهیه کننده
+                        </Button>
+                      </Modal.Toggle>
+                      <Modal.Window>
+                        <div className="w-[500px] h-[450px] p-3 bg-white"></div>
+                      </Modal.Window>
+                    </Modal>
+                  </div>
+                </div>
+              }
+            >
+              <TableHeader headerData={tableHeader} />
+              <TableBody>
+                {filteredPurchases.length === 0 ? (
                   <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Invoice #
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Supplier
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Product
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Quantity
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Total Amount
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Paid
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Owed
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Payment
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Actions
-                    </th>
+                    <td
+                      colSpan="10"
+                      className="px-6 py-12 text-center text-gray-500"
+                    >
+                      <div className="flex flex-col items-center">
+                        <ClipboardDocumentListIcon className="h-12 w-12 text-gray-400 mb-3" />
+                        <p className="text-lg font-medium">
+                          No purchases found
+                        </p>
+                        <p className="text-sm">
+                          Try adjusting your search or filters
+                        </p>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredPurchases.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="10"
-                        className="px-6 py-12 text-center text-gray-500"
+                ) : (
+                  filteredPurchases.map((purchase) => (
+                    <TableRow key={purchase.invoiceNumber}>
+                      <TableColumn>{purchase.invoiceNumber}</TableColumn>
+                      <TableColumn>
+                        {new Date(purchase.purchaseDate).toLocaleDateString()}
+                      </TableColumn>
+                      <TableColumn>{purchase.supplier}</TableColumn>
+                      <TableColumn>{purchase.product}</TableColumn>
+                      <TableColumn>{purchase.quantity}</TableColumn>
+                      <TableColumn>
+                        {purchase.totalAmount.toFixed(2)}
+                      </TableColumn>
+                      <TableColumn>
+                        {purchase.amountPaid.toFixed(2)}
+                      </TableColumn>
+                      <TableColumn>
+                        {purchase.amountOwed.toFixed(2)}
+                      </TableColumn>
+                      <TableColumn>{purchase.paymentMethod}</TableColumn>
+                      <TableColumn
+                        className={` relative ${
+                          "pur234chase" +
+                          purchase?.invoiceNumber +
+                          new Date(purchase?.paymentDate).getMilliseconds()
+                        }`}
                       >
-                        <div className="flex flex-col items-center">
-                          <ClipboardDocumentListIcon className="h-12 w-12 text-gray-400 mb-3" />
-                          <p className="text-lg font-medium">
-                            No purchases found
-                          </p>
-                          <p className="text-sm">
-                            Try adjusting your search or filters
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredPurchases.map((purchase) => (
-                      <tr key={purchase.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {purchase.invoiceNumber}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(purchase.purchaseDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {purchase.supplier}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {purchase.product}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {purchase.quantity}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          ${purchase.totalAmount.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                          ${purchase.amountPaid.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">
-                          ${purchase.amountOwed.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
-                              purchase.paymentStatus
-                            )}`}
-                          >
-                            {purchase.paymentStatus}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => {
-                                setSelectedPurchase(purchase);
-                                setShowDetailsModal(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="View Details"
-                            >
-                              <EyeIcon className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedPurchase(purchase);
-                                setShowEditModal(true);
-                              }}
-                              className="text-amber-600 hover:text-amber-900"
-                              title="Edit Purchase"
-                            >
-                              <PencilIcon className="h-5 w-5" />
-                            </button>
-                            {purchase.amountOwed > 0 && (
-                              <button
-                                onClick={() => {
-                                  setSelectedPurchase(purchase);
-                                  setShowPaymentModal(true);
-                                }}
-                                className="text-green-600 hover:text-green-900"
-                                title="Add Payment"
+                        <TableMenuModal>
+                          <Menus>
+                            <Menus.Menu>
+                              <Menus.Toggle id={purchase?.invoiceNumber} />
+                              <Menus.List
+                                parent={
+                                  "pur234chase" +
+                                  purchase?.invoiceNumber +
+                                  new Date(
+                                    purchase?.paymentDate
+                                  ).getMilliseconds()
+                                }
+                                id={purchase?.invoiceNumber}
+                                className="bg-white rounded-lg shadow-xl"
                               >
-                                <BanknotesIcon className="h-5 w-5" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeletePurchase(purchase.id)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete Purchase"
-                            >
-                              <TrashIcon className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                                <TableMenuModal.Open opens="deplicate">
+                                  <Menus.Button icon={<HiSquare2Stack />}>
+                                    نمایش
+                                  </Menus.Button>
+                                </TableMenuModal.Open>
+
+                                <TableMenuModal.Open opens="edit">
+                                  <Menus.Button icon={<HiPencil />}>
+                                    ویرایش
+                                  </Menus.Button>
+                                </TableMenuModal.Open>
+
+                                <TableMenuModal.Open opens="delete">
+                                  <Menus.Button icon={<HiTrash />}>
+                                    حذف
+                                  </Menus.Button>
+                                </TableMenuModal.Open>
+                              </Menus.List>
+                            </Menus.Menu>
+
+                            <TableMenuModal.Window name="delete" className={""}>
+                              <Confirmation type="delete" />
+                            </TableMenuModal.Window>
+                            <TableMenuModal.Window name="edit" className={``}>
+                              <Confirmation type="edit" />
+                            </TableMenuModal.Window>
+                          </Menus>
+                        </TableMenuModal>
+                      </TableColumn>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         )}
 
@@ -767,78 +794,7 @@ const Purchases = () => {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {suppliers.map((supplier) => (
-                <div
-                  key={supplier.id}
-                  className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-amber-100 p-3 rounded-full">
-                        <UserGroupIcon className="h-6 w-6 text-amber-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {supplier.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {supplier.company}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Total Purchases:</span>
-                      <span className="font-semibold text-gray-900">
-                        {supplier.totalPurchases}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Total Amount:</span>
-                      <span className="font-semibold text-gray-900">
-                        ${supplier.totalAmount.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Amount Paid:</span>
-                      <span className="font-semibold text-green-600">
-                        ${supplier.amountPaid.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Amount Owed:</span>
-                      <span className="font-semibold text-red-600">
-                        ${supplier.amountOwed.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="pt-3 border-t border-gray-200">
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>Credit Limit:</span>
-                        <span>${supplier.creditLimit.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>Payment Terms:</span>
-                        <span>{supplier.paymentTerms}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedSupplier(supplier);
-                        setShowDetailsModal(true);
-                      }}
-                      className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                    >
-                      View Details
-                    </button>
-                    <button className="flex-1 px-3 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700">
-                      Contact
-                    </button>
-                  </div>
-                </div>
+                <SupplierComponent supplier={supplier} key={supplier.id} />
               ))}
             </div>
           </div>
@@ -848,7 +804,28 @@ const Purchases = () => {
         {activeTab === "history" && (
           <div className="p-6">
             <div className="overflow-x-auto -mx-6 px-6">
-              <table className="min-w-full divide-y divide-gray-200">
+              <Table>
+                <TableHeader headerData={historyHeader} />
+                <TableBody>
+                  {paymentHistory.map((payment) => (
+                    <TableRow>
+                      <TableColumn>{payment.paymentDate}</TableColumn>
+                      <TableColumn>{payment.invoiceNumber}</TableColumn>
+                      <TableColumn>{payment.supplier}</TableColumn>
+                      <TableColumn className={"text-green-600"}>
+                        {" "}
+                        ${payment.amount.toFixed(2)}
+                      </TableColumn>
+                      <TableColumn>
+                        {payment.paymentMethod.replace("_", " ")}
+                      </TableColumn>
+                      <TableColumn>{payment.reference}</TableColumn>
+                      <TableColumn>{payment.notes}</TableColumn>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {/* <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
@@ -886,7 +863,7 @@ const Purchases = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {payment.supplier}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold ">
                         ${payment.amount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
@@ -901,7 +878,7 @@ const Purchases = () => {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table> */}
             </div>
           </div>
         )}
@@ -1614,4 +1591,76 @@ const Purchases = () => {
   );
 };
 
+const SupplierComponent = ({ supplier }) => {
+  return (
+    <div
+      key={supplier.id}
+      className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-amber-100 p-3 rounded-full">
+            <UserGroupIcon className="h-6 w-6 text-amber-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {supplier.name}
+            </h3>
+            <p className="text-sm text-gray-600">{supplier.company}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">مجموعی خرید:</span>
+          <span className="font-semibold text-gray-900">
+            {supplier.totalPurchases}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">مجموعی قیمت:</span>
+          <span className="font-semibold text-gray-900">
+            ${supplier.totalAmount.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">مبلغ پرداختی:</span>
+          <span className="font-semibold text-green-600">
+            ${supplier.amountPaid.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">مبلغ باقی مانده:</span>
+          <span className="font-semibold text-red-600">
+            ${supplier.amountOwed.toLocaleString()}
+          </span>
+        </div>
+        <div className="pt-3 border-t border-gray-200">
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>Credit Limit:</span>
+            <span>${supplier.creditLimit.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>Payment Terms:</span>
+            <span>{supplier.paymentTerms}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <Button
+          className=" bg-warning-orange"
+          // onClick={() => {
+          //   setSelectedSupplier(supplier);
+          //   setShowDetailsModal(true);
+          // }}
+        >
+          دیدن جزئیات
+        </Button>
+        <Button className=" bg-success-green">تماس</Button>
+      </div>
+    </div>
+  );
+};
 export default Purchases;

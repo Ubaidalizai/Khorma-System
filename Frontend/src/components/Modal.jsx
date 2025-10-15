@@ -1,9 +1,14 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { cloneElement, createContext, useContext, useState } from "react";
+import { AiOutlineClose } from "react-icons/ai";
+import React, {
+  cloneElement,
+  createContext,
+  useContext,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { FaXmark } from "react-icons/fa6";
 import { useClickOutSide } from "../hooks/useClickOutSide";
-
+import { AnimatePresence, motion } from "framer-motion";
 const ModalContext = createContext();
 export default function Modal({ children }) {
   const [openId, setOpenId] = useState("");
@@ -26,7 +31,6 @@ function Toggle({ children, id }) {
 function Window({ children, name }) {
   const { openId, close } = useContext(ModalContext);
   const ref = useClickOutSide(close);
-  let parentElement = document.querySelector("header") || document.body;
 
   return createPortal(
     <AnimatePresence>
@@ -42,11 +46,31 @@ function Window({ children, name }) {
           transition={{ duration: 0.23 }}
           className="bg-text-400/20 dark:bg-white/20 backdrop-blur h-screen  mx-auto   fixed inset-0 z-50 grid place-items-center  cursor-pointer"
         >
-          {cloneElement(children, { ref })}
+          <div className=" w-auto h-auto relative p-3" ref={ref}>
+            <AiOutlineClose
+              className=" absolute top-2 right-3"
+              onClick={close}
+            />
+            {React.isValidElement(children)
+              ? React.cloneElement(children, {
+                  close,
+                  onSubmit: (e) => {
+                    try {
+                      if (typeof children.props.onSubmit === "function") {
+                        children.props.onSubmit(e);
+                      }
+                    } finally {
+                      // close after submit handler runs
+                      close();
+                    }
+                  },
+                })
+              : children}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>,
-    parentElement
+    document.body
   );
 }
 

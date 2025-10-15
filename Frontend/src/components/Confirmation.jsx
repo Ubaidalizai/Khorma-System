@@ -6,7 +6,17 @@ import { BsFillTrashFill } from "react-icons/bs";
 import React from "react";
 import Button from "./Button";
 
-function Confirmation({ type, handleClick, handleCancel }) {
+function Confirmation({ type, handleClick, handleCancel, close }) {
+  const onConfirm = () => {
+    if (typeof handleClick === "function") handleClick();
+    if (typeof close === "function") close();
+  };
+
+  const onCancel = () => {
+    if (typeof handleCancel === "function") handleCancel();
+    if (typeof close === "function") close();
+  };
+
   return (
     <div class="flex flex-col bg-white w-100 h-82 rounded-md py-4 px-6 border border-slate-100">
       <div className=" flex-3 relative ">
@@ -28,7 +38,7 @@ function Confirmation({ type, handleClick, handleCancel }) {
       </div>
       <div class=" flex-1 flex justify-around items-center gap-3 py-3">
         <Button
-          onClick={handleClick}
+          onClick={onConfirm}
           className={`${
             type === "delete"
               ? " bg-warning-orange hover:bg-warning-orange/90"
@@ -45,7 +55,7 @@ function Confirmation({ type, handleClick, handleCancel }) {
           {type === "delete" ? "بلی، حذف کنید" : "بلی ویرایش کنید"}
         </Button>
         <Button
-          onClick={handleCancel}
+          onClick={onCancel}
           className={` bg-red-500`}
           icon={<GiCancel className=" text-green-500" />}
         >

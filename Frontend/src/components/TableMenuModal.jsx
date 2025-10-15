@@ -60,7 +60,9 @@ function Window({ children, name }) {
           className=" fixed inset-0  w-full flex justify-center items-center  min-h-screen bg-white/20 backdrop-blur-xs z-50"
         >
           <div ref={ref} className="">
-            {children}
+            {React.isValidElement(children)
+              ? React.cloneElement(children, { close })
+              : children}
           </div>
         </motion.div>
       )}
