@@ -1,134 +1,125 @@
 {
   "product": [
     {
-      "id": "1",
-      "date": "1404/07/20",
-      "itemName": "داروی سرماخوردگی",
-      "unit": "بسته",
-      "minQuantity": "10",
-      "tracker": "علی رضایی",
-      "description": "دارو برای بخش اطفال خریداری شده است."
-    },
-    {
-      "id": "2",
-      "date": "1404/07/21",
-      "itemName": "دستکش طبی",
-      "unit": "جفت",
-      "minQuantity": "50",
-      "tracker": "سارا احمدی",
-      "description": "برای استفاده در بخش جراحی تهیه گردید."
-    },
-    {
-      "id": "3",
-      "date": "1404/07/22",
-      "itemName": "ماسک تنفسی",
-      "unit": "عدد",
-      "minQuantity": "100",
-      "tracker": "حمید نورزی",
-      "description": "در انبار اصلی ذخیره شده است."
-    },
-    {
       "id": "4",
-      "date": "1404/07/23",
-      "itemName": "محلول ضدعفونی",
-      "unit": "لیتر",
-      "minQuantity": "20",
-      "tracker": "فرشته حسینی",
-      "description": "برای ضدعفونی اتاق‌ها استفاده می‌شود."
+      "date": "1404/07/25",
+      "itemName": "سرنگ ۵ میلی‌لیتر",
+      "unit": "جعبه",
+      "minQuantity": "80",
+      "tracker": "فاطمه احمدی",
+      "description": "در قفسه سوم قرار دارد."
     },
     {
       "id": "5",
-      "date": "1404/07/24",
-      "itemName": "پنبه طبی",
+      "date": "1404/07/27",
+      "itemName": "پنبه پزشکی",
       "unit": "بسته",
-      "minQuantity": "15",
-      "tracker": "مجید کریمی",
-      "description": "مقدار جدید به انبار افزوده شد."
+      "minQuantity": "120",
+      "tracker": "علی حسینی",
+      "description": "در حال آماده‌سازی برای توزیع است."
     },
     {
-      "id": "a80d",
-      "itemName": "afsdf",
-      "unit": "",
-      "minLevel": "123",
-      "tracker": "",
-      "description": "123"
+      "id": "6",
+      "date": "1404/07/28",
+      "itemName": "الکل ۷۰٪",
+      "unit": "بطری",
+      "minQuantity": "60",
+      "tracker": "مینا نادری",
+      "description": "در انبار فرعی ذخیره شده است."
     },
     {
-      "id": "aaf1",
-      "itemName": "afsdf",
-      "unit": "",
-      "minLevel": "123",
-      "tracker": "",
-      "description": "123qwe"
+      "id": "7",
+      "date": "1404/08/01",
+      "itemName": "چسب زخم",
+      "unit": "بسته",
+      "minQuantity": "90",
+      "tracker": "رضا عباسی",
+      "description": "برای بخش اورژانس نگهداری می‌شود."
     },
     {
-      "id": "7523",
-      "date": "1404-07-23",
-      "data": {
-        "itemName": "sfkfdsdfs",
-        "unit": "",
-        "minLevel": "123",
-        "tracker": "",
-        "description": "234234"
-      }
+      "id": "8",
+      "date": "1404/08/03",
+      "itemName": "پانسمان گازی",
+      "unit": "بسته",
+      "minQuantity": "70",
+      "tracker": "ناهید سلطانی",
+      "description": "در طبقه دوم انبار است."
+    },
+    {
+      "id": "9",
+      "date": "1404/08/06",
+      "itemName": "تب‌سنج دیجیتال",
+      "unit": "عدد",
+      "minQuantity": "40",
+      "tracker": "جمال حیدری",
+      "description": "در اتاق تجهیزات نگهداری می‌شود."
+    },
+    {
+      "id": "10",
+      "date": "1404/08/08",
+      "itemName": "گاز استریل",
+      "unit": "بسته",
+      "minQuantity": "150",
+      "tracker": "سمیرا مهدوی",
+      "description": "برای مصرف بیمارستانی آماده است."
     }
   ],
   "inventory": [
     {
       "id": "1",
-      "name": "خرما تازه - مجول",
+      "name": "خرما - مجول",
       "category": "خرما",
       "sku": "FD001",
       "warehouseStock": 150,
       "storeStock": 45,
       "unitPrice": 15.99,
       "minStockLevel": 30,
-      "status": "موجود در انبار",
-      "expiryDate": "2025-12-31",
+      "status": "موجود",
+      "expiryDate": "2026-01-15",
       "lastUpdated": "2025-10-15T00:00:00.000Z",
-      "description": "خرمای مجول با کیفیت عالی"
+      "description": "خرمای ممتاز مجول با کیفیت بالا"
     },
     {
       "id": "2",
-      "name": "نخود - ارگانیک",
-      "category": "غلات",
-      "sku": "CP002",
-      "warehouseStock": 200,
-      "storeStock": 80,
-      "unitPrice": 8.5,
-      "minStockLevel": 50,
-      "status": "موجود در انبار",
-      "expiryDate": "2026-06-30",
+      "name": "خرما - خضری",
+      "category": "خرما",
+      "sku": "FD002",
+      "warehouseStock": 90,
+      "storeStock": 25,
+      "unitPrice": 9.99,
+      "minStockLevel": 20,
+      "status": "موجود",
+      "expiryDate": "2026-02-10",
       "lastUpdated": "2025-10-15T00:00:00.000Z",
-      "description": "نخود ارگانیک از مزارع محلی"
+      "description": "خرمای نرم و تازه خضری"
     },
     {
       "id": "3",
-      "name": "مخلوط کیک - چاکلیتی",
-      "category": "نانوایی",
-      "sku": "CM003",
-      "warehouseStock": 25,
-      "storeStock": 5,
-      "unitPrice": 12.99,
-      "minStockLevel": 40,
-      "status": "موجودی کم",
-      "expiryDate": "2025-08-15",
+      "name": "خرما - پیارم",
+      "category": "خرما",
+      "sku": "FD003",
+      "warehouseStock": 60,
+      "storeStock": 18,
+      "unitPrice": 13.49,
+      "minStockLevel": 25,
+      "status": "موجود",
+      "expiryDate": "2025-12-20",
       "lastUpdated": "2025-10-15T00:00:00.000Z",
-      "description": "مخلوط کیک چاکلیتی ممتاز"
+      "description": "خرمای نیمه‌خشک پیارم با طعم عالی"
     },
     {
       "id": "4",
-      "name": "شکر - سفید دانه‌ریز",
-      "category": "نانوایی",
-      "sku": "SG004",
-      "warehouseStock": 100,
-      "storeStock": 30,
-      "unitPrice": 4.5,
-      "minStockLevel": 20,
-      "status": "موجود در انبار",
-      "expiryDate": "2027-01-01",
+      "name": "خرما - زاهدی",
+      "category": "خرما",
+      "sku": "FD004",
+      "warehouseStock": 35,
+      "storeStock": 10,
+      "unitPrice": 8.49,
+      "minStockLevel": 15,
+      "status": "موجود",
+      "expiryDate": "2026-03-05",
       "lastUpdated": "2025-10-15T00:00:00.000Z",
-      "description": "شکر سفید دانه‌ریز و خالص"
+      "description": "خرمای خشک زاهدی مناسب برای صادرات"
     },
     {
       "id": "5",
@@ -143,6 +134,150 @@
       "expiryDate": "2025-11-30",
       "lastUpdated": "2025-10-15T00:00:00.000Z",
       "description": "خرمای شیرین دگلت نور"
+    },
+    {
+      "id": "6",
+      "name": "خرما - ربی",
+      "category": "خرما",
+      "sku": "FD006",
+      "warehouseStock": 120,
+      "storeStock": 35,
+      "unitPrice": 11.49,
+      "minStockLevel": 25,
+      "status": "موجود",
+      "expiryDate": "2026-04-12",
+      "lastUpdated": "2025-10-15T00:00:00.000Z",
+      "description": "خرمای ربی با طعم طبیعی و خوشمزه"
+    },
+    {
+      "id": "7",
+      "name": "خرما - کبکاب",
+      "category": "خرما",
+      "sku": "FD007",
+      "warehouseStock": 80,
+      "storeStock": 20,
+      "unitPrice": 9.49,
+      "minStockLevel": 20,
+      "status": "موجود",
+      "expiryDate": "2026-05-01",
+      "lastUpdated": "2025-10-15T00:00:00.000Z",
+      "description": "خرمای کبکاب نرم و خوش‌طعم"
+    },
+    {
+      "id": "8",
+      "name": "خرما - شکر",
+      "category": "خرما",
+      "sku": "FD008",
+      "warehouseStock": 55,
+      "storeStock": 12,
+      "unitPrice": 7.99,
+      "minStockLevel": 15,
+      "status": "موجود",
+      "expiryDate": "2025-12-05",
+      "lastUpdated": "2025-10-15T00:00:00.000Z",
+      "description": "خرمای شکر طبیعی و خوش‌عطر"
+    },
+    {
+      "id": "9",
+      "name": "خرما - خضری ویژه",
+      "category": "خرما",
+      "sku": "FD009",
+      "warehouseStock": 100,
+      "storeStock": 28,
+      "unitPrice": 12.25,
+      "minStockLevel": 30,
+      "status": "موجود",
+      "expiryDate": "2026-01-20",
+      "lastUpdated": "2025-10-15T00:00:00.000Z",
+      "description": "خرمای خضری با بسته‌بندی ویژه"
+    },
+    {
+      "id": "10",
+      "name": "خرما - خاصویی",
+      "category": "خرما",
+      "sku": "FD010",
+      "warehouseStock": 25,
+      "storeStock": 5,
+      "unitPrice": 14.75,
+      "minStockLevel": 20,
+      "status": "کمبود موجودی",
+      "expiryDate": "2025-11-15",
+      "lastUpdated": "2025-10-15T00:00:00.000Z",
+      "description": "خرمای خاصویی با کیفیت عالی"
+    }
+  ],
+  "store": [
+    {
+      "trackingNumber": "TRK003",
+      "location": "فروشگاه ۱",
+      "product": "گاز استریل",
+      "expiryDate": "2025-12-20",
+      "purchasePrice": "۵.۰۰",
+      "unit": "بسته",
+      "id": "65a4"
+    },
+    {
+      "trackingNumber": "TRK004",
+      "location": "انبار C",
+      "product": "دستکش جراحی",
+      "expiryDate": "2026-03-10",
+      "purchasePrice": "۲.۰۰",
+      "unit": "جعبه",
+      "id": "6a04"
+    },
+    {
+      "trackingNumber": "TRK005",
+      "location": "فروشگاه ۲",
+      "product": "مایع ضدعفونی‌کننده",
+      "expiryDate": "2026-05-05",
+      "purchasePrice": "۳.۵۰",
+      "unit": "بطری",
+      "id": "e7a8"
+    },
+    {
+      "trackingNumber": "TRK006",
+      "location": "انبار A",
+      "product": "شیلد محافظ صورت",
+      "expiryDate": "2026-02-28",
+      "purchasePrice": "۴.۰۰",
+      "unit": "عدد",
+      "id": "ebba"
+    },
+    {
+      "trackingNumber": "TRK007",
+      "location": "انبار B",
+      "product": "کلاه جراحی",
+      "expiryDate": "2025-12-15",
+      "purchasePrice": "۱.۲۰",
+      "unit": "عدد",
+      "id": "e566"
+    },
+    {
+      "trackingNumber": "TRK008",
+      "location": "فروشگاه ۱",
+      "product": "ست تزریقی IV",
+      "expiryDate": "2026-04-01",
+      "purchasePrice": "۱۲.۵۰",
+      "unit": "ست",
+      "id": "375f"
+    },
+    {
+      "trackingNumber": "TRK009",
+      "location": "انبار C",
+      "product": "تب‌سنج",
+      "expiryDate": "2026-06-10",
+      "purchasePrice": "۸.۰۰",
+      "unit": "عدد",
+      "id": "77fb"
+    },
+    {
+      "trackingNumber": "TRK010",
+      "location": "فروشگاه ۲",
+      "product": "ماسک اکسیژن",
+      "expiryDate": "2026-03-20",
+      "purchasePrice": "۱۵.۰۰",
+      "unit": "عدد",
+      "id": "738e"
     }
   ]
 }

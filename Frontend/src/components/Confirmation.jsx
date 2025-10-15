@@ -6,7 +6,7 @@ import { BsFillTrashFill } from "react-icons/bs";
 import React from "react";
 import Button from "./Button";
 
-function Confirmation({ type, handleClick, handleCancel, close }) {
+function Confirmation({ type, handleClick, handleCancel, close, message }) {
   const onConfirm = () => {
     if (typeof handleClick === "function") handleClick();
     if (typeof close === "function") close();
@@ -31,10 +31,14 @@ function Confirmation({ type, handleClick, handleCancel, close }) {
             className=" text-slate-200 absolute left-2/4 -translate-x-2/4"
           />
         )}
-        <p className=" text-xl text-center absolute top-2/4 ">
-          آیا شما مطمین هستید که این فایل را
-          {type === "delete" ? "حذف" : "ویرایش"} را کنید؟
-        </p>
+        {message ? (
+          <p className="text-2xl text-center absolute top-2/4 ">{message}</p>
+        ) : (
+          <p className=" text-xl text-center absolute top-2/4 ">
+            آیا شما مطمین هستید که این فایل را
+            {type === "delete" ? "حذف" : "ویرایش"} را کنید؟
+          </p>
+        )}
       </div>
       <div class=" flex-1 flex justify-around items-center gap-3 py-3">
         <Button

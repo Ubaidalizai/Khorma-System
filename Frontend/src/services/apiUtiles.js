@@ -41,6 +41,7 @@ export const deleteProductItem = async (id) => {
   const res = await fetch(`${import.meta.env.VITE_API_URL}/product/${id}`, {
     method: "DELETE",
   });
+  console.log(res);
   if (!res.ok) throw new Error("Failed to delete item");
   return true;
 };
@@ -96,4 +97,50 @@ export const deleteInventoryItem = async (id) => {
   });
   if (!res.ok) throw new Error("خطا در حذف کالا");
   return true;
+};
+
+// STORE API
+export const fetchStores = async () => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/store`);
+  if (!res.ok) throw new Error("Failed to fetch stores");
+  return res.json();
+};
+
+// Fetch single store
+export const fetchStore = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/store/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch store");
+  return res.json();
+};
+
+// Create store
+export const createStore = async (newStore) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/store`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newStore),
+  });
+  if (!res.ok) throw new Error("Failed to create store");
+  return res.json();
+};
+
+// Update store
+export const updateStore = async ({ id, updatedStore }) => {
+  console.log(updatedStore);
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/store/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updatedStore),
+  });
+  if (!res.ok) throw new Error("Failed to update store");
+  return res.json();
+};
+
+// Delete store
+export const deleteStore = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/store/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete store");
+  return res.json();
 };

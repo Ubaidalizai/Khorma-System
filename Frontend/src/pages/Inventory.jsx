@@ -1,47 +1,45 @@
-import { BiLoaderAlt } from "react-icons/bi";
-import { MdOutlineProductionQuantityLimits } from "react-icons/md";
-import { useState, useEffect } from "react";
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  ArrowRightIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  BuildingStorefrontIcon,
-  BuildingOffice2Icon,
   ArrowPathIcon,
+  BuildingOffice2Icon,
+  BuildingStorefrontIcon,
   ChartBarIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  PlusIcon,
+  XCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { motion } from "framer-motion";
-import Product from "./Product";
-import Modal from "../components/Modal";
-import Input from "../components/Input";
-import Select from "../components/Select";
-import NumberInput from "../components/NumberInput";
-import TextArea from "../components/TextArea";
+import { toJalaali } from "jalaali-js";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import Button from "../components/Button";
-import { useForm, Controller } from "react-hook-form";
+import Input from "../components/Input";
+import Modal from "../components/Modal";
+import NumberInput from "../components/NumberInput";
+import ProductForm from "../components/ProductForm";
+import Select from "../components/Select";
 import Table from "../components/Table";
-import TableHeader from "../components/TableHeader";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
+import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import TableMenuModal from "../components/TableMenuModal";
-import Menus from "../components/Menu";
-import Confirmation from "../components/Confirmation";
-import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
-import SearchInput from "../components/SearchInput";
+import TextArea from "../components/TextArea";
+import { useCreateProdcut, useProduct } from "../services/useApi";
+import Product from "./Product";
+import Store from "./Store";
 import Warehouse from "./Warehouse";
-import { select } from "framer-motion/client";
-import EditProduct from "../components/EditProduct";
-import { useCreateProdcut, useInventory, useProduct } from "../services/useApi";
-import ProductForm from "../components/ProductForm";
-import { toJalaali } from "jalaali-js";
+const getStatusColor = (status) => {
+  switch (status) {
+    case "In Stock":
+      return "bg-green-100 text-green-800 border border-green-200";
+    case "Low Stock":
+      return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+    case "Out of Stock":
+      return "bg-red-100 text-red-800 border border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border border-gray-200";
+  }
+};
 
 const Inventory = () => {
   const { register, handleSubmit, formState, reset } = useForm();
@@ -124,222 +122,6 @@ const Inventory = () => {
    * Resets when `selectedProduct` changes. Submitting updates products
    * and properties lists, then closes the modal.
    */
-  function EditProductForm() {
-    const { control, handleSubmit, reset } = useForm({
-      defaultValues: {
-        name: selectedProduct?.name || "",
-        category: selectedProduct?.category || "",
-        sku: selectedProduct?.sku || "",
-        unitPrice: selectedProduct?.unitPrice || 0,
-        warehouseStock: selectedProduct?.warehouseStock || 0,
-        storeStock: selectedProduct?.storeStock || 0,
-        minStockLevel: selectedProduct?.minStockLevel || 10,
-        expiryDate: selectedProduct?.expiryDate || "",
-        description: selectedProduct?.description || "",
-      },
-    });
-
-    useEffect(() => {
-      if (selectedProduct) {
-        reset({
-          name: selectedProduct.name || "",
-          category: selectedProduct.category || "",
-          sku: selectedProduct.sku || "",
-          unitPrice: selectedProduct.unitPrice || 0,
-          warehouseStock: selectedProduct.warehouseStock || 0,
-          storeStock: selectedProduct.storeStock || 0,
-          minStockLevel: selectedProduct.minStockLevel || 10,
-          expiryDate: selectedProduct.expiryDate || "",
-          description: selectedProduct.description || "",
-        });
-      }
-    }, [selectedProduct, reset]);
-
-    const onSubmit = (data) => {
-      const updated = {
-        ...selectedProduct,
-        name: data.name,
-        category: data.category,
-        sku: data.sku,
-        unitPrice: Number(data.unitPrice),
-        warehouseStock: Number(data.warehouseStock),
-        storeStock: Number(data.storeStock),
-        minStockLevel: Number(data.minStockLevel),
-        expiryDate: data.expiryDate,
-        description: data.description,
-        status: calculateStockStatus({
-          warehouseStock: Number(data.warehouseStock),
-          storeStock: Number(data.storeStock),
-          minStockLevel: Number(data.minStockLevel),
-        }),
-        lastUpdated: new Date().toISOString(),
-      };
-
-      setProducts((prev) =>
-        prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
-      );
-
-      setProductList((prev) =>
-        prev.map((prop) =>
-          prop.tracker === selectedProduct.sku || prop.id === selectedProduct.id
-            ? {
-                ...prop,
-                itemName: updated.name,
-                tracker: updated.sku,
-                minQuantity: String(updated.minStockLevel),
-                description: updated.description,
-              }
-            : prop
-        )
-      );
-
-      setShowEditModal(false);
-      setSelectedProduct(null);
-    };
-
-    return (
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Product</h2>
-          <button
-            type="button"
-            onClick={() => {
-              setShowEditModal(false);
-              setSelectedProduct(null);
-            }}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
-
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }) => (
-                  <Input label="Product Name" register={field} />
-                )}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="category"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Category"
-                    register={field}
-                    defaultSelected={field.value}
-                    options={[
-                      { value: "Dates" },
-                      { value: "Grains" },
-                      { value: "Bakery" },
-                      { value: "Baking" },
-                    ]}
-                  />
-                )}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="sku"
-                control={control}
-                render={({ field }) => <Input label="SKU" register={field} />}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="unitPrice"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    type="number"
-                    label="Unit Price ($)"
-                    register={field}
-                  />
-                )}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="warehouseStock"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput label="Warehouse Stock" register={field} />
-                )}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="storeStock"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput label="Store Stock" register={field} />
-                )}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="minStockLevel"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput label="Minimum Stock Level" register={field} />
-                )}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="expiryDate"
-                control={control}
-                render={({ field }) => (
-                  <Input type="date" label="Expiry Date" register={field} />
-                )}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Controller
-                name="description"
-                control={control}
-                render={({ field }) => (
-                  <TextArea label="Description" rows={3} register={field} />
-                )}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
-          <button
-            type="button"
-            onClick={() => {
-              setShowEditModal(false);
-              setSelectedProduct(null);
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-          >
-            Update Product
-          </button>
-        </div>
-      </form>
-    );
-  }
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -370,81 +152,79 @@ const Inventory = () => {
   });
 
   // Products data
-  const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
-
-  const setProducts = () => {};
-  // const [products, setProducts] = useState([
-  //   {
-  //     id: 1,
-  //     name: "Fresh Dates - Medjool",
-  //     category: "Dates",
-  //     sku: "FD001",
-  //     warehouseStock: 150,
-  //     storeStock: 45,
-  //     unitPrice: 15.99,
-  //     minStockLevel: 30,
-  //     status: "In Stock",
-  //     expiryDate: "2025-12-31",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Premium quality Medjool dates",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Chickpeas - Organic",
-  //     category: "Grains",
-  //     sku: "CP002",
-  //     warehouseStock: 200,
-  //     storeStock: 80,
-  //     unitPrice: 8.5,
-  //     minStockLevel: 50,
-  //     status: "In Stock",
-  //     expiryDate: "2026-06-30",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Organic chickpeas from local farms",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Cake Mix - Chocolate",
-  //     category: "Bakery",
-  //     sku: "CM003",
-  //     warehouseStock: 25,
-  //     storeStock: 5,
-  //     unitPrice: 12.99,
-  //     minStockLevel: 40,
-  //     status: "Low Stock",
-  //     expiryDate: "2025-08-15",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Premium chocolate cake mix",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Sugar - White Granulated",
-  //     category: "Baking",
-  //     sku: "SG004",
-  //     warehouseStock: 100,
-  //     storeStock: 30,
-  //     unitPrice: 4.5,
-  //     minStockLevel: 20,
-  //     status: "In Stock",
-  //     expiryDate: "2027-01-01",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Fine white granulated sugar",
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "Dates - Deglet Noor",
-  //     category: "Dates",
-  //     sku: "FD005",
-  //     warehouseStock: 0,
-  //     storeStock: 0,
-  //     unitPrice: 10.99,
-  //     minStockLevel: 30,
-  //     status: "Out of Stock",
-  //     expiryDate: "2025-11-30",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Sweet Deglet Noor dates",
-  //   },
-  // ]);
+  // const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
+  const [products, setProducts] = useState([
+    {
+      id: 1,
+      name: "Fresh Dates - Medjool",
+      category: "Dates",
+      sku: "FD001",
+      warehouseStock: 150,
+      storeStock: 45,
+      unitPrice: 15.99,
+      minStockLevel: 30,
+      status: "In Stock",
+      expiryDate: "2025-12-31",
+      lastUpdated: new Date().toISOString(),
+      description: "Premium quality Medjool dates",
+    },
+    {
+      id: 2,
+      name: "Chickpeas - Organic",
+      category: "Grains",
+      sku: "CP002",
+      warehouseStock: 200,
+      storeStock: 80,
+      unitPrice: 8.5,
+      minStockLevel: 50,
+      status: "In Stock",
+      expiryDate: "2026-06-30",
+      lastUpdated: new Date().toISOString(),
+      description: "Organic chickpeas from local farms",
+    },
+    {
+      id: 3,
+      name: "Cake Mix - Chocolate",
+      category: "Bakery",
+      sku: "CM003",
+      warehouseStock: 25,
+      storeStock: 5,
+      unitPrice: 12.99,
+      minStockLevel: 40,
+      status: "Low Stock",
+      expiryDate: "2025-08-15",
+      lastUpdated: new Date().toISOString(),
+      description: "Premium chocolate cake mix",
+    },
+    {
+      id: 4,
+      name: "Sugar - White Granulated",
+      category: "Baking",
+      sku: "SG004",
+      warehouseStock: 100,
+      storeStock: 30,
+      unitPrice: 4.5,
+      minStockLevel: 20,
+      status: "In Stock",
+      expiryDate: "2027-01-01",
+      lastUpdated: new Date().toISOString(),
+      description: "Fine white granulated sugar",
+    },
+    {
+      id: 5,
+      name: "Dates - Deglet Noor",
+      category: "Dates",
+      sku: "FD005",
+      warehouseStock: 0,
+      storeStock: 0,
+      unitPrice: 10.99,
+      minStockLevel: 30,
+      status: "Out of Stock",
+      expiryDate: "2025-11-30",
+      lastUpdated: new Date().toISOString(),
+      description: "Sweet Deglet Noor dates",
+    },
+  ]);
 
   // Derived warehouse batches (new shape). We keep `products` for compatibility
   // and create `warehouseBatches` to start moving toward separate batch data.
@@ -555,19 +335,6 @@ const Inventory = () => {
       (sum, p) => sum + (p.warehouseStock + p.storeStock) * p.unitPrice,
       0
     ),
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "In Stock":
-        return "bg-green-100 text-green-800 border border-green-200";
-      case "Low Stock":
-        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-      case "Out of Stock":
-        return "bg-red-100 text-red-800 border border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border border-gray-200";
-    }
   };
 
   // Handle product addition
@@ -682,12 +449,12 @@ const Inventory = () => {
     setShowEditModal(false);
     setSelectedProduct(null);
   };
-  if (isLoadingProduct || IsInventoryIsLoading)
-    return (
-      <div className="w-full h-full flex justify-center items-center">
-        <BiLoaderAlt className=" text-2xl animate-spin" />
-      </div>
-    );
+  // if (isLoadingProduct || IsInventoryIsLoading)
+  //   return (
+  //     <div className="w-full h-full flex justify-center items-center">
+  //       <BiLoaderAlt className=" text-2xl animate-spin" />
+  //     </div>
+  //   );
   return (
     <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
@@ -873,6 +640,7 @@ const Inventory = () => {
             />
           </div>
         )}
+        {activeTab === "store" && <Store />}
       </div>
 
       {/* Stock Transfer History */}
@@ -918,191 +686,6 @@ const Inventory = () => {
           </Table>
         </div>
       </div>
-
-      {/* Add Product Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Add New Product
-              </h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newProduct.name}
-                    onChange={(e) =>
-                      setNewProduct({ ...newProduct, name: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="Enter product name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category *
-                  </label>
-                  <select
-                    value={newProduct.category}
-                    onChange={(e) =>
-                      setNewProduct({ ...newProduct, category: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  >
-                    <option value="">Select category</option>
-                    <option value="Dates">Dates</option>
-                    <option value="Grains">Grains</option>
-                    <option value="Bakery">Bakery</option>
-                    <option value="Baking">Baking</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SKU *
-                  </label>
-                  <input
-                    type="text"
-                    value={newProduct.sku}
-                    onChange={(e) =>
-                      setNewProduct({ ...newProduct, sku: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="e.g., FD001"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Unit Price ($) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newProduct.unitPrice}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        unitPrice: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Warehouse Stock *
-                  </label>
-                  <input
-                    type="number"
-                    value={newProduct.warehouseStock}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        warehouseStock: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Store Stock *
-                  </label>
-                  <input
-                    type="number"
-                    value={newProduct.storeStock}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        storeStock: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum Stock Level *
-                  </label>
-                  <input
-                    type="number"
-                    value={newProduct.minStockLevel}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        minStockLevel: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="10"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Expiry Date
-                  </label>
-                  <input
-                    type="date"
-                    value={newProduct.expiryDate}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        expiryDate: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={newProduct.description}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        description: e.target.value,
-                      })
-                    }
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="Enter product description"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddProduct}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-              >
-                Add Product
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Transfer Stock Modal */}
       {showTransferModal && selectedProduct && (
@@ -1173,164 +756,6 @@ const Inventory = () => {
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Transfer Stock
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Product Modal (react-hook-form) */}
-      {showEditModal && selectedProduct && (
-        <div className="fixed inset-0 bg-white/60  bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <EditProduct productId={selectedProduct?.id} />
-          </div>
-        </div>
-      )}
-
-      {/* Product Details Modal */}
-      {showDetailsModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Product Details
-              </h2>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Product Name
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedProduct.name}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    SKU
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedProduct.sku}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Category
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedProduct.category}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Unit Price
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    ${selectedProduct.unitPrice}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Warehouse Stock
-                  </h3>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {selectedProduct.warehouseStock} units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Store Stock
-                  </h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    {selectedProduct.storeStock} units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Total Stock
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {selectedProduct.warehouseStock +
-                      selectedProduct.storeStock}{" "}
-                    units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Status
-                  </h3>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      selectedProduct.status
-                    )}`}
-                  >
-                    {selectedProduct.status}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Minimum Stock Level
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedProduct.minStockLevel} units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Expiry Date
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedProduct.expiryDate || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Total Value
-                  </h3>
-                  <p className="text-lg font-semibold text-amber-600">
-                    $
-                    {(
-                      (selectedProduct.warehouseStock +
-                        selectedProduct.storeStock) *
-                      selectedProduct.unitPrice
-                    ).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Last Updated
-                  </h3>
-                  <p className="text-sm text-gray-700">
-                    {new Date(selectedProduct.lastUpdated).toLocaleString()}
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Description
-                  </h3>
-                  <p className="text-gray-900">
-                    {selectedProduct.description || "No description available"}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setSelectedProduct(null);
-                }}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-              >
-                Close
               </button>
             </div>
           </div>

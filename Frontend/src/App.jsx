@@ -9,6 +9,7 @@ import Reports from "./pages/Reports";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
+import { ReactQueryDevtools } from "./../node_modules/@tanstack/react-query-devtools/src/index";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -35,6 +36,7 @@ function App() {
 
         <ToastContainer />
       </Router>
+      <ReactQueryDevtools />
     </QueryClientProvider>
   );
 }

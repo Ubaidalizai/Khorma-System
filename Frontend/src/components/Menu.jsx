@@ -122,8 +122,7 @@ function List({ children, id, className = "", parent }) {
 function Button({ children, icon, onClick, className = "" }) {
   const { close } = useMenus();
 
-  function handleClick(e) {
-    e.stopPropagation();
+  function handleClick() {
     onClick?.();
     close();
   }
@@ -132,7 +131,7 @@ function Button({ children, icon, onClick, className = "" }) {
     <motion.li variants={itemVariants}>
       <button
         onClick={handleClick}
-        className={`w-full text-sm  text-left bg-none border-none py-1.5 px-4  transition-all duration-200 flex items-center gap-3 hover:bg-gray-100 text-gray-700 ${className}`}
+        className={`w-full text-sm text-slate-800 text-left bg-none border-none py-1.5 px-4  transition-all duration-200 flex items-center gap-3 hover:bg-gray-100  ${className}`}
       >
         {icon && (
           <motion.span

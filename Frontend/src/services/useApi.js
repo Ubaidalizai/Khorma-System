@@ -10,6 +10,11 @@ import {
   createInventoryItem,
   updateInventoryItem,
   deleteInventoryItem,
+  fetchStores,
+  fetchStore,
+  createStore,
+  updateStore,
+  deleteStore,
 } from "./apiUtiles";
 
 // ✅ Get all inventory items
@@ -46,6 +51,7 @@ export const useUpdateProdcut = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateProductItem,
+    mutationKey: ["productupdate"],
     onSuccess: () => {
       queryClient.invalidateQueries(["product"]);
     },
@@ -57,6 +63,7 @@ export const useDeleteProdcut = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteProductItem,
+    mutationKey: ["productRemove"],
     onSuccess: () => {
       queryClient.invalidateQueries(["product"]);
     },
@@ -104,5 +111,44 @@ export const useDeleteInventory = () => {
   return useMutation({
     mutationFn: deleteInventoryItem,
     onSuccess: () => queryClient.invalidateQueries(["inventory"]),
+  });
+};
+// use store
+
+export const useStores = () => {
+  return useQuery({
+    queryKey: ["allstores"],
+    queryFn: fetchStores,
+  });
+};
+
+export const useStore = (id) =>
+  useQuery({
+    queryKey: ["store", id],
+    queryFn: fetchStore,
+  });
+
+export const useCreateStore = () => {
+  const queryClient = useQueryClient();
+  return useMutation(createStore, {
+    onSuccess: () => queryClient.invalidateQueries(["createStore"]),
+  });
+};
+
+export const useUpdateStore = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteStore"],
+    mutationFn: () => updateStore,
+    onSuccess: () => queryClient.invalidateQueries(["allstores"]),
+  });
+};
+
+export const useDeleteStore = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["storedelete"],
+    mutationFn: deleteStore,
+    onSuccess: () => queryClient.invalidateQueries(["allstores"]),
   });
 };
