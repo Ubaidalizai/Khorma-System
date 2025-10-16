@@ -1,3 +1,4 @@
+import { BiTransferAlt } from "react-icons/bi";
 import { BiLoaderAlt } from "react-icons/bi";
 import React, { useEffect, useState } from "react";
 import SearchInput from "../components/SearchInput";
@@ -16,6 +17,7 @@ import Button from "../components/Button";
 import WarehouseForm from "../components/WarehouseForm";
 import { useForm } from "react-hook-form";
 import { useUpdateStore } from "../services/useApi";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 const tableHeader = [
   { title: "جنس" },
   { title: "نمبر ردیابی" },
@@ -28,8 +30,10 @@ const tableHeader = [
   { title: "عملیات" },
 ];
 function Warehouse({ warehouses, getStatusColor, isLoading }) {
+  const [transferQuantity, setTransferQuantity] = useState(null);
   const { control, handleSubmit, reset } = useForm();
   const { mutate: updateInventory } = useUpdateStore();
+  const [showTransfer, setShowTransfer] = useState(false);
   const [show, setShow] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
@@ -130,6 +134,15 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                             }}
                           >
                             نمایش
+                          </Menus.Button>
+                          <Menus.Button
+                            icon={<BiTransferAlt size={24} />}
+                            onClick={() => {
+                              setSelectedPro(filter);
+                              setShowTransfer(true);
+                            }}
+                          >
+                            انتقال
                           </Menus.Button>
 
                           <Menus.Button
@@ -286,6 +299,73 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
             control={control}
           />
         </div>
+      </GloableModal>
+      <GloableModal open={showTransfer} setOpen={setShowTransfer}>
+        {showTransfer && (
+          <div className="bg-white rounded-sm shadow-sm  w-[600px]">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Transfer Stock
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm text-gray-600">Product</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {selectedPro.name}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Available in Warehouse</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {selectedPro.warehouseStock} units
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quantity to Transfer *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={selectedPro.warehouseStock}
+                  value={transferQuantity}
+                  onChange={(e) => setTransferQuantity(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Enter quantity"
+                />
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Transfer Direction:</strong> Warehouse → Store
+                </p>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setSelectedPro(null);
+                  setTransferQuantity("");
+                  setShowTransfer(false);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {}}
+                disabled={
+                  !transferQuantity ||
+                  transferQuantity <= 0 ||
+                  transferQuantity > selectedPro.warehouseStock
+                }
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Transfer Stock
+              </button>
+            </div>
+          </div>
+        )}
       </GloableModal>
     </section>
   );

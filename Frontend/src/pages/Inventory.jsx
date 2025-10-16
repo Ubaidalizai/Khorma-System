@@ -24,15 +24,16 @@ import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
 import TextArea from "../components/TextArea";
-import { useCreateProdcut, useProduct } from "../services/useApi";
+import { useCreateProdcut, useInventory, useProduct } from "../services/useApi";
 import Product from "./Product";
 import Store from "./Store";
 import Warehouse from "./Warehouse";
+import { BiLoaderAlt } from "react-icons/bi";
 const getStatusColor = (status) => {
   switch (status) {
-    case "In Stock":
+    case "موجود":
       return "bg-green-100 text-green-800 border border-green-200";
-    case "Low Stock":
+    case "کمبود موجودی":
       return "bg-yellow-100 text-yellow-800 border border-yellow-200";
     case "Out of Stock":
       return "bg-red-100 text-red-800 border border-red-200";
@@ -43,6 +44,7 @@ const getStatusColor = (status) => {
 
 const Inventory = () => {
   const { register, handleSubmit, formState, reset } = useForm();
+  const { data: totalProdcut } = useProduct();
   const { data: productList, isLoadingProduct } = useProduct();
   const { mutate: createProduct } = useCreateProdcut();
   function AddProductForm({ close }) {
@@ -66,165 +68,89 @@ const Inventory = () => {
       />
     );
   }
-
-  const handleAddProdcut = (data) => {
-    // Map form data to product shape used by the products list
-    const warehouseStock = Number(data.warehouseStock) || 0;
-    const storeStock = Number(data.storeStock) || 0;
-    const minStockLevel = Number(data.minLevel) || 10;
-
-    const product = {
-      id: products.length + 1,
-      name: data.itemName || `Product ${products.length + 1}`,
-      category: data.unit || "",
-      sku: data.tracker ? String(data.tracker) : `SKU${Date.now()}`,
-      warehouseStock,
-      storeStock,
-      unitPrice: Number(data.unitPrice) || 0,
-      minStockLevel,
-      status: calculateStockStatus({
-        warehouseStock,
-        storeStock,
-        minStockLevel,
-      }),
-      expiryDate: data.expiryDate || "",
-      lastUpdated: new Date().toISOString(),
-      description: data.description || "",
-    };
-
-    // Add to main products array so it appears in the table
-    setProducts((curr) => [...curr, product]);
-
-    // Also keep properties in sync for the product view (if used)
-    setProductList((curr) => [
-      ...curr,
-      {
-        id: curr.length + 1,
-        date: new Date().toLocaleDateString(),
-        itemName: product.name,
-        unit: product.category,
-        minQuantity: String(product.minStockLevel),
-        tracker: product.sku,
-        description: product.description,
-      },
-    ]);
-
-    // Reset the form fields in the Modal
-    if (typeof reset === "function") reset();
-  };
-
-  // const [productList, setProductList] = useState();
-  const setProductList = () => {};
-
-  /**
-   * EditProductForm component (moved here so it's defined before return)
-   * Uses react-hook-form to populate fields from `selectedProduct`.
-   * Resets when `selectedProduct` changes. Submitting updates products
-   * and properties lists, then closes the modal.
-   */
-
-  // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
-
-  // Modal states
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-
   // Selected product and transfer state
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [transferQuantity, setTransferQuantity] = useState("");
 
   // New Product Form State
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    category: "",
-    sku: "",
-    warehouseStock: 0,
-    storeStock: 0,
-    unitPrice: 0,
-    minStockLevel: 10,
-    expiryDate: "",
-    description: "",
-  });
 
   // Products data
-  // const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Fresh Dates - Medjool",
-      category: "Dates",
-      sku: "FD001",
-      warehouseStock: 150,
-      storeStock: 45,
-      unitPrice: 15.99,
-      minStockLevel: 30,
-      status: "In Stock",
-      expiryDate: "2025-12-31",
-      lastUpdated: new Date().toISOString(),
-      description: "Premium quality Medjool dates",
-    },
-    {
-      id: 2,
-      name: "Chickpeas - Organic",
-      category: "Grains",
-      sku: "CP002",
-      warehouseStock: 200,
-      storeStock: 80,
-      unitPrice: 8.5,
-      minStockLevel: 50,
-      status: "In Stock",
-      expiryDate: "2026-06-30",
-      lastUpdated: new Date().toISOString(),
-      description: "Organic chickpeas from local farms",
-    },
-    {
-      id: 3,
-      name: "Cake Mix - Chocolate",
-      category: "Bakery",
-      sku: "CM003",
-      warehouseStock: 25,
-      storeStock: 5,
-      unitPrice: 12.99,
-      minStockLevel: 40,
-      status: "Low Stock",
-      expiryDate: "2025-08-15",
-      lastUpdated: new Date().toISOString(),
-      description: "Premium chocolate cake mix",
-    },
-    {
-      id: 4,
-      name: "Sugar - White Granulated",
-      category: "Baking",
-      sku: "SG004",
-      warehouseStock: 100,
-      storeStock: 30,
-      unitPrice: 4.5,
-      minStockLevel: 20,
-      status: "In Stock",
-      expiryDate: "2027-01-01",
-      lastUpdated: new Date().toISOString(),
-      description: "Fine white granulated sugar",
-    },
-    {
-      id: 5,
-      name: "Dates - Deglet Noor",
-      category: "Dates",
-      sku: "FD005",
-      warehouseStock: 0,
-      storeStock: 0,
-      unitPrice: 10.99,
-      minStockLevel: 30,
-      status: "Out of Stock",
-      expiryDate: "2025-11-30",
-      lastUpdated: new Date().toISOString(),
-      description: "Sweet Deglet Noor dates",
-    },
-  ]);
+  const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
+  // const [products, setProducts] = useState([
+  //   {
+  //     id: 1,
+  //     name: "Fresh Dates - Medjool",
+  //     category: "Dates",
+  //     sku: "FD001",
+  //     warehouseStock: 150,
+  //     storeStock: 45,
+  //     unitPrice: 15.99,
+  //     minStockLevel: 30,
+  //     status: "In Stock",
+  //     expiryDate: "2025-12-31",
+  //     lastUpdated: new Date().toISOString(),
+  //     description: "Premium quality Medjool dates",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Chickpeas - Organic",
+  //     category: "Grains",
+  //     sku: "CP002",
+  //     warehouseStock: 200,
+  //     storeStock: 80,
+  //     unitPrice: 8.5,
+  //     minStockLevel: 50,
+  //     status: "In Stock",
+  //     expiryDate: "2026-06-30",
+  //     lastUpdated: new Date().toISOString(),
+  //     description: "Organic chickpeas from local farms",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Cake Mix - Chocolate",
+  //     category: "Bakery",
+  //     sku: "CM003",
+  //     warehouseStock: 25,
+  //     storeStock: 5,
+  //     unitPrice: 12.99,
+  //     minStockLevel: 40,
+  //     status: "Low Stock",
+  //     expiryDate: "2025-08-15",
+  //     lastUpdated: new Date().toISOString(),
+  //     description: "Premium chocolate cake mix",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Sugar - White Granulated",
+  //     category: "Baking",
+  //     sku: "SG004",
+  //     warehouseStock: 100,
+  //     storeStock: 30,
+  //     unitPrice: 4.5,
+  //     minStockLevel: 20,
+  //     status: "In Stock",
+  //     expiryDate: "2027-01-01",
+  //     lastUpdated: new Date().toISOString(),
+  //     description: "Fine white granulated sugar",
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "Dates - Deglet Noor",
+  //     category: "Dates",
+  //     sku: "FD005",
+  //     warehouseStock: 0,
+  //     storeStock: 0,
+  //     unitPrice: 10.99,
+  //     minStockLevel: 30,
+  //     status: "Out of Stock",
+  //     expiryDate: "2025-11-30",
+  //     lastUpdated: new Date().toISOString(),
+  //     description: "Sweet Deglet Noor dates",
+  //   },
+  // ]);
 
   // Derived warehouse batches (new shape). We keep `products` for compatibility
   // and create `warehouseBatches` to start moving toward separate batch data.
@@ -244,49 +170,41 @@ const Inventory = () => {
   // );
 
   // Stock transfer history
-  const [transferHistory, setTransferHistory] = useState([
-    {
-      id: 1,
-      productName: "Fresh Dates - Medjool",
-      quantity: 20,
-      from: "Warehouse",
-      to: "Store",
-      date: new Date().toISOString(),
-      performedBy: "Admin",
-    },
-  ]);
+  const [transferHistory, setTransferHistory] = useState([]);
 
   // Calculate stock status
   const calculateStockStatus = (product) => {
     const totalStock = product.warehouseStock + product.storeStock;
-    if (totalStock === 0) return "Out of Stock";
-    if (totalStock <= product.minStockLevel) return "Low Stock";
+    if (totalStock === 0) return "موجود";
+    if (totalStock <= product.minStockLevel) return "کمبود موجودی";
     return "In Stock";
   };
 
   // Update product status on mount
-  useEffect(() => {
-    setProducts((prevProducts) =>
-      prevProducts.map((product) => ({
-        ...product,
-        status: calculateStockStatus(product),
-      }))
-    );
-  }, []);
-
+  // setTransferHistory([
+  //       {
+  //         id: 12 + 1,
+  //         productName: "Kandom",
+  //         quantity: 12,
+  //         from: "Warehouse",
+  //         to: "Store",
+  //         date: new Date().toISOString(),
+  //         performedBy: "Admin",
+  //       },
+  //     ]);
   // Real-time stock tracking simulation (updates every 30 seconds)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProducts((prevProducts) =>
-        prevProducts.map((product) => ({
-          ...product,
-          lastUpdated: new Date().toISOString(),
-        }))
-      );
-    }, 30000);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setProducts((prevProducts) =>
+  //       prevProducts.map((product) => ({
+  //         ...product,
+  //         lastUpdated: new Date().toISOString(),
+  //       }))
+  //     );
+  //   }, 30000);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   // Get alerts
   const getLowStockAlerts = () => {
@@ -325,7 +243,7 @@ const Inventory = () => {
 
   // Calculate statistics
   const stats = {
-    totalProducts: products?.length,
+    totalProducts: totalProdcut?.length,
     totalWarehouseStock: products?.reduce(
       (sum, p) => sum + p.warehouseStock,
       0
@@ -336,125 +254,12 @@ const Inventory = () => {
       0
     ),
   };
-
-  // Handle product addition
-  const handleAddProduct = () => {
-    if (!newProduct.name || !newProduct.category || !newProduct.sku) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    const product = {
-      id: products.length + 1,
-      ...newProduct,
-      warehouseStock: Number(newProduct.warehouseStock),
-      storeStock: Number(newProduct.storeStock),
-      unitPrice: Number(newProduct.unitPrice),
-      minStockLevel: Number(newProduct.minStockLevel),
-      status: calculateStockStatus({
-        warehouseStock: Number(newProduct.warehouseStock),
-        storeStock: Number(newProduct.storeStock),
-        minStockLevel: Number(newProduct.minStockLevel),
-      }),
-      lastUpdated: new Date().toISOString(),
-    };
-
-    setProducts([...products, product]);
-    setShowAddModal(false);
-    setNewProduct({
-      name: "",
-      category: "",
-      sku: "",
-      warehouseStock: 0,
-      storeStock: 0,
-      unitPrice: 0,
-      minStockLevel: 10,
-      expiryDate: "",
-      description: "",
-    });
-  };
-
-  // Handle stock transfer
-  const handleStockTransfer = () => {
-    if (!selectedProduct || !transferQuantity) {
-      alert("Please enter a transfer quantity");
-      return;
-    }
-
-    const quantity = Number(transferQuantity);
-    if (quantity <= 0 || quantity > selectedProduct.warehouseStock) {
-      alert("Invalid transfer quantity");
-      return;
-    }
-
-    setProducts(
-      products.map((p) =>
-        p.id === selectedProduct.id
-          ? {
-              ...p,
-              warehouseStock: p.warehouseStock - quantity,
-              storeStock: p.storeStock + quantity,
-              status: calculateStockStatus({
-                ...p,
-                warehouseStock: p.warehouseStock - quantity,
-                storeStock: p.storeStock + quantity,
-              }),
-              lastUpdated: new Date().toISOString(),
-            }
-          : p
-      )
+  if (IsInventoryIsLoading)
+    return (
+      <div className="w-full h-full flex justify-center items-center">
+        <BiLoaderAlt className=" text-2xl animate-spin" />
+      </div>
     );
-
-    setTransferHistory([
-      {
-        id: transferHistory.length + 1,
-        productName: selectedProduct.name,
-        quantity: quantity,
-        from: "Warehouse",
-        to: "Store",
-        date: new Date().toISOString(),
-        performedBy: "Admin",
-      },
-      ...transferHistory,
-    ]);
-
-    setShowTransferModal(false);
-    setSelectedProduct(null);
-    setTransferQuantity("");
-  };
-
-  // Handle product deletion
-  const handleDeleteProduct = (productId) => {
-    // Remove from products and productList
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
-    setProductList((prev) => prev.filter((p) => p.id !== productId));
-  };
-
-  // Handle product update
-  const handleUpdateProduct = () => {
-    if (!selectedProduct) return;
-    console.log(selectedProduct);
-    setProducts(
-      products.map((p) =>
-        p.id === selectedProduct.id
-          ? {
-              ...selectedProduct,
-              status: calculateStockStatus(selectedProduct),
-              lastUpdated: new Date().toISOString(),
-            }
-          : p
-      )
-    );
-
-    setShowEditModal(false);
-    setSelectedProduct(null);
-  };
-  // if (isLoadingProduct || IsInventoryIsLoading)
-  //   return (
-  //     <div className="w-full h-full flex justify-center items-center">
-  //       <BiLoaderAlt className=" text-2xl animate-spin" />
-  //     </div>
-  //   );
   return (
     <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
@@ -633,10 +438,6 @@ const Inventory = () => {
               getStatusColor={getStatusColor}
               warehouses={filteredProducts}
               isLoading={isLoadingProduct}
-              deleteProdcut={handleDeleteProduct}
-              updateProduct={handleUpdateProduct}
-              setselectedProduct={setSelectedProduct}
-              setShowEditModal={setShowEditModal}
             />
           </div>
         )}
@@ -661,26 +462,23 @@ const Inventory = () => {
               ]}
             >
               <TableBody>
-                {transferHistory.slice(0, 1).map((transfer) => {
-                  return (
-                    <TableRow>
-                      <TableColumn>{transfer.productName} units</TableColumn>
-                      <TableColumn>
-                        {" "}
-                        <BuildingOffice2Icon className="h-4 w-4" />
-                        {transfer.from}
-                      </TableColumn>
-                      <TableColumn>
-                        <BuildingStorefrontIcon className="h-4 w-4" />
-                        {transfer.to}
-                      </TableColumn>
-                      <TableColumn>
-                        {new Date(transfer.date).toLocaleString()}
-                      </TableColumn>
-                      <TableColumn>{transfer.performedBy}</TableColumn>
-                    </TableRow>
-                  );
-                })}
+                {transferHistory.map((transfer) => (
+                  <TableRow>
+                    <TableColumn>{transfer.productName} units</TableColumn>
+                    <TableColumn>
+                      <BuildingOffice2Icon className="h-4 w-4" />
+                      {transfer.from}
+                    </TableColumn>
+                    <TableColumn>
+                      <BuildingStorefrontIcon className="h-4 w-4" />
+                      {transfer.to}
+                    </TableColumn>
+                    <TableColumn>
+                      {new Date(transfer.date).toLocaleString()}
+                    </TableColumn>
+                    <TableColumn>{transfer.performedBy}</TableColumn>
+                  </TableRow>
+                ))}
               </TableBody>
             </TableHeader>
           </Table>
@@ -688,7 +486,7 @@ const Inventory = () => {
       </div>
 
       {/* Transfer Stock Modal */}
-      {showTransferModal && selectedProduct && (
+      {/* {showTransferModal && selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -760,7 +558,7 @@ const Inventory = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

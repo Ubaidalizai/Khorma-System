@@ -20,7 +20,7 @@ function GloableModal({ open, setOpen, children }) {
           transition={{ duration: 0.23 }}
           className="bg-text-400/20 dark:bg-white/20 backdrop-blur h-screen  mx-auto   fixed inset-0 z-50 flex justify-center items-center  cursor-pointer"
         >
-          <div className=" w-auto h-auto relative p-3" ref={ref}>
+          <div className="relative p-3" ref={ref}>
             <AiOutlineClose
               className=" absolute top-5 right-4 p4"
               onClick={() => setOpen(false)}

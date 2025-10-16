@@ -8,7 +8,7 @@ const Layout = ({ children }) => {
 
   return (
     <section
-      className="h-screen flex overflow-hidden"
+      className="h-screen flex overflow-hidden max-w-[1440px] mx-auto min-w-[768px] "
       style={{
         backgroundColor: "var(--background)",
         fontFamily: "var(--font-family)",

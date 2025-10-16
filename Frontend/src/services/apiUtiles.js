@@ -144,3 +144,97 @@ export const deleteStore = async (id) => {
   if (!res.ok) throw new Error("Failed to delete store");
   return res.json();
 };
+
+// API FOR PURCHASE
+
+export const fetchPurchases = async () => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase`);
+  if (!res.ok) throw new Error("Failed to fetch purchase");
+  return res.json();
+};
+
+// Fetch single store
+export const fetchPurchase = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/puchase/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch purchase");
+  return res.json();
+};
+
+// Create store
+export const createPurchase = async (newStore) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newStore),
+  });
+  if (!res.ok) throw new Error("Failed to create purchase");
+  return res.json();
+};
+
+// Update store
+export const updatePurchase = async ({ id, updatedPurchase }) => {
+  console.log(updatedPurchase);
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updatedPurchase),
+  });
+  if (!res.ok) throw new Error("Failed to update store");
+  return res.json();
+};
+
+// Delete store
+export const deletePurchase = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete purchase");
+  return res.json();
+};
+
+// SUPPLIERS API
+
+export const fetchSuppliers = async () => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier`);
+  if (!res.ok) throw new Error("Failed to fetch supplier");
+  return res.json();
+};
+
+// Fetch single store
+export const fetchSupplier = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch supplier");
+  return res.json();
+};
+
+// Create store
+export const createSupplier = async (newStore) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newStore),
+  });
+  if (!res.ok) throw new Error("Failed to create supplier");
+  return res.json();
+};
+
+// Update store
+export const updateSupplier = async ({ id, updatedPurchase }) => {
+  console.log(updatedPurchase);
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updatedPurchase),
+  });
+  if (!res.ok) throw new Error("Failed to update supplier");
+  return res.json();
+};
+
+// Delete store
+export const deleteSupplier = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete supplier");
+  return res.json();
+};

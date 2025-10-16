@@ -14,6 +14,7 @@ import TableRow from "./../components/TableRow";
 import TableColumn from "./../components/TableColumn";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency } from "./../utilies/helper";
+import { useProduct } from "../services/useApi";
 
 const Dashboard = () => {
   const headers = [
@@ -23,6 +24,7 @@ const Dashboard = () => {
     { title: "مبلغ" },
     { title: "زمان" },
   ];
+  const { data: products } = useProduct();
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalSales: 0,
@@ -35,7 +37,7 @@ const Dashboard = () => {
   // Mock data - in real app, this would come from API
   useEffect(() => {
     setStats({
-      totalProducts: 156,
+      totalProducts: products?.length,
       totalSales: 125000,
       totalPurchases: 89000,
       lowStockItems: 12,

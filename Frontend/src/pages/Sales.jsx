@@ -402,7 +402,7 @@ const Sales = () => {
           </Modal>
           <Modal>
             <Modal.Toggle id="addPurchase">
-              <Button className=" bg-deepdate-400"> ایجاد خرید</Button>
+              <Button className=" bg-deepdate-400">اضافه کردن فروش</Button>
             </Modal.Toggle>
             <Modal.Window name="addPurchase">
               <div className="w-[400px] h-[300px] bg-white"></div>
@@ -483,7 +483,7 @@ const Sales = () => {
               }`}
             >
               <ShoppingCartIcon className="h-5 w-5" />
-              خرید
+              فروش
             </button>
             <button
               onClick={() => setActiveTab("customers")}

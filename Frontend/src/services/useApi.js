@@ -15,6 +15,16 @@ import {
   createStore,
   updateStore,
   deleteStore,
+  fetchPurchases,
+  fetchPurchase,
+  createPurchase,
+  updatePurchase,
+  deletePurchase,
+  fetchSuppliers,
+  fetchSupplier,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
 } from "./apiUtiles";
 
 // ✅ Get all inventory items
@@ -150,5 +160,89 @@ export const useDeleteStore = () => {
     mutationKey: ["storedelete"],
     mutationFn: deleteStore,
     onSuccess: () => queryClient.invalidateQueries(["allstores"]),
+  });
+};
+
+// Purchases
+
+export const usePurchases = () => {
+  return useQuery({
+    queryKey: ["allPurchases"],
+    queryFn: fetchPurchases,
+  });
+};
+
+export const usePurchase = (id) =>
+  useQuery({
+    queryKey: ["purchase", id],
+    queryFn: fetchPurchase,
+  });
+
+export const useCreatePurchase = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPurchase,
+    mutationKey: ["newPurchase"],
+    onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+  });
+};
+
+export const useUpdatePurchase = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updatePurchase"],
+    mutationFn: () => updatePurchase,
+    onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+  });
+};
+
+export const useDeletePurchase = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["purchaseDelete"],
+    mutationFn: deletePurchase,
+    onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+  });
+};
+
+// Supplier CRUD operations
+
+export const useSuppliers = () => {
+  return useQuery({
+    queryKey: ["allSuppliers"],
+    queryFn: fetchSuppliers,
+  });
+};
+
+export const useSupplier = (id) =>
+  useQuery({
+    queryKey: ["supplier", id],
+    queryFn: fetchSupplier,
+  });
+
+export const useCreateSupplier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createSupplier,
+    mutationKey: ["newSupplier"],
+    onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+  });
+};
+
+export const useUpdateSupplier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateSupplier"],
+    mutationFn: () => updateSupplier,
+    onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+  });
+};
+
+export const useDeleteSupplier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteSupplier"],
+    mutationFn: deleteSupplier,
+    onSuccess: () => queryClient.invalidateQueries(["allSupplier"]),
   });
 };
