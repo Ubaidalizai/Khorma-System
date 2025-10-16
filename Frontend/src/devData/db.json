@@ -419,5 +419,77 @@
       "paymentTerms": "30",
       "notes": "123"
     }
+  ],
+  "sale": [
+    {
+      "id": 1,
+      "billNumber": "BILL-2024-001",
+      "customer": "Ahmad Khan",
+      "customerId": 1,
+      "employee": "Ali Mohammad",
+      "employeeId": 1,
+      "items": [
+        {
+          "product": "Fresh Dates - Medjool",
+          "quantity": 10,
+          "unitPrice": 15.99,
+          "total": 159.9
+        },
+        {
+          "product": "Chickpeas",
+          "quantity": 5,
+          "unitPrice": 8.5,
+          "total": 42.5
+        }
+      ],
+      "subtotal": 202.4,
+      "discount": 10,
+      "tax": 19.24,
+      "totalAmount": 211.64,
+      "amountPaid": 211.64,
+      "amountOwed": 0,
+      "saleType": "cash",
+      "billType": "small",
+      "paymentStatus": "paid",
+      "saleDate": "2024-01-15",
+      "notes": "Regular customer",
+      "createdBy": "Admin",
+      "lastUpdated": "2024-01-15T10:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "billNumber": "BILL-2024-002",
+      "customer": "Sara Ahmed Wholesale",
+      "customerId": 2,
+      "employee": "Fatima Hussain",
+      "employeeId": 2,
+      "items": [
+        {
+          "product": "Fresh Dates - Medjool",
+          "quantity": 100,
+          "unitPrice": 14.99,
+          "total": 1499
+        },
+        {
+          "product": "Chickpeas - Organic",
+          "quantity": 50,
+          "unitPrice": 7.5,
+          "total": 375
+        }
+      ],
+      "subtotal": 1874,
+      "discount": 100,
+      "tax": 177.4,
+      "totalAmount": 1951.4,
+      "amountPaid": 1000,
+      "amountOwed": 951.4,
+      "saleType": "credit",
+      "billType": "large",
+      "paymentStatus": "partial",
+      "saleDate": "2024-01-15",
+      "notes": "Bulk order - 30 days payment terms",
+      "createdBy": "Admin",
+      "lastUpdated": "2024-01-15T10:00:00.000Z"
+    }
   ]
 }

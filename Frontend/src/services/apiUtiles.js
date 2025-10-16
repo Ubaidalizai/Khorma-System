@@ -238,3 +238,51 @@ export const deleteSupplier = async (id) => {
   if (!res.ok) throw new Error("Failed to delete supplier");
   return res.json();
 };
+
+// STORE
+
+export const fetchSales = async () => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale`);
+
+  if (!res.ok) throw new Error("Failed to fetch sale");
+  return res.json();
+};
+
+// Fetch single store
+export const fetchSale = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch supplier");
+  return res.json();
+};
+
+// Create store
+export const createSale = async (newStore) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newStore),
+  });
+  if (!res.ok) throw new Error("Failed to create sale");
+  return res.json();
+};
+
+// Update store
+export const updateSale = async ({ id, updatedPurchase }) => {
+  console.log(updatedPurchase);
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updatedPurchase),
+  });
+  if (!res.ok) throw new Error("Failed to update sale");
+  return res.json();
+};
+
+// Delete store
+export const deleteSale = async (id) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete sale");
+  return res.json();
+};

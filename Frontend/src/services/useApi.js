@@ -25,6 +25,11 @@ import {
   createSupplier,
   updateSupplier,
   deleteSupplier,
+  fetchSales,
+  fetchSale,
+  createSale,
+  updateSale,
+  deleteSale,
 } from "./apiUtiles";
 
 // ✅ Get all inventory items
@@ -244,5 +249,47 @@ export const useDeleteSupplier = () => {
     mutationKey: ["deleteSupplier"],
     mutationFn: deleteSupplier,
     onSuccess: () => queryClient.invalidateQueries(["allSupplier"]),
+  });
+};
+
+// USE THE SALE
+
+export const useSales = () => {
+  return useQuery({
+    queryKey: ["allSales"],
+    queryFn: fetchSales,
+  });
+};
+
+export const useSale = (id) =>
+  useQuery({
+    queryKey: ["sale", id],
+    queryFn: fetchSale,
+  });
+
+export const useCreateSale = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createSale,
+    mutationKey: ["newSale"],
+    onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+  });
+};
+
+export const useUpdateSale = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateSale"],
+    mutationFn: () => updateSale,
+    onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+  });
+};
+
+export const useDeleteSales = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteSale"],
+    mutationFn: deleteSale,
+    onSuccess: () => queryClient.invalidateQueries(["allSales"]),
   });
 };
