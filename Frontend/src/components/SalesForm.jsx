@@ -13,7 +13,6 @@ import TableBody from "./TableBody";
 import TableColumn from "./TableColumn";
 import TableHeader from "./TableHeader";
 import TableRow from "./TableRow";
-import { useEffect, useState } from "react";
 const productHeader = [
   { title: "محصول" },
   { title: "واحد" },
@@ -29,7 +28,7 @@ export default function SalesForm({
   currentItem,
   summary,
   setCurrentItem,
-  onSubmit,
+
   onCancel,
   register,
   handleSubmit,
@@ -69,7 +68,7 @@ export default function SalesForm({
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit}
       className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -277,7 +276,7 @@ export default function SalesForm({
           </div>
 
           {/* Items table */}
-          {items && (
+          {items?.length > 0 && (
             <div className="overflow-auto">
               <Table className="w-full text-sm">
                 <TableHeader headerData={productHeader} />

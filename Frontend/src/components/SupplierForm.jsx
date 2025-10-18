@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { inputStyle } from "./ProductForm";
 
 function SupplierForm({ handleSubmit, register, onSubmit }) {
   const [contactInfo, setContactInfo] = useState({
@@ -29,20 +30,8 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
             <input
               type="text"
               {...register("name")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className={inputStyle}
               placeholder="Ahmed Hassan"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Company Name *
-            </label>
-            <input
-              type="text"
-              {...register("company")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="Company Name Ltd"
             />
           </div>
 
@@ -52,8 +41,11 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
             </label>
             <input
               type="email"
-              {...register("email")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              value={contactInfo?.email}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, email: e.target.value })
+              }
+              className={inputStyle}
               placeholder="email@example.com"
             />
           </div>
@@ -64,8 +56,11 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
             </label>
             <input
               type="tel"
-              {...register("phone")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              value={contactInfo?.phone}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, phone: e.target.value })
+              }
+              className={inputStyle}
               placeholder="+93 700 123 456"
             />
           </div>
@@ -76,73 +71,13 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
             </label>
             <input
               type="text"
-              {...register("address")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              value={contactInfo?.address}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, address: e.target.value })
+              }
+              className={inputStyle}
               placeholder="City, Country"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tax ID
-            </label>
-            <input
-              type="text"
-              {...register("taxId")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="TIN-12345"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bank Account
-            </label>
-            <input
-              type="text"
-              {...register("bankaccount")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="Account number"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Credit Limit ($)
-            </label>
-            <input
-              type="number"
-              {...register("creditLimit")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="0"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Payment Terms (days)
-            </label>
-            <select
-              {...register("paymentTerms")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            >
-              <option value="15">15 days</option>
-              <option value="30">30 days</option>
-              <option value="45">45 days</option>
-              <option value="60">60 days</option>
-            </select>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
-            </label>
-            <textarea
-              {...register("notes")}
-              rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="Additional notes..."
-            ></textarea>
           </div>
         </div>
       </div>

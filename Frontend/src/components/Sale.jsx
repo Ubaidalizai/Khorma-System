@@ -21,7 +21,6 @@ import TableColumn from "./TableColumn";
 import Confirmation from "./Confirmation";
 import GloableModal from "./GloableModal";
 import Button from "./Button";
-import { PrinterIcon } from "lucide-react";
 const salesHeader = [
   { title: "نمبر فاکتور" },
   { title: "تاریخ" },

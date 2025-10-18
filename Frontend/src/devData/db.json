@@ -282,9 +282,9 @@
       "_id": "purchase_101",
       "supplier": "sup_001",
       "purchaseDate": "2025-10-01T10:30:00.000Z",
-      "totalAmount": 1500.0,
-      "paidAmount": 1000.0,
-      "dueAmount": 500.0,
+      "totalAmount": 1500,
+      "paidAmount": 1000,
+      "dueAmount": 500,
       "isDeleted": false,
       "items": [
         {
@@ -294,8 +294,8 @@
           "unit": "u_box",
           "batchNumber": "بچ-الف۱۲",
           "quantity": 5,
-          "unitPrice": 100.0,
-          "totalPrice": 500.0,
+          "unitPrice": 100,
+          "totalPrice": 500,
           "isDeleted": false,
           "createdAt": "2025-10-01T10:31:00.000Z",
           "updatedAt": "2025-10-01T10:31:00.000Z"
@@ -307,8 +307,8 @@
           "unit": "u_kg",
           "batchNumber": "کیلو-۳۳",
           "quantity": 20,
-          "unitPrice": 50.0,
-          "totalPrice": 1000.0,
+          "unitPrice": 50,
+          "totalPrice": 1000,
           "isDeleted": false,
           "createdAt": "2025-10-01T10:32:00.000Z",
           "updatedAt": "2025-10-01T10:32:00.000Z"
@@ -323,7 +323,7 @@
       "purchaseDate": "2025-09-15T14:20:00.000Z",
       "totalAmount": 375.5,
       "paidAmount": 375.5,
-      "dueAmount": 0.0,
+      "dueAmount": 0,
       "isDeleted": false,
       "items": [
         {
@@ -333,8 +333,8 @@
           "unit": "u_piece",
           "batchNumber": "بچ-ج۱",
           "quantity": 25,
-          "unitPrice": 10.0,
-          "totalPrice": 250.0,
+          "unitPrice": 10,
+          "totalPrice": 250,
           "isDeleted": false,
           "createdAt": "2025-09-15T14:21:00.000Z",
           "updatedAt": "2025-09-15T14:21:00.000Z"
@@ -354,16 +354,18 @@
         }
       ],
       "createdAt": "2025-09-15T14:23:00.000Z",
-      "updatedAt": "2025-09-15T14:23:00.000Z"
+      "updatedAt": "2025-09-15T14:23:00.000Z",
+      "paymentStatus": "pending"
     },
     {
       "_id": "purchase_103",
       "supplier": "sup_002",
       "purchaseDate": "2025-08-05T09:00:00.000Z",
-      "totalAmount": 620.0,
-      "paidAmount": 200.0,
-      "dueAmount": 420.0,
+      "totalAmount": 620,
+      "paidAmount": 200,
+      "dueAmount": 420,
       "isDeleted": false,
+      "paymentStatus": "paid",
       "items": [
         {
           "_id": "pi_105",
@@ -372,8 +374,8 @@
           "unit": "u_l",
           "batchNumber": "لیتر-۹",
           "quantity": 40,
-          "unitPrice": 10.0,
-          "totalPrice": 400.0,
+          "unitPrice": 10,
+          "totalPrice": 400,
           "isDeleted": false,
           "createdAt": "2025-08-05T09:01:00.000Z",
           "updatedAt": "2025-08-05T09:01:00.000Z"
@@ -386,7 +388,7 @@
           "batchNumber": "گرم-۵۵",
           "quantity": 200,
           "unitPrice": 1.1,
-          "totalPrice": 220.0,
+          "totalPrice": 220,
           "isDeleted": false,
           "createdAt": "2025-08-05T09:02:00.000Z",
           "updatedAt": "2025-08-05T09:02:00.000Z"
@@ -399,10 +401,11 @@
       "_id": "purchase_104",
       "supplier": "sup_007",
       "purchaseDate": "2025-07-20T16:45:00.000Z",
-      "totalAmount": 90.0,
-      "paidAmount": 90.0,
-      "dueAmount": 0.0,
+      "totalAmount": 90,
+      "paidAmount": 90,
+      "dueAmount": 0,
       "isDeleted": true,
+      "paymentStatus": "partial",
       "items": [
         {
           "_id": "pi_107",
@@ -411,8 +414,8 @@
           "unit": "u_piece",
           "batchNumber": "بچ-قدیم",
           "quantity": 9,
-          "unitPrice": 10.0,
-          "totalPrice": 90.0,
+          "unitPrice": 10,
+          "totalPrice": 90,
           "isDeleted": true,
           "createdAt": "2025-07-20T16:46:00.000Z",
           "updatedAt": "2025-07-20T16:46:00.000Z"
@@ -420,6 +423,41 @@
       ],
       "createdAt": "2025-07-20T16:47:00.000Z",
       "updatedAt": "2025-07-20T16:47:00.000Z"
+    },
+    {
+      "id": "3699",
+      "purchaseDate": 1760787405152,
+      "supplier": "sup_004",
+      "tax": "123123",
+      "discount": "12",
+      "shippingCost": "12",
+      "paymentStatus": "pending",
+      "notes": "",
+      "items": [
+        {
+          "product": "sdf",
+          "unit": "u_box",
+          "batchNumber": "",
+          "quantity": "123",
+          "unitPrice": "12",
+          "total": 1476
+        },
+        {
+          "product": "123",
+          "unit": "u_g",
+          "batchNumber": "123",
+          "quantity": "21",
+          "unitPrice": "21",
+          "total": 441
+        }
+      ],
+      "subtotal": 1917,
+      "taxAmount": 2345493.15,
+      "totalAmount": 2347398.15,
+      "paidAmount": 0,
+      "dueAmount": 2347398.15,
+      "createdBy": "Admin",
+      "lastUpdated": "2025-10-18T11:36:45.152Z"
     }
   ],
   "supplier": [
@@ -526,6 +564,19 @@
         "zip_code": "4005"
       },
       "isDeleted": true
+    },
+    {
+      "id": "b270",
+      "name": "",
+      "company": "",
+      "email": "",
+      "phone": "",
+      "address": "",
+      "taxId": "",
+      "bankaccount": "",
+      "creditLimit": "",
+      "paymentTerms": "15",
+      "notes": ""
     }
   ],
   "sale": [

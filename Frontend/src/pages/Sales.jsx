@@ -328,11 +328,10 @@ const Sales = () => {
                 setCurrentItem={setCurrentItem}
                 items={saleItems}
                 setItems={setSaleItems}
-                handleSubmit={handleSubmit}
+                handleSubmit={handleSubmit(onSubmit)}
                 register={register}
                 watch={watch}
                 control={control}
-                onSubmit={onSubmit}
               />
             </Modal.Window>
           </Modal>
