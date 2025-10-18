@@ -3,12 +3,9 @@ import {
   Bars3Icon,
   BellIcon,
   UserCircleIcon,
-  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../contexts/AuthContext";
 
 const Header = ({ onMenuClick }) => {
-  const { user, logout, isLoggingOut } = useAuth();
   const [notifications] = useState([
     { id: 1, message: "Low stock alert: Dates", type: "warning" },
     { id: 2, message: "New purchase order received", type: "info" },
@@ -104,14 +101,12 @@ const Header = ({ onMenuClick }) => {
                   color: "var(--text-dark)",
                 }}
               >
-                {user?.name || user?.username || "کاربر"}
+                کاربر مدیر
               </p>
               <p className="text-xs" style={{ color: "var(--text-medium)" }}>
-                {user?.role || "کاربر سیستم"}
+                مدیر سیستم
               </p>
             </div>
-            
-            {/* User Avatar */}
             <button
               className="p-2 rounded-full transition-colors duration-200"
               style={{
@@ -128,30 +123,6 @@ const Header = ({ onMenuClick }) => {
               }}
             >
               <UserCircleIcon className="h-8 w-8" />
-            </button>
-
-            {/* Logout Button */}
-            <button
-              onClick={logout}
-              disabled={isLoggingOut}
-              className="p-2 rounded-full transition-colors duration-200"
-              style={{
-                color: "var(--error-red)",
-                backgroundColor: "transparent",
-                opacity: isLoggingOut ? 0.6 : 1,
-                cursor: isLoggingOut ? "not-allowed" : "pointer",
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoggingOut) {
-                  e.target.style.backgroundColor = "var(--error-light)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "transparent";
-              }}
-              title="خروج از سیستم"
-            >
-              <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
           </div>
         </div>
