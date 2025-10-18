@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchProduct,
   fetchProductyById,
@@ -34,12 +34,12 @@ import {
   logoutUser,
   refreshToken,
   getCurrentUser,
-} from "./apiUtiles";
+} from './apiUtiles';
 
 // ✅ Get all inventory items
 export const useProduct = () => {
   return useQuery({
-    queryKey: ["product"],
+    queryKey: ['product'],
     queryFn: fetchProduct,
   });
 };
@@ -47,7 +47,7 @@ export const useProduct = () => {
 // ✅ Get single item by ID
 export const useProdcutItem = (id) => {
   return useQuery({
-    queryKey: ["product", id],
+    queryKey: ['product', id],
     queryFn: () => fetchProductyById(id),
     enabled: !!id,
   });
@@ -58,9 +58,9 @@ export const useCreateProdcut = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createProductItem,
-    mutationKey: ["newProduct"],
+    mutationKey: ['newProduct'],
     onSuccess: () => {
-      queryClient.invalidateQueries(["product"]);
+      queryClient.invalidateQueries(['product']);
     },
   });
 };
@@ -70,9 +70,9 @@ export const useUpdateProdcut = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateProductItem,
-    mutationKey: ["productupdate"],
+    mutationKey: ['productupdate'],
     onSuccess: () => {
-      queryClient.invalidateQueries(["product"]);
+      queryClient.invalidateQueries(['product']);
     },
   });
 };
@@ -82,9 +82,9 @@ export const useDeleteProdcut = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteProductItem,
-    mutationKey: ["productRemove"],
+    mutationKey: ['productRemove'],
     onSuccess: () => {
-      queryClient.invalidateQueries(["product"]);
+      queryClient.invalidateQueries(['product']);
     },
   });
 };
@@ -92,7 +92,7 @@ export const useDeleteProdcut = () => {
 // INVENTORY USE CONT..
 export const useInventory = () => {
   return useQuery({
-    queryKey: ["inventory"],
+    queryKey: ['inventory'],
     queryFn: fetchInventory,
   });
 };
@@ -100,7 +100,7 @@ export const useInventory = () => {
 // 🔍 Get single item
 export const useInventoryItem = (id) => {
   return useQuery({
-    queryKey: ["inventory", id],
+    queryKey: ['inventory', id],
     queryFn: () => fetchInventoryById(id),
     enabled: !!id,
   });
@@ -111,7 +111,7 @@ export const useCreateInventory = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createInventoryItem,
-    onSuccess: () => queryClient.invalidateQueries(["inventory"]),
+    onSuccess: () => queryClient.invalidateQueries(['inventory']),
   });
 };
 
@@ -120,7 +120,7 @@ export const useUpdateInventory = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateInventoryItem,
-    onSuccess: () => queryClient.invalidateQueries(["inventory"]),
+    onSuccess: () => queryClient.invalidateQueries(['inventory']),
   });
 };
 
@@ -129,46 +129,46 @@ export const useDeleteInventory = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteInventoryItem,
-    onSuccess: () => queryClient.invalidateQueries(["inventory"]),
+    onSuccess: () => queryClient.invalidateQueries(['inventory']),
   });
 };
 // use store
 
 export const useStores = () => {
   return useQuery({
-    queryKey: ["allstores"],
+    queryKey: ['allstores'],
     queryFn: fetchStores,
   });
 };
 
 export const useStore = (id) =>
   useQuery({
-    queryKey: ["store", id],
+    queryKey: ['store', id],
     queryFn: fetchStore,
   });
 
 export const useCreateStore = () => {
   const queryClient = useQueryClient();
   return useMutation(createStore, {
-    onSuccess: () => queryClient.invalidateQueries(["createStore"]),
+    onSuccess: () => queryClient.invalidateQueries(['createStore']),
   });
 };
 
 export const useUpdateStore = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["deleteStore"],
+    mutationKey: ['deleteStore'],
     mutationFn: () => updateStore,
-    onSuccess: () => queryClient.invalidateQueries(["allstores"]),
+    onSuccess: () => queryClient.invalidateQueries(['allstores']),
   });
 };
 
 export const useDeleteStore = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["storedelete"],
+    mutationKey: ['storedelete'],
     mutationFn: deleteStore,
-    onSuccess: () => queryClient.invalidateQueries(["allstores"]),
+    onSuccess: () => queryClient.invalidateQueries(['allstores']),
   });
 };
 
@@ -176,14 +176,14 @@ export const useDeleteStore = () => {
 
 export const usePurchases = () => {
   return useQuery({
-    queryKey: ["allPurchases"],
+    queryKey: ['allPurchases'],
     queryFn: fetchPurchases,
   });
 };
 
 export const usePurchase = (id) =>
   useQuery({
-    queryKey: ["purchase", id],
+    queryKey: ['purchase', id],
     queryFn: fetchPurchase,
   });
 
@@ -191,26 +191,26 @@ export const useCreatePurchase = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createPurchase,
-    mutationKey: ["newPurchase"],
-    onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+    mutationKey: ['newPurchase'],
+    onSuccess: () => queryClient.invalidateQueries(['allPurchases']),
   });
 };
 
 export const useUpdatePurchase = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["updatePurchase"],
+    mutationKey: ['updatePurchase'],
     mutationFn: () => updatePurchase,
-    onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+    onSuccess: () => queryClient.invalidateQueries(['allPurchases']),
   });
 };
 
 export const useDeletePurchase = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["purchaseDelete"],
+    mutationKey: ['purchaseDelete'],
     mutationFn: deletePurchase,
-    onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+    onSuccess: () => queryClient.invalidateQueries(['allPurchases']),
   });
 };
 
@@ -218,14 +218,14 @@ export const useDeletePurchase = () => {
 
 export const useSuppliers = () => {
   return useQuery({
-    queryKey: ["allSuppliers"],
+    queryKey: ['allSuppliers'],
     queryFn: fetchSuppliers,
   });
 };
 
 export const useSupplier = (id) =>
   useQuery({
-    queryKey: ["supplier", id],
+    queryKey: ['supplier', id],
     queryFn: fetchSupplier,
   });
 
@@ -233,26 +233,26 @@ export const useCreateSupplier = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createSupplier,
-    mutationKey: ["newSupplier"],
-    onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+    mutationKey: ['newSupplier'],
+    onSuccess: () => queryClient.invalidateQueries(['allSuppliers']),
   });
 };
 
 export const useUpdateSupplier = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["updateSupplier"],
+    mutationKey: ['updateSupplier'],
     mutationFn: () => updateSupplier,
-    onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+    onSuccess: () => queryClient.invalidateQueries(['allSuppliers']),
   });
 };
 
 export const useDeleteSupplier = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["deleteSupplier"],
+    mutationKey: ['deleteSupplier'],
     mutationFn: deleteSupplier,
-    onSuccess: () => queryClient.invalidateQueries(["allSupplier"]),
+    onSuccess: () => queryClient.invalidateQueries(['allSupplier']),
   });
 };
 
@@ -260,14 +260,14 @@ export const useDeleteSupplier = () => {
 
 export const useSales = () => {
   return useQuery({
-    queryKey: ["allSales"],
+    queryKey: ['allSales'],
     queryFn: fetchSales,
   });
 };
 
 export const useSale = (id) =>
   useQuery({
-    queryKey: ["sale", id],
+    queryKey: ['sale', id],
     queryFn: fetchSale,
   });
 
@@ -275,26 +275,26 @@ export const useCreateSale = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createSale,
-    mutationKey: ["newSale"],
-    onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+    mutationKey: ['newSale'],
+    onSuccess: () => queryClient.invalidateQueries(['allSales']),
   });
 };
 
 export const useUpdateSale = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["updateSale"],
+    mutationKey: ['updateSale'],
     mutationFn: () => updateSale,
-    onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+    onSuccess: () => queryClient.invalidateQueries(['allSales']),
   });
 };
 
 export const useDeleteSales = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["deleteSale"],
+    mutationKey: ['deleteSale'],
     mutationFn: deleteSale,
-    onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+    onSuccess: () => queryClient.invalidateQueries(['allSales']),
   });
 };
 
@@ -307,9 +307,9 @@ export const useLogin = () => {
     mutationFn: loginUser,
     onSuccess: (data) => {
       // Store user data in query cache
-      queryClient.setQueryData(["user"], data.user);
+      queryClient.setQueryData(['user'], data.user);
       // Invalidate user queries to refetch
-      queryClient.invalidateQueries(["user"]);
+      queryClient.invalidateQueries(['user']);
     },
   });
 };
@@ -323,7 +323,7 @@ export const useLogout = () => {
       // Clear all cached data
       queryClient.clear();
       // Remove user data
-      queryClient.removeQueries(["user"]);
+      queryClient.removeQueries(['user']);
     },
   });
 };
@@ -331,7 +331,7 @@ export const useLogout = () => {
 // Get current user
 export const useCurrentUser = () => {
   return useQuery({
-    queryKey: ["user"],
+    queryKey: ['user'],
     queryFn: getCurrentUser,
     retry: (failureCount, error) => {
       // Don't retry on 401 (unauthorized)
@@ -349,7 +349,7 @@ export const useRefreshToken = () => {
     mutationFn: refreshToken,
     onSuccess: (data) => {
       // Update user data with new token info
-      queryClient.setQueryData(["user"], data.user);
+      queryClient.setQueryData(['user'], data.user);
     },
   });
 };

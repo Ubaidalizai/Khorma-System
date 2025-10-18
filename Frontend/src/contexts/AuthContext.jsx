@@ -1,13 +1,13 @@
-import { createContext, useContext, useEffect } from "react";
-import { useCurrentUser, useLogout } from "../services/useApi";
-import { toast } from "react-hot-toast";
+import { createContext, useContext, useEffect } from 'react';
+import { useCurrentUser, useLogout } from '../services/useApi';
+import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
@@ -19,12 +19,12 @@ export const AuthProvider = ({ children }) => {
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        toast.success("خروج موفقیت‌آمیز بود");
+        toast.success('خروج موفقیت‌آمیز بود');
         // Redirect will be handled by the router
       },
       onError: (error) => {
-        toast.error(error.message || "خطا در خروج");
-      }
+        toast.error(error.message || 'خطا در خروج');
+      },
     });
   };
 
@@ -37,9 +37,5 @@ export const AuthProvider = ({ children }) => {
     isLoggingOut,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

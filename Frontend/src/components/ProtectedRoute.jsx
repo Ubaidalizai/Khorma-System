@@ -1,6 +1,6 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import Spinner from "./Spinner";
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import Spinner from './Spinner';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -8,7 +8,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className='flex items-center justify-center min-h-screen'>
         <Spinner />
       </div>
     );
@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     // Redirect to login page with return url
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to='/login' state={{ from: location }} replace />;
   }
 
   return children;
