@@ -43,7 +43,7 @@ const getStatusColor = (status) => {
 };
 
 const Inventory = () => {
-  const { register, handleSubmit, formState, reset } = useForm();
+  const { register, handleSubmit, formState, reset, control } = useForm();
   const { data: totalProdcut } = useProduct();
   const { data: productList, isLoadingProduct } = useProduct();
   const { mutate: createProduct } = useCreateProdcut();
@@ -51,6 +51,7 @@ const Inventory = () => {
     const now = new Date();
     const jalaaliDate = toJalaali(now);
     const onSubmit = (data) => {
+      console.log(data);
       createProduct({
         date: `${jalaaliDate.jy}-${String(jalaaliDate.jm).padStart(
           2,
@@ -58,6 +59,7 @@ const Inventory = () => {
         )}-${String(jalaaliDate.jd).padStart(2, "0")}`,
         ...data,
       });
+      reset();
       if (typeof close === "function") close();
     };
     return (
@@ -65,6 +67,7 @@ const Inventory = () => {
         register={register}
         handleSubmit={handleSubmit(onSubmit)}
         formState={formState}
+        control={control}
       />
     );
   }

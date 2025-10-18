@@ -9,14 +9,18 @@ import TableMenuModal from "./TableMenuModal";
 import Menus from "./Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import { AiTwotonePrinter } from "react-icons/ai";
-import { useDeleteSales, useSales } from "../services/useApi";
+import {
+  useCustomers,
+  useDeleteSales,
+  useEmployees,
+  useSales,
+} from "../services/useApi";
 import Spinner from "./Spinner";
 import TableRow from "./TableRow";
 import TableColumn from "./TableColumn";
 import Confirmation from "./Confirmation";
 import GloableModal from "./GloableModal";
 import Button from "./Button";
-import { PrinterIcon } from "lucide-react";
 const salesHeader = [
   { title: "نمبر فاکتور" },
   { title: "تاریخ" },
@@ -30,13 +34,29 @@ const salesHeader = [
   { title: "پرداخت" },
   { title: "عملیات" },
 ];
+const productHeader = [
+  { title: "محصول" },
+  { title: "واحد" },
+  { title: "Batch" },
+  { title: "تعداد" },
+  { title: "قیمت یک" },
+  { title: "مجموع" },
+];
 function Sale({ getBillTypeColor, getPaymentStatusColor }) {
   const { data: filteredSales, isLoading } = useSales();
+  const { data: customers, isLoading: isCustomerLoading } = useCustomers();
+  const { data: employees, isLoading: isEmployeeLoading } = useEmployees();
   const [openPrint, setOpenPrint] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const { mutate: deleteSale } = useDeleteSales();
-  if (isLoading) return <Spinner />;
+  const currentCustomer = (cuid) => {
+    return customers?.filter((curr) => curr.id === cuid)[0];
+  };
+  const currentEmployee = (cuid) => {
+    return employees?.filter((curr) => curr.id === cuid)[0];
+  };
+  if (isLoading || isCustomerLoading || isEmployeeLoading) return <Spinner />;
   return (
     <section>
       <Table
@@ -78,36 +98,36 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
         <TableBody>
           {filteredSales.map((sale, index) => (
             <TableRow key={index}>
-              <TableColumn>{sale.billNumber}</TableColumn>
+              <TableColumn>{sale.id}</TableColumn>
               <TableColumn>
                 {new Date(sale.saleDate).toLocaleDateString()}
               </TableColumn>
-              <TableColumn>{sale.customer}</TableColumn>
-              <TableColumn>{sale.employee}</TableColumn>
+              <TableColumn>{currentCustomer(sale.customer)?.name}</TableColumn>
+              <TableColumn>{currentEmployee(sale.employee)?.name}</TableColumn>
               <TableColumn>{sale?.items?.length} items</TableColumn>
               <TableColumn>{formatCurrency(sale.totalAmount)}</TableColumn>
               <TableColumn className=" text-success-green">
-                {formatCurrency(sale.amountPaid)}
+                {formatCurrency(sale.paidAmount)}
               </TableColumn>
               <TableColumn className=" text-red-500">
-                {formatCurrency(sale.amountOwed)}
+                {formatCurrency(sale.dueAmount)}
               </TableColumn>
               <TableColumn>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBillTypeColor(
-                    sale.billType
+                    sale.invoiceType
                   )}`}
                 >
-                  {sale.billType}
+                  {sale.invoiceType}
                 </span>
               </TableColumn>
               <TableColumn>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
-                    sale.paymentStatus
+                    sale.dueAmount === 0 ? "paid" : "partial"
                   )}`}
                 >
-                  {sale.paymentStatus}
+                  {sale.dueAmount === 0 ? "paid" : "partial"}
                 </span>
               </TableColumn>
               <TableColumn
@@ -176,17 +196,15 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
         {selectedSale && (
           <div className="bg-white rounded-sm  shadow-sm  w-[600px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Sale Details</h2>
+              <h2 className="text-2xl font-bold text-gray-900">جزئیات فروش</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">
-                    Bill Number
+                    نمبر فروش
                   </h3>
-                  <p className="text-lg font-semibold">
-                    {selectedSale.billNumber}
-                  </p>
+                  <p className="text-lg font-semibold">{selectedSale?.id}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Date</h3>
@@ -195,109 +213,97 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Customer
-                  </h3>
+                  <h3 className="text-sm font-medium text-gray-500">مشتری</h3>
                   <p className="text-lg font-semibold">
-                    {selectedSale.customer}
+                    {currentCustomer(selectedSale.customer)?.name}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">فروشنده</h3>
+                  <p className="text-lg font-semibold">
+                    {currentEmployee(selectedSale.employee)?.name}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">
-                    Employee
-                  </h3>
-                  <p className="text-lg font-semibold">
-                    {selectedSale.employee}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Bill Type
+                    نوعیت فروش
                   </h3>
                   <span
                     className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getBillTypeColor(
-                      selectedSale.billType
+                      selectedSale.invoiceType
                     )}`}
                   >
-                    {selectedSale.billType}
+                    {selectedSale.invoiceType}
                   </span>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">
-                    Sale Type
+                    نوعیت پرداخت
                   </h3>
                   <p className="text-lg font-semibold capitalize">
-                    {selectedSale.saleType}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                        selectedSale.dueAmount === 0 ? "paid" : "partial"
+                      )}`}
+                    >
+                      {selectedSale.dueAmount === 0 ? "paid" : "partial"}
+                    </span>
                   </p>
                 </div>
               </div>
 
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Items</h3>
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-right py-2 px-4">Product</th>
-                      <th className="text-right py-2 px-4">Qty</th>
-                      <th className="text-right py-2 px-4">Price</th>
-                      <th className="text-right py-2 px-4">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedSale.items.map((item, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="py-2 px-4 text-right">{item.product}</td>
-                        <td className="py-2 px-4 text-right">
-                          {item.quantity}
-                        </td>
-                        <td className="py-2 px-4 text-right">
-                          ${item.unitPrice}
-                        </td>
-                        <td className="py-2 px-4 text-right font-semibold">
-                          ${item.total.toFixed(2)}
-                        </td>
-                      </tr>
+                <Table className="w-full text-sm">
+                  <TableHeader headerData={productHeader} />
+                  <TableBody>
+                    {selectedSale?.items?.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableColumn>{item.product}</TableColumn>
+                        <TableColumn>{item.unit}</TableColumn>
+                        <TableColumn>{item.quantity}</TableColumn>
+                        <TableColumn>{item.batchNumber}</TableColumn>
+                        <TableColumn>{item.unitPrice}</TableColumn>
+                        <TableColumn>{item.totalPrice}</TableColumn>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span className="font-semibold">
-                      ${selectedSale.subtotal.toFixed(2)}
-                    </span>
+                    <span className="font-semibold"></span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount:</span>
                     <span className="font-semibold text-red-600">
-                      -${selectedSale.discount.toFixed(2)}
+                      {selectedSale?.discount}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax:</span>
                     <span className="font-semibold">
-                      ${selectedSale.tax.toFixed(2)}
+                      {formatCurrency(selectedSale?.tax)}
                     </span>
                   </div>
                   <div className="flex justify-between border-t pt-2 mt-2">
                     <span className="font-bold text-lg">Total:</span>
                     <span className="font-bold text-xl text-amber-600">
-                      ${selectedSale.totalAmount.toFixed(2)}
+                      {formatCurrency(selectedSale?.totalAmount)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-green-600">Paid:</span>
                     <span className="font-semibold text-green-600">
-                      ${selectedSale.amountPaid.toFixed(2)}
+                      {formatCurrency(selectedSale.paidAmount)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-red-600">Owed:</span>
                     <span className="font-semibold text-red-600">
-                      ${selectedSale.amountOwed.toFixed(2)}
+                      {formatCurrency(selectedSale.dueAmount)}
                     </span>
                   </div>
                 </div>
@@ -316,7 +322,7 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
           </div>
         )}
       </GloableModal>
-      <GloableModal open={openPrint} setOpen={setOpenPrint}>
+      {/* <GloableModal open={openPrint} setOpen={setOpenPrint}>
         {selectedSale && (
           <div className="bg-white rounded-sm shadow-sm w-[700px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
@@ -437,7 +443,7 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
             </div>
           </div>
         )}
-      </GloableModal>
+      </GloableModal> */}
     </section>
   );
 }

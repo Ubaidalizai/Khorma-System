@@ -19,12 +19,22 @@ import {
   usePurchases,
   useSuppliers,
 } from "../services/useApi";
+import { formatCurrency } from "../utilies/helper";
 
 const Purchases = () => {
   const { data: suppliers, isLoading: isSupplierLoading } = useSuppliers();
   const { data: purchases } = usePurchases();
   const { mutate: createPurchase } = useCreatePurchase();
-  const { register, handleSubmit, watch } = useForm();
+  const { register, handleSubmit, watch, reset } = useForm();
+  const [currentItem, setCurrentItem] = useState({
+    product: "",
+    unit: "",
+    batchNumber: "",
+    quantity: 0,
+    unitPrice: 0,
+    total: 0,
+  });
+  const [items, setItems] = useState([]);
   // Search and filter states
   // const [searchTerm, setSearchTerm] = useState("");
 
@@ -34,89 +44,28 @@ const Purchases = () => {
   // const [filterSupplierOpen, setFilterSupplierOpen] = useState("all");
   // const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [activeTab, setActiveTab] = useState("purchases"); // 'purchases', 'suppliers', 'history'
+
   const onSubmit = (data) => {
     const totals = calculatePurchaseTotals();
+    console.log(data);
     createPurchase({
       ...data,
+      purchaseDate: data.purchaseDate ? data.purchaseDate : Date.now(),
+      items: [...items],
       subtotal: parseFloat(totals.subtotal),
       taxAmount: parseFloat(totals.taxAmount),
-      totalAmount: parseFloat(totals.total),
-      amountPaid:
+      totalAmount: totals.total,
+      paidAmount:
         watch("paymentStatus") === "paid" ? parseFloat(totals.total) : 0,
-      amountOwed:
+      dueAmount:
         watch("paymentStatus") === "paid" ? 0 : parseFloat(totals.total),
-      status: watch("paymentStatus") === "paid" ? "completed" : "pending",
+      paymentStatus:
+        watch("paymentStatus") === "paid" ? "completed" : "pending",
       createdBy: "Admin",
       lastUpdated: new Date().toISOString(),
     });
+    reset();
   };
-  // const [newSupplier, setNewSupplier] = useState({
-  //   name: "",
-  //   company: "",
-  //   email: "",
-  //   phone: "",
-  //   address: "",
-  //   taxId: "",
-  //   bankAccount: "",
-  //   creditLimit: 0,
-  //   paymentTerms: "30",
-  //   notes: "",
-  // });
-
-  // Suppliers data
-  // const [suppliers, setSuppliers] = useState([
-  //   {
-  //     id: 1,
-  //     name: "Ahmed Hassan",
-  //     company: "Fresh Foods Ltd",
-  //     email: "ahmed@freshfoods.com",
-  //     phone: "+93 700 123 456",
-  //     address: "Kabul, Afghanistan",
-  //     taxId: "TIN-12345",
-  //     totalPurchases: 15,
-  //     totalAmount: 45000,
-  //     amountOwed: 5000,
-  //     amountPaid: 40000,
-  //     creditLimit: 50000,
-  //     paymentTerms: "30 days",
-  //     status: "active",
-  //     lastPurchase: "2024-01-15",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Mohammad Ali",
-  //     company: "Grain Suppliers Inc",
-  //     email: "ali@grainsupply.com",
-  //     phone: "+93 700 234 567",
-  //     address: "Herat, Afghanistan",
-  //     taxId: "TIN-23456",
-  //     totalPurchases: 12,
-  //     totalAmount: 38000,
-  //     amountOwed: 8000,
-  //     amountPaid: 30000,
-  //     creditLimit: 40000,
-  //     paymentTerms: "45 days",
-  //     status: "active",
-  //     lastPurchase: "2024-01-14",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Fatima Karimi",
-  //     company: "Bakery Supplies Co",
-  //     email: "fatima@bakerysupply.com",
-  //     phone: "+93 700 345 678",
-  //     address: "Mazar-i-Sharif, Afghanistan",
-  //     taxId: "TIN-34567",
-  //     totalPurchases: 8,
-  //     totalAmount: 22000,
-  //     amountOwed: 0,
-  //     amountPaid: 22000,
-  //     creditLimit: 30000,
-  //     paymentTerms: "15 days",
-  //     status: "active",
-  //     lastPurchase: "2024-01-13",
-  //   },
-  // ]);
   // Payment history
   const [paymentHistory, setPaymentHistory] = useState([
     {
@@ -155,18 +104,20 @@ const Purchases = () => {
   ]);
 
   const calculatePurchaseTotals = () => {
-    const subtotal = Number(watch("quantity")) * Number(watch("unitPrice"));
-    const taxAmount = (subtotal * Number(watch("tax"))) / 100;
-    const total =
-      subtotal +
-      taxAmount -
-      Number(watch("discount")) +
-      Number(watch("shippingCost"));
+    const totalProductPrice = items?.reduce((pre, curr) => pre + curr.total, 0);
+
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const discountAmount = watch("discount");
+    const taxAmount =
+      ((subtotal - discountAmount) * Number(watch("tax"))) / 100;
+    const total = totalProductPrice - discountAmount + taxAmount;
+
+    taxAmount - Number(watch("discount")) + Number(watch("shippingCost"));
 
     return {
-      subtotal: subtotal.toFixed(2),
-      taxAmount: taxAmount.toFixed(2),
-      total: total.toFixed(2),
+      subtotal: subtotal,
+      taxAmount: taxAmount,
+      total: total,
     };
   };
   // Filter purchases
@@ -195,8 +146,8 @@ const Purchases = () => {
   const stats = {
     totalPurchases: purchases?.length,
     totalAmount: purchases?.reduce((sum, p) => sum + p.totalAmount, 0),
-    totalPaid: purchases?.reduce((sum, p) => sum + p.amountPaid, 0),
-    totalOwed: purchases?.reduce((sum, p) => sum + p.amountOwed, 0),
+    totalPaid: purchases?.reduce((sum, p) => sum + p.paidAmount, 0),
+    totalOwed: purchases?.reduce((sum, p) => sum + p.dueAmount, 0),
     pendingPayments: purchases?.filter((p) => p.paymentStatus === "pending")
       .length,
     completedPayments: purchases?.filter((p) => p.paymentStatus === "paid")
@@ -259,6 +210,11 @@ const Purchases = () => {
                 watch={watch}
                 handleSubmit={handleSubmit(onSubmit)}
                 calculatePurchaseTotals={calculatePurchaseTotals}
+                currentItem={currentItem}
+                setCurrentItem={setCurrentItem}
+                items={items}
+                setItems={setItems}
+                summary={calculatePurchaseTotals}
               />
             </Modal.Window>
           </Modal>
@@ -286,7 +242,7 @@ const Purchases = () => {
             <div>
               <p className="text-sm text-gray-600">مجموع کل</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                ${stats.totalAmount}
+                {formatCurrency(Number(stats?.totalAmount).toFixed(2))}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -300,7 +256,7 @@ const Purchases = () => {
             <div>
               <p className="text-sm text-gray-600">مبلغ پرداخت شده</p>
               <p className="text-2xl font-bold text-green-600 mt-1">
-                ${stats.totalPaid}
+                {formatCurrency(stats.totalPaid?.toFixed(2))}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -314,7 +270,7 @@ const Purchases = () => {
             <div>
               <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
               <p className="text-2xl font-bold text-red-600 mt-1">
-                ${stats.totalOwed}
+                {formatCurrency(stats.totalOwed?.toFixed(2))}
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
@@ -378,7 +334,7 @@ const Purchases = () => {
               {isSupplierLoading ? (
                 <Spinner />
               ) : (
-                suppliers.map((supplier) => (
+                suppliers?.map((supplier) => (
                   <SupplierComponent supplier={supplier} key={supplier.id} />
                 ))
               )}

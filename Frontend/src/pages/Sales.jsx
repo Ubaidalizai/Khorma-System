@@ -17,10 +17,23 @@ import Modal from "./../components/Modal";
 import { useForm } from "react-hook-form";
 import { useCreateSale } from "../services/useApi";
 import CustomerForm from "../components/CustomerForm";
+import SalesForm from "../components/SalesForm";
 
 const Sales = () => {
   // Tab and filter states
-  const { register, handleSubmit, watch, reset } = useForm();
+  const { register, handleSubmit, watch, reset, control } = useForm({
+    defaultValues: {
+      saleDate: new Date().toISOString().slice(0, 10),
+      customer: "",
+      employee: "",
+      saleType: "cash",
+      billType: "small",
+      discount: 0,
+      tax: 0,
+      notes: "",
+      items: [], // sale items (saleItemSchema fields)
+    },
+  });
   const { mutate: createSale } = useCreateSale();
   const [activeTab, setActiveTab] = useState("sales");
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,31 +43,17 @@ const Sales = () => {
 
   // Modal states
   const [showAddSaleModal, setShowAddSaleModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [showPrintModal, setShowPrintModal] = useState(false);
-  const [selectedSale, setSelectedSale] = useState(null);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Sale items state
   const [saleItems, setSaleItems] = useState([]);
   const [currentItem, setCurrentItem] = useState({
     product: "",
-    quantity: 1,
+    unit: "",
+    batchNumber: "",
+    quantity: 0,
     unitPrice: 0,
-  });
-
-  // New sale form state
-  const [newSale, setNewSale] = useState({
-    customer: "",
-    customerId: null,
-    employee: "",
-    saleType: "cash",
-    billType: "small",
-    discount: 0,
-    tax: 0,
-    notes: "",
-    saleDate: new Date().toISOString().split("T")[0],
+    total: 0,
   });
 
   // New customer state
@@ -210,78 +209,16 @@ const Sales = () => {
   // Calculate sale totals
   const calculateSaleTotals = () => {
     const subtotal = saleItems.reduce((sum, item) => sum + item.total, 0);
-    const discountAmount = Number(newSale.discount);
-    const taxAmount = ((subtotal - discountAmount) * Number(newSale.tax)) / 100;
+    const discountAmount = Number(watch("discount"));
+    const taxAmount =
+      ((subtotal - discountAmount) * Number(watch("tax"))) / 100;
     const total = subtotal - discountAmount + taxAmount;
-
+    console.log(subtotal, discountAmount, taxAmount);
     return {
-      subtotal: subtotal.toFixed(2),
-      taxAmount: taxAmount.toFixed(2),
-      total: total.toFixed(2),
+      subtotal: subtotal,
+      taxAmount: taxAmount,
+      total: total,
     };
-  };
-
-  // Add item to sale
-  const addItemToSale = (e) => {
-    e.preventDefault();
-    if (!currentItem.product || currentItem.quantity <= 0) return;
-
-    const item = {
-      ...currentItem,
-      total: currentItem.quantity * currentItem.unitPrice,
-    };
-
-    setSaleItems([...saleItems, item]);
-    setCurrentItem({ product: "", quantity: 1, unitPrice: 0 });
-  };
-
-  // Remove item from sale
-  const removeItemFromSale = (e, index) => {
-    e.preventDefault();
-    setSaleItems(saleItems.filter((_, i) => i !== index));
-  };
-
-  // Handle sale creation
-  const handleAddSale = () => {
-    if (saleItems.length === 0) {
-      alert("Please add at least one item to the sale");
-      return;
-    }
-
-    const totals = calculateSaleTotals();
-    const sale = {
-      id: sales.length + 1,
-      billNumber: `BILL-2024-${String(sales.length + 1).padStart(3, "0")}`,
-      ...newSale,
-      items: saleItems,
-      subtotal: parseFloat(totals.subtotal),
-      taxAmount: parseFloat(totals.taxAmount),
-      totalAmount: parseFloat(totals.total),
-      amountPaid: newSale.saleType === "cash" ? parseFloat(totals.total) : 0,
-      amountOwed: newSale.saleType === "cash" ? 0 : parseFloat(totals.total),
-      paymentStatus: newSale.saleType === "cash" ? "paid" : "pending",
-      createdBy: "Admin",
-      lastUpdated: new Date().toISOString(),
-    };
-
-    setSales([sale, ...sales]);
-    setShowAddSaleModal(false);
-    resetSaleForm();
-  };
-
-  const resetSaleForm = () => {
-    setSaleItems([]);
-    setNewSale({
-      customer: "",
-      customerId: null,
-      employee: "",
-      saleType: "cash",
-      billType: "small",
-      discount: 0,
-      tax: 0,
-      notes: "",
-      saleDate: new Date().toISOString().split("T")[0],
-    });
   };
 
   // Handle customer creation
@@ -385,334 +322,17 @@ const Sales = () => {
               <Button className=" bg-deepdate-400">اضافه کردن فروش</Button>
             </Modal.Toggle>
             <Modal.Window name="addPurchase">
-              <form
-                noValidate
-                onSubmit={handleSubmit(onSubmit)}
-                className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-              >
-                <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900">New Sale</h2>
-                </div>
-
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Sale Date *
-                      </label>
-                      <input
-                        type="date"
-                        {...register("saleDate")}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Customer *
-                      </label>
-                      <select
-                        {...register("customer")}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-                      >
-                        <option value="">Select customer</option>
-                        {customers.map((customer) => (
-                          <option key={customer.id} value={customer.name}>
-                            {customer.name} - {customer.company}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Employee *
-                      </label>
-                      <select
-                        {...register("employee")}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-                      >
-                        <option value="">Select employee</option>
-                        {employees.map((emp) => (
-                          <option key={emp.id} value={emp.name}>
-                            {emp.name} - {emp.position}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Sale Type *
-                      </label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="cash"
-                            {...register("saleType", {
-                              required: "Select on the of them",
-                            })}
-                            className="ml-2"
-                          />
-                          <span className="mr-2 text-sm">Cash</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="credit"
-                            {...register("saleType", {
-                              required: "Select one of them",
-                            })}
-                            className="ml-2"
-                          />
-                          <span className="mr-2 text-sm">Credit</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Bill Type *
-                      </label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="small"
-                            {...register("billType")}
-                            className="ml-2"
-                          />
-                          <span className="mr-2 text-sm">Small</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="large"
-                            {...register("billType")}
-                            className="ml-2"
-                          />
-                          <span className="mr-2 text-sm">Large</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Sale Items Section */}
-                  <div className="border border-gray-300 rounded-lg p-4 mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Sale Items
-                    </h3>
-
-                    {/* Add Item Form */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Product
-                        </label>
-                        <input
-                          type="text"
-                          value={currentItem.product}
-                          onChange={(e) =>
-                            setCurrentItem({
-                              ...currentItem,
-                              product: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                          placeholder="Product name"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Quantity
-                        </label>
-                        <input
-                          type="number"
-                          value={currentItem.quantity}
-                          onChange={(e) =>
-                            setCurrentItem({
-                              ...currentItem,
-                              quantity: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Unit Price
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={currentItem.unitPrice}
-                          onChange={(e) =>
-                            setCurrentItem({
-                              ...currentItem,
-                              unitPrice: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-
-                      <div className="flex items-end">
-                        <button
-                          onClick={addItemToSale}
-                          className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                        >
-                          Add Item
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Items List */}
-                    {saleItems.length > 0 && (
-                      <div className="border-t pt-4">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-right py-2">Product</th>
-                              <th className="text-right py-2">Qty</th>
-                              <th className="text-right py-2">Price</th>
-                              <th className="text-right py-2">Total</th>
-                              <th className="text-right py-2">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {saleItems.map((item, index) => (
-                              <tr key={index} className="border-b">
-                                <td className="py-2 text-right">
-                                  {item.product}
-                                </td>
-                                <td className="py-2 text-right">
-                                  {item.quantity}
-                                </td>
-                                <td className="py-2 text-right">
-                                  ${item.unitPrice}
-                                </td>
-                                <td className="py-2 text-right font-semibold">
-                                  ${item.total.toFixed(2)}
-                                </td>
-                                <td className="py-2 text-right">
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      setSaleItems(
-                                        saleItems.filter((_, i) => i !== index)
-                                      );
-                                    }}
-                                    className="text-red-600 hover:text-red-800"
-                                  >
-                                    <TrashIcon className="h-4 w-4" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Additional Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Discount ($)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        {...register("discount")}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tax (%)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        {...register("tax")}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      />
-                    </div>
-
-                    <div className="md:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Notes
-                      </label>
-                      <input
-                        type="text"
-                        {...register("notes")}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Additional notes"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Sale Summary */}
-                  {saleItems.length > 0 && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Sale Summary
-                      </h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">
-                            Subtotal:
-                          </span>
-                          <span className="font-semibold">
-                            {formatCurrency(calculateSaleTotals().subtotal)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">
-                            Discount:
-                          </span>
-                          <span className="font-semibold text-red-600">
-                            -{formatCurrency(watch("discount"))}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">
-                            Tax ({formatCurrency(watch("tax"))}%):
-                          </span>
-                          <span className="font-semibold">
-                            {formatCurrency(calculateSaleTotals().taxAmount)}
-                          </span>
-                        </div>
-                        <div className="pt-2 border-t border-gray-300">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-lg">Total:</span>
-                            <span className="text-2xl font-bold text-amber-600">
-                              ${formatCurrency(calculateSaleTotals().total)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-6 border-t flex justify-end gap-4">
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddSale}
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-                  >
-                    Create Sale
-                  </button>
-                </div>
-              </form>
+              <SalesForm
+                summary={() => calculateSaleTotals()}
+                currentItem={currentItem}
+                setCurrentItem={setCurrentItem}
+                items={saleItems}
+                setItems={setSaleItems}
+                handleSubmit={handleSubmit(onSubmit)}
+                register={register}
+                watch={watch}
+                control={control}
+              />
             </Modal.Window>
           </Modal>
         </div>

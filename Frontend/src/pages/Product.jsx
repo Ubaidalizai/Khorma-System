@@ -17,11 +17,11 @@ import TableMenuModal from "../components/TableMenuModal";
 import TableRow from "../components/TableRow";
 import { useDeleteProdcut } from "../services/useApi";
 const headers = [
-  { title: "نمبر مسلسل" },
   { title: "تاریخ" },
   { title: "اسم جنس" },
-  { title: "واحد موردنظر" },
-  { title: "کمترین اندازه" },
+  { title: "واحد اصلی" },
+  { title: "اخیر ترین قیمت" },
+  { title: "تعداد" },
   { title: "توضیحات" },
   { title: "عملیات" },
 ];
@@ -60,11 +60,11 @@ function Product({ properties: productList }) {
         <TableBody>
           {productList?.map((el) => (
             <TableRow key={el.id}>
-              <TableColumn>{el?.id}</TableColumn>
               <TableColumn>{el?.date}</TableColumn>
-              <TableColumn>{el?.itemName}</TableColumn>
-              <TableColumn>{el?.unit}</TableColumn>
-              <TableColumn>{el?.minQuantity}</TableColumn>
+              <TableColumn>{el?.name}</TableColumn>
+              <TableColumn>{el?.baseUnit}</TableColumn>
+              <TableColumn>{el?.latestPurchasePrice}</TableColumn>
+              <TableColumn>{el?.minLevel}</TableColumn>
               <TableColumn>{el?.description}</TableColumn>
               <TableColumn>
                 <span
@@ -286,7 +286,7 @@ function Product({ properties: productList }) {
             <div className=" p-6 text-slate-800 flex  items-center  gap-3 ">
               <p className="text-2xl  font-black">{selectedPro.id}#</p>
               <h2 className="text-2xl font-bold text-palm-500">
-                {selectedPro.itemName}
+                {selectedPro.name}
               </h2>
             </div>
 
@@ -299,7 +299,7 @@ function Product({ properties: productList }) {
                     <span className="text-lg text-palm-500">واحد</span>
                   </h3>
                   <p className="text-lg font-semibold text-palm-400">
-                    {selectedPro.unit}
+                    {selectedPro.baseUnit}
                   </p>
                 </div>
 
@@ -310,7 +310,7 @@ function Product({ properties: productList }) {
                     <span className="ext-lg text-palm-500">حداقل مقدار</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.minQuantity} عدد
+                    {selectedPro.minLevel} عدد
                   </p>
                 </div>
 
@@ -318,10 +318,10 @@ function Product({ properties: productList }) {
                 <div className="flex flex-col  items-start gap-x-2">
                   <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
                     <User className="text-2xl text-palm-500" />
-                    <span className="ext-lg text-palm-500">مسئول پیگیری</span>
+                    <span className="ext-lg text-palm-500">اخیر ترین قیمت</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.tracker}
+                    {selectedPro.latestPurchasePrice}
                   </p>
                 </div>
 
