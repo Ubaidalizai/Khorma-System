@@ -92,7 +92,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-600">{title} </p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+            <div className="text-2xl font-bold text-gray-900 mt-1">
               {change ? (
                 <div
                   className={`mt-2 text-center  w-full  flex items-center gap-1 text-sm font-medium ${
@@ -120,7 +120,7 @@ const Dashboard = () => {
               ) : (
                 value
               )}
-            </p>
+            </div>
           </div>
 
           <div
