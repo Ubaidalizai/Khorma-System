@@ -1,13 +1,14 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import { Outlet } from "react-router-dom";
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div
-      className='min-h-screen flex overflow-x-hidden'
+    <section
+      className="h-screen flex overflow-hidden max-w-[1440px] mx-auto min-w-[768px] "
       style={{
         backgroundColor: "var(--background)",
         fontFamily: "var(--font-family)",
@@ -16,22 +17,19 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main content */}
-      <div className='flex-1 flex flex-col w-full lg:w-auto overflow-x-hidden'>
-        {/* Header */}
+      {/* Main content wrapper */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header - sticky at top */}
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* Page content */}
-        <main
-          className='flex-1 px-4 py-6 sm:px-6 overflow-x-hidden'
-          style={{
-            minHeight: "calc(100vh - 72px)",
-          }}
-        >
-          <div className='max-w-full overflow-x-hidden'>{children}</div>
+        {/* Page content - scrollable area */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6">
+          <div className="max-w-full">
+            <Outlet />
+          </div>
         </main>
       </div>
-    </div>
+    </section>
   );
 };
 

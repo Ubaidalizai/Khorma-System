@@ -229,10 +229,7 @@ const Accounts = () => {
     totalExpenses: expenses.reduce((sum, e) => sum + e.amount, 0),
     categoriesUsed: [...new Set(expenses.map((e) => e.category))].length,
     thisMonthExpenses: expenses
-      .filter(
-        (e) =>
-          new Date(e.date).getMonth() === new Date().getMonth()
-      )
+      .filter((e) => new Date(e.date).getMonth() === new Date().getMonth())
       .reduce((sum, e) => sum + e.amount, 0),
     totalBudget: expenseCategories.reduce((sum, c) => sum + c.budget, 0),
   };
@@ -268,83 +265,80 @@ const Accounts = () => {
     });
   };
 
-
   return (
-    <div className='space-y-6 w-full max-w-full overflow-x-hidden'>
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
-            Account Management
-          </h1>
-          <p className='text-gray-600 mt-2'>
-            Track suppliers, employees, expenses, and payments
+          <h1 className="text-3xl font-bold text-gray-900">مدیریت حسابات</h1>
+          <p className="text-gray-600 mt-2">
+            ردیابی تهیه کننده ها، کارمندان، مصارف و پرداخت ها
           </p>
         </div>
         {activeTab === "expenses" && (
           <button
             onClick={() => setShowExpenseModal(true)}
-            className='bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2'
+            className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
           >
-            <PlusIcon className='h-5 w-5' />
+            <PlusIcon className="h-5 w-5" />
             Add Expense
           </button>
         )}
       </div>
 
       {/* Statistics Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {activeTab === "suppliers" && (
           <>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Suppliers</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">مجموعه تهیه کننده ها</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     {supplierStats.totalSuppliers}
                   </p>
                 </div>
-                <div className='bg-blue-100 p-3 rounded-lg'>
-                  <BuildingOfficeIcon className='h-6 w-6 text-blue-600' />
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <BuildingOfficeIcon className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Amount Paid</p>
-                  <p className='text-2xl font-bold text-green-600 mt-1'>
+                  <p className="text-sm text-gray-600">مبلغ پرداخت شده</p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">
                     ${supplierStats.totalPaid.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-green-100 p-3 rounded-lg'>
-                  <BanknotesIcon className='h-6 w-6 text-green-600' />
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <BanknotesIcon className="h-6 w-6 text-green-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Amount Owed</p>
-                  <p className='text-2xl font-bold text-red-600 mt-1'>
+                  <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
+                  <p className="text-2xl font-bold text-red-600 mt-1">
                     ${supplierStats.totalOwed.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-red-100 p-3 rounded-lg'>
-                  <CurrencyDollarIcon className='h-6 w-6 text-red-600' />
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <CurrencyDollarIcon className="h-6 w-6 text-red-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Active Suppliers</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">تهیه کننده فعال</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     {supplierStats.activeSuppliers}
                   </p>
                 </div>
-                <div className='bg-purple-100 p-3 rounded-lg'>
-                  <ChartBarIcon className='h-6 w-6 text-purple-600' />
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <ChartBarIcon className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
             </div>
@@ -353,55 +347,55 @@ const Accounts = () => {
 
         {activeTab === "employees" && (
           <>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Employees</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">تعداد کارمندان</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     {employeeStats.totalEmployees}
                   </p>
                 </div>
-                <div className='bg-blue-100 p-3 rounded-lg'>
-                  <UserIcon className='h-6 w-6 text-blue-600' />
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <UserIcon className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Salaries</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">مجموعه معاشات</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${employeeStats.totalSalary.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-purple-100 p-3 rounded-lg'>
-                  <BanknotesIcon className='h-6 w-6 text-purple-600' />
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <BanknotesIcon className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Goods Given</p>
-                  <p className='text-2xl font-bold text-amber-600 mt-1'>
+                  <p className="text-sm text-gray-600">اجناس فروختده شده</p>
+                  <p className="text-2xl font-bold text-amber-600 mt-1">
                     ${employeeStats.totalGoodsGiven.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-amber-100 p-3 rounded-lg'>
-                  <ArrowTrendingUpIcon className='h-6 w-6 text-amber-600' />
+                <div className="bg-amber-100 p-3 rounded-lg">
+                  <ArrowTrendingUpIcon className="h-6 w-6 text-amber-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Cash Pending</p>
-                  <p className='text-2xl font-bold text-red-600 mt-1'>
+                  <p className="text-sm text-gray-600">مبالغ معلق</p>
+                  <p className="text-2xl font-bold text-red-600 mt-1">
                     ${employeeStats.totalCashPending.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-red-100 p-3 rounded-lg'>
-                  <ArrowTrendingDownIcon className='h-6 w-6 text-red-600' />
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <ArrowTrendingDownIcon className="h-6 w-6 text-red-600" />
                 </div>
               </div>
             </div>
@@ -410,55 +404,55 @@ const Accounts = () => {
 
         {activeTab === "expenses" && (
           <>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Expenses</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">مجموعه مصارف</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${expenseStats.totalExpenses.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-red-100 p-3 rounded-lg'>
-                  <CurrencyDollarIcon className='h-6 w-6 text-red-600' />
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <CurrencyDollarIcon className="h-6 w-6 text-red-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>This Month</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">این ماه</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${expenseStats.thisMonthExpenses.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-purple-100 p-3 rounded-lg'>
-                  <CalendarIcon className='h-6 w-6 text-purple-600' />
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <CalendarIcon className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Categories</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">کتگوری</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     {expenseStats.categoriesUsed}
                   </p>
                 </div>
-                <div className='bg-amber-100 p-3 rounded-lg'>
-                  <TagIcon className='h-6 w-6 text-amber-600' />
+                <div className="bg-amber-100 p-3 rounded-lg">
+                  <TagIcon className="h-6 w-6 text-amber-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Budget</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">مجموع سرمایه</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     ${expenseStats.totalBudget.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-blue-100 p-3 rounded-lg'>
-                  <ChartBarIcon className='h-6 w-6 text-blue-600' />
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <ChartBarIcon className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
             </div>
@@ -467,49 +461,49 @@ const Accounts = () => {
 
         {activeTab === "payments" && (
           <>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Payments</p>
-                  <p className='text-2xl font-bold text-gray-900 mt-1'>
+                  <p className="text-sm text-gray-600">مجموع پرداخت ها</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
                     {paymentStats.totalPayments}
                   </p>
                 </div>
-                <div className='bg-blue-100 p-3 rounded-lg'>
-                  <ClipboardDocumentListIcon className='h-6 w-6 text-blue-600' />
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Paid Out</p>
-                  <p className='text-2xl font-bold text-red-600 mt-1'>
+                  <p className="text-sm text-gray-600">Total Paid Out</p>
+                  <p className="text-2xl font-bold text-red-600 mt-1">
                     ${paymentStats.totalPaid.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-red-100 p-3 rounded-lg'>
-                  <ArrowTrendingDownIcon className='h-6 w-6 text-red-600' />
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <ArrowTrendingDownIcon className="h-6 w-6 text-red-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Total Received</p>
-                  <p className='text-2xl font-bold text-green-600 mt-1'>
+                  <p className="text-sm text-gray-600">مجموع دریافتی</p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">
                     ${paymentStats.totalReceived.toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-green-100 p-3 rounded-lg'>
-                  <ArrowTrendingUpIcon className='h-6 w-6 text-green-600' />
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <ArrowTrendingUpIcon className="h-6 w-6 text-green-600" />
                 </div>
               </div>
             </div>
-            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-              <div className='flex items-center justify-between'>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className='text-sm text-gray-600'>Net Flow</p>
+                  <p className="text-sm text-gray-600">Net Flow</p>
                   <p
                     className={`text-2xl font-bold mt-1 ${
                       paymentStats.totalReceived - paymentStats.totalPaid > 0
@@ -523,8 +517,8 @@ const Accounts = () => {
                     ).toLocaleString()}
                   </p>
                 </div>
-                <div className='bg-purple-100 p-3 rounded-lg'>
-                  <ChartBarIcon className='h-6 w-6 text-purple-600' />
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <ChartBarIcon className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
             </div>
@@ -533,9 +527,9 @@ const Accounts = () => {
       </div>
 
       {/* Tabs */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200'>
-        <div className='border-b border-gray-200'>
-          <nav className='flex -mb-px'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("suppliers")}
               className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
@@ -544,8 +538,8 @@ const Accounts = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              <BuildingOfficeIcon className='h-5 w-5' />
-              Supplier Accounts
+              <BuildingOfficeIcon className="h-5 w-5" />
+              حساب تهیه کننده
             </button>
             <button
               onClick={() => setActiveTab("employees")}
@@ -555,8 +549,8 @@ const Accounts = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              <UserIcon className='h-5 w-5' />
-              Employee Accountability
+              <UserIcon className="h-5 w-5" />
+              جوابگویی کارمند
             </button>
             <button
               onClick={() => setActiveTab("expenses")}
@@ -566,8 +560,8 @@ const Accounts = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              <TagIcon className='h-5 w-5' />
-              Expense Management
+              <TagIcon className="h-5 w-5" />
+              مدیریت مصارف
             </button>
             <button
               onClick={() => setActiveTab("payments")}
@@ -577,91 +571,89 @@ const Accounts = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              <BanknotesIcon className='h-5 w-5' />
-              Payment Tracking
+              <BanknotesIcon className="h-5 w-5" />
+              ردیابی پرداختی
             </button>
           </nav>
         </div>
 
         {/* Supplier Accounts Tab */}
         {activeTab === "suppliers" && (
-          <div className='p-6'>
-            <div className='overflow-x-auto -mx-6 px-6'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
+          <div className="p-6">
+            <div className="overflow-x-auto -mx-6 px-6">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Supplier
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Contact
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Total Amount
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Paid
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Owed
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Last Payment
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Terms
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-gray-200'>
+                <tbody className="divide-y divide-gray-200">
                   {suppliers.map((supplier) => (
-                    <tr key={supplier.id} className='hover:bg-gray-50'>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='text-sm font-medium text-gray-900'>
+                    <tr key={supplier.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
                           {supplier.name}
                         </div>
-                        <div className='text-sm text-gray-500'>
+                        <div className="text-sm text-gray-500">
                           {supplier.email}
                         </div>
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {supplier.contact}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                         ${supplier.totalAmount.toLocaleString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                         ${supplier.amountPaid.toLocaleString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">
                         ${supplier.amountOwed.toLocaleString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(supplier.lastPayment).toLocaleDateString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {supplier.paymentTerms}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <span className='inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           {supplier.status}
                         </span>
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm'>
-                        <div className='flex space-x-2'>
-                          <button
-                            className='text-blue-600 hover:text-blue-900'
-                          >
-                            <EyeIcon className='h-5 w-5' />
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex space-x-2">
+                          <button className="text-blue-600 hover:text-blue-900">
+                            <EyeIcon className="h-5 w-5" />
                           </button>
-                          <button className='text-green-600 hover:text-green-900'>
-                            <BanknotesIcon className='h-5 w-5' />
+                          <button className="text-green-600 hover:text-green-900">
+                            <BanknotesIcon className="h-5 w-5" />
                           </button>
                         </div>
                       </td>
@@ -675,92 +667,94 @@ const Accounts = () => {
 
         {/* Employee Accountability Tab */}
         {activeTab === "employees" && (
-          <div className='p-6'>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {employees.map((employee) => (
                 <div
                   key={employee.id}
-                  className='bg-white border border-gray-200 rounded-lg p-6'
+                  className="bg-white border border-gray-200 rounded-lg p-6"
                 >
-                  <div className='flex items-center gap-4 mb-6'>
-                    <div className='bg-amber-100 p-4 rounded-full'>
-                      <UserIcon className='h-8 w-8 text-amber-600' />
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="bg-amber-100 p-4 rounded-full">
+                      <UserIcon className="h-8 w-8 text-amber-600" />
                     </div>
                     <div>
-                      <h3 className='text-xl font-bold text-gray-900'>
+                      <h3 className="text-xl font-bold text-gray-900">
                         {employee.name}
                       </h3>
-                      <p className='text-sm text-gray-600'>{employee.position}</p>
+                      <p className="text-sm text-gray-600">
+                        {employee.position}
+                      </p>
                     </div>
                   </div>
 
-                  <div className='space-y-3'>
-                    <div className='bg-blue-50 rounded-lg p-3'>
-                      <h4 className='text-xs font-semibold text-gray-600 mb-2'>
+                  <div className="space-y-3">
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <h4 className="text-xs font-semibold text-gray-600 mb-2">
                         Sales Performance
                       </h4>
-                      <div className='flex justify-between text-sm'>
-                        <span className='text-gray-700'>Total Sales:</span>
-                        <span className='font-bold text-blue-600'>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700">Total Sales:</span>
+                        <span className="font-bold text-blue-600">
                           {employee.totalSales}
                         </span>
                       </div>
-                      <div className='flex justify-between text-sm mt-1'>
-                        <span className='text-gray-700'>Revenue:</span>
-                        <span className='font-bold text-blue-600'>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-gray-700">Revenue:</span>
+                        <span className="font-bold text-blue-600">
                           ${employee.salesRevenue.toLocaleString()}
                         </span>
                       </div>
-                      <div className='flex justify-between text-sm mt-1'>
-                        <span className='text-gray-700'>Commission:</span>
-                        <span className='font-bold text-green-600'>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-gray-700">Commission:</span>
+                        <span className="font-bold text-green-600">
                           ${employee.commission.toLocaleString()}
                         </span>
                       </div>
                     </div>
 
-                    <div className='bg-amber-50 rounded-lg p-3'>
-                      <h4 className='text-xs font-semibold text-gray-600 mb-2'>
+                    <div className="bg-amber-50 rounded-lg p-3">
+                      <h4 className="text-xs font-semibold text-gray-600 mb-2">
                         Goods Accountability
                       </h4>
-                      <div className='flex justify-between text-sm'>
-                        <span className='text-gray-700'>Goods Given:</span>
-                        <span className='font-bold text-amber-600'>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700">Goods Given:</span>
+                        <span className="font-bold text-amber-600">
                           ${employee.goodsGiven.toLocaleString()}
                         </span>
                       </div>
-                      <div className='flex justify-between text-sm mt-1'>
-                        <span className='text-gray-700'>Goods Sold:</span>
-                        <span className='font-bold text-green-600'>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-gray-700">Goods Sold:</span>
+                        <span className="font-bold text-green-600">
                           ${employee.goodsSold.toLocaleString()}
                         </span>
                       </div>
-                      <div className='flex justify-between text-sm mt-1'>
-                        <span className='text-gray-700'>Goods Returned:</span>
-                        <span className='font-bold text-purple-600'>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-gray-700">Goods Returned:</span>
+                        <span className="font-bold text-purple-600">
                           ${employee.goodsReturned.toLocaleString()}
                         </span>
                       </div>
                     </div>
 
-                    <div className='bg-green-50 rounded-lg p-3'>
-                      <h4 className='text-xs font-semibold text-gray-600 mb-2'>
+                    <div className="bg-green-50 rounded-lg p-3">
+                      <h4 className="text-xs font-semibold text-gray-600 mb-2">
                         Cash Accountability
                       </h4>
-                      <div className='flex justify-between text-sm'>
-                        <span className='text-gray-700'>Cash Collected:</span>
-                        <span className='font-bold text-green-600'>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700">Cash Collected:</span>
+                        <span className="font-bold text-green-600">
                           ${employee.cashCollected.toLocaleString()}
                         </span>
                       </div>
-                      <div className='flex justify-between text-sm mt-1'>
-                        <span className='text-gray-700'>Cash Submitted:</span>
-                        <span className='font-bold text-blue-600'>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-gray-700">Cash Submitted:</span>
+                        <span className="font-bold text-blue-600">
                           ${employee.cashSubmitted.toLocaleString()}
                         </span>
                       </div>
-                      <div className='flex justify-between text-sm mt-1'>
-                        <span className='text-gray-700'>Balance:</span>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-gray-700">Balance:</span>
                         <span
                           className={`font-bold ${
                             employee.balance > 0
@@ -773,21 +767,21 @@ const Accounts = () => {
                       </div>
                     </div>
 
-                    <div className='pt-3 border-t'>
-                      <div className='flex justify-between text-sm'>
-                        <span className='text-gray-600'>Monthly Salary:</span>
-                        <span className='font-semibold text-gray-900'>
+                    <div className="pt-3 border-t">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Monthly Salary:</span>
+                        <span className="font-semibold text-gray-900">
                           ${employee.salary.toLocaleString()}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className='mt-4 flex gap-2'>
-                    <button className='flex-1 px-3 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700'>
+                  <div className="mt-4 flex gap-2">
+                    <button className="flex-1 px-3 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700">
                       View Details
                     </button>
-                    <button className='flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200'>
+                    <button className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                       Sales History
                     </button>
                   </div>
@@ -799,13 +793,13 @@ const Accounts = () => {
 
         {/* Expense Management Tab */}
         {activeTab === "expenses" && (
-          <div className='p-6'>
+          <div className="p-6">
             {/* Expense Categories */}
-            <div className='mb-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Expense Categories & Budgets
               </h3>
-              <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {expenseCategories.map((category) => {
                   const spent = expenses
                     .filter((e) => e.category === category.name)
@@ -815,10 +809,10 @@ const Accounts = () => {
                   return (
                     <div
                       key={category.id}
-                      className='bg-white border border-gray-200 rounded-lg p-4'
+                      className="bg-white border border-gray-200 rounded-lg p-4"
                     >
-                      <div className='flex items-center justify-between mb-2'>
-                        <span className='text-2xl'>{category.icon}</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">{category.icon}</span>
                         <span
                           className={`text-xs font-semibold px-2 py-1 rounded ${
                             percentage > 90
@@ -831,22 +825,22 @@ const Accounts = () => {
                           {percentage.toFixed(0)}%
                         </span>
                       </div>
-                      <h4 className='font-semibold text-gray-900 text-sm'>
+                      <h4 className="font-semibold text-gray-900 text-sm">
                         {category.name}
                       </h4>
-                      <div className='mt-2 text-xs text-gray-600'>
-                        <div className='flex justify-between'>
+                      <div className="mt-2 text-xs text-gray-600">
+                        <div className="flex justify-between">
                           <span>Spent:</span>
-                          <span className='font-semibold'>
+                          <span className="font-semibold">
                             ${spent.toLocaleString()}
                           </span>
                         </div>
-                        <div className='flex justify-between'>
+                        <div className="flex justify-between">
                           <span>Budget:</span>
                           <span>${category.budget.toLocaleString()}</span>
                         </div>
                       </div>
-                      <div className='mt-2 w-full bg-gray-200 rounded-full h-2'>
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${
                             percentage > 90
@@ -866,66 +860,66 @@ const Accounts = () => {
 
             {/* Recent Expenses */}
             <div>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Recent Expenses
               </h3>
-              <div className='overflow-x-auto -mx-6 px-6'>
-                <table className='min-w-full divide-y divide-gray-200'>
-                  <thead className='bg-gray-50'>
+              <div className="overflow-x-auto -mx-6 px-6">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Date
                       </th>
-                      <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Category
                       </th>
-                      <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Description
                       </th>
-                      <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Amount
                       </th>
-                      <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Method
                       </th>
-                      <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Reference
                       </th>
-                      <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className='divide-y divide-gray-200'>
+                  <tbody className="divide-y divide-gray-200">
                     {expenses.map((expense) => (
-                      <tr key={expense.id} className='hover:bg-gray-50'>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      <tr key={expense.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(expense.date).toLocaleDateString()}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800'>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                             {expense.category}
                           </span>
                         </td>
-                        <td className='px-6 py-4 text-sm text-gray-900'>
+                        <td className="px-6 py-4 text-sm text-gray-900">
                           {expense.description}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">
                           ${expense.amount.toLocaleString()}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
                           {expense.paymentMethod.replace("_", " ")}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {expense.reference}
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <div className='flex space-x-2'>
-                            <button className='text-blue-600 hover:text-blue-900'>
-                              <EyeIcon className='h-5 w-5' />
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex space-x-2">
+                            <button className="text-blue-600 hover:text-blue-900">
+                              <EyeIcon className="h-5 w-5" />
                             </button>
-                            <button className='text-red-600 hover:text-red-900'>
-                              <TrashIcon className='h-5 w-5' />
+                            <button className="text-red-600 hover:text-red-900">
+                              <TrashIcon className="h-5 w-5" />
                             </button>
                           </div>
                         </td>
@@ -940,44 +934,44 @@ const Accounts = () => {
 
         {/* Payment Tracking Tab */}
         {activeTab === "payments" && (
-          <div className='p-6'>
-            <div className='overflow-x-auto -mx-6 px-6'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
+          <div className="p-6">
+            <div className="overflow-x-auto -mx-6 px-6">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Date
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Type
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Party
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Amount
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Method
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Reference
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-gray-200'>
+                <tbody className="divide-y divide-gray-200">
                   {payments.map((payment) => (
-                    <tr key={payment.id} className='hover:bg-gray-50'>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                    <tr key={payment.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(payment.date).toLocaleDateString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             payment.type.includes("receipt")
@@ -988,7 +982,7 @@ const Accounts = () => {
                           {payment.type.replace("_", " ")}
                         </span>
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {payment.party}
                       </td>
                       <td
@@ -1001,20 +995,20 @@ const Accounts = () => {
                         {payment.type.includes("receipt") ? "+" : "-"}$
                         {payment.amount.toLocaleString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
                         {payment.paymentMethod.replace("_", " ")}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {payment.reference}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <span className='inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           {payment.status}
                         </span>
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <button className='text-blue-600 hover:text-blue-900'>
-                          <EyeIcon className='h-5 w-5' />
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button className="text-blue-600 hover:text-blue-900">
+                          <EyeIcon className="h-5 w-5" />
                         </button>
                       </td>
                     </tr>
@@ -1028,35 +1022,35 @@ const Accounts = () => {
 
       {/* Add Expense Modal */}
       {showExpenseModal && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-lg shadow-xl max-w-2xl w-full'>
-            <div className='p-6 border-b flex justify-between items-center'>
-              <h2 className='text-2xl font-bold text-gray-900'>Add Expense</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Add Expense</h2>
               <button
                 onClick={() => setShowExpenseModal(false)}
-                className='text-gray-500 hover:text-gray-700'
+                className="text-gray-500 hover:text-gray-700"
               >
-                <XMarkIcon className='h-6 w-6' />
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <div className='p-6'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Date *
                   </label>
                   <input
-                    type='date'
+                    type="date"
                     value={newExpense.date}
                     onChange={(e) =>
                       setNewExpense({ ...newExpense, date: e.target.value })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Category *
                   </label>
                   <select
@@ -1064,9 +1058,9 @@ const Accounts = () => {
                     onChange={(e) =>
                       setNewExpense({ ...newExpense, category: e.target.value })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   >
-                    <option value=''>Select category</option>
+                    <option value="">Select category</option>
                     {expenseCategories.map((cat) => (
                       <option key={cat.id} value={cat.name}>
                         {cat.icon} {cat.name}
@@ -1076,22 +1070,22 @@ const Accounts = () => {
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Amount ($) *
                   </label>
                   <input
-                    type='number'
-                    step='0.01'
+                    type="number"
+                    step="0.01"
                     value={newExpense.amount}
                     onChange={(e) =>
                       setNewExpense({ ...newExpense, amount: e.target.value })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Payment Method *
                   </label>
                   <select
@@ -1102,20 +1096,20 @@ const Accounts = () => {
                         paymentMethod: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   >
-                    <option value='cash'>Cash</option>
-                    <option value='bank_transfer'>Bank Transfer</option>
-                    <option value='check'>Check</option>
+                    <option value="cash">Cash</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="check">Check</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Reference
                   </label>
                   <input
-                    type='text'
+                    type="text"
                     value={newExpense.reference}
                     onChange={(e) =>
                       setNewExpense({
@@ -1123,13 +1117,13 @@ const Accounts = () => {
                         reference: e.target.value,
                       })
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg'
-                    placeholder='e.g., RENT-JAN-2024'
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="e.g., RENT-JAN-2024"
                   />
                 </div>
 
-                <div className='md:col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description *
                   </label>
                   <textarea
@@ -1140,23 +1134,23 @@ const Accounts = () => {
                         description: e.target.value,
                       })
                     }
-                    rows='3'
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg'
-                    placeholder='Expense description'
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Expense description"
                   ></textarea>
                 </div>
               </div>
             </div>
-            <div className='p-6 border-t flex justify-end gap-4'>
+            <div className="p-6 border-t flex justify-end gap-4">
               <button
                 onClick={() => setShowExpenseModal(false)}
-                className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50'
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddExpense}
-                className='px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700'
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
               >
                 Add Expense
               </button>
