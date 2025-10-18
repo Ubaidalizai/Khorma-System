@@ -1,43 +1,53 @@
-import Button from "./Button";
-import Modal from "./Modal";
-import SearchInput from "./SearchInput";
-import Select from "./Select";
-import Table from "./Table";
-import React, { useState } from "react";
-import TableHeader from "./TableHeader";
-import TableBody from "./TableBody";
-import TableRow from "./TableRow";
-import TableColumn from "./TableColumn";
-import TableMenuModal from "./TableMenuModal";
-import Menus from "./Menu";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import {
   useCreateSupplier,
   useDeletePurchase,
+  useProduct,
   usePurchases,
+  useSuppliers,
   useUpdatePurchase,
 } from "../services/useApi";
-import Spinner from "./Spinner";
-import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
+import Button from "./Button";
 import Confirmation from "./Confirmation";
-import { useForm } from "react-hook-form";
 import GloableModal from "./GloableModal";
+import Menus from "./Menu";
+import Modal from "./Modal";
+import SearchInput from "./SearchInput";
+import Select from "./Select";
+import Spinner from "./Spinner";
+import Table from "./Table";
+import TableBody from "./TableBody";
+import TableColumn from "./TableColumn";
+import TableHeader from "./TableHeader";
+import TableMenuModal from "./TableMenuModal";
+import TableRow from "./TableRow";
 const tableHeader = [
   { title: "نمبر فاکتور" },
   { title: "تاریخ" },
   { title: "تهیه کننده" },
-  { title: "جنس" },
-  { title: "مقدار" },
+  { title: "تعداد جنس" },
   { title: "قیمت مجموعی" },
   { title: "پرداخت شده" },
   { title: "باقی مانده" },
-  { title: "پرداخت" },
+  { title: "طریقه پرداخت" },
   { title: "حالت" },
   { title: "عملیات" },
+];
+const productHeader = [
+  { title: "محصول" },
+  { title: "واحد" },
+  { title: "تعداد" },
+  { title: "قیمت یک دانه" },
+  { title: "قیمت مجموعی" },
 ];
 function Purchase({ getPaymentStatusColor }) {
   const { data: filteredPurchases, isLoading } = usePurchases();
   const { mutate: deletePurchase } = useDeletePurchase();
   const { mutate: updatePurchase } = useUpdatePurchase();
+  const { data: products } = useProduct();
+  const { data: suppliers } = useSuppliers();
   const { register, handleSubmit } = useForm();
   const { mutate: createSupplier } = useCreateSupplier();
   const [selectedPurchase, setSelectedPurchase] = useState(null);
@@ -54,6 +64,12 @@ function Purchase({ getPaymentStatusColor }) {
       ...data,
     });
   };
+  const findSuppliers = (supId) => {
+    return suppliers.filter((supp) => supp._id === supId)[0];
+  };
+  // const findProduct = (proID) => {
+  //   return products?.filter((pr) => pr.id === proID)[0];
+  // };
   if (isLoading) return <Spinner />;
   return (
     <section>
@@ -252,7 +268,7 @@ function Purchase({ getPaymentStatusColor }) {
       >
         <TableHeader headerData={tableHeader} />
         <TableBody>
-          {filteredPurchases.length === 0 ? (
+          {filteredPurchases?.length === 0 ? (
             <tr>
               <td colSpan="10" className="px-6 py-12 text-center text-gray-500">
                 <div className="flex flex-col items-center">
@@ -265,40 +281,55 @@ function Purchase({ getPaymentStatusColor }) {
               </td>
             </tr>
           ) : (
-            filteredPurchases.map((purchase) => (
-              <TableRow key={purchase.invoiceNumber}>
-                <TableColumn>{purchase.invoiceNumber}</TableColumn>
+            filteredPurchases?.map((purchase) => (
+              <TableRow key={purchase._id}>
+                <TableColumn>{purchase._id}</TableColumn>
                 <TableColumn>
                   {new Date(purchase.purchaseDate).toLocaleDateString()}
                 </TableColumn>
-                <TableColumn>{purchase.supplier}</TableColumn>
-                <TableColumn>{purchase.product}</TableColumn>
-                <TableColumn>{purchase.quantity}</TableColumn>
-                <TableColumn>{purchase.totalAmount.toFixed(2)}</TableColumn>
-                <TableColumn>{purchase.amountPaid.toFixed(2)}</TableColumn>
-                <TableColumn>{purchase.amountOwed.toFixed(2)}</TableColumn>
-                <TableColumn>{purchase.paymentMethod}</TableColumn>
-                <TableColumn className={getPaymentStatusColor(purchase.status)}>
-                  {purchase.status}
+                <TableColumn>
+                  {findSuppliers(purchase.supplier)?.name}
+                </TableColumn>
+                <TableColumn>{purchase?.items?.length}</TableColumn>
+                <TableColumn className=" text-purple-500">
+                  {purchase.totalAmount}
+                </TableColumn>
+                <TableColumn className=" text-blue-500">
+                  {purchase.paidAmount}
+                </TableColumn>
+                <TableColumn className={"text-warning-orange"}>
+                  {purchase.dueAmount}
+                </TableColumn>
+                <TableColumn>نقد</TableColumn>
+                <TableColumn>
+                  <span
+                    className={getPaymentStatusColor(
+                      purchase.dueAmount > 0 ? "partial" : "paid"
+                    )}
+                  >
+                    {purchase.dueAmount > 0
+                      ? "نسبی پرداخت شده"
+                      : "تمام پرداخت شده"}
+                  </span>
                 </TableColumn>
                 <TableColumn
                   className={` relative ${
                     "pur234chase" +
-                    purchase?.invoiceNumber +
-                    new Date(purchase?.paymentDate).getMilliseconds()
+                    purchase?._id +
+                    new Date(purchase?.purchaseDate).getMilliseconds()
                   }`}
                 >
                   <TableMenuModal>
                     <Menus>
                       <Menus.Menu>
-                        <Menus.Toggle id={purchase?.invoiceNumber} />
+                        <Menus.Toggle id={purchase?._id} />
                         <Menus.List
                           parent={
                             "pur234chase" +
-                            purchase?.invoiceNumber +
-                            new Date(purchase?.paymentDate).getMilliseconds()
+                            purchase?._id +
+                            new Date(purchase?.purchaseDate).getMilliseconds()
                           }
-                          id={purchase?.invoiceNumber}
+                          id={purchase?._id}
                           className="bg-white rounded-lg shadow-xl"
                         >
                           <Menus.Button
@@ -343,25 +374,23 @@ function Purchase({ getPaymentStatusColor }) {
       </Table>
       <GloableModal open={showModal} setOpen={setShowModal}>
         {selectedPurchase && (
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl  w-[700px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Purchase Details
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900">جزئیات خرید</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Invoice Number
+                    نمبر فاکتور
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPurchase.invoiceNumber}
+                    {selectedPurchase._id}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Purchase Date
+                    تاریخ خرید
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
                     {new Date(
@@ -371,77 +400,55 @@ function Purchase({ getPaymentStatusColor }) {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Supplier
+                    تهیه کننده
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPurchase.supplier}
+                    {findSuppliers(selectedPurchase.supplier)?.name}
                   </p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Product
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedPurchase.product}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Quantity
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedPurchase.quantity} units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Unit Price
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    ${selectedPurchase.unitPrice}
-                  </p>
-                </div>
-                <div>
+                <div className="mb-6"></div>
+
+                {/* <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Subtotal
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    ${selectedPurchase.subtotal.toFixed(2)}
+                    ${selectedPurchase?.subtotal}
                   </p>
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Tax
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    ${selectedPurchase.tax.toFixed(2)}
+                    ${selectedPurchase?.tax}
                   </p>
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Discount
                   </h3>
                   <p className="text-lg font-semibold text-red-600">
-                    -${selectedPurchase.discount.toFixed(2)}
+                    -${selectedPurchase?.discount}
                   </p>
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Shipping Cost
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    ${selectedPurchase.shippingCost.toFixed(2)}
+                    ${selectedPurchase?.shippingCost}
                   </p>
-                </div>
+                </div> */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Total Amount
                   </h3>
                   <p className="text-2xl font-bold text-amber-600">
-                    ${selectedPurchase.totalAmount.toFixed(2)}
+                    ${selectedPurchase?.totalAmount}
                   </p>
                 </div>
-                <div>
+                {/* <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Payment Status
                   </h3>
@@ -452,13 +459,13 @@ function Purchase({ getPaymentStatusColor }) {
                   >
                     {selectedPurchase.paymentStatus}
                   </span>
-                </div>
+                </div> */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Amount Paid
                   </h3>
                   <p className="text-lg font-semibold text-green-600">
-                    ${selectedPurchase.amountPaid.toFixed(2)}
+                    ${selectedPurchase.paidAmount}
                   </p>
                 </div>
                 <div>
@@ -466,35 +473,49 @@ function Purchase({ getPaymentStatusColor }) {
                     Amount Owed
                   </h3>
                   <p className="text-lg font-semibold text-red-600">
-                    ${selectedPurchase.amountOwed.toFixed(2)}
+                    ${selectedPurchase.dueAmount}
                   </p>
                 </div>
-                <div>
+                {/* <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Payment Method
                   </h3>
                   <p className="text-lg font-semibold text-gray-900 capitalize">
                     {selectedPurchase.paymentMethod.replace("_", " ")}
                   </p>
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     Created By
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
                     {selectedPurchase.createdBy}
                   </p>
-                </div>
-                {selectedPurchase.notes && (
+                </div> */}
+                {/* {selectedPurchase.notes && (
                   <div className="md:col-span-2">
                     <h3 className="text-sm font-medium text-gray-500 mb-1">
                       Notes
                     </h3>
                     <p className="text-gray-900">{selectedPurchase.notes}</p>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
+            <Table className="w-full text-sm">
+              <TableHeader headerData={productHeader} />
+              <TableBody>
+                {selectedPurchase?.items?.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableColumn>{item.product}</TableColumn>
+                    <TableColumn>{item.unit}</TableColumn>
+                    <TableColumn>{item.quantity}</TableColumn>
+                    <TableColumn>{item.unitPrice}</TableColumn>
+                    <TableColumn>{item.totalPrice}</TableColumn>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
             <div className="p-6 border-t border-gray-200 flex justify-end">
               <button
                 onClick={() => setShowModal(false)}

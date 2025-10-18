@@ -46,9 +46,9 @@ function Window({ children, name }) {
           transition={{ duration: 0.23 }}
           className="bg-text-400/20 dark:bg-white/20 backdrop-blur h-screen  mx-auto   fixed inset-0 z-50 grid place-items-center  cursor-pointer"
         >
-          <div className=" w-auto h-auto relative p-3" ref={ref}>
+          <div className=" w-auto h-auto relative p-2" ref={ref}>
             <AiOutlineClose
-              className=" absolute top-2 right-3"
+              className=" absolute top-6 right-6"
               onClick={close}
             />
             {React.isValidElement(children)

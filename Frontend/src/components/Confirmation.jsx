@@ -18,7 +18,7 @@ function Confirmation({ type, handleClick, handleCancel, close, message }) {
   };
 
   return (
-    <div class="flex flex-col bg-white w-100 h-82 rounded-md py-4 px-6 border border-slate-100">
+    <div className="flex flex-col bg-white w-100 h-82 rounded-md py-4 px-6 border border-slate-100">
       <div className=" flex-3 relative ">
         {type === "delete" ? (
           <BsFillTrashFill
@@ -40,7 +40,7 @@ function Confirmation({ type, handleClick, handleCancel, close, message }) {
           </p>
         )}
       </div>
-      <div class=" flex-1 flex justify-around items-center gap-3 py-3">
+      <div className=" flex-1 flex justify-around items-center gap-3 py-3">
         <Button
           onClick={onConfirm}
           className={`${

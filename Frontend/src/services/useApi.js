@@ -30,6 +30,20 @@ import {
   createSale,
   updateSale,
   deleteSale,
+  fetchUnits,
+  fetchCustomer,
+  fetchCustomers,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  fetchEmployee,
+  fetchEmployees,
+  createEmployee,
+  updateEmployee,
+  deleteEmployee,
+  createCompnay,
+  updateCompany,
+  deleteCompany,
 } from "./apiUtiles";
 
 // ✅ Get all inventory items
@@ -291,5 +305,179 @@ export const useDeleteSales = () => {
     mutationKey: ["deleteSale"],
     mutationFn: deleteSale,
     onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+  });
+};
+
+export const useUnits = () => {
+  return useQuery({
+    queryKey: ["units"],
+    queryFn: fetchUnits,
+  });
+};
+// CUSTOMER USE
+
+// export const useSuppliers = () => {
+//   return useQuery({
+//     queryKey: ["allSuppliers"],
+//     queryFn: fetchSuppliers,
+//   });
+// };
+
+// export const useSupplier = (id) =>
+//   useQuery({
+//     queryKey: ["supplier", id],
+//     queryFn: fetchSupplier,
+//   });
+
+// export const useCreateSupplier = () => {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: createSupplier,
+//     mutationKey: ["newSupplier"],
+//     onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+//   });
+// };
+
+// export const useUpdateSupplier = () => {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationKey: ["updateSupplier"],
+//     mutationFn: () => updateSupplier,
+//     onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+//   });
+// };
+
+// export const useDeleteSupplier = () => {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationKey: ["deleteSupplier"],
+//     mutationFn: deleteSupplier,
+//     onSuccess: () => queryClient.invalidateQueries(["allSupplier"]),
+//   });
+// };
+
+// USE THE SALE
+
+export const useCustomers = () => {
+  return useQuery({
+    queryKey: ["allCustomers"],
+    queryFn: fetchCustomers,
+  });
+};
+
+export const useCustomer = (id) =>
+  useQuery({
+    queryKey: ["customer", id],
+    queryFn: fetchCustomer,
+  });
+
+export const useCreateCustomer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createCustomer,
+    mutationKey: ["newCustomer"],
+    onSuccess: () => queryClient.invalidateQueries(["allCustomers"]),
+  });
+};
+
+export const useUpdateCustomer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateCustomer"],
+    mutationFn: () => updateCustomer,
+    onSuccess: () => queryClient.invalidateQueries(["allCustomers"]),
+  });
+};
+
+export const useDeleteCustomer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteCustomer"],
+    mutationFn: deleteCustomer,
+    onSuccess: () => queryClient.invalidateQueries(["allCustomers"]),
+  });
+};
+
+// USE COMPNAY
+
+export const useCompanies = () => {
+  return useQuery({
+    queryKey: ["allCompanies"],
+    queryFn: fetchSuppliers,
+  });
+};
+
+export const useCompany = (id) =>
+  useQuery({
+    queryKey: ["company", id],
+    queryFn: fetchSupplier,
+  });
+
+export const useCreateCompany = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createCompnay,
+    mutationKey: ["newCompany"],
+    onSuccess: () => queryClient.invalidateQueries(["allCompanies"]),
+  });
+};
+
+export const useUpdateCompany = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateCompany"],
+    mutationFn: () => updateCompany,
+    onSuccess: () => queryClient.invalidateQueries(["allCompanies"]),
+  });
+};
+
+export const useDeleteCompany = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteCompany"],
+    mutationFn: deleteCompany,
+    onSuccess: () => queryClient.invalidateQueries(["allCompanies"]),
+  });
+};
+
+// USE THE employee
+
+export const useEmployees = () => {
+  return useQuery({
+    queryKey: ["allEmployees"],
+    queryFn: fetchEmployees,
+  });
+};
+
+export const useEmployee = (id) =>
+  useQuery({
+    queryKey: ["employee", id],
+    queryFn: fetchEmployee,
+  });
+
+export const useCreateEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createEmployee,
+    mutationKey: ["newEmployee"],
+    onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
+  });
+};
+
+export const useUpdateEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateEmployee"],
+    mutationFn: () => updateEmployee,
+    onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
+  });
+};
+
+export const useDeleteEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteEmployee"],
+    mutationFn: deleteEmployee,
+    onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
   });
 };

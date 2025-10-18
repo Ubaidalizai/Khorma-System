@@ -88,64 +88,51 @@ const Dashboard = () => {
   }) => {
     const isPositive = change > 0;
     return (
-      <motion.div
-        whileHover={{ y: -4 }}
-        className="relative overflow-hidden  rounded-2xl bg-white dark:bg-neutral-900 p-5 shadow-sm transition-all hover:shadow-lg border border-neutral-100 dark:border-neutral-800"
-      >
-        <div className="flex w-full h-full  flex-col items-center  justify-between">
-          {/* Icon Container */}
+      <div className="bg-white hover:translate-y-1.5 transition-all duration-200  cursor-pointer  rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">{title} </p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {change ? (
+                <div
+                  className={`mt-2 text-center  w-full  flex items-center gap-1 text-sm font-medium ${
+                    isPositive
+                      ? "text-green-500 dark:text-green-400"
+                      : "text-red-500 dark:text-red-400"
+                  }`}
+                >
+                  <div className=" flex items-center justify-start">
+                    {isPositive ? (
+                      <span className=" p-3">
+                        <TrendingUp size={24} />
+                      </span>
+                    ) : (
+                      <span className=" p-3 ">
+                        <TrendingDown size={24} />
+                      </span>
+                    )}
+                    <span className="">
+                      {isPositive ? "+" : "-"}%
+                      {change > 0 ? change : change * -1}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                value
+              )}
+            </p>
+          </div>
+
           <div
-            className="p-4   rounded-2xl shadow-inner flex items-center justify-center"
+            className="p-3 rounded-lg border border-slate-200"
             style={{
               background: `linear-gradient(135deg, ${color}33, ${color}99)`,
             }}
           >
-            <Icon
-              className="h-8 w-8 text-white drop-shadow-sm"
-              style={{ color }}
-            />
-          </div>
-
-          {/* Left content */}
-          <div className="flex flex-col">
-            <p className="text-sm text-center font-medium text-neutral-500 dark:text-neutral-400">
-              {title}
-            </p>
-            <h3 className="mt-1 text-center text-3xl font-semibold text-slate-700 dark:text-white">
-              {value}
-            </h3>
-
-            {change && (
-              <div
-                className={`mt-2 text-center  w-full  flex items-center gap-1 text-sm font-medium ${
-                  isPositive
-                    ? "text-green-500 dark:text-green-400"
-                    : "text-red-500 dark:text-red-400"
-                }`}
-              >
-                <div className=" flex">
-                  {isPositive ? (
-                    <TrendingUp size={24} />
-                  ) : (
-                    <TrendingDown size={24} />
-                  )}
-                  <span className="">
-                    {isPositive ? "+" : ""}%{change} از ماه قبل
-                  </span>
-                </div>
-              </div>
-            )}
+            <Icon className="h-6 w-6" style={{ color }} />
           </div>
         </div>
-
-        {/* Subtle hover glow */}
-        <div
-          className="absolute  inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-          style={{
-            background: `radial-gradient(circle at top right, ${color}22, transparent 70%)`,
-          }}
-        />
-      </motion.div>
+      </div>
     );
   };
 

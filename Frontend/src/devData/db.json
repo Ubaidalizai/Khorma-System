@@ -1,58 +1,64 @@
 {
   "product": [
     {
+      "id": "1",
+      "baseUnit": "متر",
+      "description": "توضیحات در مورد پارچه کتانی",
+      "latestPurchasePrice": 1200,
+      "minLevel": 50,
+      "name": "پارچه کتانی",
+      "trackByBatch": true,
+      "date": "1404-07-24"
+    },
+    {
+      "id": "2",
+      "baseUnit": "کیلوگرام",
+      "description": "توضیحات در مورد برنج باسمتی",
+      "latestPurchasePrice": 750,
+      "minLevel": 100,
+      "name": "برنج باسمتی",
+      "trackByBatch": false,
+      "date": "1404-06-18"
+    },
+    {
+      "id": "3",
+      "baseUnit": "لیتر",
+      "description": "توضیحات در مورد روغن زیتون",
+      "latestPurchasePrice": 950,
+      "minLevel": 30,
+      "name": "روغن زیتون",
+      "trackByBatch": true,
+      "date": "1404-05-12"
+    },
+    {
       "id": "4",
-      "date": "1404/07/25",
-      "itemName": "سرنگ ۵ میلی‌لیتر",
-      "unit": "جعبه",
-      "minQuantity": "80",
-      "tracker": "فاطمه احمدی",
-      "description": "در قفسه سوم قرار دارد."
+      "baseUnit": "بسته",
+      "description": "توضیحات در مورد چای سیاه",
+      "latestPurchasePrice": 400,
+      "minLevel": 20,
+      "name": "چای سیاه",
+      "trackByBatch": false,
+      "date": "1404-04-25"
     },
     {
       "id": "5",
-      "date": "1404/07/27",
-      "itemName": "پنبه پزشکی",
-      "unit": "بسته",
-      "minQuantity": "120",
-      "tracker": "علی حسینی",
-      "description": "در حال آماده‌سازی برای توزیع است."
+      "baseUnit": "عدد",
+      "description": "توضیحات در مورد قلم خودکار",
+      "latestPurchasePrice": 35,
+      "minLevel": 200,
+      "name": "قلم خودکار",
+      "trackByBatch": false,
+      "date": "1404-03-10"
     },
     {
       "id": "6",
-      "date": "1404/07/28",
-      "itemName": "الکل ۷۰٪",
-      "unit": "بطری",
-      "minQuantity": "60",
-      "tracker": "مینا نادری",
-      "description": "در انبار فرعی ذخیره شده است."
-    },
-    {
-      "id": "7",
-      "date": "1404/08/01",
-      "itemName": "چسب زخم",
-      "unit": "بسته",
-      "minQuantity": "90",
-      "tracker": "رضا عباسی",
-      "description": "برای بخش اورژانس نگهداری می‌شود."
-    },
-    {
-      "id": "8",
-      "date": "1404/08/03",
-      "itemName": "پانسمان گازی",
-      "unit": "بسته",
-      "minQuantity": "70",
-      "tracker": "ناهید سلطانی",
-      "description": "در طبقه دوم انبار است."
-    },
-    {
-      "id": "9",
-      "date": "1404/08/06",
-      "itemName": "تب‌سنج دیجیتال",
-      "unit": "عدد",
-      "minQuantity": "40",
-      "tracker": "جمال حیدری",
-      "description": "در اتاق تجهیزات نگهداری می‌شود."
+      "baseUnit": "کیلوگرام",
+      "description": "توضیحات در مورد قند سفید",
+      "latestPurchasePrice": 600,
+      "minLevel": 80,
+      "name": "قند سیاه",
+      "trackByBatch": true,
+      "date": "1404-02-29"
     }
   ],
   "inventory": [
@@ -273,223 +279,742 @@
   ],
   "purchase": [
     {
-      "id": "2",
-      "invoiceNumber": "INV-2024-002",
-      "supplier": "Grain Suppliers Inc",
-      "supplierId": 2,
-      "product": "Chickpeas - Organic",
-      "productId": 2,
-      "quantity": 200,
-      "unitPrice": 6.75,
-      "subtotal": 1350,
-      "tax": 135,
-      "discount": 50,
-      "shippingCost": 75,
-      "totalAmount": 1510,
-      "amountPaid": 510,
-      "amountOwed": 1000,
-      "purchaseDate": "2024-01-14",
-      "paymentDate": null,
-      "paymentMethod": "credit",
-      "paymentStatus": "partial",
-      "status": "pending",
-      "notes": "Payment in installments",
-      "createdBy": "Admin",
-      "lastUpdated": "2025-10-15T00:00:00.000Z"
+      "_id": "purchase_101",
+      "supplier": "sup_001",
+      "purchaseDate": "2025-10-01T10:30:00.000Z",
+      "totalAmount": 1500.0,
+      "paidAmount": 1000.0,
+      "dueAmount": 500.0,
+      "isDeleted": false,
+      "items": [
+        {
+          "_id": "pi_101",
+          "purchase": "purchase_101",
+          "product": "prod_001",
+          "unit": "u_box",
+          "batchNumber": "بچ-الف۱۲",
+          "quantity": 5,
+          "unitPrice": 100.0,
+          "totalPrice": 500.0,
+          "isDeleted": false,
+          "createdAt": "2025-10-01T10:31:00.000Z",
+          "updatedAt": "2025-10-01T10:31:00.000Z"
+        },
+        {
+          "_id": "pi_102",
+          "purchase": "purchase_101",
+          "product": "prod_002",
+          "unit": "u_kg",
+          "batchNumber": "کیلو-۳۳",
+          "quantity": 20,
+          "unitPrice": 50.0,
+          "totalPrice": 1000.0,
+          "isDeleted": false,
+          "createdAt": "2025-10-01T10:32:00.000Z",
+          "updatedAt": "2025-10-01T10:32:00.000Z"
+        }
+      ],
+      "createdAt": "2025-10-01T10:33:00.000Z",
+      "updatedAt": "2025-10-01T10:33:00.000Z"
     },
     {
-      "id": "3",
-      "invoiceNumber": "INV-2024-003",
-      "supplier": "Bakery Supplies Co",
-      "supplierId": 3,
-      "product": "Cake Mix - Chocolate",
-      "productId": 3,
-      "quantity": 50,
-      "unitPrice": 10.99,
-      "subtotal": 549.5,
-      "tax": 54.95,
-      "discount": 20,
-      "shippingCost": 25,
-      "totalAmount": 609.45,
-      "amountPaid": 609.45,
-      "amountOwed": 0,
-      "purchaseDate": "2024-01-13",
-      "paymentDate": "2024-01-13",
-      "paymentMethod": "cash",
-      "paymentStatus": "paid",
-      "status": "completed",
-      "notes": "",
-      "createdBy": "Admin",
-      "lastUpdated": "2025-10-15T00:00:00.000Z"
+      "_id": "purchase_102",
+      "supplier": "sup_003",
+      "purchaseDate": "2025-09-15T14:20:00.000Z",
+      "totalAmount": 375.5,
+      "paidAmount": 375.5,
+      "dueAmount": 0.0,
+      "isDeleted": false,
+      "items": [
+        {
+          "_id": "pi_103",
+          "purchase": "purchase_102",
+          "product": "prod_005",
+          "unit": "u_piece",
+          "batchNumber": "بچ-ج۱",
+          "quantity": 25,
+          "unitPrice": 10.0,
+          "totalPrice": 250.0,
+          "isDeleted": false,
+          "createdAt": "2025-09-15T14:21:00.000Z",
+          "updatedAt": "2025-09-15T14:21:00.000Z"
+        },
+        {
+          "_id": "pi_104",
+          "purchase": "purchase_102",
+          "product": "prod_006",
+          "unit": "u_pack",
+          "batchNumber": "پک-۴",
+          "quantity": 5,
+          "unitPrice": 25.1,
+          "totalPrice": 125.5,
+          "isDeleted": false,
+          "createdAt": "2025-09-15T14:22:00.000Z",
+          "updatedAt": "2025-09-15T14:22:00.000Z"
+        }
+      ],
+      "createdAt": "2025-09-15T14:23:00.000Z",
+      "updatedAt": "2025-09-15T14:23:00.000Z"
     },
     {
-      "id": "4",
-      "invoiceNumber": "INV-2024-004",
-      "supplier": "Fresh Foods Ltd",
-      "supplierId": 1,
-      "product": "Sugar - White Granulated",
-      "productId": 4,
-      "quantity": 300,
-      "unitPrice": 3.25,
-      "subtotal": 975,
-      "tax": 97.5,
-      "discount": 0,
-      "shippingCost": 40,
-      "totalAmount": 1112.5,
-      "amountPaid": 0,
-      "amountOwed": 1112.5,
-      "purchaseDate": "2024-01-12",
-      "paymentDate": null,
-      "paymentMethod": "credit",
-      "paymentStatus": "pending",
-      "status": "pending",
-      "notes": "Payment due in 30 days",
-      "createdBy": "Admin",
-      "lastUpdated": "2025-10-15T00:00:00.000Z"
+      "_id": "purchase_103",
+      "supplier": "sup_002",
+      "purchaseDate": "2025-08-05T09:00:00.000Z",
+      "totalAmount": 620.0,
+      "paidAmount": 200.0,
+      "dueAmount": 420.0,
+      "isDeleted": false,
+      "items": [
+        {
+          "_id": "pi_105",
+          "purchase": "purchase_103",
+          "product": "prod_010",
+          "unit": "u_l",
+          "batchNumber": "لیتر-۹",
+          "quantity": 40,
+          "unitPrice": 10.0,
+          "totalPrice": 400.0,
+          "isDeleted": false,
+          "createdAt": "2025-08-05T09:01:00.000Z",
+          "updatedAt": "2025-08-05T09:01:00.000Z"
+        },
+        {
+          "_id": "pi_106",
+          "purchase": "purchase_103",
+          "product": "prod_011",
+          "unit": "u_g",
+          "batchNumber": "گرم-۵۵",
+          "quantity": 200,
+          "unitPrice": 1.1,
+          "totalPrice": 220.0,
+          "isDeleted": false,
+          "createdAt": "2025-08-05T09:02:00.000Z",
+          "updatedAt": "2025-08-05T09:02:00.000Z"
+        }
+      ],
+      "createdAt": "2025-08-05T09:03:00.000Z",
+      "updatedAt": "2025-08-05T09:03:00.000Z"
+    },
+    {
+      "_id": "purchase_104",
+      "supplier": "sup_007",
+      "purchaseDate": "2025-07-20T16:45:00.000Z",
+      "totalAmount": 90.0,
+      "paidAmount": 90.0,
+      "dueAmount": 0.0,
+      "isDeleted": true,
+      "items": [
+        {
+          "_id": "pi_107",
+          "purchase": "purchase_104",
+          "product": "prod_020",
+          "unit": "u_piece",
+          "batchNumber": "بچ-قدیم",
+          "quantity": 9,
+          "unitPrice": 10.0,
+          "totalPrice": 90.0,
+          "isDeleted": true,
+          "createdAt": "2025-07-20T16:46:00.000Z",
+          "updatedAt": "2025-07-20T16:46:00.000Z"
+        }
+      ],
+      "createdAt": "2025-07-20T16:47:00.000Z",
+      "updatedAt": "2025-07-20T16:47:00.000Z"
     }
   ],
   "supplier": [
     {
-      "id": "1",
-      "name": "Ahmed Hassan",
-      "company": "Fresh Foods Ltd",
-      "email": "ahmed@freshfoods.com",
-      "phone": "+93 700 123 456",
-      "address": "Kabul, Afghanistan",
-      "taxId": "TIN-12345",
-      "totalPurchases": 15,
-      "totalAmount": 45000,
-      "amountOwed": 5000,
-      "amountPaid": 40000,
-      "creditLimit": 50000,
-      "paymentTerms": "30 days",
-      "status": "active",
-      "lastPurchase": "2024-01-15"
+      "_id": "sup_001",
+      "name": "شرکت تکتاز تأمین",
+      "contact_info": {
+        "phone": "+93-700-111101",
+        "email": "taktaz.supply@example.com",
+        "address": "کابل، ناحیهٔ چهار، سرک سهیلی، پل ششم",
+        "city": "کابل",
+        "state": "کابل",
+        "zip_code": "1004"
+      },
+      "isDeleted": false
     },
     {
-      "id": "2",
-      "name": "Mohammad Ali",
-      "company": "Grain Suppliers Inc",
-      "email": "ali@grainsupply.com",
-      "phone": "+93 700 234 567",
-      "address": "Herat, Afghanistan",
-      "taxId": "TIN-23456",
-      "totalPurchases": 12,
-      "totalAmount": 38000,
-      "amountOwed": 8000,
-      "amountPaid": 30000,
-      "creditLimit": 40000,
-      "paymentTerms": "45 days",
-      "status": "active",
-      "lastPurchase": "2024-01-14"
+      "_id": "sup_002",
+      "name": "شرکت سامان واردات",
+      "contact_info": {
+        "phone": "+93-700-222202",
+        "email": "saman.imports@example.com",
+        "address": "هرات، بازار قدیم، کوچهٔ صانعین، دفتر ۲",
+        "city": "هرات",
+        "state": "هرات",
+        "zip_code": "3002"
+      },
+      "isDeleted": false
     },
     {
-      "id": "3",
-      "name": "Fatima Karimi",
-      "company": "Bakery Supplies Co",
-      "email": "fatima@bakerysupply.com",
-      "phone": "+93 700 345 678",
-      "address": "Mazar-i-Sharif, Afghanistan",
-      "taxId": "TIN-34567",
-      "totalPurchases": 8,
-      "totalAmount": 22000,
-      "amountOwed": 0,
-      "amountPaid": 22000,
-      "creditLimit": 30000,
-      "paymentTerms": "15 days",
-      "status": "active",
-      "lastPurchase": "2024-01-13"
+      "_id": "sup_003",
+      "name": "تجارت سرآمد",
+      "contact_info": {
+        "phone": "+93-700-333303",
+        "email": "saramad.trading@example.com",
+        "address": "قندهار، ناحیهٔ صنعت، جادهٔ زرغون، پلاک ۴۵",
+        "city": "قندهار",
+        "state": "قندهار",
+        "zip_code": "4004"
+      },
+      "isDeleted": false
     },
     {
-      "id": "4dfc",
-      "totalPurchases": 0,
-      "totalAmount": 0,
-      "amountOwed": 0,
-      "amountPaid": 0,
-      "status": "active",
-      "lastPurchase": null,
-      "name": "supplier123",
-      "company": "afghan telcome",
-      "email": "afghantelecom",
-      "phone": "07234234",
-      "address": "herat",
-      "taxId": "Tin-233",
-      "bankaccount": "afsad",
-      "creditLimit": "123",
-      "paymentTerms": "30",
-      "notes": "123"
+      "_id": "sup_004",
+      "name": "خدمات لجستیک بلخ",
+      "contact_info": {
+        "phone": "+93-700-444404",
+        "email": "balkh.logistics@example.com",
+        "address": "مزار شریف، بولوار صنعتی، نزدیک ترمینال",
+        "city": "مزار شریف",
+        "state": "بلخ",
+        "zip_code": "2202"
+      },
+      "isDeleted": false
+    },
+    {
+      "_id": "sup_005",
+      "name": "شرکت آریان تأمین",
+      "contact_info": {
+        "phone": "+93-700-555505",
+        "email": "aryan.supply@example.com",
+        "address": "جلال‌آباد، ناحیهٔ مرکزی، سرک بهسود، بازارچهٔ ۳",
+        "city": "جلال‌آباد",
+        "state": "ننگرهار",
+        "zip_code": "2105"
+      },
+      "isDeleted": false
+    },
+    {
+      "_id": "sup_006",
+      "name": "نظام تجهیز",
+      "contact_info": {
+        "phone": "+93-700-666606",
+        "email": "nezam.tajhiz@example.com",
+        "address": "لشکرگاه، بازارچهٔ نو، ساختمان تجهیزات",
+        "city": "لشکرگاه",
+        "state": "هلمند",
+        "zip_code": "3801"
+      },
+      "isDeleted": false
+    },
+    {
+      "_id": "sup_007",
+      "name": "پخش افغانستان",
+      "contact_info": {
+        "phone": "+93-700-777707",
+        "email": "afghanistan.distrib@example.com",
+        "address": "کابل، شهرنو، روبه‌روی میدان استقلال، پلاک ۲۱",
+        "city": "کابل",
+        "state": "کابل",
+        "zip_code": "1001"
+      },
+      "isDeleted": false
+    },
+    {
+      "_id": "sup_008",
+      "name": "شرکت پیشتاز تجارت",
+      "contact_info": {
+        "phone": "+93-700-888808",
+        "email": "pishtaz.trading@example.com",
+        "address": "کندهار، ناحیهٔ چهار، کوچهٔ تجارت، دفتر ۵",
+        "city": "کندهار",
+        "state": "کندهار",
+        "zip_code": "4005"
+      },
+      "isDeleted": true
     }
   ],
   "sale": [
     {
-      "id": 1,
-      "billNumber": "BILL-2024-001",
-      "customer": "Ahmad Khan",
-      "customerId": 1,
-      "employee": "Ali Mohammad",
-      "employeeId": 1,
+      "id": "sale_101",
+      "customer": "cust_001",
+      "employee": "emp_001",
+      "saleDate": "2025-10-10T09:15:00.000Z",
+      "totalAmount": 240,
+      "paidAmount": 240,
+      "dueAmount": 0,
+      "placedIn": "acc_001",
+      "invoiceType": "small",
+      "soldBy": "user_001",
+      "isDeleted": false,
       "items": [
         {
-          "product": "Fresh Dates - Medjool",
+          "id": "si_101",
+          "product": "prod_001",
+          "unit": "u_piece",
+          "batchNumber": "بچ-الف۱",
           "quantity": 10,
-          "unitPrice": 15.99,
-          "total": 159.9
+          "unitPrice": 10,
+          "totalPrice": 100
         },
         {
-          "product": "Chickpeas",
-          "quantity": 5,
-          "unitPrice": 8.5,
-          "total": 42.5
+          "id": "si_102",
+          "product": "prod_002",
+          "unit": "u_box",
+          "batchNumber": "بکس-۲۲",
+          "quantity": 2,
+          "unitPrice": 70,
+          "totalPrice": 140
         }
       ],
-      "subtotal": 202.4,
-      "discount": 10,
-      "tax": 19.24,
-      "totalAmount": 211.64,
-      "amountPaid": 211.64,
-      "amountOwed": 0,
-      "saleType": "cash",
-      "billType": "small",
-      "paymentStatus": "paid",
-      "saleDate": "2024-01-15",
-      "notes": "Regular customer",
-      "createdBy": "Admin",
-      "lastUpdated": "2024-01-15T10:00:00.000Z"
+      "createdAt": "2025-10-10T09:16:00.000Z",
+      "updatedAt": "2025-10-10T09:16:00.000Z",
+      "discount": 20,
+      "tax": 0.6,
+      "saleType": "cash"
     },
     {
-      "id": 2,
-      "billNumber": "BILL-2024-002",
-      "customer": "Sara Ahmed Wholesale",
-      "customerId": 2,
-      "employee": "Fatima Hussain",
-      "employeeId": 2,
+      "id": "sale_102",
+      "customer": "cust_003",
+      "employee": "emp_003",
+      "saleDate": "2025-09-28T14:40:00.000Z",
+      "totalAmount": 52.5,
+      "paidAmount": 30,
+      "dueAmount": 22.5,
+      "placedIn": "acc_002",
+      "invoiceType": "large",
+      "soldBy": "user_002",
+      "isDeleted": false,
       "items": [
         {
-          "product": "Fresh Dates - Medjool",
-          "quantity": 100,
-          "unitPrice": 14.99,
-          "total": 1499
+          "id": "si_103",
+          "product": "prod_003",
+          "unit": "u_kg",
+          "batchNumber": "کیلو-۷۷",
+          "quantity": 2.5,
+          "unitPrice": 12,
+          "totalPrice": 30
         },
         {
-          "product": "Chickpeas - Organic",
-          "quantity": 50,
-          "unitPrice": 7.5,
-          "total": 375
+          "id": "si_104",
+          "product": "prod_004",
+          "unit": "u_piece",
+          "batchNumber": "بدون-بچ",
+          "quantity": 5,
+          "unitPrice": 4.5,
+          "totalPrice": 22.5
         }
       ],
-      "subtotal": 1874,
-      "discount": 100,
-      "tax": 177.4,
-      "totalAmount": 1951.4,
-      "amountPaid": 1000,
-      "amountOwed": 951.4,
-      "saleType": "credit",
-      "billType": "large",
-      "paymentStatus": "partial",
-      "saleDate": "2024-01-15",
-      "notes": "Bulk order - 30 days payment terms",
-      "createdBy": "Admin",
-      "lastUpdated": "2024-01-15T10:00:00.000Z"
+      "createdAt": "2025-09-28T14:41:00.000Z",
+      "updatedAt": "2025-09-28T14:45:00.000Z",
+      "discount": 2,
+      "tax": 0.6,
+      "saleType": "cash"
+    },
+    {
+      "id": "sale_103",
+      "customer": null,
+      "employee": null,
+      "saleDate": "2025-10-12T11:05:00.000Z",
+      "totalAmount": 15,
+      "paidAmount": 15,
+      "dueAmount": 0,
+      "placedIn": "acc_001",
+      "invoiceType": "small",
+      "soldBy": "user_001",
+      "isDeleted": false,
+      "items": [
+        {
+          "id": "si_105",
+          "product": "prod_005",
+          "unit": "u_piece",
+          "batchNumber": "بچ-۳",
+          "quantity": 3,
+          "unitPrice": 5,
+          "totalPrice": 15
+        }
+      ],
+      "createdAt": "2025-10-12T11:06:00.000Z",
+      "updatedAt": "2025-10-12T11:06:00.000Z",
+      "discount": 5,
+      "tax": 0.6,
+      "saleType": "cash"
+    },
+    {
+      "id": "sale_104",
+      "customer": "cust_002",
+      "employee": "emp_002",
+      "saleDate": "2025-08-05T08:30:00.000Z",
+      "totalAmount": 1000,
+      "paidAmount": 600,
+      "dueAmount": 400,
+      "placedIn": "acc_003",
+      "invoiceType": "large",
+      "soldBy": "user_003",
+      "isDeleted": false,
+      "items": [
+        {
+          "id": "si_106",
+          "product": "prod_006",
+          "unit": "u_box",
+          "batchNumber": "لارج-۹۰۰",
+          "quantity": 5,
+          "unitPrice": 120,
+          "totalPrice": 600
+        },
+        {
+          "id": "si_107",
+          "product": "prod_001",
+          "unit": "u_piece",
+          "batchNumber": "بچ-الف۲",
+          "quantity": 20,
+          "unitPrice": 20,
+          "totalPrice": 400
+        }
+      ],
+      "createdAt": "2025-08-05T08:35:00.000Z",
+      "updatedAt": "2025-08-05T08:37:00.000Z",
+      "discount": 10,
+      "tax": 0.6,
+      "saleType": "cash"
+    }
+  ],
+  "unit": [
+    {
+      "id": "u_piece",
+      "name": "Piece",
+      "description": "Single item unit",
+      "conversion_to_base": 1,
+      "is_base_unit": true,
+      "isDeleted": false
+    },
+    {
+      "id": "u_box",
+      "name": "Box",
+      "description": "Box containing 12 pieces",
+      "conversion_to_base": 12,
+      "is_base_unit": false,
+      "isDeleted": false
+    },
+    {
+      "id": "u_dozen",
+      "name": "Dozen",
+      "description": "12 pieces (dozen)",
+      "conversion_to_base": 12,
+      "is_base_unit": false,
+      "isDeleted": false
+    },
+    {
+      "id": "u_kg",
+      "name": "Kilogram",
+      "description": "Kilogram base for weight",
+      "conversion_to_base": 1,
+      "is_base_unit": true,
+      "isDeleted": false
+    },
+    {
+      "id": "u_g",
+      "name": "Gram",
+      "description": "Gram - 0.001 kg",
+      "conversion_to_base": 0.001,
+      "is_base_unit": false,
+      "isDeleted": false
+    },
+    {
+      "id": "u_l",
+      "name": "Liter",
+      "description": "Liquid liter",
+      "conversion_to_base": 1,
+      "is_base_unit": true,
+      "isDeleted": false
+    },
+    {
+      "id": "u_ml",
+      "name": "Milliliter",
+      "description": "Milliliter - 0.001 L",
+      "conversion_to_base": 0.001,
+      "is_base_unit": false,
+      "isDeleted": false
+    },
+    {
+      "id": "u_pack",
+      "name": "Pack",
+      "description": "Pack - variable conversion",
+      "conversion_to_base": 6,
+      "is_base_unit": false,
+      "isDeleted": false
+    }
+  ],
+  "employee": [
+    {
+      "id": "emp_001",
+      "name": "احسان خان",
+      "role": "salesman",
+      "contact_info": {
+        "phone": "+93-700-111222",
+        "email": "ehsan.khan@example.com",
+        "address": "کابل، ناحیهٔ چهار، سرک گلشن"
+      },
+      "hire_date": "2021-03-15T00:00:00.000Z",
+      "is_active": true,
+      "isDeleted": false
+    },
+    {
+      "id": "emp_002",
+      "name": "سارا احمدی",
+      "role": "riding_man",
+      "contact_info": {
+        "phone": "+93-700-333444",
+        "email": "sara.ahmadi@example.com",
+        "address": "کابل، شیرپور، کوچهٔ پنج"
+      },
+      "hire_date": "2022-07-01T00:00:00.000Z",
+      "is_active": true,
+      "isDeleted": false
+    },
+    {
+      "id": "emp_003",
+      "name": "بلال رضا",
+      "role": "cashier",
+      "contact_info": {
+        "phone": "+93-700-555666",
+        "email": "bilal.reza@example.com",
+        "address": "هرات، شهر نو، بازار مرکزی"
+      },
+      "hire_date": "2020-11-20T00:00:00.000Z",
+      "is_active": true,
+      "isDeleted": false
+    },
+    {
+      "id": "emp_004",
+      "name": "نادیا حسین",
+      "role": "manager",
+      "contact_info": {
+        "phone": "+93-700-777888",
+        "email": "nadia.hussain@example.com",
+        "address": "قندهار، چهارراه صنایع، خانه شماره ۱۲"
+      },
+      "hire_date": "2019-05-10T00:00:00.000Z",
+      "is_active": true,
+      "isDeleted": false
+    },
+    {
+      "id": "emp_005",
+      "name": "عمر فاروق",
+      "role": "admin",
+      "contact_info": {
+        "phone": "+93-700-999000",
+        "email": "omar.farooq@example.com",
+        "address": "مزار شریف، بلوار مرکزی، پلاک ۱۱"
+      },
+      "hire_date": "2018-01-02T00:00:00.000Z",
+      "is_active": true,
+      "isDeleted": false
+    },
+    {
+      "id": "emp_006",
+      "name": "فاطمه نور",
+      "role": "salesman",
+      "contact_info": {
+        "phone": "+93-700-121212",
+        "email": "fatima.noor@example.com",
+        "address": "پلخمری، قبرسکان، ناحیهٔ ۳"
+      },
+      "hire_date": "2023-02-14T00:00:00.000Z",
+      "is_active": true,
+      "isDeleted": false
+    },
+    {
+      "id": "emp_007",
+      "name": "عثمان قریشی",
+      "role": "riding_man",
+      "contact_info": {
+        "phone": "+93-700-343434",
+        "email": "usman.qureshi@example.com",
+        "address": "کابل، شهرنو، نزدیک میدان استقلال"
+      },
+      "hire_date": "2021-09-30T00:00:00.000Z",
+      "is_active": false,
+      "isDeleted": false
+    },
+    {
+      "id": "emp_008",
+      "name": "زارا علی",
+      "role": "cashier",
+      "contact_info": {
+        "phone": "+93-700-565656",
+        "email": "zara.ali@example.com",
+        "address": "قندوز، محلهٔ نو، بازارچهٔ مرکزی"
+      },
+      "hire_date": "2017-06-18T00:00:00.000Z",
+      "is_active": false,
+      "isDeleted": true
+    }
+  ],
+  "company": [
+    {
+      "id": "comp_001",
+      "name": "شرکت روشنان تجارت",
+      "address": "کابل، ناحیهٔ ۳، سرک باغچه، پلاک ۱۲",
+      "contactNumber": "+93-700-111001",
+      "email": "roshanan.tijarat@example.com",
+      "isDeleted": false
+    },
+    {
+      "id": "comp_002",
+      "name": "شرکت گلستان واردات",
+      "address": "هرات، بازار مرکزی، کوچهٔ پنجم، دفتر ۳",
+      "contactNumber": "+93-700-222002",
+      "email": "golestan.vardat@example.com",
+      "isDeleted": false
+    },
+    {
+      "id": "comp_003",
+      "name": "شرکت سراج تولیدات",
+      "address": "قندهار، ناحیهٔ صنعت، پلاک ۴۵",
+      "contactNumber": "+93-700-333003",
+      "email": "siraj.tolidat@example.com",
+      "isDeleted": false
+    },
+    {
+      "id": "comp_004",
+      "name": "شرکت نور آنلاین",
+      "address": "مزار شریف، خیابان اصلی، برج نور، طبقهٔ دوم",
+      "contactNumber": "+93-700-444004",
+      "email": "noor.online@example.com",
+      "isDeleted": false
+    },
+    {
+      "id": "comp_005",
+      "name": "شرکت کریم و پسران",
+      "address": "قندهار، بازارچهٔ قدیم، دروازهٔ غرب، غرفهٔ ۸",
+      "contactNumber": "+93-700-555005",
+      "email": "karim.and.sons@example.com",
+      "isDeleted": false
+    },
+    {
+      "id": "comp_006",
+      "name": "شرکت خدماتی نسرین",
+      "address": "پلخمری، ناحیهٔ ۳، کوچهٔ سوم، ساختمان خدماتی",
+      "contactNumber": "+93-700-666006",
+      "email": "nasrin.services@example.com",
+      "isDeleted": false
+    },
+    {
+      "id": "comp_007",
+      "name": "شرکت افغانستان پخش",
+      "address": "کابل، شهرنو، نزدیک میدان استقلال، پلاک ۲۱",
+      "contactNumber": "+93-700-777007",
+      "email": "afghanistan.distribution@example.com",
+      "isDeleted": false
+    },
+    {
+      "id": "comp_008",
+      "name": "شرکت نغمه تجارت",
+      "address": "قندوز، محلهٔ نو، پلاک ۸، طبقهٔ اول",
+      "contactNumber": "+93-700-888008",
+      "email": "naghma.tijarat@example.com",
+      "isDeleted": true
+    }
+  ],
+  "customer": [
+    {
+      "id": "cust_001",
+      "name": "محمد حکیمی",
+      "contact_info": {
+        "phone": "+93-700-111001",
+        "email": "m.hakimi@example.com",
+        "address": "کابل، ناحیهٔ ۳، سرک باغچه، خانهٔ ۱۲",
+        "city": "کابل",
+        "state": "کابل",
+        "zip_code": "1003"
+      },
+      "isDeleted": false
+    },
+    {
+      "id": "cust_002",
+      "name": "مریم گل",
+      "contact_info": {
+        "phone": "+93-700-222002",
+        "email": "m.gul@example.com",
+        "address": "هرات، بازار مرکزی، کوچهٔ پنجم، دفتر ۳",
+        "city": "هرات",
+        "state": "هرات",
+        "zip_code": "3001"
+      },
+      "isDeleted": false
+    },
+    {
+      "id": "cust_003",
+      "name": "احمد سراج",
+      "contact_info": {
+        "phone": "+93-700-333003",
+        "email": "a.siraj@example.com",
+        "address": "قندهار، ناحیهٔ صنعت، پلاک ۱۲",
+        "city": "قندهار",
+        "state": "قندهار",
+        "zip_code": "4002"
+      },
+      "isDeleted": false
+    },
+    {
+      "id": "cust_004",
+      "name": "فاطمه رضایی",
+      "contact_info": {
+        "phone": "+93-700-444004",
+        "email": "f.rozaee@example.com",
+        "address": "مزار شریف، خیابان اصلی، برج نور، طبقهٔ دوم",
+        "city": "مزار شریف",
+        "state": "بلخ",
+        "zip_code": "2201"
+      },
+      "isDeleted": false
+    },
+    {
+      "id": "cust_005",
+      "name": "علی کریم",
+      "contact_info": {
+        "phone": "+93-700-555005",
+        "email": "a.karim@example.com",
+        "address": "قندهار، بازارچهٔ قدیم، غرفهٔ ۸",
+        "city": "قندهار",
+        "state": "قندهار",
+        "zip_code": "4003"
+      },
+      "isDeleted": false
+    },
+    {
+      "id": "cust_006",
+      "name": "نسرین عظیمی",
+      "contact_info": {
+        "phone": "+93-700-666006",
+        "email": "n.azimi@example.com",
+        "address": "پلخمری، ناحیهٔ ۳، کوچهٔ سوم",
+        "city": "پلخمری",
+        "state": "بغلان",
+        "zip_code": "2104"
+      },
+      "isDeleted": false
+    },
+    {
+      "id": "cust_007",
+      "name": "کریم ولی",
+      "contact_info": {
+        "phone": "+93-700-777007",
+        "email": "k.wali@example.com",
+        "address": "کابل، شهرنو، نزدیک میدان استقلال",
+        "city": "کابل",
+        "state": "کابل",
+        "zip_code": "1001"
+      },
+      "isDeleted": false
+    },
+    {
+      "id": "cust_008",
+      "name": "هلیا احمد",
+      "contact_info": {
+        "phone": "+93-700-888008",
+        "email": "h.ahmad@example.com",
+        "address": "قندوز، محلهٔ نو، پلاک ۸",
+        "city": "قندوز",
+        "state": "قندوز",
+        "zip_code": "2302"
+      },
+      "isDeleted": true
     }
   ]
 }

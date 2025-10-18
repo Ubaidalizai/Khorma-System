@@ -378,7 +378,7 @@ const Purchases = () => {
               {isSupplierLoading ? (
                 <Spinner />
               ) : (
-                suppliers.map((supplier) => (
+                suppliers?.map((supplier) => (
                   <SupplierComponent supplier={supplier} key={supplier.id} />
                 ))
               )}
