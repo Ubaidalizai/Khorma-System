@@ -59,6 +59,15 @@
       "name": "قند سیاه",
       "trackByBatch": true,
       "date": "1404-02-29"
+    },
+    {
+      "id": "44a5",
+      "date": "1404-07-26",
+      "name": "product1",
+      "minLevel": 1231,
+      "latestPurchasePrice": 12312,
+      "description": "description",
+      "trackByBatch": true
     }
   ],
   "inventory": [
@@ -315,7 +324,8 @@
         }
       ],
       "createdAt": "2025-10-01T10:33:00.000Z",
-      "updatedAt": "2025-10-01T10:33:00.000Z"
+      "updatedAt": "2025-10-01T10:33:00.000Z",
+      "id": "be28"
     },
     {
       "_id": "purchase_102",
@@ -355,7 +365,8 @@
       ],
       "createdAt": "2025-09-15T14:23:00.000Z",
       "updatedAt": "2025-09-15T14:23:00.000Z",
-      "paymentStatus": "pending"
+      "paymentStatus": "pending",
+      "id": "ec02"
     },
     {
       "_id": "purchase_103",
@@ -395,7 +406,8 @@
         }
       ],
       "createdAt": "2025-08-05T09:03:00.000Z",
-      "updatedAt": "2025-08-05T09:03:00.000Z"
+      "updatedAt": "2025-08-05T09:03:00.000Z",
+      "id": "6827"
     },
     {
       "_id": "purchase_104",
@@ -422,42 +434,8 @@
         }
       ],
       "createdAt": "2025-07-20T16:47:00.000Z",
-      "updatedAt": "2025-07-20T16:47:00.000Z"
-    },
-    {
-      "id": "3699",
-      "purchaseDate": 1760787405152,
-      "supplier": "sup_004",
-      "tax": "123123",
-      "discount": "12",
-      "shippingCost": "12",
-      "paymentStatus": "pending",
-      "notes": "",
-      "items": [
-        {
-          "product": "sdf",
-          "unit": "u_box",
-          "batchNumber": "",
-          "quantity": "123",
-          "unitPrice": "12",
-          "total": 1476
-        },
-        {
-          "product": "123",
-          "unit": "u_g",
-          "batchNumber": "123",
-          "quantity": "21",
-          "unitPrice": "21",
-          "total": 441
-        }
-      ],
-      "subtotal": 1917,
-      "taxAmount": 2345493.15,
-      "totalAmount": 2347398.15,
-      "paidAmount": 0,
-      "dueAmount": 2347398.15,
-      "createdBy": "Admin",
-      "lastUpdated": "2025-10-18T11:36:45.152Z"
+      "updatedAt": "2025-07-20T16:47:00.000Z",
+      "id": "c44e"
     }
   ],
   "supplier": [
@@ -472,7 +450,8 @@
         "state": "کابل",
         "zip_code": "1004"
       },
-      "isDeleted": false
+      "isDeleted": false,
+      "id": "c098"
     },
     {
       "_id": "sup_002",
@@ -485,7 +464,8 @@
         "state": "هرات",
         "zip_code": "3002"
       },
-      "isDeleted": false
+      "isDeleted": false,
+      "id": "bc48"
     },
     {
       "_id": "sup_003",
@@ -498,7 +478,8 @@
         "state": "قندهار",
         "zip_code": "4004"
       },
-      "isDeleted": false
+      "isDeleted": false,
+      "id": "9f9f"
     },
     {
       "_id": "sup_004",
@@ -511,7 +492,8 @@
         "state": "بلخ",
         "zip_code": "2202"
       },
-      "isDeleted": false
+      "isDeleted": false,
+      "id": "290e"
     },
     {
       "_id": "sup_005",
@@ -524,7 +506,8 @@
         "state": "ننگرهار",
         "zip_code": "2105"
       },
-      "isDeleted": false
+      "isDeleted": false,
+      "id": "dae5"
     },
     {
       "_id": "sup_006",
@@ -537,7 +520,8 @@
         "state": "هلمند",
         "zip_code": "3801"
       },
-      "isDeleted": false
+      "isDeleted": false,
+      "id": "b221"
     },
     {
       "_id": "sup_007",
@@ -550,7 +534,8 @@
         "state": "کابل",
         "zip_code": "1001"
       },
-      "isDeleted": false
+      "isDeleted": false,
+      "id": "3064"
     },
     {
       "_id": "sup_008",
@@ -563,20 +548,34 @@
         "state": "کندهار",
         "zip_code": "4005"
       },
-      "isDeleted": true
+      "isDeleted": true,
+      "id": "c206"
     },
     {
-      "id": "b270",
-      "name": "",
-      "company": "",
-      "email": "",
-      "phone": "",
-      "address": "",
-      "taxId": "",
-      "bankaccount": "",
-      "creditLimit": "",
-      "paymentTerms": "15",
-      "notes": ""
+      "id": "em7p",
+      "_id": "sup_009",
+      "name": "kjfds",
+      "contact_info": {
+        "phone": "+92384234",
+        "email": "adfk",
+        "address": "123213",
+        "city": "23442",
+        "state": "34",
+        "zip_code": "34324"
+      }
+    },
+    {
+      "id": "w10r",
+      "_id": "sup_009",
+      "name": "h",
+      "contact_info": {
+        "phone": "jj",
+        "email": "jjj",
+        "address": "jj",
+        "city": "jj",
+        "state": "jj",
+        "zip_code": "jj"
+      }
     }
   ],
   "sale": [

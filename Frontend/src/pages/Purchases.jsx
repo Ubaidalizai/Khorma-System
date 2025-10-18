@@ -45,29 +45,8 @@ const Purchases = () => {
   // const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [activeTab, setActiveTab] = useState("purchases"); // 'purchases', 'suppliers', 'history'
 
-  const onSubmit = (data) => {
-    const totals = calculatePurchaseTotals();
-    console.log(data);
-    createPurchase({
-      ...data,
-      purchaseDate: data.purchaseDate ? data.purchaseDate : Date.now(),
-      items: [...items],
-      subtotal: parseFloat(totals.subtotal),
-      taxAmount: parseFloat(totals.taxAmount),
-      totalAmount: totals.total,
-      paidAmount:
-        watch("paymentStatus") === "paid" ? parseFloat(totals.total) : 0,
-      dueAmount:
-        watch("paymentStatus") === "paid" ? 0 : parseFloat(totals.total),
-      paymentStatus:
-        watch("paymentStatus") === "paid" ? "completed" : "pending",
-      createdBy: "Admin",
-      lastUpdated: new Date().toISOString(),
-    });
-    reset();
-  };
   // Payment history
-  const [paymentHistory, setPaymentHistory] = useState([
+  const [paymentHistory] = useState([
     {
       id: 1,
       purchaseId: 1,
@@ -208,13 +187,14 @@ const Purchases = () => {
               <PurchaseForm
                 register={register}
                 watch={watch}
-                handleSubmit={handleSubmit(onSubmit)}
+                handleSubmit={handleSubmit}
+                reset={reset}
+                createPurchase={createPurchase}
                 calculatePurchaseTotals={calculatePurchaseTotals}
                 currentItem={currentItem}
                 setCurrentItem={setCurrentItem}
                 items={items}
                 setItems={setItems}
-                summary={calculatePurchaseTotals}
               />
             </Modal.Window>
           </Modal>
@@ -385,25 +365,25 @@ const SupplierComponent = ({ supplier }) => {
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">مجموعی قیمت:</span>
           <span className="font-semibold text-gray-900">
-            ${supplier.totalAmount.toLocaleString()}
+            {formatCurrency(supplier?.totalAmount)}
           </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">مبلغ پرداختی:</span>
           <span className="font-semibold text-green-600">
-            ${supplier.amountPaid.toLocaleString()}
+            ${supplier?.amountPaid}
           </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">مبلغ باقی مانده:</span>
           <span className="font-semibold text-red-600">
-            ${supplier.amountOwed.toLocaleString()}
+            {formatCurrency(supplier?.amountOwed)}
           </span>
         </div>
         <div className="pt-3 border-t border-gray-200">
           <div className="flex justify-between text-xs text-gray-500">
             <span>Credit Limit:</span>
-            <span>${supplier.creditLimit.toLocaleString()}</span>
+            <span>${supplier?.creditLimit}</span>
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>Payment Terms:</span>

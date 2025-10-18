@@ -56,6 +56,7 @@ function Purchase({ getPaymentStatusColor }) {
   const [showModal, setShowModal] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const onSubmit = (data) => {
+    console.log(data);
     createSupplier({ ...data });
   };
   const findSuppliers = (supId) => {

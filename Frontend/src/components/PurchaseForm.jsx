@@ -21,13 +21,15 @@ function PurchaseForm({
   register,
   handleSubmit,
   watch,
+  reset,
+  createPurchase,
   calculatePurchaseTotals,
   currentItem,
   setCurrentItem,
   items,
   setItems,
-  summary,
-  onCancel,
+  close,
+  errors,
 }) {
   const { data: suppliers } = useSuppliers();
   const { data: units } = useUnits();
@@ -47,10 +49,41 @@ function PurchaseForm({
   const handleRemove = (index) => {
     setItems(items.filter((_, i) => i !== index));
   };
+  const onSubmit = (data) => {
+    const totals = calculatePurchaseTotals();
+    console.log(data);
+    createPurchase({
+      ...data,
+      purchaseDate: data.purchaseDate ? data.purchaseDate : Date.now(),
+      items: [...items],
+      subtotal: parseFloat(totals.subtotal),
+      taxAmount: parseFloat(totals.taxAmount),
+      totalAmount: totals.total,
+      paidAmount:
+        watch("paymentStatus") === "paid" ? parseFloat(totals.total) : 0,
+      dueAmount:
+        watch("paymentStatus") === "paid" ? 0 : parseFloat(totals.total),
+      paymentStatus:
+        watch("paymentStatus") === "paid" ? "completed" : "pending",
+      createdBy: "Admin",
+      lastUpdated: new Date().toISOString(),
+    });
+    reset();
+    setItems([]);
+    setCurrentItem({
+      product: "",
+      unit: "",
+      batchNumber: "",
+      quantity: 0,
+      unitPrice: 0,
+    });
+    close && close();
+  };
+
   return (
     <form
       noValidate
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="bg-white rounded-lg shadow-xl max-w-4xl w-[700px] max-h-[90vh] overflow-y-auto"
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -60,26 +93,44 @@ function PurchaseForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Purchase Date *
+              تاریخ خرید *
             </label>
             <input
               type="date"
-              {...register("purchaseDate")}
+              {...register("purchaseDate", {
+                required: "تاریخ خرید را انتخاب کنید",
+              })}
               className={inputStyle}
             />
+            {errors?.purchaseDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.purchaseDate.message}
+              </p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Supplier *
+              تهیه کننده *
             </label>
-            <select {...register("supplier")} className={inputStyle}>
+            <select
+              {...register("supplier", {
+                required: "تامین کننده را انتخاب کنید",
+              })}
+              className={inputStyle}
+            >
+              <option value="">انتخاب تامین کننده</option>
               {suppliers?.map((supplier) => (
                 <option key={supplier._id} value={supplier._id}>
                   {supplier.name}
                 </option>
               ))}
             </select>
+            {errors?.supplier && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.supplier.message}
+              </p>
+            )}
           </div>
           <div className="border col-start-1 col-end-3 border-gray-300 rounded-lg p-4 mb-4">
             <div className="flex justify-between items-center mb-4">
@@ -204,7 +255,7 @@ function PurchaseForm({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tax (%)
+              مالیه (%)
             </label>
             <input
               type="number"
@@ -217,7 +268,7 @@ function PurchaseForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Discount ($)
+              تخفیف ($)
             </label>
             <input
               type="number"
@@ -230,7 +281,7 @@ function PurchaseForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Shipping Cost ($)
+              قیمت نقل مکان ($)
             </label>
             <input
               type="number"
@@ -242,17 +293,28 @@ function PurchaseForm({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Payment Status *
+              وضعیت پرداخت *
             </label>
-            <select {...register("paymentStatus")} className={inputStyle}>
+            <select
+              {...register("paymentStatus", {
+                required: "وضعیت پرداخت را انتخاب کنید",
+              })}
+              className={inputStyle}
+            >
+              <option value="">انتخاب وضعیت پرداخت</option>
               <option value="pending">Pending</option>
               <option value="partial">Partial Payment</option>
               <option value="paid">Paid</option>
             </select>
+            {errors?.paymentStatus && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.paymentStatus.message}
+              </p>
+            )}
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
+              یاداشت
             </label>
             <textarea
               {...register("notes")}
@@ -264,47 +326,6 @@ function PurchaseForm({
         </div>
 
         {/* Purchase Summary */}
-        {watch("quantity") > 0 && watch("unitPrice") > 0 && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
-              Purchase Summary
-            </h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotal:</span>
-                <span className="font-semibold text-gray-900">
-                  ${calculatePurchaseTotals().subtotal}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Tax ({watch("tax")}%):</span>
-                <span className="font-semibold text-gray-900">
-                  ${calculatePurchaseTotals().taxAmount}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Discount:</span>
-                <span className="font-semibold text-red-600">
-                  -${watch("discount")}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Shipping:</span>
-                <span className="font-semibold text-gray-900">
-                  ${watch("shippingCost")}
-                </span>
-              </div>
-              <div className="pt-2 border-t border-gray-300">
-                <div className="flex justify-between">
-                  <span className="font-bold text-gray-900">Total Amount:</span>
-                  <span className="text-xl font-bold text-amber-600">
-                    ${calculatePurchaseTotals().total}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       {items?.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
@@ -312,29 +333,35 @@ function PurchaseForm({
             خلاصه خرید
           </h3>
           <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Subtotal:</span>
-              <span className="font-semibold">{summary().subtotal}</span>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">مجموعه نسبی:</span>
+              <span className="font-semibold text-gray-900">
+                {formatCurrency(calculatePurchaseTotals().subtotal)}
+              </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Discount:</span>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">مالیه ({watch("tax")}%):</span>
+              <span className="font-semibold text-gray-900">
+                {formatCurrency(calculatePurchaseTotals().taxAmount)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">تخفیف:</span>
               <span className="font-semibold text-red-600">
                 {formatCurrency(watch("discount"))}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">
-                Tax ({watch("tax")}%):
-              </span>
-              <span className="font-semibold">
-                {formatCurrency(summary().taxAmount)}
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">قیمت نقل مکان</span>
+              <span className="font-semibold text-gray-900">
+                {formatCurrency(watch("shippingCost"))}
               </span>
             </div>
             <div className="pt-2 border-t border-gray-300">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-lg">Total:</span>
-                <span className="text-2xl font-bold text-amber-600">
-                  {formatCurrency(summary().total)}
+              <div className="flex justify-between">
+                <span className="font-bold text-gray-900">مجموعه:</span>
+                <span className="text-xl font-bold text-amber-600">
+                  {formatCurrency(calculatePurchaseTotals().total.toFixed(2))}
                 </span>
               </div>
             </div>
@@ -343,15 +370,16 @@ function PurchaseForm({
       )}
       <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
         <button
-          onClick={() => {}}
+          type="button"
+          onClick={() => {
+            close && close();
+          }}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
         >
           Cancel
         </button>
         <button
-          onClick={() => {
-            onCancel && onCancel();
-          }}
+          type="submit"
           className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
         >
           Add Purchase

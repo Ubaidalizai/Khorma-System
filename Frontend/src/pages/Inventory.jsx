@@ -51,7 +51,6 @@ const Inventory = () => {
     const now = new Date();
     const jalaaliDate = toJalaali(now);
     const onSubmit = (data) => {
-      console.log(data);
       createProduct({
         date: `${jalaaliDate.jy}-${String(jalaaliDate.jm).padStart(
           2,
@@ -68,6 +67,7 @@ const Inventory = () => {
         handleSubmit={handleSubmit(onSubmit)}
         formState={formState}
         control={control}
+        onClose={close}
       />
     );
   }

@@ -28,11 +28,13 @@ export default function SalesForm({
   currentItem,
   summary,
   setCurrentItem,
-
-  onCancel,
+  reset,
+  createSale,
+  close,
   register,
   handleSubmit,
   watch,
+  errors,
 }) {
   const { data: products, isLoading: isLoadingProduct } = useProduct();
   const { data: units, isLoading: isLoadingUnits } = useUnits();
@@ -54,6 +56,35 @@ export default function SalesForm({
   const handleRemove = (index) => {
     setItems(items.filter((_, i) => i !== index));
   };
+
+  const onSubmit = (data) => {
+    const totals = summary();
+    console.log(data);
+    createSale({
+      ...data,
+      saleDate: data.saleDate ? data.saleDate : Date.now(),
+      items: [...items],
+      subtotal: parseFloat(totals.subtotal),
+      taxAmount: parseFloat(totals.taxAmount),
+      totalAmount: totals.total,
+      amountPaid: data.saleType === "cash" ? parseFloat(totals.total) : 0,
+      amountOwed: data.saleType === "cash" ? 0 : parseFloat(totals.total),
+      paymentStatus: data.saleType === "cash" ? "paid" : "pending",
+      createdBy: "Admin",
+      lastUpdated: new Date().toISOString(),
+    });
+    reset();
+    setItems([]);
+    setCurrentItem({
+      product: "",
+      unit: "",
+      batchNumber: "",
+      quantity: 0,
+      unitPrice: 0,
+    });
+    close && close();
+  };
+
   if (
     isLoadingCustomers ||
     isLoadingEmployees ||
@@ -68,7 +99,7 @@ export default function SalesForm({
   return (
     <form
       noValidate
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -93,7 +124,10 @@ export default function SalesForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               مشتری *
             </label>
-            <select {...register("customer")} className={inputStyle}>
+            <select
+              {...register("customer", { required: "مشتری را انتخاب کنید" })}
+              className={inputStyle}
+            >
               <option value="">انتخاب مشتری</option>
               {customers?.map((c) => {
                 const id = c._id || c.id;
@@ -104,13 +138,21 @@ export default function SalesForm({
                 );
               })}
             </select>
+            {errors?.customer && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.customer.message}
+              </p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               کارمند *
             </label>
-            <select {...register("employee")} className={inputStyle}>
+            <select
+              {...register("employee", { required: "کارمند را انتخاب کنید" })}
+              className={inputStyle}
+            >
               <option value="">انتخاب کارمند</option>
               {employees?.map((e) => {
                 const id = e._id || e.id;
@@ -121,6 +163,11 @@ export default function SalesForm({
                 );
               })}
             </select>
+            {errors?.employee && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.employee.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -132,7 +179,9 @@ export default function SalesForm({
                 <input
                   type="radio"
                   value="cash"
-                  {...register("saleType", { required: true })}
+                  {...register("saleType", {
+                    required: "نوعیت فروش را انتخاب کنید",
+                  })}
                   className="ml-2"
                 />
                 <span className="mr-2 text-sm">نقد</span>
@@ -141,12 +190,19 @@ export default function SalesForm({
                 <input
                   type="radio"
                   value="credit"
-                  {...register("saleType", { required: true })}
+                  {...register("saleType", {
+                    required: "نوعیت فروش را انتخاب کنید",
+                  })}
                   className="ml-2"
                 />
                 <span className="mr-2 text-sm">نسیه</span>
               </label>
             </div>
+            {errors?.saleType && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.saleType.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -158,7 +214,9 @@ export default function SalesForm({
                 <input
                   type="radio"
                   value="small"
-                  {...register("billType")}
+                  {...register("billType", {
+                    required: "نوعیت فاکتور را انتخاب کنید",
+                  })}
                   className="ml-2"
                 />
                 <span className="mr-2 text-sm">کوچک</span>
@@ -167,12 +225,19 @@ export default function SalesForm({
                 <input
                   type="radio"
                   value="large"
-                  {...register("billType")}
+                  {...register("billType", {
+                    required: "نوعیت فاکتور را انتخاب کنید",
+                  })}
                   className="ml-2"
                 />
                 <span className="mr-2 text-sm">بزرگ</span>
               </label>
             </div>
+            {errors?.billType && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.billType.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -309,7 +374,7 @@ export default function SalesForm({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Discount ($)
+              تخفیف ($)
             </label>
             <input
               type="number"
@@ -321,7 +386,7 @@ export default function SalesForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tax (%)
+              مالیه (%)
             </label>
             <input
               type="number"
@@ -333,7 +398,7 @@ export default function SalesForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
+              یاداشت
             </label>
             <input
               type="text"
@@ -352,20 +417,20 @@ export default function SalesForm({
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Subtotal:</span>
+                <span className="text-sm text-gray-600">مجموع نسبی:</span>
                 <span className="font-semibold">
                   {console.log(formatCurrency(summary().subtotal))}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Discount:</span>
+                <span className="text-sm text-gray-600">تخفیف:</span>
                 <span className="font-semibold text-red-600">
                   {formatCurrency(watch("discount"))}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
-                  Tax ({watch("tax")}%):
+                  مالیه ({watch("tax")}):
                 </span>
                 <span className="font-semibold">
                   {formatCurrency(summary().taxAmount)}
@@ -373,7 +438,7 @@ export default function SalesForm({
               </div>
               <div className="pt-2 border-t border-gray-300">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-lg">Total:</span>
+                  <span className="font-bold text-lg">مجموعه کلی:</span>
                   <span className="text-2xl font-bold text-amber-600">
                     {formatCurrency(summary().total)}
                   </span>
@@ -387,7 +452,7 @@ export default function SalesForm({
       <div className="p-6 border-t flex justify-end gap-4">
         <button
           type="button"
-          onClick={() => onCancel && onCancel()}
+          onClick={() => close && close()}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
         >
           Cancel

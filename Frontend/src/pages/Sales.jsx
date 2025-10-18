@@ -21,7 +21,14 @@ import SalesForm from "../components/SalesForm";
 
 const Sales = () => {
   // Tab and filter states
-  const { register, handleSubmit, watch, reset, control } = useForm({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       saleDate: new Date().toISOString().slice(0, 10),
       customer: "",
@@ -328,10 +335,12 @@ const Sales = () => {
                 setCurrentItem={setCurrentItem}
                 items={saleItems}
                 setItems={setSaleItems}
-                handleSubmit={handleSubmit(onSubmit)}
+                reset={reset}
+                createSale={createSale}
+                onCancel={() => {}}
                 register={register}
+                handleSubmit={handleSubmit}
                 watch={watch}
-                control={control}
               />
             </Modal.Window>
           </Modal>
@@ -462,172 +471,6 @@ const Sales = () => {
                     </Button>
                   </Modal.Toggle>
                   <Modal.Window>
-                    {/* <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                      <div className="p-6 border-b flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-gray-900">
-                          Add Customer
-                        </h2>
-                      </div>
-                      <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Customer Name *
-                            </label>
-                            <input
-                              type="text"
-                              value={newCustomer.name}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  name: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Company
-                            </label>
-                            <input
-                              type="text"
-                              value={newCustomer.company}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  company: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Phone *
-                            </label>
-                            <input
-                              type="tel"
-                              value={newCustomer.phone}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  phone: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Email
-                            </label>
-                            <input
-                              type="email"
-                              value={newCustomer.email}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  email: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            />
-                          </div>
-
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Address
-                            </label>
-                            <input
-                              type="text"
-                              value={newCustomer.address}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  address: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Customer Type
-                            </label>
-                            <select
-                              value={newCustomer.customerType}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  customerType: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            >
-                              <option value="retail">Retail</option>
-                              <option value="wholesale">Wholesale</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Credit Limit ($)
-                            </label>
-                            <input
-                              type="number"
-                              value={newCustomer.creditLimit}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  creditLimit: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Payment Terms
-                            </label>
-                            <select
-                              value={newCustomer.paymentTerms}
-                              onChange={(e) =>
-                                setNewCustomer({
-                                  ...newCustomer,
-                                  paymentTerms: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            >
-                              <option value="15">15 days</option>
-                              <option value="30">30 days</option>
-                              <option value="45">45 days</option>
-                              <option value="60">60 days</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-6 border-t flex justify-end gap-4">
-                        <button
-                          onClick={() => setShowCustomerModal(false)}
-                          className="px-4 py-2 border rounded-lg"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleAddCustomer}
-                          className="px-4 py-2 bg-amber-600 text-white rounded-lg"
-                        >
-                          Add Customer
-                        </button>
-                      </div>
-                    </div> */}
                     <CustomerForm />
                   </Modal.Window>
                 </Modal>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { inputStyle } from "./ProductForm";
 
-function SupplierForm({ handleSubmit, register, onSubmit }) {
+function SupplierForm({ handleSubmit, register, onSubmit, close }) {
   const [contactInfo, setContactInfo] = useState({
     phone: "",
     email: "",
@@ -10,11 +10,47 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
     state: "",
     zip_code: "",
   });
+
+  const generateId = () => Math.random().toString(36).substr(2, 4);
+
+  const generateSupplierId = () => {
+    const existingIds = [
+      "sup_001",
+      "sup_002",
+      "sup_003",
+      "sup_004",
+      "sup_005",
+      "sup_006",
+      "sup_007",
+      "sup_008",
+    ];
+    let nextNum = 9;
+    while (existingIds.includes(`sup_${String(nextNum).padStart(3, "0")}`)) {
+      nextNum++;
+    }
+    return `sup_${String(nextNum).padStart(3, "0")}`;
+  };
+
+  const handleOnSubmit = (data) => {
+    if (!data.name || !contactInfo.phone) {
+      alert("لطفا نام تماس و تلفن را وارد کنید");
+      return;
+    }
+    const supplierData = {
+      _id: generateSupplierId(),
+      name: data.name,
+      contact_info: contactInfo,
+      id: generateId(),
+    };
+    onSubmit(supplierData);
+    close && close();
+  };
+
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(onSubmit)}
-      className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh]  overflow-y-auto"
+      onSubmit={handleSubmit(handleOnSubmit)}
+      className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">
@@ -25,19 +61,19 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contact Name *
+              نام تماس *
             </label>
             <input
               type="text"
-              {...register("name")}
+              {...register("name", { required: "نام تماس را وارد کنید" })}
               className={inputStyle}
-              placeholder="Ahmed Hassan"
+              placeholder="احمد حسن"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
+              ایمیل
             </label>
             <input
               type="email"
@@ -52,7 +88,7 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone *
+              تلفن *
             </label>
             <input
               type="tel"
@@ -65,9 +101,9 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
             />
           </div>
 
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Address
+              آدرس
             </label>
             <input
               type="text"
@@ -76,20 +112,66 @@ function SupplierForm({ handleSubmit, register, onSubmit }) {
                 setContactInfo({ ...contactInfo, address: e.target.value })
               }
               className={inputStyle}
-              placeholder="City, Country"
+              placeholder="آدرس"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              شهر
+            </label>
+            <input
+              type="text"
+              value={contactInfo?.city}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, city: e.target.value })
+              }
+              className={inputStyle}
+              placeholder="شهر"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ایالت
+            </label>
+            <input
+              type="text"
+              value={contactInfo?.state}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, state: e.target.value })
+              }
+              className={inputStyle}
+              placeholder="ایالت"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              کد پستی
+            </label>
+            <input
+              type="text"
+              value={contactInfo?.zip_code}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, zip_code: e.target.value })
+              }
+              className={inputStyle}
+              placeholder="کد پستی"
             />
           </div>
         </div>
       </div>
       <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
         <button
-          onClick={() => {}}
+          type="button"
+          onClick={() => close && close()}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
         >
           لغو کردن
         </button>
         <button
-          onClick={() => {}}
+          type="submit"
           className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
         >
           اضافه کردن تهیه کننده
