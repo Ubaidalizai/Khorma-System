@@ -286,3 +286,65 @@ export const deleteSale = async (id) => {
   if (!res.ok) throw new Error("Failed to delete sale");
   return res.json();
 };
+
+// AUTHENTICATION API
+
+// Login user
+export const loginUser = async (credentials) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(credentials),
+    credentials: "include", // Important for cookies
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "خطا در ورود");
+  }
+  
+  return res.json();
+};
+
+// Logout user
+export const logoutUser = async () => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include", // Important for cookies
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "خطا در خروج");
+  }
+  
+  return res.json();
+};
+
+// Refresh token
+export const refreshToken = async () => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+    method: "POST",
+    credentials: "include", // Important for cookies
+  });
+  
+  if (!res.ok) {
+    throw new Error("خطا در تازه‌سازی توکن");
+  }
+  
+  return res.json();
+};
+
+// Get current user
+export const getCurrentUser = async () => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+    method: "GET",
+    credentials: "include", // Important for cookies
+  });
+  
+  if (!res.ok) {
+    throw new Error("خطا در دریافت اطلاعات کاربر");
+  }
+  
+  return res.json();
+};

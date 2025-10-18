@@ -30,6 +30,10 @@ import {
   createSale,
   updateSale,
   deleteSale,
+  loginUser,
+  logoutUser,
+  refreshToken,
+  getCurrentUser,
 } from "./apiUtiles";
 
 // ✅ Get all inventory items
@@ -291,5 +295,61 @@ export const useDeleteSales = () => {
     mutationKey: ["deleteSale"],
     mutationFn: deleteSale,
     onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+  });
+};
+
+// AUTHENTICATION HOOKS
+
+// Login mutation
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      // Store user data in query cache
+      queryClient.setQueryData(["user"], data.user);
+      // Invalidate user queries to refetch
+      queryClient.invalidateQueries(["user"]);
+    },
+  });
+};
+
+// Logout mutation
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
+      // Clear all cached data
+      queryClient.clear();
+      // Remove user data
+      queryClient.removeQueries(["user"]);
+    },
+  });
+};
+
+// Get current user
+export const useCurrentUser = () => {
+  return useQuery({
+    queryKey: ["user"],
+    queryFn: getCurrentUser,
+    retry: (failureCount, error) => {
+      // Don't retry on 401 (unauthorized)
+      if (error?.status === 401) return false;
+      return failureCount < 2;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+// Refresh token mutation
+export const useRefreshToken = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: refreshToken,
+    onSuccess: (data) => {
+      // Update user data with new token info
+      queryClient.setQueryData(["user"], data.user);
+    },
   });
 };
