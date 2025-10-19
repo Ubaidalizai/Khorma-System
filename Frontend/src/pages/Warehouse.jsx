@@ -18,15 +18,15 @@ import WarehouseForm from "../components/WarehouseForm";
 import { useForm } from "react-hook-form";
 import { useUpdateStore } from "../services/useApi";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+// Headers aligned with Backend stock.model.js
 const tableHeader = [
-  { title: "جنس" },
-  { title: "نمبر ردیابی" },
+  { title: "محصول" },
+  { title: "نمبر بچ" },
   { title: "واحد" },
-  { title: "گدام" },
-  { title: "فروشگاه" },
+  { title: "موقعیت" },
   { title: "تاریخ انقضا" },
+  { title: "قیمت خرید/واحد" },
   { title: "تعداد" },
-  { title: "حالت" },
   { title: "عملیات" },
 ];
 function Warehouse({ warehouses, getStatusColor, isLoading }) {
@@ -81,55 +81,40 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
       >
         <TableHeader headerData={tableHeader} />
         <TableBody>
-          {warehouses?.map((filter) => (
-            <TableRow key={filter.id}>
-              <TableColumn>{filter.name}</TableColumn>
-              <TableColumn>{filter.sku}</TableColumn>
-              <TableColumn>{filter.category}</TableColumn>
-              <TableColumn className="text-purple-600">
-                {filter.warehouseStock}
-              </TableColumn>
-              <TableColumn className="text-green-600">
-                {filter.storeStock}
-              </TableColumn>
-              <TableColumn>
-                {filter.warehouseStock + filter.storeStock}
-              </TableColumn>
-              <TableColumn>{filter.unitPrice}</TableColumn>
-              <TableColumn>
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                    filter.status
-                  )}`}
-                >
-                  {filter.status}
-                </span>
-              </TableColumn>
+          {warehouses?.map((row) => (
+            <TableRow key={row?._id}>
+              <TableColumn>{row?.product?.name || row?.product}</TableColumn>
+              <TableColumn>{row?.batchNumber || "DEFAULT"}</TableColumn>
+              <TableColumn>{row?.unit?.name || row?.unit}</TableColumn>
+              <TableColumn>{row?.location === "warehouse" ? "گدام" : row?.location}</TableColumn>
+              <TableColumn>{row?.expiryDate ? new Date(row.expiryDate).toLocaleDateString('fa-IR') : "—"}</TableColumn>
+              <TableColumn>{row?.purchasePricePerBaseUnit?.toLocaleString?.() || row?.purchasePricePerBaseUnit}</TableColumn>
+              <TableColumn className="font-semibold">{row?.quantity}</TableColumn>
               <TableColumn
                 className={`${
                   "itemavs" +
-                  new Date(filter.expiryDate).getMilliseconds() +
-                  filter?.id
+                  (row?.expiryDate ? new Date(row.expiryDate).getMilliseconds() : "0") +
+                  row?._id
                 } relative`}
               >
                 <span>
                   <TableMenuModal>
                     <Menus>
                       <Menus.Menu>
-                        <Menus.Toggle id={filter?.id} />
+                        <Menus.Toggle id={row?._id} />
                         <Menus.List
                           parent={
                             "itemavs" +
-                            new Date(filter.expiryDate).getMilliseconds() +
-                            filter?.id
+                            (row?.expiryDate ? new Date(row.expiryDate).getMilliseconds() : "0") +
+                            row?._id
                           }
-                          id={filter?.id}
+                          id={row?._id}
                           className="bg-white rounded-lg shadow-xl"
                         >
                           <Menus.Button
                             icon={<HiSquare2Stack />}
                             onClick={() => {
-                              setSelectedPro(filter);
+                              setSelectedPro(row);
                               setShow(true);
                             }}
                           >
@@ -138,7 +123,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                           <Menus.Button
                             icon={<BiTransferAlt size={24} />}
                             onClick={() => {
-                              setSelectedPro(filter);
+                              setSelectedPro(row);
                               setShowTransfer(true);
                             }}
                           >
@@ -148,7 +133,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                           <Menus.Button
                             icon={<HiPencil />}
                             onClick={() => {
-                              setSelectedPro(filter);
+                              setSelectedPro(row);
                               setShowEdit(true);
                             }}
                           >
@@ -174,34 +159,34 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    نام گدام
+                    محصول
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.name}
+                    {selectedPro?.product?.name || selectedPro?.product}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    کُد محصول (SKU)
+                    نمبر بچ
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.sku}
+                    {selectedPro?.batchNumber || 'DEFAULT'}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    دسته‌بندی
+                    واحد
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.category}
+                    {selectedPro?.unit?.name || selectedPro?.unit}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    قیمت واحد
+                    قیمت خرید/واحد
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    ${selectedPro.unitPrice}
+                    ${selectedPro?.purchasePricePerBaseUnit}
                   </p>
                 </div>
                 <div>
@@ -209,7 +194,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                     موجودی در انبار
                   </h3>
                   <p className="text-2xl font-bold text-purple-600">
-                    {selectedPro.warehouseStock} عدد
+                    {selectedPro?.location === 'warehouse' ? selectedPro?.quantity : 0} عدد
                   </p>
                 </div>
                 <div>
@@ -217,7 +202,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                     موجودی در فروشگاه
                   </h3>
                   <p className="text-2xl font-bold text-green-600">
-                    {selectedPro.storeStock} عدد
+                    {selectedPro?.location === 'store' ? selectedPro?.quantity : 0} عدد
                   </p>
                 </div>
                 <div>
@@ -225,7 +210,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                     مجموع موجودی
                   </h3>
                   <p className="text-2xl font-bold text-gray-900">
-                    {selectedPro.warehouseStock + selectedPro.storeStock} عدد
+                    {selectedPro?.quantity} عدد
                   </p>
                 </div>
                 <div>
@@ -234,10 +219,10 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                   </h3>
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      selectedPro.status
+                      selectedPro?.expiryDate ? 'موجود' : '—'
                     )}`}
                   >
-                    {selectedPro.status}
+                    {selectedPro?.expiryDate ? 'موجود' : '—'}
                   </span>
                 </div>
                 <div>
@@ -245,7 +230,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                     حداقل سطح موجودی
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.minStockLevel} عدد
+                    {selectedPro?.product?.minLevel ?? 0} عدد
                   </p>
                 </div>
                 <div>
@@ -253,7 +238,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                     تاریخ انقضا
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.expiryDate || "در دسترس نیست"}
+                    {selectedPro?.expiryDate ? new Date(selectedPro.expiryDate).toLocaleDateString('fa-IR') : "در دسترس نیست"}
                   </p>
                 </div>
                 <div>
@@ -263,8 +248,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                   <p className="text-lg font-semibold text-amber-600">
                     $
                     {(
-                      (selectedPro.warehouseStock + selectedPro.storeStock) *
-                      selectedPro.unitPrice
+                      selectedPro?.quantity * selectedPro?.purchasePricePerBaseUnit
                     ).toFixed(2)}
                   </p>
                 </div>
@@ -273,7 +257,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
                     آخرین به‌روزرسانی
                   </h3>
                   <p className="text-sm text-gray-700">
-                    {new Date(selectedPro.lastUpdated).toLocaleString()}
+                    {new Date(selectedPro.updatedAt || selectedPro.createdAt).toLocaleString('fa-IR')}
                   </p>
                 </div>
                 <div className="md:col-span-2">

@@ -10,23 +10,26 @@ import TableMenuModal from "../components/TableMenuModal";
 import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import Confirmation from "../components/Confirmation";
-import { useDeleteStore, useStores, useUpdateStore } from "../services/useApi";
+import { useDeleteStore, useUpdateStore } from "../services/useApi";
 import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
 import { motion } from "framer-motion";
 import Button from "../components/Button";
-import { CalendarDays, ClipboardList, Info, Package, User } from "lucide-react";
+import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
+
+// Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
-  { title: "نمبر ردیابی" },
+  { title: "نمبر بچ" },
   { title: "موقعیت" },
   { title: "محصول" },
   { title: "تاریخ انقضا" },
-  { title: "قیمت خرید" },
+  { title: "قیمت خرید/واحد" },
   { title: "واحد" },
+  { title: "تعداد" },
   { title: "عملیات" },
 ];
-function Store() {
-  const { data: storelist } = useStores();
+
+function Store({ stocks = [], isLoading = false }) {
   const { mutate: deleteStore } = useDeleteStore();
   const { mutate: updateStore } = useUpdateStore();
   const [selectedData, setSelectedData] = useState(null);
@@ -57,20 +60,21 @@ function Store() {
       >
         <TableHeader headerData={storeHeader} />
         <TableBody>
-          {storelist?.map((el) => (
-            <TableRow key={el.id}>
-              <TableColumn>{el?.trackingNumber}</TableColumn>
-              <TableColumn>{el?.location}</TableColumn>
-              <TableColumn>{el?.product}</TableColumn>
-              <TableColumn>{el?.expiryDate}</TableColumn>
-              <TableColumn>{el?.purchasePrice}</TableColumn>
-              <TableColumn>{el?.unit}</TableColumn>
+          {stocks?.map((el) => (
+            <TableRow key={el?._id}>
+              <TableColumn>{el?.batchNumber || "DEFAULT"}</TableColumn>
+              <TableColumn>{el?.location === 'store' ? 'فروشگاه' : el?.location}</TableColumn>
+              <TableColumn>{el?.product?.name || el?.product}</TableColumn>
+              <TableColumn>{el?.expiryDate ? new Date(el.expiryDate).toLocaleDateString('fa-IR') : '—'}</TableColumn>
+              <TableColumn>{el?.purchasePricePerBaseUnit?.toLocaleString?.() || el?.purchasePricePerBaseUnit}</TableColumn>
+              <TableColumn>{el?.unit?.name || el?.unit}</TableColumn>
+              <TableColumn className="font-semibold">{el?.quantity}</TableColumn>
               <TableColumn>
                 <span
                   className={`${
                     "stores" +
-                    el?.id +
-                    new Date(el?.expiryDate).getMilliseconds()
+                    el?._id +
+                    new Date(el?.expiryDate || Date.now()).getMilliseconds()
                   } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
                 >
                   <div
@@ -79,14 +83,14 @@ function Store() {
                     <TableMenuModal>
                       <Menus>
                         <Menus.Menu>
-                          <Menus.Toggle id={el?.id} />
+                          <Menus.Toggle id={el?._id} />
                           <Menus.List
                             parent={
                               "stores" +
-                              el?.id +
-                              new Date(el?.expiryDate).getMilliseconds()
+                              el?._id +
+                              new Date(el?.expiryDate || Date.now()).getMilliseconds()
                             }
-                            id={el?.id}
+                            id={el?._id}
                             className="bg-white rounded-lg shadow-xl"
                           >
                             <Menus.Button
@@ -98,39 +102,16 @@ function Store() {
                             >
                               نمایش
                             </Menus.Button>
-
-                            <TableMenuModal.Open opens="edit">
-                              <Menus.Button icon={<HiPencil />}>
-                                ویرایش
-                              </Menus.Button>
-                            </TableMenuModal.Open>
-
-                            <TableMenuModal.Open opens="delete">
-                              <Menus.Button icon={<HiTrash />}>
-                                حذف
-                              </Menus.Button>
-                            </TableMenuModal.Open>
-                          </Menus.List>
-                        </Menus.Menu>
-
-                        <TableMenuModal.Window name="delete" className={""}>
-                          <Confirmation
-                            type="delete"
-                            handleClick={() => deleteStore(el?.id)}
-                            handleCancel={() => {}}
-                          />
-                        </TableMenuModal.Window>
-
-                        <TableMenuModal.Window name="edit" className={``}>
-                          <Confirmation
-                            type="edit"
-                            handleClick={() => {
+                            <Menus.Button icon={<HiPencil />} onClick={() => {
                               setSelectedData(el);
                               setEditForm(true);
-                            }}
-                            handleCancel={() => {}}
-                          />
-                        </TableMenuModal.Window>
+                            }}>ویرایش</Menus.Button>
+                            <Menus.Button icon={<HiTrash />} onClick={() => {
+                              setSelectedData(el);
+                              // You can wire up a confirmation modal similar to Product page
+                            }}>حذف</Menus.Button>
+                          </Menus.List>
+                        </Menus.Menu>
                       </Menus>
                     </TableMenuModal>
                   </div>
@@ -150,9 +131,9 @@ function Store() {
             className="w-[500px] mx-auto bg-white rounded-sm shadow-sm overflow-hidden"
           >
             <div className=" p-6 text-slate-800 flex  items-center  gap-3 ">
-              <p className="text-2xl  font-black">{selectedData.id}#</p>
+              <p className="text-2xl  font-black">{selectedData?._id?.slice(-6)}#</p>
               <h2 className="text-2xl font-bold text-palm-500">
-                {selectedData.location}
+                {selectedData?.location === 'store' ? 'فروشگاه' : selectedData?.location}
               </h2>
             </div>
 
@@ -165,7 +146,7 @@ function Store() {
                     <span className="text-lg text-palm-500">واحد</span>
                   </h3>
                   <p className="text-lg font-semibold text-palm-400">
-                    {selectedData.unit}
+                    {selectedData?.unit?.name || selectedData?.unit}
                   </p>
                 </div>
 
@@ -176,7 +157,7 @@ function Store() {
                     <span className="ext-lg text-palm-500">محصول</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedData.product}
+                    {selectedData?.product?.name || selectedData?.product}
                   </p>
                 </div>
 
@@ -187,7 +168,7 @@ function Store() {
                     <span className="ext-lg text-palm-500">قیمت</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedData.purchasePrice}
+                    {selectedData?.purchasePricePerBaseUnit}
                   </p>
                 </div>
 
@@ -198,7 +179,7 @@ function Store() {
                     <span className="ext-lg text-palm-500">تاریخ انقضا</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedData.expiryDate}
+                    {selectedData?.expiryDate ? new Date(selectedData.expiryDate).toLocaleDateString('fa-IR') : '—'}
                   </p>
                 </div>
               </div>
@@ -212,7 +193,7 @@ function Store() {
                   <span className="ext-[16px] text-palm-500">نمبر ردیابی</span>
                 </h3>
                 <p className="text-gray-800 leading-relaxed text-right">
-                  {selectedData.trackingNumber}
+                  {selectedData?.batchNumber || 'DEFAULT'}
                 </p>
               </div>
             </div>

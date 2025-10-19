@@ -137,10 +137,12 @@ const Purchases = () => {
     totalAmount: purchases?.data?.reduce((sum, p) => sum + p.totalAmount, 0),
     totalPaid: purchases?.data?.reduce((sum, p) => sum + p.paidAmount, 0),
     totalOwed: purchases?.data?.reduce((sum, p) => sum + p.dueAmount, 0),
-    pendingPayments: purchases?.data?.filter((p) => p.paymentStatus === "pending")
-      .length,
-    completedPayments: purchases?.data?.filter((p) => p.paymentStatus === "paid")
-      .length,
+    pendingPayments: purchases?.data?.filter(
+      (p) => p.paymentStatus === "pending"
+    ).length,
+    completedPayments: purchases?.data?.filter(
+      (p) => p.paymentStatus === "paid"
+    ).length,
   };
 
   // Status colors
@@ -171,29 +173,29 @@ const Purchases = () => {
   // };
 
   return (
-    <div className='space-y-6 w-full max-w-full overflow-x-hidden'>
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>مدیریت خرید</h1>
-          <p className='text-gray-600 mt-2'>
+          <h1 className="text-3xl font-bold text-gray-900">مدیریت خرید</h1>
+          <p className="text-gray-600 mt-2">
             پیدا کردن خرید، مدیریت تامین کننده ها و مانتور کردن پرداخت ها
           </p>
         </div>
-        <div className='flex w-[300px] gap-3'>
+        <div className="flex w-[300px] gap-3">
           <Modal>
-            <Modal.Toggle id='export'>
-              <Button className=' bg-success-green'>خروجی</Button>
+            <Modal.Toggle id="export">
+              <Button className=" bg-success-green">خروجی</Button>
             </Modal.Toggle>
-            <Modal.Window name='export'>
-              <div className='w-[400px] h-[300px] bg-white'></div>
+            <Modal.Window name="export">
+              <div className="w-[400px] h-[300px] bg-white"></div>
             </Modal.Window>
           </Modal>
           <Modal>
-            <Modal.Toggle id='addPurchase'>
-              <Button className=' bg-deepdate-400'>اضافه کردن خرید</Button>
+            <Modal.Toggle id="addPurchase">
+              <Button className=" bg-deepdate-400">اضافه کردن خرید</Button>
             </Modal.Toggle>
-            <Modal.Window name='addPurchase'>
+            <Modal.Window name="addPurchase">
               <PurchaseForm
                 register={register}
                 watch={watch}
@@ -213,68 +215,68 @@ const Purchases = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>مجموع خرید</p>
-              <p className='text-2xl font-bold text-gray-900 mt-1'>
+              <p className="text-sm text-gray-600">مجموع خرید</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalPurchases}
               </p>
             </div>
-            <div className='bg-blue-100 p-3 rounded-lg'>
-              <ClipboardDocumentListIcon className='h-6 w-6 text-blue-600' />
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مجموع کل</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {formatCurrency(Number(stats?.totalAmount).toFixed(2))}
               </p>
             </div>
-            <div className='bg-purple-100 p-3 rounded-lg'>
-              <CurrencyDollarIcon className='h-6 w-6 text-purple-600' />
+            <div className="bg-purple-100 p-3 rounded-lg">
+              <CurrencyDollarIcon className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مبلغ پرداخت شده</p>
               <p className="text-2xl font-bold text-green-600 mt-1">
                 {formatCurrency(stats.totalPaid?.toFixed(2))}
               </p>
             </div>
-            <div className='bg-green-100 p-3 rounded-lg'>
-              <BanknotesIcon className='h-6 w-6 text-green-600' />
+            <div className="bg-green-100 p-3 rounded-lg">
+              <BanknotesIcon className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
               <p className="text-2xl font-bold text-red-600 mt-1">
                 {formatCurrency(stats.totalOwed?.toFixed(2))}
               </p>
             </div>
-            <div className='bg-red-100 p-3 rounded-lg'>
-              <DocumentTextIcon className='h-6 w-6 text-red-600' />
+            <div className="bg-red-100 p-3 rounded-lg">
+              <DocumentTextIcon className="h-6 w-6 text-red-600" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200'>
-        <div className='border-b border-gray-200'>
-          <nav className='flex -mb-px'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("purchases")}
               className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
@@ -283,7 +285,7 @@ const Purchases = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <ClipboardDocumentListIcon className='h-5 w-5' />
+              <ClipboardDocumentListIcon className="h-5 w-5" />
               خرید
             </button>
             <button
@@ -294,7 +296,7 @@ const Purchases = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <UserGroupIcon className='h-5 w-5' />
+              <UserGroupIcon className="h-5 w-5" />
               تهیه کننده ({suppliers?.length})
             </button>
             <button
@@ -305,7 +307,7 @@ const Purchases = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <ChartBarIcon className='h-5 w-5' />
+              <ChartBarIcon className="h-5 w-5" />
               تاریخچه چرداخت ها
             </button>
           </nav>
@@ -313,19 +315,19 @@ const Purchases = () => {
 
         {/* Purchases Tab */}
         {activeTab === "purchases" && (
-          <div className='p-6'>
+          <div className="p-6">
             <Purchase getPaymentStatusColor={getPaymentStatusColor} />
           </div>
         )}
 
         {/* Suppliers Tab */}
         {activeTab === "suppliers" && (
-          <div className='p-6'>
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {isSupplierLoading ? (
                 <Spinner />
               ) : (
-                suppliers?.map((supplier) => (
+                suppliers?.data?.map((supplier) => (
                   <SupplierComponent supplier={supplier} key={supplier.id} />
                 ))
               )}
@@ -335,8 +337,8 @@ const Purchases = () => {
 
         {/* Payment History Tab */}
         {activeTab === "history" && (
-          <div className='p-6'>
-            <div className='overflow-x-auto -mx-6 px-6'>
+          <div className="p-6">
+            <div className="overflow-x-auto -mx-6 px-6">
               <PaymentHistory paymentHistory={paymentHistory} />
             </div>
           </div>
@@ -350,26 +352,26 @@ const SupplierComponent = ({ supplier }) => {
   return (
     <div
       key={supplier.id}
-      className='bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow'
+      className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
     >
-      <div className='flex items-start justify-between mb-4'>
-        <div className='flex items-center gap-3'>
-          <div className='bg-amber-100 p-3 rounded-full'>
-            <UserGroupIcon className='h-6 w-6 text-amber-600' />
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-amber-100 p-3 rounded-full">
+            <UserGroupIcon className="h-6 w-6 text-amber-600" />
           </div>
           <div>
-            <h3 className='text-lg font-semibold text-gray-900'>
+            <h3 className="text-lg font-semibold text-gray-900">
               {supplier.name}
             </h3>
-            <p className='text-sm text-gray-600'>{supplier.company}</p>
+            <p className="text-sm text-gray-600">{supplier.company}</p>
           </div>
         </div>
       </div>
 
-      <div className='space-y-3'>
-        <div className='flex justify-between text-sm'>
-          <span className='text-gray-600'>مجموعی خرید:</span>
-          <span className='font-semibold text-gray-900'>
+      <div className="space-y-3">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">مجموعی خرید:</span>
+          <span className="font-semibold text-gray-900">
             {supplier.totalPurchases}
           </span>
         </div>
@@ -391,21 +393,21 @@ const SupplierComponent = ({ supplier }) => {
             {formatCurrency(supplier?.amountOwed)}
           </span>
         </div>
-        <div className='pt-3 border-t border-gray-200'>
-          <div className='flex justify-between text-xs text-gray-500'>
+        <div className="pt-3 border-t border-gray-200">
+          <div className="flex justify-between text-xs text-gray-500">
             <span>Credit Limit:</span>
             <span>${supplier?.creditLimit}</span>
           </div>
-          <div className='flex justify-between text-xs text-gray-500 mt-1'>
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>Payment Terms:</span>
             <span>{supplier.paymentTerms}</span>
           </div>
         </div>
       </div>
 
-      <div className='mt-4 flex gap-2'>
+      <div className="mt-4 flex gap-2">
         <Button
-          className=' bg-warning-orange'
+          className=" bg-warning-orange"
           // onClick={() => {
           //   setSelectedSupplier(supplier);
           //   setShowDetailsModal(true);
@@ -413,7 +415,7 @@ const SupplierComponent = ({ supplier }) => {
         >
           دیدن جزئیات
         </Button>
-        <Button className=' bg-success-green'>تماس</Button>
+        <Button className=" bg-success-green">تماس</Button>
       </div>
     </div>
   );

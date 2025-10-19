@@ -129,7 +129,7 @@ export default function SalesForm({
               className={inputStyle}
             >
               <option value="">انتخاب مشتری</option>
-              {customers?.map((c) => {
+              {customers?.data?.map((c) => {
                 const id = c._id || c.id;
                 return (
                   <option key={id} value={id}>
@@ -154,7 +154,7 @@ export default function SalesForm({
               className={inputStyle}
             >
               <option value="">انتخاب کارمند</option>
-              {employees?.map((e) => {
+              {employees?.data?.map((e) => {
                 const id = e._id || e.id;
                 return (
                   <option key={id} value={id}>
@@ -271,7 +271,7 @@ export default function SalesForm({
                 className={inputStyle}
               >
                 <option value="">Select product</option>
-                {products?.map((p, index) => (
+                {products?.data?.map((p, index) => (
                   <option key={index} value={p._id}>
                     {p.name}
                   </option>
@@ -290,7 +290,7 @@ export default function SalesForm({
                 className={inputStyle}
               >
                 <option value="">Unit</option>
-                {units?.map((u, index) => (
+                {units?.data?.map((u, index) => (
                   <option key={index} value={u.id}>
                     {u.name}
                   </option>

@@ -20,18 +20,79 @@ const headers = [
   { title: "تاریخ" },
   { title: "اسم جنس" },
   { title: "واحد اصلی" },
-  { title: "اخیر ترین قیمت" },
   { title: "تعداد" },
   { title: "توضیحات" },
   { title: "عملیات" },
 ];
 
 function Product({ properties: productList }) {
-  const { mutate: deleteProduct } = useDeleteProdcut();
+  const { mutate: deleteProduct, isLoading: isDeleting } = useDeleteProdcut();
   const [isEditable, setIsEditable] = useState(false);
   const [showData, setShowData] = useState(false);
   const [show, setShow] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+ 
+  // Show loading state if data is being fetched
+  if (!productList) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-500">در حال بارگذاری...</div>
+      </div>
+    );
+  }
+
+  // Handle delete product
+  const handleDeleteProduct = (product) => {
+    setProductToDelete(product);
+    setShowDeleteConfirm(true);
+  };
+
+  // Confirm delete product
+  const confirmDeleteProduct = () => {
+    if (productToDelete) {
+      deleteProduct(productToDelete._id, {
+        onSuccess: () => {
+          console.log('محصول با موفقیت حذف شد');
+          setShowDeleteConfirm(false);
+          setProductToDelete(null);
+        },
+        onError: (error) => {
+          console.error('خطا در حذف محصول:', error);
+        }
+      });
+    }
+  };
+
+  // Cancel delete
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setProductToDelete(null);
+  };
+
+  // Handle edit product
+  const handleEditProduct = (product) => {
+    setSelectedPro(product);
+    setIsEditable(true);
+  };
+
+  // Handle view product
+  const handleViewProduct = (product) => {
+    setSelectedPro(product);
+    setShowData(true);
+  };
+
+  // Handle close modals
+  const handleCloseEdit = () => {
+    setIsEditable(false);
+    setSelectedPro(null);
+  };
+
+  const handleCloseView = () => {
+    setShowData(false);
+    setSelectedPro(null);
+  };
 
   return (
     <section className="w-full">
@@ -58,18 +119,27 @@ function Product({ properties: productList }) {
       >
         <TableHeader headerData={headers} />
         <TableBody>
-          {productList?.data?.map((el) => (
-            <TableRow key={el.id}>
-              <TableColumn>{el?.date}</TableColumn>
+          {productList?.length > 0 ? (
+            productList?.map((el) => (
+            <TableRow key={el._id}>
+              <TableColumn>{new Date(el?.createdAt).toLocaleDateString('fa-IR')}</TableColumn>
               <TableColumn>{el?.name}</TableColumn>
-              <TableColumn>{el?.baseUnit}</TableColumn>
-              <TableColumn>{el?.latestPurchasePrice}</TableColumn>
-              <TableColumn>{el?.minLevel}</TableColumn>
-              <TableColumn>{el?.description}</TableColumn>
+              <TableColumn>{el?.baseUnit?.name || 'نامشخص'}</TableColumn>
+              
+              <TableColumn>{el?.minLevel || 0}</TableColumn>
+              <TableColumn>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  el?.trackByBatch 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {el?.trackByBatch ? 'فعال' : 'غیرفعال'}
+                </span>
+              </TableColumn>
               <TableColumn>
                 <span
                   className={`${
-                    "itemavs" + el?.id + new Date(el?.date).getMilliseconds()
+                    "itemavs" + el?._id + new Date(el?.createdAt).getMilliseconds()
                   } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
                 >
                   <div
@@ -78,69 +148,58 @@ function Product({ properties: productList }) {
                     <TableMenuModal>
                       <Menus>
                         <Menus.Menu>
-                          <Menus.Toggle id={el?.id} />
+                          <Menus.Toggle id={el?._id} />
                           <Menus.List
                             parent={
                               "itemavs" +
-                              el?.id +
-                              new Date(el?.date).getMilliseconds()
+                              el?._id +
+                              new Date(el?.createdAt).getMilliseconds()
                             }
-                            id={el?.id}
+                            id={el?._id}
                             className="bg-white rounded-lg shadow-xl"
                           >
                             <Menus.Button
                               icon={<HiSquare2Stack />}
-                              onClick={() => {
-                                setSelectedPro(el);
-                                setShowData(true);
-                              }}
+                              onClick={() => handleViewProduct(el)}
                             >
                               نمایش
                             </Menus.Button>
 
-                            <TableMenuModal.Open opens="edit">
-                              <Menus.Button icon={<HiPencil />}>
-                                ویرایش
-                              </Menus.Button>
-                            </TableMenuModal.Open>
+                            <Menus.Button 
+                              icon={<HiPencil />}
+                              onClick={() => handleEditProduct(el)}
+                            >
+                              ویرایش
+                            </Menus.Button>
 
-                            <TableMenuModal.Open opens="delete">
-                              <Menus.Button icon={<HiTrash />}>
-                                حذف
-                              </Menus.Button>
-                            </TableMenuModal.Open>
+                            <Menus.Button 
+                              icon={<HiTrash />}
+                              onClick={() => handleDeleteProduct(el)}
+                              disabled={isDeleting}
+                            >
+                              {isDeleting ? 'در حال حذف...' : 'حذف'}
+                            </Menus.Button>
                           </Menus.List>
                         </Menus.Menu>
 
-                        <TableMenuModal.Window name="delete" className={""}>
-                          <Confirmation
-                            type="delete"
-                            handleClick={() => deleteProduct(el?.id)}
-                            handleCancel={() => {}}
-                          />
-                        </TableMenuModal.Window>
-
-                        <TableMenuModal.Window name="edit" className={``}>
-                          <Confirmation
-                            type="edit"
-                            handleClick={() => {
-                              setSelectedPro(el);
-                              setIsEditable(true);
-                            }}
-                            handleCancel={() => {}}
-                          />
-                        </TableMenuModal.Window>
                       </Menus>
                     </TableMenuModal>
                   </div>
                 </span>
               </TableColumn>
             </TableRow>
-          ))}
+            ))
+          ) : (
+            <TableRow>
+              <TableColumn colSpan={7} className="text-center py-8 text-gray-500">
+                هیچ محصولی یافت نشد
+              </TableColumn>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
-      <GloableModal open={isEditable} setOpen={setIsEditable}>
-        <EditProduct productId={selectedPro?.id} />
+      <GloableModal open={isEditable} setOpen={handleCloseEdit}>
+        <EditProduct productId={selectedPro?._id} onClose={handleCloseEdit} />
       </GloableModal>
 
       <GloableModal open={show} setOpen={setShow}>
@@ -274,7 +333,7 @@ function Product({ properties: productList }) {
           </div>
         )}
       </GloableModal>
-      <GloableModal open={showData} setOpen={setShowData}>
+      <GloableModal open={showData} setOpen={handleCloseView}>
         {selectedPro && (
           <motion.div
             initial={{ opacity: 0, y: 25 }}
@@ -284,7 +343,7 @@ function Product({ properties: productList }) {
             className="w-[500px] mx-auto bg-white rounded-sm shadow-sm overflow-hidden"
           >
             <div className=" p-6 text-slate-800 flex  items-center  gap-3 ">
-              <p className="text-2xl  font-black">{selectedPro.id}#</p>
+              <p className="text-2xl  font-black">{selectedPro._id?.slice(-6)}#</p>
               <h2 className="text-2xl font-bold text-palm-500">
                 {selectedPro.name}
               </h2>
@@ -292,47 +351,72 @@ function Product({ properties: productList }) {
 
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
-                {/* Unit */}
+                {/* Base Unit */}
                 <div className=" flex flex-col  items-start gap-x-2">
                   <h3 className="text-sm  font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
                     <Package className=" text-2xl text-palm-500" />
-                    <span className="text-lg text-palm-500">واحد</span>
+                    <span className="text-lg text-palm-500">واحد پایه</span>
                   </h3>
                   <p className="text-lg font-semibold text-palm-400">
-                    {selectedPro.baseUnit}
+                    {selectedPro.baseUnit?.name || 'نامشخص'}
                   </p>
                 </div>
 
-                {/* Min Quantity */}
+                {/* Min Level */}
                 <div className="flex flex-col  items-start gap-x-2">
                   <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
                     <ClipboardList className="text-2xl text-palm-500" />
-                    <span className="ext-lg text-palm-500">حداقل مقدار</span>
+                    <span className="text-lg text-palm-500">حداقل سطح</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.minLevel} عدد
+                    {selectedPro.minLevel || 0} عدد
                   </p>
                 </div>
 
-                {/* Tracker */}
+                {/* Latest Purchase Price */}
                 <div className="flex flex-col  items-start gap-x-2">
                   <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
                     <User className="text-2xl text-palm-500" />
-                    <span className="ext-lg text-palm-500">اخیر ترین قیمت</span>
+                    <span className="text-lg text-palm-500">آخرین قیمت خرید</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.latestPurchasePrice}
+                    {selectedPro.latestPurchasePrice 
+                      ? `${selectedPro.latestPurchasePrice.toLocaleString()} افغانی` 
+                      : 'نامشخص'
+                    }
                   </p>
                 </div>
 
-                {/* Date */}
+                {/* Track by Batch */}
                 <div className="flex flex-col  items-start gap-x-2">
                   <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
                     <CalendarDays className="text-2xl text-palm-500" />
-                    <span className="ext-lg text-palm-500">تاریخ ثبت</span>
+                    <span className="text-lg text-palm-500">ردیابی بچ</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.date}
+                    {selectedPro.trackByBatch ? 'فعال' : 'غیرفعال'}
+                  </p>
+                </div>
+
+                {/* Created Date */}
+                <div className="flex flex-col  items-start gap-x-2">
+                  <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
+                    <CalendarDays className="text-2xl text-palm-500" />
+                    <span className="text-lg text-palm-500">تاریخ ایجاد</span>
+                  </h3>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {new Date(selectedPro.createdAt).toLocaleDateString('fa-IR')}
+                  </p>
+                </div>
+
+                {/* Updated Date */}
+                <div className="flex flex-col  items-start gap-x-2">
+                  <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
+                    <CalendarDays className="text-2xl text-palm-500" />
+                    <span className="text-lg text-palm-500">آخرین بروزرسانی</span>
+                  </h3>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {new Date(selectedPro.updatedAt).toLocaleDateString('fa-IR')}
                   </p>
                 </div>
               </div>
@@ -343,7 +427,7 @@ function Product({ properties: productList }) {
               <div className="flex flex-col  items-start gap-x-2">
                 <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center justify-end gap-1">
                   <Info className="text-2xl text-palm-500" />
-                  <span className="ext-[16px] text-palm-500">توضیحات</span>
+                  <span className="text-[16px] text-palm-500">توضیحات</span>
                 </h3>
                 <p className="text-gray-800 leading-relaxed text-right">
                   {selectedPro.description || "هیچ توضیحی در دسترس نیست."}
@@ -353,10 +437,21 @@ function Product({ properties: productList }) {
 
             {/* Footer */}
             <div className="bg-gray-50 border-t border-gray-200 p-4 flex justify-end">
-              <Button onClick={() => setShowData(false)}>بسته کردن</Button>
+              <Button onClick={handleCloseView}>بسته کردن</Button>
             </div>
           </motion.div>
         )}
+      </GloableModal>
+
+      {/* Delete Confirmation Modal */}
+      <GloableModal open={showDeleteConfirm} setOpen={setShowDeleteConfirm}>
+        <Confirmation
+          type="delete"
+          message={`آیا مطمئن هستید که می‌خواهید محصول "${productToDelete?.name}" را حذف کنید؟`}
+          handleClick={confirmDeleteProduct}
+          handleCancel={cancelDelete}
+          close={cancelDelete}
+        />
       </GloableModal>
     </section>
   );

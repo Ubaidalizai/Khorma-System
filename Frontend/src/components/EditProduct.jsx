@@ -12,6 +12,7 @@ import Button from "./Button";
 import ProductForm from "./ProductForm";
 
 function EditProduct({ productId, onClose }) {
+  
   const { data, isLoading, isError } = useProdcutItem(productId);
   const { mutate: updateProduct } = useUpdateProdcut();
   const { handleSubmit, reset, register, control, formState } = useForm({
@@ -25,14 +26,14 @@ function EditProduct({ productId, onClose }) {
   });
   // Reset form when API data is loaded
   useEffect(() => {
-    if (data) {
+    if (data?.product) {
       reset({
-        name: data.name ?? "",
-        baseUnit: data.baseUnit ?? "",
-        minLevel: data.minLevel ?? 0,
-        latestPurchasePrice: data.latestPurchasePrice ?? "",
-        description: data.description ?? "",
-        trackByBatch: data.trackByBatch ?? false,
+        name: data?.product?.name ?? "",
+        baseUnit: data?.product?.baseUnit ?? "",
+        minLevel: data?.product?.minLevel ?? 0,
+        latestPurchasePrice: data?.product?.latestPurchasePrice ?? "",
+        description: data?.product?.description ?? "",
+        trackByBatch: data?.product?.trackByBatch ?? false,
       });
     }
   }, [data, reset]);

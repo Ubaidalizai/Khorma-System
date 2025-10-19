@@ -50,11 +50,15 @@ const iconVariants = {
 
 export default function Menus({ children }) {
   const [openId, setOpenId] = useState("");
-  const close = () => setOpenId("");
+  const [anchorRect, setAnchorRect] = useState(null);
+  const close = () => {
+    setOpenId("");
+    setAnchorRect(null);
+  };
   const open = setOpenId;
 
   return (
-    <MenusContext.Provider value={{ open, close, openId }}>
+    <MenusContext.Provider value={{ open, close, openId, anchorRect, setAnchorRect }}>
       {children}
     </MenusContext.Provider>
   );
@@ -73,9 +77,11 @@ function Menu({ children, className = "" }) {
 }
 
 function Toggle({ id }) {
-  const { openId, open, close } = useMenus();
+  const { openId, open, close, setAnchorRect } = useMenus();
   const handleClick = (e) => {
     e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setAnchorRect(rect);
     openId === "" || openId !== id ? open(id) : close();
   };
 
@@ -95,9 +101,22 @@ function Toggle({ id }) {
 }
 
 function List({ children, id, className = "", parent }) {
-  const containerParent = document.querySelector(`.${parent}`) || document.body;
-  const { openId, close } = useMenus();
+  // Always portal to body to avoid stacking/overflow issues
+  const containerParent = document.body;
+  const { openId, close, anchorRect } = useMenus();
   const ref = useClickOutSide(close);
+
+  // Compute anchored position next to the toggle button
+  const anchoredStyle = anchorRect
+    ? {
+        position: "fixed",
+        top: anchorRect.bottom + 4, // small offset below the button
+        left: anchorRect.left + anchorRect.width / 2,
+        transform: "translateX(-50%)",
+        zIndex: 99999,
+        originY: "top",
+      }
+    : {};
 
   return createPortal(
     <AnimatePresence>
@@ -108,8 +127,8 @@ function List({ children, id, className = "", parent }) {
           initial="closed"
           animate="open"
           exit="closed"
-          style={{ originY: "top", translateX: "-50%" }}
-          className={`absolute  left-full  bottom-2/18 bg-white rounded-sm shadow-lg border border-gray-200 py-1 z-[100] min-w-[130px] overflow-hidden ${className}`}
+          style={anchoredStyle}
+          className={`bg-white rounded-sm shadow-lg border border-gray-200 py-1 z-[99999] min-w-[130px] overflow-hidden ${className}`}
         >
           {children}
         </motion.ul>
