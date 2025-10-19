@@ -133,13 +133,13 @@ const Purchases = () => {
 
   // Calculate statistics
   const stats = {
-    totalPurchases: purchases?.length,
-    totalAmount: purchases?.reduce((sum, p) => sum + p.totalAmount, 0),
-    totalPaid: purchases?.reduce((sum, p) => sum + p.paidAmount, 0),
-    totalOwed: purchases?.reduce((sum, p) => sum + p.dueAmount, 0),
-    pendingPayments: purchases?.filter((p) => p.paymentStatus === "pending")
+    totalPurchases: purchases?.data?.length,
+    totalAmount: purchases?.data?.reduce((sum, p) => sum + p.totalAmount, 0),
+    totalPaid: purchases?.data?.reduce((sum, p) => sum + p.paidAmount, 0),
+    totalOwed: purchases?.data?.reduce((sum, p) => sum + p.dueAmount, 0),
+    pendingPayments: purchases?.data?.filter((p) => p.paymentStatus === "pending")
       .length,
-    completedPayments: purchases?.filter((p) => p.paymentStatus === "paid")
+    completedPayments: purchases?.data?.filter((p) => p.paymentStatus === "paid")
       .length,
   };
 

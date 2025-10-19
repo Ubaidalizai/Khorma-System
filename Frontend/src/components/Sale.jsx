@@ -51,10 +51,10 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
   const [selectedSale, setSelectedSale] = useState(null);
   const { mutate: deleteSale } = useDeleteSales();
   const currentCustomer = (cuid) => {
-    return customers?.filter((curr) => curr.id === cuid)[0];
+    return customers?.data?.filter((curr) => curr.id === cuid)[0];
   };
   const currentEmployee = (cuid) => {
-    return employees?.filter((curr) => curr.id === cuid)[0];
+    return employees?.data?.filter((curr) => curr.id === cuid)[0];
   };
   if (isLoading || isCustomerLoading || isEmployeeLoading) return <Spinner />;
   return (
@@ -96,7 +96,7 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
       >
         <TableHeader headerData={salesHeader} />
         <TableBody>
-          {filteredSales.map((sale, index) => (
+          {filteredSales?.data?.map((sale, index) => (
             <TableRow key={index}>
               <TableColumn>{sale.id}</TableColumn>
               <TableColumn>

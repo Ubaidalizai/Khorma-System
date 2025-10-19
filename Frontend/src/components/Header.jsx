@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Bars3Icon,
   BellIcon,
   UserCircleIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Header = ({ onMenuClick }) => {
   const [notifications] = useState([
@@ -11,6 +15,35 @@ const Header = ({ onMenuClick }) => {
     { id: 2, message: "New purchase order received", type: "info" },
     { id: 3, message: "Daily sales report ready", type: "success" },
   ]);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const menuRef = useRef(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('خروج موفقیت‌آمیز بود');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('خطا در خروج از سیستم');
+    }
+  };
 
   return (
     <header
@@ -92,38 +125,79 @@ const Header = ({ onMenuClick }) => {
           </div>
 
           {/* User menu */}
-          <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
-            <div className="text-right hidden sm:block">
-              <p
-                className="font-medium"
+          <div className="relative" ref={menuRef}>
+            <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
+              <div className="text-right hidden sm:block">
+                <p
+                  className="font-medium"
+                  style={{
+                    fontSize: "var(--body-small)",
+                    color: "var(--text-dark)",
+                  }}
+                >
+                  {user?.name || user?.email || 'کاربر مدیر'}
+                </p>
+                <p className="text-xs" style={{ color: "var(--text-medium)" }}>
+                  {user?.role === 'admin' ? 'مدیر سیستم' : 'کاربر'}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="p-2 rounded-full transition-colors duration-200"
                 style={{
-                  fontSize: "var(--body-small)",
-                  color: "var(--text-dark)",
+                  color: "var(--text-medium)",
+                  backgroundColor: "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = "var(--text-dark)";
+                  e.target.style.backgroundColor = "var(--beige-light)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = "var(--text-medium)";
+                  e.target.style.backgroundColor = "transparent";
                 }}
               >
-                کاربر مدیر
-              </p>
-              <p className="text-xs" style={{ color: "var(--text-medium)" }}>
-                مدیر سیستم
-              </p>
+                <UserCircleIcon className="h-8 w-8" />
+              </button>
             </div>
-            <button
-              className="p-2 rounded-full transition-colors duration-200"
-              style={{
-                color: "var(--text-medium)",
-                backgroundColor: "transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.color = "var(--text-dark)";
-                e.target.style.backgroundColor = "var(--beige-light)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.color = "var(--text-medium)";
-                e.target.style.backgroundColor = "transparent";
-              }}
-            >
-              <UserCircleIcon className="h-8 w-8" />
-            </button>
+
+            {/* User dropdown menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg z-50"
+                style={{
+                  backgroundColor: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                }}>
+                <div className="py-1">
+                  <div className="px-4 py-2 border-b" style={{ borderColor: "var(--border)" }}>
+                    <p className="text-sm font-medium" style={{ color: "var(--text-dark)" }}>
+                      {user?.name || user?.email || 'کاربر'}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--text-medium)" }}>
+                      {user?.email}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-sm transition-colors duration-200"
+                    style={{
+                      color: "var(--text-dark)",
+                      backgroundColor: "transparent"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "var(--beige-light)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <ArrowRightOnRectangleIcon className="h-4 w-4 ml-2" />
+                    خروج از سیستم
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

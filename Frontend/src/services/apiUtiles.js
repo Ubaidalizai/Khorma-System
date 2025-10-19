@@ -4,6 +4,55 @@
 
 import { apiRequest, API_ENDPOINTS } from "./apiConfig";
 
+// Authentication functions
+export const loginUser = async (credentials) => {
+  const response = await fetch(`http://localhost:3001/api/v1/users/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Login failed');
+  }
+
+  return response.json();
+};
+
+export const logoutUser = async () => {
+  const response = await fetch(`http://localhost:3001/api/v1/users/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error('Logout failed');
+  }
+
+  return response.json();
+};
+
+export const refreshUserToken = async () => {
+  const response = await fetch(`http://localhost:3001/api/v1/users/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error('Token refresh failed');
+  }
+
+  return response.json();
+};
+
+export const getUserProfile = async () => {
+  return await apiRequest(API_ENDPOINTS.AUTH.PROFILE);
+};
+
 // Products
 export const fetchProducts = async () => {
   return await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);

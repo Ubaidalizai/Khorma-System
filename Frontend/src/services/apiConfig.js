@@ -2,7 +2,7 @@
 // API Configuration and Utilities
 // ========================================
 
-const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000";
+const API_BASE_URL = "http://localhost:3001/api/v1";
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -88,6 +88,7 @@ export const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const config = {
     headers: getDefaultHeaders(),
+    credentials: 'include', // Include cookies for authentication
     ...options,
   };
 
@@ -122,21 +123,21 @@ export const API_ENDPOINTS = {
 
   // Inventory/Stock
   STOCK: {
-    LIST: "/stock",
-    INVENTORY: "/stock?location=Inventory",
-    STORE: "/stock?location=Store",
-    DETAIL: (id) => `/stock/${id}`,
-    CREATE: "/stock",
-    UPDATE: (id) => `/stock/${id}`,
-    DELETE: (id) => `/stock/${id}`,
+    LIST: "/stocks",
+    INVENTORY: "/stocks?location=warehouse",
+    STORE: "/stocks?location=store",
+    DETAIL: (id) => `/stocks/${id}`,
+    CREATE: "/stocks",
+    UPDATE: (id) => `/stocks/${id}`,
+    DELETE: (id) => `/stocks/${id}`,
   },
 
   // Stock Transfers
   STOCK_TRANSFER: {
-    LIST: "/stock-transfer",
-    CREATE: "/stock-transfer",
-    DETAIL: (id) => `/stock-transfer/${id}`,
-    DELETE: (id) => `/stock-transfer/${id}`,
+    LIST: "/stock-transfers",
+    CREATE: "/stock-transfers",
+    DETAIL: (id) => `/stock-transfers/${id}`,
+    DELETE: (id) => `/stock-transfers/${id}`,
   },
 
   // Purchases
@@ -151,11 +152,11 @@ export const API_ENDPOINTS = {
 
   // Sales
   SALES: {
-    LIST: "/sale",
-    DETAIL: (id) => `/sale/${id}`,
-    CREATE: "/sale",
-    UPDATE: (id) => `/sale/${id}`,
-    DELETE: (id) => `/sale/${id}`,
+    LIST: "/sales",
+    DETAIL: (id) => `/sales/${id}`,
+    CREATE: "/sales",
+    UPDATE: (id) => `/sales/${id}`,
+    DELETE: (id) => `/sales/${id}`,
   },
 
   // Suppliers
@@ -164,7 +165,7 @@ export const API_ENDPOINTS = {
     DETAIL: (id) => `/suppliers/${id}`,
     CREATE: "/suppliers",
     UPDATE: (id) => `/suppliers/${id}`,
-    DELETE: (id) => `/supplier/${id}`,
+    DELETE: (id) => `/suppliers/${id}`,
   },
 
   // Customers
@@ -187,18 +188,18 @@ export const API_ENDPOINTS = {
 
   // Types
   TYPES: {
-    LIST: "/type",
-    CREATE: "/type",
-    UPDATE: (id) => `/type/${id}`,
-    DELETE: (id) => `/type/${id}`,
+    LIST: "/types",
+    CREATE: "/types",
+    UPDATE: (id) => `/types/${id}`,
+    DELETE: (id) => `/types/${id}`,
   },
 
   // Units
   UNITS: {
-    LIST: "/unit",
-    CREATE: "/unit",
-    UPDATE: (id) => `/unit/${id}`,
-    DELETE: (id) => `/unit/${id}`,
+    LIST: "/units",
+    CREATE: "/units",
+    UPDATE: (id) => `/units/${id}`,
+    DELETE: (id) => `/units/${id}`,
   },
 
   // Employees

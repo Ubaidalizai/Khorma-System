@@ -45,7 +45,45 @@ import {
   createCompnay,
   updateCompany,
   deleteCompany,
+  loginUser,
+  logoutUser,
+  refreshUserToken,
+  getUserProfile,
 } from "./apiUtiles";
+
+// Authentication hooks
+export const useLogin = () => {
+  return useMutation({
+    mutationFn: loginUser,
+    mutationKey: ["login"],
+  });
+};
+
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: logoutUser,
+    mutationKey: ["logout"],
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
+};
+
+export const useRefreshToken = () => {
+  return useMutation({
+    mutationFn: refreshUserToken,
+    mutationKey: ["refreshToken"],
+  });
+};
+
+export const useUserProfile = () => {
+  return useQuery({
+    queryKey: ["userProfile"],
+    queryFn: getUserProfile,
+    enabled: false, // Only fetch when explicitly called
+  });
+};
 
 // ✅ Get all inventory items
 export const useProduct = () => {

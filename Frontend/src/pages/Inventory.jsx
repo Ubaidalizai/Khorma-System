@@ -33,6 +33,7 @@ import Product from "./Product";
 import Store from "./Store";
 import Warehouse from "./Warehouse";
 import { BiLoaderAlt } from "react-icons/bi";
+
 const getStatusColor = (status) => {
   switch (status) {
     case "موجود":
@@ -87,99 +88,8 @@ const Inventory = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [transferQuantity, setTransferQuantity] = useState("");
 
-  // New Product Form State
-
   // Products data
   const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
-  // const [products, setProducts] = useState([
-  //   {
-  //     id: 1,
-  //     name: "Fresh Dates - Medjool",
-  //     category: "Dates",
-  //     sku: "FD001",
-  //     warehouseStock: 150,
-  //     storeStock: 45,
-  //     unitPrice: 15.99,
-  //     minStockLevel: 30,
-  //     status: "In Stock",
-  //     expiryDate: "2025-12-31",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Premium quality Medjool dates",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Chickpeas - Organic",
-  //     category: "Grains",
-  //     sku: "CP002",
-  //     warehouseStock: 200,
-  //     storeStock: 80,
-  //     unitPrice: 8.5,
-  //     minStockLevel: 50,
-  //     status: "In Stock",
-  //     expiryDate: "2026-06-30",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Organic chickpeas from local farms",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Cake Mix - Chocolate",
-  //     category: "Bakery",
-  //     sku: "CM003",
-  //     warehouseStock: 25,
-  //     storeStock: 5,
-  //     unitPrice: 12.99,
-  //     minStockLevel: 40,
-  //     status: "Low Stock",
-  //     expiryDate: "2025-08-15",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Premium chocolate cake mix",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Sugar - White Granulated",
-  //     category: "Baking",
-  //     sku: "SG004",
-  //     warehouseStock: 100,
-  //     storeStock: 30,
-  //     unitPrice: 4.5,
-  //     minStockLevel: 20,
-  //     status: "In Stock",
-  //     expiryDate: "2027-01-01",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Fine white granulated sugar",
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "Dates - Deglet Noor",
-  //     category: "Dates",
-  //     sku: "FD005",
-  //     warehouseStock: 0,
-  //     storeStock: 0,
-  //     unitPrice: 10.99,
-  //     minStockLevel: 30,
-  //     status: "Out of Stock",
-  //     expiryDate: "2025-11-30",
-  //     lastUpdated: new Date().toISOString(),
-  //     description: "Sweet Deglet Noor dates",
-  //   },
-  // ]);
-
-  // Derived warehouse batches (new shape). We keep `products` for compatibility
-  // and create `warehouseBatches` to start moving toward separate batch data.
-  // const [warehouseBatches, setWarehouseBatches] = useState(
-  //   products.map((p) => ({
-  //     id: p.id,
-  //     batchNumber: `B${p.id}`,
-  //     productId: p.id,
-  //     productName: p.name,
-  //     createdAt: p.lastUpdated,
-  //     expiryDate: p.expiryDate,
-  //     purchasePricePerBaseUnit: p.unitPrice,
-  //     quantity: p.warehouseStock,
-  //     updatedAt: p.lastUpdated,
-  //     unit: p.category,
-  //   }))
-  // );
 
   // Stock transfer history
   const [transferHistory, setTransferHistory] = useState([]);
@@ -220,24 +130,24 @@ const Inventory = () => {
 
   // Get alerts
   const getLowStockAlerts = () => {
-    return products?.filter((p) => {
+    return products?.data?.filter((p) => {
       const total = p.warehouseStock + p.storeStock;
       return total > 0 && total <= p.minStockLevel;
     });
   };
 
   const getOutOfStockItems = () => {
-    return products?.filter(
+    return products?.data?.filter(
       (p) => p?.warehouseStock === 0 && p?.storeStock === 0
     );
   };
 
   // Filter products
-  const filteredProducts = products?.filter((product) => {
-    const matchesSearch =
-      product.name.includes(searchTerm.toLowerCase()) ||
-      product.sku.includes(searchTerm.toLowerCase()) ||
-      product.category.includes(searchTerm.toLowerCase());
+  const filteredProducts = products?.data?.filter((product) => {
+    // const matchesSearch =
+    //   product.name.includes(searchTerm.toLowerCase())
+      // product.sku.includes(searchTerm.toLowerCase()) ||
+      // product.category.includes(searchTerm.toLowerCase());
 
     const matchesFilter =
       filterType === "all" ||
@@ -250,17 +160,17 @@ const Inventory = () => {
       matchesTab = product.storeStock > 0;
     }
 
-    return matchesSearch && matchesFilter && matchesTab;
+    // return matchesSearch && matchesFilter && matchesTab;
   });
 
   // Calculate statistics
   const stats = {
     totalProducts: totalProdcut?.length || 0,
     totalWarehouseStock:
-      products?.reduce((sum, p) => sum + p.warehouseStock, 0) || 0,
-    totalStoreStock: products?.reduce((sum, p) => sum + p.storeStock, 0) || 0,
+      products?.data?.reduce((sum, p) => sum + p.warehouseStock, 0) || 0,
+    totalStoreStock: products?.data?.reduce((sum, p) => sum + p.storeStock, 0) || 0,
     totalValue:
-      products?.reduce(
+      products?.data?.reduce(
         (sum, p) => sum + (p.warehouseStock + p.storeStock) * p.unitPrice,
         0
       ) || 0,

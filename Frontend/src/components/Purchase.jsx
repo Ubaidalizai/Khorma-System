@@ -130,7 +130,7 @@ function Purchase({ getPaymentStatusColor }) {
               </td>
             </tr>
           ) : (
-            filteredPurchases?.map((purchase) => (
+            filteredPurchases?.data?.map((purchase) => (
               <TableRow key={purchase._id}>
                 <TableColumn>{purchase._id}</TableColumn>
                 <TableColumn>

@@ -58,7 +58,7 @@ function Product({ properties: productList }) {
       >
         <TableHeader headerData={headers} />
         <TableBody>
-          {productList?.map((el) => (
+          {productList?.data?.map((el) => (
             <TableRow key={el.id}>
               <TableColumn>{el?.date}</TableColumn>
               <TableColumn>{el?.name}</TableColumn>
