@@ -9,7 +9,7 @@ import Reports from "./pages/Reports";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
-import { ReactQueryDevtools } from "./../node_modules/@tanstack/react-query-devtools/src/index";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -24,13 +24,13 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path='/' element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/purchases" element={<Purchases />} />
-            <Route path="/sales" element={<Sales />} />
-            <Route path="/accounts" element={<Accounts />} />
-            <Route path="/reports" element={<Reports />} />
+            <Route path='/inventory' element={<Inventory />} />
+            <Route path='/purchases' element={<Purchases />} />
+            <Route path='/sales' element={<Sales />} />
+            <Route path='/accounts' element={<Accounts />} />
+            <Route path='/reports' element={<Reports />} />
           </Route>
         </Routes>
 

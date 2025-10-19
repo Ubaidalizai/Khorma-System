@@ -1,28 +1,23 @@
-// ✅ Fetch all items
-export const fetchProduct = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/product`);
-  if (!res.ok) throw new Error("Failed to fetch inventory");
-  return res.json();
+// ========================================
+// API Utility Functions
+// ========================================
+
+import { apiRequest, API_ENDPOINTS } from "./apiConfig";
+
+// Products
+export const fetchProducts = async () => {
+  return await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
 };
 
-// ✅ Fetch single item by ID
-export const fetchProductyById = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/product/${id}`);
-
-  if (!res.ok) throw new Error("Failed to fetch item");
-  return res.json();
+export const fetchProduct = async (id) => {
+  return await apiRequest(API_ENDPOINTS.PRODUCTS.DETAIL(id));
 };
 
-// ✅ Create a new item
-export const createProductItem = async (newItem) => {
-  console.log(newItem);
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/product`, {
+export const createProduct = async (productData) => {
+  return await apiRequest(API_ENDPOINTS.PRODUCTS.CREATE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newItem),
+    body: JSON.stringify(productData),
   });
-  if (!res.ok) throw new Error("Failed to create item");
-  return res.json();
 };
 
 // ✅ Update an item
@@ -33,354 +28,553 @@ export const updateProductItem = async ({ id, updatedItem }) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedItem),
   });
-  if (!res.ok) throw new Error("Failed to update item");
+  if (!res.ok) throw new Error("Failed to update product");
   return res.json();
 };
 
-// ✅ Delete an item
-export const deleteProductItem = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/product/${id}`, {
-    method: "DELETE",
+export const updateProduct = async (id, productData) => {
+  return await apiRequest(API_ENDPOINTS.PRODUCTS.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(productData),
   });
-  console.log(res);
-  if (!res.ok) throw new Error("Failed to delete item");
-  return true;
 };
 
-// INEVENTORY DATA CRUD OPERATION
+export const deleteProduct = async (id) => {
+  return await apiRequest(API_ENDPOINTS.PRODUCTS.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Suppliers
+export const fetchSuppliers = async () => {
+  return await apiRequest(API_ENDPOINTS.SUPPLIERS.LIST);
+};
+
+export const fetchSupplier = async (id) => {
+  return await apiRequest(API_ENDPOINTS.SUPPLIERS.DETAIL(id));
+};
+
+export const createSupplier = async (supplierData) => {
+  return await apiRequest(API_ENDPOINTS.SUPPLIERS.CREATE, {
+    method: "POST",
+    body: JSON.stringify(supplierData),
+  });
+};
+
+export const updateSupplier = async (id, supplierData) => {
+  return await apiRequest(API_ENDPOINTS.SUPPLIERS.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(supplierData),
+  });
+};
+
+export const deleteSupplier = async (id) => {
+  return await apiRequest(API_ENDPOINTS.SUPPLIERS.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Customers
+export const fetchCustomers = async () => {
+  return await apiRequest(API_ENDPOINTS.CUSTOMERS.LIST);
+};
+
+export const fetchCustomer = async (id) => {
+  return await apiRequest(API_ENDPOINTS.CUSTOMERS.DETAIL(id));
+};
+
+export const createCustomer = async (customerData) => {
+  return await apiRequest(API_ENDPOINTS.CUSTOMERS.CREATE, {
+    method: "POST",
+    body: JSON.stringify(customerData),
+  });
+};
+
+export const updateCustomer = async (id, customerData) => {
+  return await apiRequest(API_ENDPOINTS.CUSTOMERS.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(customerData),
+  });
+};
+
+export const deleteCustomer = async (id) => {
+  return await apiRequest(API_ENDPOINTS.CUSTOMERS.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Employees
+export const fetchEmployees = async () => {
+  return await apiRequest(API_ENDPOINTS.EMPLOYEES.LIST);
+};
+
+export const fetchEmployee = async (id) => {
+  return await apiRequest(API_ENDPOINTS.EMPLOYEES.DETAIL(id));
+};
+
+export const createEmployee = async (employeeData) => {
+  return await apiRequest(API_ENDPOINTS.EMPLOYEES.CREATE, {
+    method: "POST",
+    body: JSON.stringify(employeeData),
+  });
+};
+
+export const updateEmployee = async (id, employeeData) => {
+  return await apiRequest(API_ENDPOINTS.EMPLOYEES.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(employeeData),
+  });
+};
+
+export const deleteEmployee = async (id) => {
+  return await apiRequest(API_ENDPOINTS.EMPLOYEES.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Units
+export const fetchUnits = async () => {
+  return await apiRequest(API_ENDPOINTS.UNITS.LIST);
+};
+
+export const fetchUnit = async (id) => {
+  return await apiRequest(API_ENDPOINTS.UNITS.DETAIL(id));
+};
+
+export const createUnit = async (unitData) => {
+  return await apiRequest(API_ENDPOINTS.UNITS.CREATE, {
+    method: "POST",
+    body: JSON.stringify(unitData),
+  });
+};
+
+export const updateUnit = async (id, unitData) => {
+  return await apiRequest(API_ENDPOINTS.UNITS.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(unitData),
+  });
+};
+
+export const deleteUnit = async (id) => {
+  return await apiRequest(API_ENDPOINTS.UNITS.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Types
+export const fetchTypes = async () => {
+  return await apiRequest(API_ENDPOINTS.TYPES.LIST);
+};
+
+export const fetchType = async (id) => {
+  return await apiRequest(API_ENDPOINTS.TYPES.DETAIL(id));
+};
+
+export const createType = async (typeData) => {
+  return await apiRequest(API_ENDPOINTS.TYPES.CREATE, {
+    method: "POST",
+    body: JSON.stringify(typeData),
+  });
+};
+
+export const updateType = async (id, typeData) => {
+  return await apiRequest(API_ENDPOINTS.TYPES.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(typeData),
+  });
+};
+
+export const deleteType = async (id) => {
+  return await apiRequest(API_ENDPOINTS.TYPES.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Accounts
+export const fetchAccounts = async () => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.LIST);
+};
+
+export const fetchAccount = async (id) => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.DETAIL(id));
+};
+
+export const createAccount = async (accountData) => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.CREATE, {
+    method: "POST",
+    body: JSON.stringify(accountData),
+  });
+};
+
+export const updateAccount = async (id, accountData) => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(accountData),
+  });
+};
+
+export const deleteAccount = async (id) => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Purchases
+export const fetchPurchases = async () => {
+  return await apiRequest(API_ENDPOINTS.PURCHASES.LIST);
+};
+
+export const fetchPurchase = async (id) => {
+  return await apiRequest(API_ENDPOINTS.PURCHASES.DETAIL(id));
+};
+
+export const createPurchase = async (purchaseData) => {
+  return await apiRequest(API_ENDPOINTS.PURCHASES.CREATE, {
+    method: "POST",
+    body: JSON.stringify(purchaseData),
+  });
+};
+
+export const updatePurchase = async (id, purchaseData) => {
+  return await apiRequest(API_ENDPOINTS.PURCHASES.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(purchaseData),
+  });
+};
+
+export const deletePurchase = async (id) => {
+  return await apiRequest(API_ENDPOINTS.PURCHASES.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+export const restorePurchase = async (id) => {
+  return await apiRequest(API_ENDPOINTS.PURCHASES.RESTORE(id), {
+    method: "POST",
+  });
+};
+
+// Sales
+export const fetchSales = async () => {
+  return await apiRequest(API_ENDPOINTS.SALES.LIST);
+};
+
+export const fetchSale = async (id) => {
+  return await apiRequest(API_ENDPOINTS.SALES.DETAIL(id));
+};
+
+export const createSale = async (saleData) => {
+  return await apiRequest(API_ENDPOINTS.SALES.CREATE, {
+    method: "POST",
+    body: JSON.stringify(saleData),
+  });
+};
+
+export const updateSale = async (id, saleData) => {
+  return await apiRequest(API_ENDPOINTS.SALES.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(saleData),
+  });
+};
+
+export const deleteSale = async (id) => {
+  return await apiRequest(API_ENDPOINTS.SALES.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Stock
+export const fetchStock = async () => {
+  return await apiRequest(API_ENDPOINTS.STOCK.LIST);
+};
+
+export const fetchInventoryStock = async () => {
+  return await apiRequest(API_ENDPOINTS.STOCK.INVENTORY);
+};
+
+export const fetchStoreStock = async () => {
+  return await apiRequest(API_ENDPOINTS.STOCK.STORE);
+};
+
+export const fetchStockItem = async (id) => {
+  return await apiRequest(API_ENDPOINTS.STOCK.DETAIL(id));
+};
+
+export const createStockItem = async (stockData) => {
+  return await apiRequest(API_ENDPOINTS.STOCK.CREATE, {
+    method: "POST",
+    body: JSON.stringify(stockData),
+  });
+};
+
+export const updateStockItem = async (id, stockData) => {
+  return await apiRequest(API_ENDPOINTS.STOCK.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(stockData),
+  });
+};
+
+export const deleteStockItem = async (id) => {
+  return await apiRequest(API_ENDPOINTS.STOCK.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Stock Transfers
+export const fetchStockTransfers = async () => {
+  return await apiRequest(API_ENDPOINTS.STOCK_TRANSFER.LIST);
+};
+
+export const fetchStockTransfer = async (id) => {
+  return await apiRequest(API_ENDPOINTS.STOCK_TRANSFER.DETAIL(id));
+};
+
+export const createStockTransfer = async (transferData) => {
+  return await apiRequest(API_ENDPOINTS.STOCK_TRANSFER.CREATE, {
+    method: "POST",
+    body: JSON.stringify(transferData),
+  });
+};
+
+export const deleteStockTransfer = async (id) => {
+  return await apiRequest(API_ENDPOINTS.STOCK_TRANSFER.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+// Expenses
+export const fetchExpenses = async () => {
+  return await apiRequest(API_ENDPOINTS.EXPENSES.LIST);
+};
+
+export const fetchExpense = async (id) => {
+  return await apiRequest(API_ENDPOINTS.EXPENSES.DETAIL(id));
+};
+
+export const createExpense = async (expenseData) => {
+  return await apiRequest(API_ENDPOINTS.EXPENSES.CREATE, {
+    method: "POST",
+    body: JSON.stringify(expenseData),
+  });
+};
+
+export const updateExpense = async (id, expenseData) => {
+  return await apiRequest(API_ENDPOINTS.EXPENSES.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(expenseData),
+  });
+};
+
+export const deleteExpense = async (id) => {
+  return await apiRequest(API_ENDPOINTS.EXPENSES.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+export const restoreExpense = async (id) => {
+  return await apiRequest(API_ENDPOINTS.EXPENSES.RESTORE(id), {
+    method: "POST",
+  });
+};
+
+// Income
+export const fetchIncome = async () => {
+  return await apiRequest(API_ENDPOINTS.INCOME.LIST);
+};
+
+export const fetchIncomeItem = async (id) => {
+  return await apiRequest(API_ENDPOINTS.INCOME.DETAIL(id));
+};
+
+export const createIncome = async (incomeData) => {
+  return await apiRequest(API_ENDPOINTS.INCOME.CREATE, {
+    method: "POST",
+    body: JSON.stringify(incomeData),
+  });
+};
+
+export const updateIncome = async (id, incomeData) => {
+  return await apiRequest(API_ENDPOINTS.INCOME.UPDATE(id), {
+    method: "PATCH",
+    body: JSON.stringify(incomeData),
+  });
+};
+
+export const deleteIncome = async (id) => {
+  return await apiRequest(API_ENDPOINTS.INCOME.DELETE(id), {
+    method: "DELETE",
+  });
+};
+
+export const restoreIncome = async (id) => {
+  return await apiRequest(API_ENDPOINTS.INCOME.RESTORE(id), {
+    method: "POST",
+  });
+};
+
+// Audit Logs
+export const fetchAuditLogs = async () => {
+  return await apiRequest(API_ENDPOINTS.AUDIT_LOGS.LIST);
+};
+
+export const fetchAuditLogsByTable = async (table) => {
+  return await apiRequest(API_ENDPOINTS.AUDIT_LOGS.BY_TABLE(table));
+};
+
+export const fetchAuditLogsByRecord = async (id) => {
+  return await apiRequest(API_ENDPOINTS.AUDIT_LOGS.BY_RECORD(id));
+};
+
+// Additional functions needed by useApi.js
+export const fetchProductyById = async (id) => {
+  return await fetchProduct(id);
+};
+
+export const createProductItem = async (productData) => {
+  return await createProduct(productData);
+};
+
+// This function is already defined above with different signature
+// export const updateProductItem = async (id, productData) => {
+//   return await updateProduct(id, productData);
+// };
+
+export const deleteProductItem = async (id) => {
+  return await deleteProduct(id);
+};
 
 export const fetchInventory = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/inventory`);
-
-  if (!res.ok) throw new Error("خطا در گرفتن معلومات انبار");
-  return res.json();
+  return await fetchStock();
 };
 
-// 📖 Read one by ID
 export const fetchInventoryById = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/inventory/${id}`);
-  if (!res.ok) throw new Error("کالا پیدا نشد");
-  return res.json();
+  return await fetchStockItem(id);
 };
 
-// ➕ Create
-export const createInventoryItem = async (newItem) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/inventory`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ...newItem,
-      lastUpdated: new Date().toISOString(),
-    }),
-  });
-  if (!res.ok) throw new Error("خطا در ایجاد کالا");
-  return res.json();
+export const createInventoryItem = async (inventoryData) => {
+  return await createStockItem(inventoryData);
 };
 
-// ✏️ Update
-export const updateInventoryItem = async ({ id, updatedItem }) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/inventory/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ...updatedItem,
-      lastUpdated: new Date().toISOString(),
-    }),
-  });
-  if (!res.ok) throw new Error("خطا در به‌روزرسانی کالا");
-  return res.json();
+export const updateInventoryItem = async (id, inventoryData) => {
+  return await updateStockItem(id, inventoryData);
 };
 
-// 🗑️ Delete
 export const deleteInventoryItem = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/inventory/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("خطا در حذف کالا");
-  return true;
+  return await deleteStockItem(id);
 };
 
-// STORE API
 export const fetchStores = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/store`);
-  if (!res.ok) throw new Error("Failed to fetch stores");
-  return res.json();
+  return await fetchStoreStock();
 };
 
-// Fetch single store
 export const fetchStore = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/store/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch store");
-  return res.json();
+  return await fetchStockItem(id);
 };
 
-// Create store
-export const createStore = async (newStore) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/store`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newStore),
-  });
-  if (!res.ok) throw new Error("Failed to create store");
-  return res.json();
+export const createStore = async (storeData) => {
+  return await createStockItem(storeData);
 };
 
-// Update store
-export const updateStore = async ({ id, updatedStore }) => {
-  console.log(updatedStore);
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/store/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedStore),
-  });
-  if (!res.ok) throw new Error("Failed to update store");
-  return res.json();
+export const updateStore = async (id, storeData) => {
+  return await updateStockItem(id, storeData);
 };
 
-// Delete store
 export const deleteStore = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/store/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete store");
-  return res.json();
+  return await deleteStockItem(id);
 };
 
-// API FOR PURCHASE
+// These functions are already defined above with apiRequest
+// export const fetchUnits = async () => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/unit`);
+//   if (!res.ok) throw new Error("Failed to fetch unit");
+//   return res.json();
+// };
 
-export const fetchPurchases = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase`);
-  if (!res.ok) throw new Error("Failed to fetch purchase");
-  return res.json();
-};
+// // Customer
+// export const fetchCustomers = async () => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/customer`);
+//   if (!res.ok) throw new Error("Failed to fetch customer");
+//   return res.json();
+// };
+// export const fetchCustomer = async (id) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/customer/${id}`);
+//   if (!res.ok) throw new Error("Failed to fetch customer");
+//   return res.json();
+// };
 
-// Fetch single store
-export const fetchPurchase = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/puchase/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch purchase");
-  return res.json();
-};
+// // Create customer
+// export const createCustomer = async (newCustomer) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/customer`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(newCustomer),
+//   });
+//   if (!res.ok) throw new Error("Failed to create customer");
+//   return res.json();
+// };
 
-// Create store
-export const createPurchase = async (newStore) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newStore),
-  });
-  if (!res.ok) throw new Error("Failed to create purchase");
-  return res.json();
-};
+// // Update customer
+// export const updateCustomer = async ({ id, updatedCustomer }) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/customer/${id}`, {
+//     method: "PUT",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(updatedCustomer),
+//   });
+//   if (!res.ok) throw new Error("Failed to update customer");
+//   return res.json();
+// };
 
-// Update store
-export const updatePurchase = async ({ id, updatedPurchase }) => {
-  console.log(updatedPurchase);
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedPurchase),
-  });
-  if (!res.ok) throw new Error("Failed to update store");
-  return res.json();
-};
+// // Delete customer
+// export const deleteCustomer = async (id) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/customer/${id}`, {
+//     method: "DELETE",
+//   });
+//   if (!res.ok) throw new Error("Failed to delete customer");
+//   return res.json();
+// };
 
-// Delete store
-export const deletePurchase = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/purchase/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete purchase");
-  return res.json();
-};
+// // Employee
+// export const fetchEmployees = async () => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/employee`);
+//   if (!res.ok) throw new Error("Failed to fetch employee");
+//   return res.json();
+// };
+// export const fetchEmployee = async (id) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/employee/${id}`);
+//   if (!res.ok) throw new Error("Failed to fetch employee");
+//   return res.json();
+// };
 
-// SUPPLIERS API
+// // Create Empoyee
+// export const createEmployee = async (newEmployee) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/employee`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(newEmployee),
+//   });
+//   if (!res.ok) throw new Error("Failed to create employee");
+//   return res.json();
+// };
 
-export const fetchSuppliers = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier`);
-  if (!res.ok) throw new Error("Failed to fetch supplier");
-  return res.json();
-};
+// // Update Empoyee
+// export const updateEmployee = async ({ id, updatedEmployee }) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/employee/${id}`, {
+//     method: "PUT",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(updatedEmployee),
+//   });
+//   if (!res.ok) throw new Error("Failed to update employee");
+//   return res.json();
+// };
 
-// Fetch single store
-export const fetchSupplier = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch supplier");
-  return res.json();
-};
-
-// Create store
-export const createSupplier = async (newStore) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newStore),
-  });
-  if (!res.ok) throw new Error("Failed to create supplier");
-  return res.json();
-};
-
-// Update store
-export const updateSupplier = async ({ id, updatedPurchase }) => {
-  console.log(updatedPurchase);
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedPurchase),
-  });
-  if (!res.ok) throw new Error("Failed to update supplier");
-  return res.json();
-};
-
-// Delete store
-export const deleteSupplier = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/supplier/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete supplier");
-  return res.json();
-};
-
-// STORE
-
-export const fetchSales = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale`);
-
-  if (!res.ok) throw new Error("Failed to fetch sale");
-  return res.json();
-};
-
-// Fetch single store
-export const fetchSale = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch supplier");
-  return res.json();
-};
-
-// Create store
-export const createSale = async (newStore) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newStore),
-  });
-  if (!res.ok) throw new Error("Failed to create sale");
-  return res.json();
-};
-
-// Update store
-export const updateSale = async ({ id, updatedPurchase }) => {
-  console.log(updatedPurchase);
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedPurchase),
-  });
-  if (!res.ok) throw new Error("Failed to update sale");
-  return res.json();
-};
-
-// Delete store
-export const deleteSale = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/sale/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete sale");
-  return res.json();
-};
-
-export const fetchUnits = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/unit`);
-
-  if (!res.ok) throw new Error("Failed to fetch unit");
-  return res.json();
-};
-
-// Customer
-
-export const fetchCustomers = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/customer`);
-  if (!res.ok) throw new Error("Failed to fetch customer");
-  return res.json();
-};
-export const fetchCustomer = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/customer/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch customer");
-  return res.json();
-};
-
-// Create customer
-export const createCustomer = async (newCustomer) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/customer`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newCustomer),
-  });
-  if (!res.ok) throw new Error("Failed to create customer");
-  return res.json();
-};
-
-// Update customer
-export const updateCustomer = async ({ id, updatedCustomer }) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/customer/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedCustomer),
-  });
-  if (!res.ok) throw new Error("Failed to update customer");
-  return res.json();
-};
-
-// Delete customer
-export const deleteCustomer = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/customer/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete customer");
-  return res.json();
-};
-
-// Employee
-export const fetchEmployees = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/employee`);
-  if (!res.ok) throw new Error("Failed to fetch employee");
-  return res.json();
-};
-export const fetchEmployee = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/employee/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch employee");
-  return res.json();
-};
-
-// Create Empoyee
-export const createEmployee = async (newEmployee) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/employee`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newEmployee),
-  });
-  if (!res.ok) throw new Error("Failed to create employee");
-  return res.json();
-};
-
-// Update Empoyee
-export const updateEmployee = async ({ id, updatedEmployee }) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/employee/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedEmployee),
-  });
-  if (!res.ok) throw new Error("Failed to update employee");
-  return res.json();
-};
-
-// Delete Empoyee
-export const deleteEmployee = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/employee/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete employee");
-  return res.json();
-};
+// // Delete Empoyee
+// export const deleteEmployee = async (id) => {
+//   const res = await fetch(`${import.meta.env.VITE_API_URL}/employee/${id}`, {
+//     method: "DELETE",
+//   });
+//   if (!res.ok) throw new Error("Failed to delete employee");
+//   return res.json();
+// };
 
 // Company
 

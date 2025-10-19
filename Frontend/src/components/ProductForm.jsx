@@ -1,5 +1,4 @@
-// ...existing code...
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Input from "./Input";
 import Select from "./Select";
 import NumberInput from "./NumberInput";
@@ -8,6 +7,7 @@ import TextArea from "./TextArea";
 import Button from "./Button";
 import { Controller } from "react-hook-form";
 import { BiMessageAlt } from "react-icons/bi";
+import { fetchUnits } from "../services/apiUtiles";
 
 /**
  * Props:
@@ -26,6 +26,30 @@ function ProductForm({
   onClose,
 }) {
   const { errors } = formState || {};
+  const [unitsState, setUnitsState] = useState(units);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadUnits = async () => {
+      try {
+        setLoading(true);
+        const unitsData = await fetchUnits();
+        setUnitsState(
+          unitsData.map((unit) => ({
+            value: unit._id,
+            label: unit.name,
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to load units:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (units.length === 0) {
+      loadUnits();
+    }
+  }, [units]);
 
   // Shared input-like class for consistent width/height
 
@@ -74,9 +98,9 @@ function ProductForm({
             render={({ field }) => (
               <select {...field} id="baseUnit" className={inputStyle}>
                 <option value="">Select unit</option>
-                {units.map((u) => (
+                {(unitsState.length > 0 ? unitsState : units).map((u) => (
                   <option key={u.value} value={u.value}>
-                    {u.title}
+                    {u.title || u.label}
                   </option>
                 ))}
               </select>
@@ -106,7 +130,6 @@ function ProductForm({
           <p className="text-red-600 text-sm mt-1">{errors.minLevel.message}</p>
         )}
       </div>
-
       {/* latestPurchasePrice */}
       <div className="col-span-2 col-start-3 row-start-2">
         <label
