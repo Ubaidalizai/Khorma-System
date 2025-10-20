@@ -18,6 +18,7 @@ import WarehouseForm from "../components/WarehouseForm";
 import { useForm } from "react-hook-form";
 import { useUpdateStore } from "../services/useApi";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useEmployees } from "../services/useApi";
 // Headers aligned with Backend stock.model.js
 const tableHeader = [
   { title: "محصول" },
@@ -286,69 +287,10 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
       </GloableModal>
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
         {showTransfer && (
-          <div className="bg-white rounded-sm shadow-sm  w-[600px]">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Transfer Stock
-              </h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <p className="text-sm text-gray-600">Product</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {selectedPro.name}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Available in Warehouse</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {selectedPro.warehouseStock} units
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantity to Transfer *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max={selectedPro.warehouseStock}
-                  value={transferQuantity}
-                  onChange={(e) => setTransferQuantity(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="Enter quantity"
-                />
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Transfer Direction:</strong> Warehouse → Store
-                </p>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
-              <button
-                onClick={() => {
-                  setSelectedPro(null);
-                  setTransferQuantity("");
-                  setShowTransfer(false);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {}}
-                disabled={
-                  !transferQuantity ||
-                  transferQuantity <= 0 ||
-                  transferQuantity > selectedPro.warehouseStock
-                }
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Transfer Stock
-              </button>
-            </div>
-          </div>
+          <StockTransferModal 
+            stock={selectedPro} 
+            onClose={() => { setShowTransfer(false); setTransferQuantity(""); setSelectedPro(null); }} 
+          />
         )}
       </GloableModal>
     </section>
@@ -356,3 +298,95 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
 }
 
 export default Warehouse;
+
+function StockTransferModal({ stock, onClose }) {
+  const [transferType, setTransferType] = React.useState("warehouse-store");
+  const [quantity, setQuantity] = React.useState("");
+  const [employee, setEmployee] = React.useState("");
+  const { data: employees } = useEmployees();
+  // Example fromLocation/toLocation logic
+  let fromLocation = stock?.location;
+  let toLocation = transferType === "warehouse-store" ?
+      (fromLocation === "warehouse" ? "store" : "warehouse") :
+      transferType === "warehouse-employee" ? "employee" :
+      transferType === "employee-warehouse" ? "warehouse" :
+      transferType === "store-employee" ? "employee" :
+      transferType === "employee-store" ? "store" :
+      "unknown";
+
+  const needsEmployee = ["warehouse-employee", "employee-warehouse", "store-employee", "employee-store"].includes(transferType);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!quantity || quantity <= 0) return;
+    // fake mutation, replace with your real endpoint later
+    const stockTransfer = {
+      product: stock.product?._id || stock.product,
+      fromLocation: fromLocation,
+      toLocation: toLocation,
+      employee: needsEmployee ? employee : undefined,
+      quantity: Number(quantity),
+      transferDate: new Date(),
+      transferredBy: 'currentUserId', // replace if you have user context
+    };
+    alert("Would submit: " + JSON.stringify(stockTransfer, null, 2));
+    onClose();
+  }
+
+  return (
+    <form className="bg-white rounded-lg shadow-sm w-[600px]" onSubmit={handleSubmit}>
+      <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">انتقال موجودی</h2>
+      </div>
+      <div className="p-6 space-y-6">
+        <div>
+          <span>محصول: </span>
+          <span className="font-bold">{stock?.product?.name || stock?.product}</span>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4">
+          <label className="flex-1">
+            <span className="block text-sm font-medium text-gray-700 mb-2">نوع انتقال</span>
+            <select className="w-full border rounded-md px-3 py-2" value={transferType} onChange={e => setTransferType(e.target.value)}>
+              <option value="warehouse-store">انبار ↔ فروشگاه</option>
+              <option value="warehouse-employee">انبار → کارمند</option>
+              <option value="employee-warehouse">کارمند → انبار</option>
+              <option value="store-employee">فروشگاه → کارمند</option>
+              <option value="employee-store">کارمند → فروشگاه</option>
+            </select>
+          </label>
+          {needsEmployee && (
+            <label className="flex-1">
+              <span className="block text-sm font-medium text-gray-700 mb-2">کارمند</span>
+              <select className="w-full border rounded-md px-3 py-2" value={employee} onChange={e => setEmployee(e.target.value)}>
+                <option value="">کارمند را انتخاب کنید</option>
+                {employees?.data?.map(emp => (
+                  <option key={emp._id} value={emp._id}>{emp.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className="flex flex-col md:flex-row gap-4">
+          <label className="flex-1">
+            <span className="block text-sm font-medium text-gray-700 mb-2">از: </span>
+            <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">{fromLocation === 'warehouse' ? 'انبار' : fromLocation === 'store' ? 'فروشگاه' : 'کارمند'}</span>
+          </label>
+          <label className="flex-1">
+            <span className="block text-sm font-medium text-gray-700 mb-2">به: </span>
+            <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">{toLocation === 'warehouse' ? 'انبار' : toLocation === 'store' ? 'فروشگاه' : 'کارمند'}</span>
+          </label>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">تعداد (واحد پایه)</label>
+          <input className="w-full border rounded-md px-3 py-2" type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} required />
+        </div>
+      </div>
+      <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+        <Button onClick={onClose} type="button" className="bg-gray-500 text-white px-4 py-2 rounded-md">بستن</Button>
+        <Button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-md" disabled={!quantity || quantity<=0 || (needsEmployee && !employee)}>
+          انتقال موجودی
+        </Button>
+      </div>
+    </form>
+  );
+}

@@ -49,6 +49,8 @@ import {
   logoutUser,
   refreshUserToken,
   getUserProfile,
+  fetchAccount,
+  fetchAccounts,
 } from "./apiUtiles";
 
 // Authentication hooks
@@ -479,6 +481,13 @@ export const useDeleteCompany = () => {
   });
 };
 
+
+export const useAccounts = () => {
+  return useQuery({
+    queryKey:["accounts"],
+    queryFn: fetchAccounts,
+  })
+}
 // USE THE employee
 
 export const useEmployees = () => {
@@ -520,3 +529,5 @@ export const useDeleteEmployee = () => {
     onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
   });
 };
+
+

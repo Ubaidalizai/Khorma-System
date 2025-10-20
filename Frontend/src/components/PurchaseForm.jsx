@@ -1,6 +1,6 @@
 import React from "react";
 import { BiTrashAlt } from "react-icons/bi";
-import { useSuppliers, useUnits, useProduct } from "../services/useApi";
+import { useSuppliers, useUnits, useProduct, useAccounts } from "../services/useApi";
 import { formatCurrency } from "../utilies/helper";
 import { inputStyle } from "./ProductForm";
 import Table from "./Table";
@@ -23,8 +23,7 @@ function PurchaseForm({
   register,
   handleSubmit,
   watch,
-  reset,
-  createPurchase,
+
   calculatePurchaseTotals,
   currentItem,
   setCurrentItem,
@@ -36,7 +35,7 @@ function PurchaseForm({
   const { data: suppliers } = useSuppliers();
   const { data: units } = useUnits();
   const { data: products } = useProduct();
-
+  const {data: paymentAccount} = useAccounts()
   const handleAddItem = () => {
     const quantity = Number(currentItem.quantity) || 0;
     const unitPrice = Number(currentItem.unitPrice) || 0;
@@ -63,42 +62,11 @@ function PurchaseForm({
   const handleRemove = (index) => {
     setItems(items.filter((_, i) => i !== index));
   };
-  const onSubmit = (data) => {
-    const totalAmount = items.reduce((sum, it) => sum + (Number(it.totalPrice) || 0), 0);
-    const paidAmount = Number(data.paidAmount) || 0;
-    const dueAmount = Math.max(totalAmount - paidAmount, 0);
-
-    createPurchase({
-      supplier: data.supplier,
-      purchaseDate: data.purchaseDate ? data.purchaseDate : Date.now(),
-      totalAmount,
-      paidAmount,
-      dueAmount,
-      items: items.map((it) => ({
-        product: it.product,
-        unit: it.unit,
-        batchNumber: it.batchNumber || null,
-        quantity: it.quantity,
-        unitPrice: it.unitPrice,
-        totalPrice: it.totalPrice,
-      })),
-    });
-    reset();
-    setItems([]);
-    setCurrentItem({
-      product: "",
-      unit: "",
-      batchNumber: "",
-      quantity: 0,
-      unitPrice: 0,
-    });
-    close && close();
-  };
-
+  
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit}
       className="bg-white rounded-lg shadow-xl max-w-4xl w-[700px] max-h-[90vh] overflow-y-auto"
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -147,6 +115,33 @@ function PurchaseForm({
               </p>
             )}
           </div>
+          <div>
+
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+              حساب پرداخت کننده*
+            </label>
+            <select
+              {...register("AccountPayment", {
+                required: "حساب پرداخت کننده را باید انتخاب کنید",
+              })}
+              className={inputStyle}
+            >
+              <option value="">
+                حساب پرداخت کننده را انتخاب کنید
+              </option>
+              {paymentAccount?.accounts?.map((payment) => (
+                <option key={payment._id} value={payment._id}>
+                  {payment.name}
+                </option>
+              ))}
+            </select>
+            {errors?.paymentAccount  && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.paymentAccount.message}
+              </p>
+            )}
+            </div>
+          
           <div className="border col-start-1 col-end-4 border-gray-300 rounded-lg p-4 mb-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -175,7 +170,7 @@ function PurchaseForm({
                   className={inputStyle}
                 >
                   <option value="">انتخاب محصول</option>
-                  {products?.data?.map((p) => (
+                  {products?.products?.map((p) => (
                     <option key={p._id} value={p._id}>
                       {p.name}
                     </option>

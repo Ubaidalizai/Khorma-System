@@ -488,6 +488,14 @@ export const createProductItem = async (productData) => {
 //   return await updateProduct(id, productData);
 // };
 
+
+// ACCOUNT
+
+export const fetchaccounts = async () => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.LIST)
+}
+
+
 export const deleteProductItem = async (id) => {
   return await deleteProduct(id);
 };
