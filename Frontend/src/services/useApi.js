@@ -59,6 +59,7 @@ import {
   getUserProfile,
   fetchAccount,
   fetchAccounts,
+  createStockTransfer,
 } from "./apiUtiles";
 
 // Authentication hooks
@@ -483,13 +484,12 @@ export const useDeleteCompany = () => {
   });
 };
 
-
 export const useAccounts = () => {
   return useQuery({
-    queryKey:["accounts"],
+    queryKey: ["accounts"],
     queryFn: fetchAccounts,
-  })
-}
+  });
+};
 // USE THE employee
 
 export const useEmployees = () => {
@@ -531,7 +531,6 @@ export const useDeleteEmployee = () => {
     onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
   });
 };
-
 
 // Units
 export const useUnits = () => {
@@ -606,5 +605,19 @@ export const useDashboardSummary = () => {
     queryKey: ["dashboardSummary"],
     queryFn: fetchDashboardSummary,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+export const useCreateStockTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createStockTransfer,
+    mutationKey: ["newTransfer"],
+    onSuccess: () => {
+      queryClient.invalidateQueries(["inventory"]);
+      alert("Stock transferred successfully");
+    },
+    onError: (error) => {
+      alert("Error transferring stock: " + error.message);
+    },
   });
 };

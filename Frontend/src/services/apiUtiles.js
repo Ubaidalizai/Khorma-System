@@ -57,6 +57,7 @@ export const getUserProfile = async () => {
 export const fetchProducts = async () => {
   try {
     const response = await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
+   
     // Handle both direct array response and paginated response with data property
     if (Array.isArray(response)) {
       return response;
