@@ -57,7 +57,8 @@ function Window({ children, name }) {
           variants={variants}
           initial="hidden"
           animate="visible"
-          className=" fixed inset-0  w-full flex justify-center items-center  min-h-screen bg-white/20 backdrop-blur-xs z-50"
+          className=" fixed inset-0  w-full flex justify-center items-center  min-h-screen bg-white/20 backdrop-blur-xs z-[99999]"
+          style={{ zIndex: 99999 }}
         >
           <div ref={ref} className="">
             {React.isValidElement(children)

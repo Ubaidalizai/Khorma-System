@@ -53,23 +53,10 @@ const Inventory = () => {
   const { data: productList, isLoadingProduct } = useProduct();
   const { mutate: createProduct } = useCreateProdcut();
   function AddProductForm({ close }) {
-    const now = new Date();
-    const jalaaliDate = toJalaali(now);
     const onSubmit = async (data) => {
-      try {
-        await createProductAPI({
-          date: `${jalaaliDate.jy}-${String(jalaaliDate.jm).padStart(
-            2,
-            "0"
-          )}-${String(jalaaliDate.jd).padStart(2, "0")}`,
-          ...data,
-        });
-        if (typeof close === "function") close();
-        // Refresh the product list
-        window.location.reload();
-      } catch (error) {
-        console.error("Failed to create product:", error);
-      }
+      createProduct({ ...data });
+      if (typeof close === "function") close();
+      reset();
     };
     return (
       <ProductForm
@@ -88,7 +75,7 @@ const Inventory = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [transferQuantity, setTransferQuantity] = useState("");
 
-  // Products data
+  // Inventory (stock) data
   const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
 
   // Stock transfer history
@@ -146,8 +133,8 @@ const Inventory = () => {
   const filteredProducts = products?.data?.filter((product) => {
     // const matchesSearch =
     //   product.name.includes(searchTerm.toLowerCase())
-      // product.sku.includes(searchTerm.toLowerCase()) ||
-      // product.category.includes(searchTerm.toLowerCase());
+    // product.sku.includes(searchTerm.toLowerCase()) ||
+    // product.category.includes(searchTerm.toLowerCase());
 
     const matchesFilter =
       filterType === "all" ||
@@ -163,12 +150,17 @@ const Inventory = () => {
     // return matchesSearch && matchesFilter && matchesTab;
   });
 
+  // Split stocks by location to match Backend stock.model.js
+  const warehouseStocks = products?.data?.filter((s) => s?.location === "warehouse");
+  const storeStocks = products?.data?.filter((s) => s?.location === "store");
+
   // Calculate statistics
   const stats = {
     totalProducts: totalProdcut?.length || 0,
     totalWarehouseStock:
       products?.data?.reduce((sum, p) => sum + p.warehouseStock, 0) || 0,
-    totalStoreStock: products?.data?.reduce((sum, p) => sum + p.storeStock, 0) || 0,
+    totalStoreStock:
+      products?.data?.reduce((sum, p) => sum + p.storeStock, 0) || 0,
     totalValue:
       products?.data?.reduce(
         (sum, p) => sum + (p.warehouseStock + p.storeStock) * p.unitPrice,
@@ -177,24 +169,24 @@ const Inventory = () => {
   };
   if (IsInventoryIsLoading)
     return (
-      <div className='w-full h-full flex justify-center items-center'>
-        <BiLoaderAlt className=' text-2xl animate-spin' />
+      <div className="w-full h-full flex justify-center items-center">
+        <BiLoaderAlt className=" text-2xl animate-spin" />
       </div>
     );
   return (
-    <div className='space-y-6 w-full max-w-full overflow-x-hidden'>
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
-      <div className='flex justify-between items-center'>
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>مدیریت موجودی</h1>
-          <p className='text-gray-600 mt-2'>
+          <h1 className="text-3xl font-bold text-gray-900">مدیریت موجودی</h1>
+          <p className="text-gray-600 mt-2">
             مدیریت کردن تمام دیتا های و نماینده گی های تان
           </p>
         </div>
-        <div className=' w-[200px] '>
+        <div className=" w-[200px] ">
           <Modal>
             <Modal.Toggle>
-              <Button icon={<PlusIcon className='h-5 w-5' />}>
+              <Button icon={<PlusIcon className="h-5 w-5" />}>
                 اضافه کردن جنس
               </Button>
             </Modal.Toggle>
@@ -208,26 +200,26 @@ const Inventory = () => {
       {/* Stock Alerts Section */}
       {(getLowStockAlerts()?.length > 0 ||
         getOutOfStockItems()?.length > 0) && (
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-            <ExclamationTriangleIcon className='h-6 w-6 text-amber-600' />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
             هشتدار موجودی
           </h3>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {getLowStockAlerts().length > 0 && (
-              <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
-                <h4 className='font-semibold text-yellow-800 mb-2 flex items-center gap-2'>
-                  <ExclamationTriangleIcon className='h-5 w-5' />
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-semibold text-yellow-800 mb-2 flex items-center gap-2">
+                  <ExclamationTriangleIcon className="h-5 w-5" />
                   موجودی باقی مانده ({getLowStockAlerts().length})
                 </h4>
-                <ul className='space-y-2'>
+                <ul className="space-y-2">
                   {getLowStockAlerts().map((product) => (
                     <li
                       key={product.id}
-                      className='text-sm text-yellow-700 flex justify-between'
+                      className="text-sm text-yellow-700 flex justify-between"
                     >
                       <span>{product.name}</span>
-                      <span className='font-semibold'>
+                      <span className="font-semibold">
                         {product.warehouseStock + product.storeStock} units
                       </span>
                     </li>
@@ -236,14 +228,14 @@ const Inventory = () => {
               </div>
             )}
             {getOutOfStockItems().length > 0 && (
-              <div className='bg-red-50 border border-red-200 rounded-lg p-4'>
-                <h4 className='font-semibold text-red-800 mb-2 flex items-center gap-2'>
-                  <XCircleIcon className='h-5 w-5' />
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2">
+                  <XCircleIcon className="h-5 w-5" />
                   موجودی تمام شده ({getOutOfStockItems().length})
                 </h4>
-                <ul className='space-y-2'>
+                <ul className="space-y-2">
                   {getOutOfStockItems().map((product) => (
-                    <li key={product.id} className='text-sm text-red-700'>
+                    <li key={product.id} className="text-sm text-red-700">
                       {product.name}
                     </li>
                   ))}
@@ -255,68 +247,68 @@ const Inventory = () => {
       )}
 
       {/* Statistics Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>تمام اجناس</p>
-              <p className='text-2xl font-bold text-gray-900 mt-1'>
+              <p className="text-sm text-gray-600">تمام اجناس</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalProducts}
               </p>
             </div>
-            <div className='bg-blue-100 p-3 rounded-lg'>
-              <ChartBarIcon className='h-6 w-6 text-blue-600' />
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <ChartBarIcon className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>موجودی گدام</p>
-              <p className='text-2xl font-bold text-gray-900 mt-1'>
+              <p className="text-sm text-gray-600">موجودی گدام</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalWarehouseStock}
               </p>
             </div>
-            <div className='bg-purple-100 p-3 rounded-lg'>
-              <BuildingOffice2Icon className='h-6 w-6 text-purple-600' />
+            <div className="bg-purple-100 p-3 rounded-lg">
+              <BuildingOffice2Icon className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>موجودی فروشگاه</p>
-              <p className='text-2xl font-bold text-gray-900 mt-1'>
+              <p className="text-sm text-gray-600">موجودی فروشگاه</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalStoreStock}
               </p>
             </div>
-            <div className='bg-green-100 p-3 rounded-lg'>
-              <BuildingStorefrontIcon className='h-6 w-6 text-green-600' />
+            <div className="bg-green-100 p-3 rounded-lg">
+              <BuildingStorefrontIcon className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-600'>مجموع قیمت</p>
-              <p className='text-2xl font-bold text-gray-900 mt-1'>
+              <p className="text-sm text-gray-600">مجموع قیمت</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 ${stats.totalValue.toFixed(2)}
               </p>
             </div>
-            <div className='bg-amber-100 p-3 rounded-lg'>
-              <CheckCircleIcon className='h-6 w-6 text-amber-600' />
+            <div className="bg-amber-100 p-3 rounded-lg">
+              <CheckCircleIcon className="h-6 w-6 text-amber-600" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs and Table */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200'>
-        <div className='border-b border-gray-200'>
-          <nav className='flex -mb-px'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("all")}
               className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
@@ -335,7 +327,7 @@ const Inventory = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <BuildingOffice2Icon className='h-5 w-5' />
+              <BuildingOffice2Icon className="h-5 w-5" />
               گدام
             </button>
             <button
@@ -346,32 +338,36 @@ const Inventory = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <BuildingStorefrontIcon className='h-5 w-5' />
+              <BuildingStorefrontIcon className="h-5 w-5" />
               فروشگاه
             </button>
           </nav>
         </div>
 
-        {activeTab === "all" && <Product properties={productList} />}
+        {activeTab === "all" && <Product properties={productList?.products} />} 
         {activeTab === "warehouse" && (
-          <div className='overflow-x-auto  -mx-6 px-6'>
+          <div className="overflow-x-auto  -mx-6 px-6">
             <Warehouse
               getStatusColor={getStatusColor}
-              warehouses={filteredProducts}
-              isLoading={isLoadingProduct}
+              warehouses={warehouseStocks}
+              isLoading={IsInventoryIsLoading}
             />
           </div>
         )}
-        {activeTab === "store" && <Store />}
+        {activeTab === "store" && (
+          <div className="overflow-x-auto  -mx-6 px-6">
+            <Store stocks={storeStocks} isLoading={IsInventoryIsLoading} />
+          </div>
+        )}
       </div>
 
       {/* Stock Transfer History */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-          <ArrowPathIcon className='h-6 w-6 text-amber-600' />
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <ArrowPathIcon className="h-6 w-6 text-amber-600" />
           انتقالات اخیر موجودی
         </h3>
-        <div className='overflow-x-auto -mx-6 px-6'>
+        <div className="overflow-x-auto -mx-6 px-6">
           <Table>
             <TableHeader
               headerData={[
@@ -387,11 +383,11 @@ const Inventory = () => {
                   <TableRow>
                     <TableColumn>{transfer.productName} units</TableColumn>
                     <TableColumn>
-                      <BuildingOffice2Icon className='h-4 w-4' />
+                      <BuildingOffice2Icon className="h-4 w-4" />
                       {transfer.from}
                     </TableColumn>
                     <TableColumn>
-                      <BuildingStorefrontIcon className='h-4 w-4' />
+                      <BuildingStorefrontIcon className="h-4 w-4" />
                       {transfer.to}
                     </TableColumn>
                     <TableColumn>

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import {
   useCreateSupplier,
+  useCreatePurchase,
   useDeletePurchase,
   useProduct,
   usePurchases,
@@ -24,6 +25,7 @@ import TableHeader from "./TableHeader";
 import TableMenuModal from "./TableMenuModal";
 import TableRow from "./TableRow";
 import SupplierForm from "./SupplierForm";
+import PurchaseForm from "./PurchaseForm";
 import { formatCurrency } from "../utilies/helper";
 const tableHeader = [
   { title: "نمبر فاکتور" },
@@ -48,13 +50,27 @@ function Purchase({ getPaymentStatusColor }) {
   const { data: filteredPurchases, isLoading } = usePurchases();
   const { mutate: deletePurchase } = useDeletePurchase();
   const { mutate: updatePurchase } = useUpdatePurchase();
+  const { mutate: createPurchase } = useCreatePurchase();
   const { data: products } = useProduct();
   const { data: suppliers } = useSuppliers();
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, reset, watch, formState } = useForm();
   const { mutate: createSupplier } = useCreateSupplier();
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [items, setItems] = useState([]);
+  const [currentItem, setCurrentItem] = useState({
+    product: "",
+    unit: "",
+    batchNumber: "",
+    quantity: 0,
+    unitPrice: 0,
+  });
+  const calculatePurchaseTotals = () => {
+    const subtotal = items.reduce((sum, it) => sum + (Number(it.totalPrice) || 0), 0);
+    return { subtotal, taxAmount: 0, total: subtotal };
+  };
   const onSubmit = (data) => {
     console.log(data);
     createSupplier({ ...data });
@@ -96,7 +112,12 @@ function Purchase({ getPaymentStatusColor }) {
                 ]}
               />
             </div>
-            <div className="flex-1 flex items-center">
+            <div className="flex-1 flex items-center justify-end">
+              <Button className="py-[14px] bg-success-green" onClick={() => setOpenCreate(true)}>
+                ایجاد خرید جدید
+              </Button>
+            </div>
+            {/* <div className="flex-1 flex items-center">
               <Modal>
                 <Modal.Toggle>
                   <Button className="py-[14px] bg-success-green">
@@ -111,13 +132,13 @@ function Purchase({ getPaymentStatusColor }) {
                   />
                 </Modal.Window>
               </Modal>
-            </div>
+            </div> */}
           </div>
         }
       >
         <TableHeader headerData={tableHeader} />
         <TableBody>
-          {filteredPurchases?.length === 0 ? (
+          {filteredPurchases?.data?.length === 0 ? (
             <tr>
               <td colSpan="10" className="px-6 py-12 text-center text-gray-500">
                 <div className="flex flex-col items-center">
@@ -209,7 +230,7 @@ function Purchase({ getPaymentStatusColor }) {
                       <TableMenuModal.Window name="delete" className={""}>
                         <Confirmation
                           type="delete"
-                          handleClick={() => deletePurchase(purchase?.id)}
+                          handleClick={() => deletePurchase(purchase?._id)}
                           handleCancel={() => {}}
                         />
                       </TableMenuModal.Window>
@@ -221,6 +242,23 @@ function Purchase({ getPaymentStatusColor }) {
           )}
         </TableBody>
       </Table>
+      {/* Create Purchase Modal */}
+      <GloableModal open={openCreate} setOpen={setOpenCreate}>
+        <PurchaseForm
+          register={register}
+          handleSubmit={handleSubmit}
+          watch={watch}
+          reset={reset}
+          createPurchase={createPurchase}
+          calculatePurchaseTotals={calculatePurchaseTotals}
+          currentItem={currentItem}
+          setCurrentItem={setCurrentItem}
+          items={items}
+          setItems={setItems}
+          close={() => setOpenCreate(false)}
+          errors={formState?.errors}
+        />
+      </GloableModal>
       <GloableModal open={showModal} setOpen={setShowModal}>
         {selectedPurchase && (
           <div className="bg-white rounded-lg shadow-xl  w-[700px] max-h-[90vh] overflow-y-auto">
