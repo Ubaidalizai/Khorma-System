@@ -1,7 +1,5 @@
 import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { motion } from "framer-motion";
-import { toast } from "react-hot-toast";
 import { useProdcutItem, useUpdateProdcut } from "../services/useApi";
 import Spinner from "./Spinner";
 import Input from "./Input";

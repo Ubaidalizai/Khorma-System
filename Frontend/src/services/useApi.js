@@ -28,6 +28,10 @@ import {
   deleteSupplier,
   fetchSales,
   fetchSale,
+  fetchDashboardStats,
+  fetchRecentTransactions,
+  fetchLowStockItems,
+  fetchDashboardSummary,
   createSale,
   updateSale,
   deleteSale,
@@ -518,5 +522,38 @@ export const useDeleteEmployee = () => {
     mutationKey: ["deleteEmployee"],
     mutationFn: deleteEmployee,
     onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
+  });
+};
+
+// Dashboard Hooks
+export const useDashboardStats = () => {
+  return useQuery({
+    queryKey: ["dashboardStats"],
+    queryFn: fetchDashboardStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useRecentTransactions = (limit = 10) => {
+  return useQuery({
+    queryKey: ["recentTransactions", limit],
+    queryFn: () => fetchRecentTransactions(limit),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+export const useLowStockItems = () => {
+  return useQuery({
+    queryKey: ["lowStockItems"],
+    queryFn: fetchLowStockItems,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useDashboardSummary = () => {
+  return useQuery({
+    queryKey: ["dashboardSummary"],
+    queryFn: fetchDashboardSummary,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

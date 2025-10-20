@@ -7,17 +7,17 @@ import { apiRequest, API_ENDPOINTS } from "./apiConfig";
 // Authentication functions
 export const loginUser = async (credentials) => {
   const response = await fetch(`http://localhost:3001/api/v1/users/login`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
     body: JSON.stringify(credentials),
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message || 'Login failed');
+    throw new Error(errorData.message || "Login failed");
   }
 
   return response.json();
@@ -25,12 +25,12 @@ export const loginUser = async (credentials) => {
 
 export const logoutUser = async () => {
   const response = await fetch(`http://localhost:3001/api/v1/users/logout`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   });
 
   if (!response.ok) {
-    throw new Error('Logout failed');
+    throw new Error("Logout failed");
   }
 
   return response.json();
@@ -38,12 +38,12 @@ export const logoutUser = async () => {
 
 export const refreshUserToken = async () => {
   const response = await fetch(`http://localhost:3001/api/v1/users/refresh`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   });
 
   if (!response.ok) {
-    throw new Error('Token refresh failed');
+    throw new Error("Token refresh failed");
   }
 
   return response.json();
@@ -55,7 +55,21 @@ export const getUserProfile = async () => {
 
 // Products
 export const fetchProducts = async () => {
-  return await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
+  try {
+    const response = await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
+    // Handle both direct array response and paginated response with data property
+    if (Array.isArray(response)) {
+      return response;
+    } else if (response && Array.isArray(response.data)) {
+      return response.data;
+    } else {
+      console.warn("Unexpected products response format:", response);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return []; // Return empty array on error
+  }
 };
 
 export const fetchProduct = async (id) => {
@@ -270,7 +284,21 @@ export const deleteAccount = async (id) => {
 
 // Purchases
 export const fetchPurchases = async () => {
-  return await apiRequest(API_ENDPOINTS.PURCHASES.LIST);
+  try {
+    const response = await apiRequest(API_ENDPOINTS.PURCHASES.LIST);
+    // Handle both direct array response and paginated response with data property
+    if (Array.isArray(response)) {
+      return response;
+    } else if (response && Array.isArray(response.data)) {
+      return response.data;
+    } else {
+      console.warn("Unexpected purchases response format:", response);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching purchases:", error);
+    return []; // Return empty array on error
+  }
 };
 
 export const fetchPurchase = async (id) => {
@@ -305,7 +333,21 @@ export const restorePurchase = async (id) => {
 
 // Sales
 export const fetchSales = async () => {
-  return await apiRequest(API_ENDPOINTS.SALES.LIST);
+  try {
+    const response = await apiRequest(API_ENDPOINTS.SALES.LIST);
+    // Handle both direct array response and paginated response with data property
+    if (Array.isArray(response)) {
+      return response;
+    } else if (response && Array.isArray(response.data)) {
+      return response.data;
+    } else {
+      console.warn("Unexpected sales response format:", response);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching sales:", error);
+    return []; // Return empty array on error
+  }
 };
 
 export const fetchSale = async (id) => {
@@ -487,6 +529,107 @@ export const createProductItem = async (productData) => {
 // export const updateProductItem = async (id, productData) => {
 //   return await updateProduct(id, productData);
 // };
+
+// Dashboard Statistics - Fallback implementation using existing endpoints
+export const fetchDashboardStats = async () => {
+  try {
+    // Try to fetch from dedicated dashboard endpoint first
+    return await apiRequest(API_ENDPOINTS.DASHBOARD.STATS);
+  } catch {
+    // Fallback: calculate stats from existing endpoints
+    const [sales, purchases, products, inventory] = await Promise.all([
+      fetchSales(),
+      fetchPurchases(),
+      fetchProducts(),
+      fetchInventory(),
+    ]);
+
+    const totalSales =
+      sales?.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0) || 0;
+    const totalPurchases =
+      purchases?.reduce(
+        (sum, purchase) => sum + (purchase.totalAmount || 0),
+        0
+      ) || 0;
+    const lowStockItems =
+      inventory?.filter((item) => item.quantity <= (item.minLevel || 0))
+        .length || 0;
+
+    return {
+      totalProducts: products?.length || 0,
+      totalSales,
+      totalPurchases,
+      lowStockItems,
+      totalRevenue: totalSales - totalPurchases,
+    };
+  }
+};
+
+export const fetchRecentTransactions = async (limit = 10) => {
+  try {
+    // Try to fetch from dedicated endpoint first
+    return await apiRequest(
+      `${API_ENDPOINTS.DASHBOARD.RECENT_TRANSACTIONS}?limit=${limit}`
+    );
+  } catch {
+    // Fallback: combine recent sales and purchases
+    const [sales, purchases] = await Promise.all([
+      fetchSales(),
+      fetchPurchases(),
+    ]);
+
+    const recentSales = (sales || [])
+      .slice(0, Math.ceil(limit / 2))
+      .map((sale) => ({
+        ...sale,
+        type: "Sale",
+        transactionType: "sale",
+      }));
+
+    const recentPurchases = (purchases || [])
+      .slice(0, Math.floor(limit / 2))
+      .map((purchase) => ({
+        ...purchase,
+        type: "Purchase",
+        transactionType: "purchase",
+      }));
+
+    const allTransactions = [...recentSales, ...recentPurchases]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
+      )
+      .slice(0, limit);
+
+    return allTransactions;
+  }
+};
+
+export const fetchLowStockItems = async () => {
+  try {
+    // Try to fetch from dedicated endpoint first
+    return await apiRequest(API_ENDPOINTS.DASHBOARD.LOW_STOCK);
+  } catch {
+    // Fallback: get low stock items from inventory
+    const inventory = await fetchInventory();
+    return (
+      inventory?.filter((item) => item.quantity <= (item.minLevel || 0)) || []
+    );
+  }
+};
+
+export const fetchDashboardSummary = async () => {
+  try {
+    return await apiRequest(API_ENDPOINTS.DASHBOARD.SUMMARY);
+  } catch {
+    // Fallback: return basic summary
+    const stats = await fetchDashboardStats();
+    return {
+      summary: stats,
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+};
 
 export const deleteProductItem = async (id) => {
   return await deleteProduct(id);
