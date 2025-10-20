@@ -7,6 +7,7 @@ import {
   UsersIcon,
   ChartBarIcon,
   XMarkIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -19,6 +20,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: "فروش‌ها", href: "/sales", icon: CurrencyDollarIcon },
     { name: "حساب‌ها", href: "/accounts", icon: UsersIcon },
     { name: "گزارش‌ها", href: "/reports", icon: ChartBarIcon },
+    { name: "پنل مدیریت", href: "/admin", icon: ShieldCheckIcon },
   ];
 
   return (

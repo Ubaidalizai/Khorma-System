@@ -244,7 +244,14 @@ export const API_ENDPOINTS = {
     STATS: "/income/stats",
     SUMMARY: "/income/summary",
   },
+
+  // Dashboard Statistics
+  DASHBOARD: {
+    STATS: "/dashboard/stats",
+    RECENT_TRANSACTIONS: "/dashboard/recent-transactions",
+    LOW_STOCK: "/dashboard/low-stock",
+    SUMMARY: "/dashboard/summary",
+  },
 };
 
 export default API_BASE_URL;
-
