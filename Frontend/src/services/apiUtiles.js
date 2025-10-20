@@ -534,6 +534,13 @@ export const createProductItem = async (productData) => {
 //   return await updateProduct(id, productData);
 // };
 
+
+// ACCOUNT
+
+export const fetchaccounts = async () => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.LIST)
+}
+
 // Dashboard Statistics - Fallback implementation using existing endpoints
 export const fetchDashboardStats = async () => {
   try {

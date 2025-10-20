@@ -25,7 +25,7 @@ import { createPurchase as createPurchaseAPI } from "../services/apiUtiles";
 const Purchases = () => {
   const { data: suppliers, isLoading: isSupplierLoading } = useSuppliers();
   const { data: purchases } = usePurchases();
-  const { mutate: createPurchase } = useCreatePurchase();
+  const {mutate: createPurchase} = useCreatePurchase()
   const { register, handleSubmit, watch, reset } = useForm();
   const [currentItem, setCurrentItem] = useState({
     product: "",
@@ -45,15 +45,39 @@ const Purchases = () => {
   // const [filterSupplierOpen, setFilterSupplierOpen] = useState("all");
   // const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [activeTab, setActiveTab] = useState("purchases"); // 'purchases', 'suppliers', 'history'
-  const onSubmit = async (data) => {
-    try {
-      await createPurchaseAPI(data);
-      // Refresh the purchases list
-      window.location.reload();
-    } catch (error) {
-      console.error("Failed to create purchase:", error);
-    }
+  const onSubmit = (data) => {
+    
+    const totalAmount = items.reduce((sum, it) => sum + (Number(it.totalPrice) || 0), 0);
+    const paidAmount = Number(data.paidAmount) || 0;
+    const dueAmount = Math.max(totalAmount - paidAmount, 0);
+
+    createPurchase({
+      supplier: data.supplier,
+      paymentAccount:data.payementAccount,
+      purchaseDate: data.purchaseDate ? data.purchaseDate : Date.now(),
+      totalAmount,
+      paidAmount,
+      dueAmount,
+      items: items.map((it) => ({
+        product: it.product,
+        unit: it.unit,
+        batchNumber: it.batchNumber || null,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+      })),
+    });
+    reset();
+    setItems([]);
+    setCurrentItem({
+      product: "",
+      unit: "",
+      batchNumber: "",
+      quantity: 0,
+      unitPrice: 0,
+    });
+    close && close();
   };
+
 
   // Payment history
   const [paymentHistory] = useState([
