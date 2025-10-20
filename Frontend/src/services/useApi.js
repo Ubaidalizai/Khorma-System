@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchProducts,
-  fetchProduct,
   fetchProductyById,
   createProductItem,
   updateProductItem,
@@ -21,7 +20,7 @@ import {
   createPurchase,
   updatePurchase,
   deletePurchase,
-  fetchSuppliers,
+  getSuppliers,
   fetchSupplier,
   createSupplier,
   updateSupplier,
@@ -32,6 +31,10 @@ import {
   updateSale,
   deleteSale,
   fetchUnits,
+  fetchUnit,
+  createUnit,
+  updateUnit,
+  deleteUnit,
   fetchCustomer,
   fetchCustomers,
   createCustomer,
@@ -42,6 +45,7 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
+  fetchCompanies,
   createCompnay,
   updateCompany,
   deleteCompany,
@@ -268,7 +272,7 @@ export const useDeletePurchase = () => {
 export const useSuppliers = () => {
   return useQuery({
     queryKey: ["allSuppliers"],
-    queryFn: fetchSuppliers,
+    queryFn: getSuppliers,
   });
 };
 
@@ -291,7 +295,7 @@ export const useUpdateSupplier = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["updateSupplier"],
-    mutationFn: () => updateSupplier,
+    mutationFn: ({ id, supplierData }) => updateSupplier(id, supplierData),
     onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
   });
 };
@@ -347,12 +351,6 @@ export const useDeleteSales = () => {
   });
 };
 
-export const useUnits = () => {
-  return useQuery({
-    queryKey: ["units"],
-    queryFn: fetchUnits,
-  });
-};
 // CUSTOMER USE
 
 // export const useSuppliers = () => {
@@ -423,7 +421,7 @@ export const useUpdateCustomer = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["updateCustomer"],
-    mutationFn: () => updateCustomer,
+    mutationFn: ({ id, customerData }) => updateCustomer(id, customerData),
     onSuccess: () => queryClient.invalidateQueries(["allCustomers"]),
   });
 };
@@ -442,7 +440,7 @@ export const useDeleteCustomer = () => {
 export const useCompanies = () => {
   return useQuery({
     queryKey: ["allCompanies"],
-    queryFn: fetchSuppliers,
+    queryFn: fetchCompanies,
   });
 };
 
@@ -507,7 +505,7 @@ export const useUpdateEmployee = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["updateEmployee"],
-    mutationFn: () => updateEmployee,
+    mutationFn: ({ id, employeeData }) => updateEmployee(id, employeeData),
     onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
   });
 };
@@ -518,5 +516,48 @@ export const useDeleteEmployee = () => {
     mutationKey: ["deleteEmployee"],
     mutationFn: deleteEmployee,
     onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
+  });
+};
+
+// Units
+export const useUnits = () => {
+  return useQuery({
+    queryKey: ["allUnits"],
+    queryFn: fetchUnits,
+  });
+};
+
+export const useUnit = (id) => {
+  return useQuery({
+    queryKey: ["unit", id],
+    queryFn: () => fetchUnit(id),
+    enabled: !!id,
+  });
+};
+
+export const useCreateUnit = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createUnit,
+    mutationKey: ["newUnit"],
+    onSuccess: () => queryClient.invalidateQueries(["allUnits"]),
+  });
+};
+
+export const useUpdateUnit = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateUnit"],
+    mutationFn: ({ id, unitData }) => updateUnit(id, unitData),
+    onSuccess: () => queryClient.invalidateQueries(["allUnits"]),
+  });
+};
+
+export const useDeleteUnit = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteUnit"],
+    mutationFn: deleteUnit,
+    onSuccess: () => queryClient.invalidateQueries(["allUnits"]),
   });
 };

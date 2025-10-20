@@ -7,6 +7,7 @@ import Sales from "./pages/Sales";
 import Accounts from "./pages/Accounts";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
+import AdminPanel from "./pages/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -43,6 +44,7 @@ function App() {
               <Route path='/sales' element={<Sales />} />
               <Route path='/accounts' element={<Accounts />} />
               <Route path='/reports' element={<Reports />} />
+              <Route path='/admin' element={<AdminPanel />} />
             </Route>
             
             {/* Redirect to dashboard for any unmatched routes */}

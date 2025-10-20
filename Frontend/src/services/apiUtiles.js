@@ -99,6 +99,10 @@ export const fetchSuppliers = async () => {
   return await apiRequest(API_ENDPOINTS.SUPPLIERS.LIST);
 };
 
+export const getSuppliers = async () => {
+  return await apiRequest(API_ENDPOINTS.SUPPLIERS.LIST);
+};
+
 export const fetchSupplier = async (id) => {
   return await apiRequest(API_ENDPOINTS.SUPPLIERS.DETAIL(id));
 };
