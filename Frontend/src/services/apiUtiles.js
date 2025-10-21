@@ -56,14 +56,9 @@ export const getUserProfile = async () => {
 // Products
 export const fetchProducts = async (params = {}) => {
   try {
-    const query = new URLSearchParams();
-    if (params.search) query.set("search", params.search);
-    if (params.includeDeleted !== undefined) query.set("includeDeleted", String(params.includeDeleted));
-    const url = query.toString()
-      ? `${API_ENDPOINTS.PRODUCTS.LIST}?${query.toString()}`
-      : API_ENDPOINTS.PRODUCTS.LIST;
-    const response = await apiRequest(url);
-    // Handle different response formats
+    const response = await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
+   
+    // Handle both direct array response and paginated response with data property
     if (Array.isArray(response)) {
       return { data: response };
     } else if (response && Array.isArray(response.products)) {

@@ -628,7 +628,6 @@ export const useDeleteEmployee = () => {
   });
 };
 
-
 // Units
 export const useUnits = () => {
   return useQuery({
@@ -702,5 +701,19 @@ export const useDashboardSummary = () => {
     queryKey: ["dashboardSummary"],
     queryFn: fetchDashboardSummary,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+export const useCreateStockTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createStockTransfer,
+    mutationKey: ["newTransfer"],
+    onSuccess: () => {
+      queryClient.invalidateQueries(["inventory"]);
+      alert("Stock transferred successfully");
+    },
+    onError: (error) => {
+      alert("Error transferring stock: " + error.message);
+    },
   });
 };
