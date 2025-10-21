@@ -1,4 +1,5 @@
 const Stock = require('../models/stock.model');
+const Product = require('../models/product.model');
 const asyncHandler = require('../middlewares/asyncHandler');
 const AppError = require('../utils/AppError');
 const {
@@ -178,5 +179,103 @@ exports.getBatchesByProduct = asyncHandler(async (req, res) => {
     success: true,
     count: batches.length,
     batches,
+  });
+});
+
+// @desc    Get inventory statistics
+// @route   GET /api/v1/stocks/stats
+exports.getInventoryStats = asyncHandler(async (req, res) => {
+  // Get total products count
+  const totalProducts = await Product.countDocuments({ isDeleted: false });
+
+  // Get warehouse stock stats
+  const warehouseStats = await Stock.aggregate([
+    { $match: { location: 'warehouse', isDeleted: false } },
+    {
+      $group: {
+        _id: null,
+        totalQuantity: { $sum: '$quantity' },
+        totalValue: { $sum: { $multiply: ['$quantity', '$purchasePricePerBaseUnit'] } },
+        uniqueProducts: { $addToSet: '$product' }
+      }
+    }
+  ]);
+
+  // Get store stock stats
+  const storeStats = await Stock.aggregate([
+    { $match: { location: 'store', isDeleted: false } },
+    {
+      $group: {
+        _id: null,
+        totalQuantity: { $sum: '$quantity' },
+        totalValue: { $sum: { $multiply: ['$quantity', '$purchasePricePerBaseUnit'] } },
+        uniqueProducts: { $addToSet: '$product' }
+      }
+    }
+  ]);
+
+  // Get low stock items (products below minimum level)
+  const lowStockItems = await Product.aggregate([
+    { $match: { isDeleted: false } },
+    {
+      $lookup: {
+        from: 'stocks',
+        let: { productId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$product', '$$productId'] },
+              isDeleted: false
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalQuantity: { $sum: '$quantity' }
+            }
+          }
+        ],
+        as: 'stockInfo'
+      }
+    },
+    {
+      $addFields: {
+        currentStock: { $ifNull: [{ $arrayElemAt: ['$stockInfo.totalQuantity', 0] }, 0] }
+      }
+    },
+    {
+      $match: {
+        $expr: { $lt: ['$currentStock', '$minLevel'] }
+      }
+    },
+    {
+      $project: {
+        name: 1,
+        minLevel: 1,
+        currentStock: 1
+      }
+    }
+  ]);
+
+  const warehouseData = warehouseStats[0] || { totalQuantity: 0, totalValue: 0, uniqueProducts: [] };
+  const storeData = storeStats[0] || { totalQuantity: 0, totalValue: 0, uniqueProducts: [] };
+
+  res.status(200).json({
+    success: true,
+    data: {
+      totalProducts,
+      warehouse: {
+        totalQuantity: warehouseData.totalQuantity,
+        totalValue: warehouseData.totalValue,
+        uniqueProducts: warehouseData.uniqueProducts.length
+      },
+      store: {
+        totalQuantity: storeData.totalQuantity,
+        totalValue: storeData.totalValue,
+        uniqueProducts: storeData.uniqueProducts.length
+      },
+      lowStockItems: lowStockItems.length,
+      lowStockDetails: lowStockItems
+    }
   });
 });

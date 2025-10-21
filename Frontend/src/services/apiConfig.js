@@ -124,6 +124,7 @@ export const API_ENDPOINTS = {
   // Inventory/Stock
   STOCK: {
     LIST: "/stocks",
+    STATS: "/stocks/stats",
     INVENTORY: "/stocks?location=warehouse",
     STORE: "/stocks?location=store",
     DETAIL: (id) => `/stocks/${id}`,
@@ -180,6 +181,7 @@ export const API_ENDPOINTS = {
   // Accounts
   ACCOUNTS: {
     LIST: "/accounts",
+    SYSTEM: "/accounts/system",
     DETAIL: (id) => `/accounts/${id}`,
     CREATE: "/accounts",
     UPDATE: (id) => `/accounts/${id}`,

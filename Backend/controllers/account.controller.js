@@ -94,6 +94,22 @@ exports.getAllAccounts = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Get system accounts (cashier, safe, saraf)
+// @route   GET /api/v1/accounts/system
+exports.getSystemAccounts = asyncHandler(async (req, res, next) => {
+  const systemTypes = ['cashier', 'safe', 'saraf'];
+  
+  const accounts = await Account.find({
+    type: { $in: systemTypes },
+    isDeleted: false
+  }).sort({ type: 1, name: 1 });
+
+  res.status(200).json({
+    success: true,
+    accounts,
+  });
+});
+
 // @desc    Get single account
 // @route   GET /api/v1/accounts/:id
 exports.getAccount = asyncHandler(async (req, res, next) => {

@@ -65,18 +65,18 @@ export const fetchProducts = async (params = {}) => {
     const response = await apiRequest(url);
     // Handle different response formats
     if (Array.isArray(response)) {
-      return response;
+      return { data: response };
     } else if (response && Array.isArray(response.products)) {
-      return response.products;
+      return { data: response.products };
     } else if (response && Array.isArray(response.data)) {
-      return response.data;
+      return { data: response.data };
     } else {
       console.warn("Unexpected products response format:", response);
-      return [];
+      return { data: [] };
     }
   } catch (error) {
     console.error("Error fetching products:", error);
-    return []; // Return empty array on error
+    return { data: [] }; // Return empty array on error
   }
 };
 
@@ -278,6 +278,10 @@ export const fetchAccounts = async (params = {}) => {
   return await apiRequest(url);
 };
 
+export const fetchSystemAccounts = async () => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.SYSTEM);
+};
+
 export const fetchAccount = async (id) => {
   return await apiRequest(API_ENDPOINTS.ACCOUNTS.DETAIL(id));
 };
@@ -430,6 +434,10 @@ export const fetchStoreStock = async (params = {}) => {
     ? `${API_ENDPOINTS.STOCK.STORE}?${query.toString()}`
     : API_ENDPOINTS.STOCK.STORE;
   return await apiRequest(url);
+};
+
+export const fetchInventoryStats = async () => {
+  return await apiRequest(API_ENDPOINTS.STOCK.STATS);
 };
 
 export const fetchStockItem = async (id) => {

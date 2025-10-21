@@ -18,30 +18,17 @@ import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import { useCreateProdcut, useProduct, useWarehouseStocks, useStoreStocks } from "../services/useApi";
+import { useCreateProdcut, useProduct, useInventoryStats } from "../services/useApi";
 import Product from "./Product";
 import Store from "./Store";
 import Warehouse from "./Warehouse";
 import { BiLoaderAlt } from "react-icons/bi";
 
-const getStatusColor = (status) => {
-  switch (status) {
-    case "موجود":
-      return "bg-green-100 text-green-800 border border-green-200";
-    case "کمبود موجودی":
-      return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-    case "Out of Stock":
-      return "bg-red-100 text-red-800 border border-red-200";
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200";
-  }
-};
 
 const Inventory = () => {
   const { register, handleSubmit, formState, reset, control } = useForm();
   const { data: productList, isLoading: isLoadingProducts } = useProduct();
-  const { data: warehouseStocksData, isLoading: isWarehouseLoading } = useWarehouseStocks();
-  const { data: storeStocksData, isLoading: isStoreLoading } = useStoreStocks();
+  const { data: inventoryStats, isLoading: isStatsLoading } = useInventoryStats();
   const { mutate: createProduct } = useCreateProdcut();
   function AddProductForm({ close }) {
     const onSubmit = async (data) => {
@@ -65,53 +52,14 @@ const Inventory = () => {
   const [transferHistory] = useState([]);
 
 
-  // Update product status on mount
-  // setTransferHistory([
-  //       {
-  //         id: 12 + 1,
-  //         productName: "Kandom",
-  //         quantity: 12,
-  //         from: "Warehouse",
-  //         to: "Store",
-  //         date: new Date().toISOString(),
-  //         performedBy: "Admin",
-  //       },
-  //     ]);
-  // Real-time stock tracking simulation (updates every 30 seconds)
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setProducts((prevProducts) =>
-  //       prevProducts.map((product) => ({
-  //         ...product,
-  //         lastUpdated: new Date().toISOString(),
-  //       }))
-  //     );
-  //   }, 30000);
-
-  //   return () => clearInterval(interval);
-  // }, []);
-
-  // (Removed local alerts; should come from backend when needed)
-
-
-  // Stocks from backend (filtered by location at the API level)
-  const warehouseStocks = warehouseStocksData?.data || warehouseStocksData || [];
-  const storeStocks = storeStocksData?.data || storeStocksData || [];
-
-  // Calculate statistics
-  const stats = {
-    totalProducts: productList?.length || 0,
-    totalWarehouseStock:
-      productList?.reduce((sum, p) => sum + (p.warehouseStock || 0), 0) || 0,
-    totalStoreStock:
-      productList?.reduce((sum, p) => sum + (p.storeStock || 0), 0) || 0,
-    totalValue:
-      productList?.reduce(
-        (sum, p) => sum + ((p.warehouseStock || 0) + (p.storeStock || 0)) * (p.unitPrice || 0),
-        0
-      ) || 0,
+  // Use backend stats
+  const stats = inventoryStats?.data || {
+    totalProducts: 0,
+    warehouse: { totalQuantity: 0, totalValue: 0, uniqueProducts: 0 },
+    store: { totalQuantity: 0, totalValue: 0, uniqueProducts: 0 },
+    lowStockItems: 0
   };
-  if (isLoadingProducts)
+  if (isLoadingProducts || isStatsLoading)
     return (
       <div className="w-full h-full flex justify-center items-center">
         <BiLoaderAlt className=" text-2xl animate-spin" />
@@ -162,7 +110,10 @@ const Inventory = () => {
             <div>
               <p className="text-sm text-gray-600">موجودی گدام</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.totalWarehouseStock}
+                {stats.warehouse.totalQuantity}
+              </p>
+              <p className="text-sm text-gray-500">
+                {stats.warehouse.uniqueProducts} محصول
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -176,7 +127,10 @@ const Inventory = () => {
             <div>
               <p className="text-sm text-gray-600">موجودی فروشگاه</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.totalStoreStock}
+                {stats.store.totalQuantity}
+              </p>
+              <p className="text-sm text-gray-500">
+                {stats.store.uniqueProducts} محصول
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -188,13 +142,16 @@ const Inventory = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">مجموع قیمت</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                ${stats.totalValue.toFixed(2)}
+              <p className="text-sm text-gray-600">کمبود موجودی</p>
+              <p className="text-2xl font-bold text-red-600 mt-1">
+                {stats.lowStockItems}
+              </p>
+              <p className="text-sm text-gray-500">
+                محصول نیاز به خرید
               </p>
             </div>
-            <div className="bg-amber-100 p-3 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-amber-600" />
+            <div className="bg-red-100 p-3 rounded-lg">
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
             </div>
           </div>
         </div>
@@ -239,7 +196,7 @@ const Inventory = () => {
           </nav>
         </div>
 
-        {activeTab === "all" && <Product properties={productList} />} 
+        {activeTab === "all" && <Product />} 
         {activeTab === "warehouse" && (
           <div className="overflow-x-auto  -mx-6 px-6">
             <Warehouse />

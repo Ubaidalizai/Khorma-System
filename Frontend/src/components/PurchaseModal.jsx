@@ -7,7 +7,7 @@ import {
   CurrencyDollarIcon,
   ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
-import { useSuppliers, useProducts, useUnits, useCreatePurchase } from "../services/useApi";
+import { useSuppliers, useProducts, useUnits, useSystemAccounts, useCreatePurchase } from "../services/useApi";
 import { formatCurrency } from "../utilies/helper";
 
 const PurchaseModal = ({ isOpen, onClose }) => {
@@ -15,6 +15,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   const { data: suppliers } = useSuppliers();
   const { data: products } = useProducts();
   const { data: units } = useUnits();
+  const { data: systemAccounts } = useSystemAccounts();
   const createPurchaseMutation = useCreatePurchase();
 
   const [items, setItems] = useState([]);
@@ -93,7 +94,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
         quantity: Number(item.quantity),
         unitPrice: Number(item.unitPrice),
         batchNumber: item.batchNumber || null,
-        expiryDate: item.expiryDate || null,
+        expiryDate: item.expiryDate && item.expiryDate !== '' ? item.expiryDate : null,
       })),
     };
 
@@ -170,8 +171,11 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
               >
                 <option value="">انتخاب حساب</option>
-                <option value="cash">نقد</option>
-                <option value="bank">بانک</option>
+                {systemAccounts?.accounts?.map((account) => (
+                  <option key={account._id} value={account._id}>
+                    {account.name} ({account.type})
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -192,7 +196,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
           {/* Add Item Form */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">اضافه کردن جنس</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   محصول *
@@ -267,6 +271,18 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                   onChange={(e) => setCurrentItem({ ...currentItem, batchNumber: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="اختیاری"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  تاریخ انقضا
+                </label>
+                <input
+                  type="date"
+                  value={currentItem.expiryDate}
+                  onChange={(e) => setCurrentItem({ ...currentItem, expiryDate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
 
@@ -363,7 +379,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              disabled={createPurchaseMutation.isPending || items.length === 0}
+              disabled={createPurchaseMutation.isPending}
               className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {createPurchaseMutation.isPending ? "در حال ایجاد..." : "ایجاد خرید"}

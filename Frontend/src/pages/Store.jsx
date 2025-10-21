@@ -10,6 +10,7 @@ import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import Confirmation from "../components/Confirmation";
 import { useStoreStocks } from "../services/useApi";
+import { getStockStatus } from "../utilies/stockStatus";
 import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
 // import { motion } from "framer-motion";
@@ -25,6 +26,7 @@ const storeHeader = [
   { title: "قیمت خرید/واحد" },
   { title: "واحد" },
   { title: "تعداد" },
+  { title: "حالت" },
   { title: "عملیات" },
 ];
 
@@ -61,6 +63,11 @@ function Store() {
               <TableColumn>{el?.purchasePricePerBaseUnit?.toLocaleString?.() || el?.purchasePricePerBaseUnit}</TableColumn>
               <TableColumn>{el?.unit?.name || el?.unit}</TableColumn>
               <TableColumn className="font-semibold">{el?.quantity}</TableColumn>
+              <TableColumn>
+                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStockStatus(el?.quantity, el?.product?.minLevel || 0).color}`}>
+                  {getStockStatus(el?.quantity, el?.product?.minLevel || 0).label}
+                </span>
+              </TableColumn>
               <TableColumn>
                 <span
                   className={`${

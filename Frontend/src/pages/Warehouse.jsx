@@ -18,7 +18,8 @@ import WarehouseForm from "../components/WarehouseForm";
 import { useForm } from "react-hook-form";
 import { useUpdateStore } from "../services/useApi";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useEmployees } from "../services/useApi";
+import { useEmployees, useWarehouseStocks } from "../services/useApi";
+import { getStockStatus, getStatusColor } from "../utilies/stockStatus";
 // Headers aligned with Backend stock.model.js
 const tableHeader = [
   { title: "محصول" },
@@ -28,16 +29,19 @@ const tableHeader = [
   { title: "تاریخ انقضا" },
   { title: "قیمت خرید/واحد" },
   { title: "تعداد" },
+  { title: "حالت" },
   { title: "عملیات" },
 ];
-function Warehouse({ warehouses, getStatusColor, isLoading }) {
-  const [transferQuantity, setTransferQuantity] = useState(null);
+function Warehouse() {
   const { control, handleSubmit, reset } = useForm();
   const { mutate: updateInventory } = useUpdateStore();
   const [showTransfer, setShowTransfer] = useState(false);
   const [show, setShow] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
+  const [search] = useState("");
+  const { data: warehouseData, isLoading } = useWarehouseStocks({ search });
+  const warehouses = warehouseData?.data || warehouseData || [];
   useEffect(
     function () {
       reset({ ...selectedPro });
@@ -77,6 +81,11 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
               <TableColumn>{row?.expiryDate ? new Date(row.expiryDate).toLocaleDateString('fa-IR') : "—"}</TableColumn>
               <TableColumn>{row?.purchasePricePerBaseUnit?.toLocaleString?.() || row?.purchasePricePerBaseUnit}</TableColumn>
               <TableColumn className="font-semibold">{row?.quantity}</TableColumn>
+              <TableColumn>
+                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStockStatus(row?.quantity, row?.product?.minLevel || 0).color}`}>
+                  {getStockStatus(row?.quantity, row?.product?.minLevel || 0).label}
+                </span>
+              </TableColumn>
               <TableColumn
                 className={`${
                   "itemavs" +
@@ -275,7 +284,7 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
         {showTransfer && (
           <StockTransferModal 
             stock={selectedPro} 
-            onClose={() => { setShowTransfer(false); setTransferQuantity(""); setSelectedPro(null); }} 
+            onClose={() => { setShowTransfer(false); setSelectedPro(null); }} 
           />
         )}
       </GloableModal>

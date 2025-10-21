@@ -37,6 +37,7 @@ import {
   fetchStock,
   fetchInventoryStock,
   fetchStoreStock,
+  fetchInventoryStats,
   fetchUnits,
   fetchUnit,
   createUnit,
@@ -61,6 +62,7 @@ import {
   refreshUserToken,
   getUserProfile,
   fetchAccounts,
+  fetchSystemAccounts,
   fetchAccountLedger,
   createAccount,
   updateAccount,
@@ -314,6 +316,14 @@ export const useStoreStocks = (opts = {}) => {
   });
 };
 
+export const useInventoryStats = () => {
+  return useQuery({
+    queryKey: ["inventoryStats"],
+    queryFn: fetchInventoryStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
 // Supplier CRUD operations
 
 export const useSuppliers = () => {
@@ -533,6 +543,14 @@ export const useAccounts = (opts = {}) => {
     keepPreviousData: true,
   })
 }
+
+export const useSystemAccounts = () => {
+  return useQuery({
+    queryKey: ["systemAccounts"],
+    queryFn: fetchSystemAccounts,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
 
 export const useCreateAccount = () => {
   const queryClient = useQueryClient();
