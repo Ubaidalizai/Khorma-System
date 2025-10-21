@@ -1,6 +1,6 @@
 import React from "react";
 import { BiTrashAlt } from "react-icons/bi";
-import { useSuppliers, useUnits, useProduct, useAccounts } from "../services/useApi";
+import { useSuppliers, useUnits, useProduct, useSystemAccounts } from "../services/useApi";
 import { formatCurrency } from "../utilies/helper";
 import { inputStyle } from "./ProductForm";
 import Table from "./Table";
@@ -35,7 +35,7 @@ function PurchaseForm({
   const { data: suppliers } = useSuppliers();
   const { data: units } = useUnits();
   const { data: products } = useProduct();
-  const {data: paymentAccount} = useAccounts()
+  const { data: systemAccounts } = useSystemAccounts();
   const handleAddItem = () => {
     const quantity = Number(currentItem.quantity) || 0;
     const unitPrice = Number(currentItem.unitPrice) || 0;
@@ -46,6 +46,7 @@ function PurchaseForm({
         product: currentItem.product,
         unit: currentItem.unit,
         batchNumber: currentItem.batchNumber || null,
+        expiryDate: currentItem.expiryDate && currentItem.expiryDate !== '' ? currentItem.expiryDate : null,
         quantity,
         unitPrice,
         totalPrice,
@@ -57,6 +58,7 @@ function PurchaseForm({
       batchNumber: "",
       quantity: 0,
       unitPrice: 0,
+      expiryDate: "",
     });
   };
   const handleRemove = (index) => {
@@ -121,7 +123,7 @@ function PurchaseForm({
               حساب پرداخت کننده*
             </label>
             <select
-              {...register("AccountPayment", {
+              {...register("paymentAccount", {
                 required: "حساب پرداخت کننده را باید انتخاب کنید",
               })}
               className={inputStyle}
@@ -129,9 +131,9 @@ function PurchaseForm({
               <option value="">
                 حساب پرداخت کننده را انتخاب کنید
               </option>
-              {paymentAccount?.accounts?.map((payment) => (
+              {systemAccounts?.accounts?.map((payment) => (
                 <option key={payment._id} value={payment._id}>
-                  {payment.name}
+                  {payment.name} ({payment.type})
                 </option>
               ))}
             </select>
@@ -157,7 +159,7 @@ function PurchaseForm({
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-4 grid-rows-2 gap-4 w-full p-6 rounded-lg bg-gray-50">
+            <div className="grid grid-cols-4 grid-rows-3 gap-4 w-full p-6 rounded-lg bg-gray-50">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   اسم محصول
@@ -170,7 +172,7 @@ function PurchaseForm({
                   className={inputStyle}
                 >
                   <option value="">انتخاب محصول</option>
-                  {products?.products?.map((p) => (
+                  {products?.data?.map((p) => (
                     <option key={p._id} value={p._id}>
                       {p.name}
                     </option>
@@ -211,7 +213,23 @@ function PurchaseForm({
                   placeholder="اختیاری"
                 />
               </div>
-              <div className=" row-start-2">
+              <div className="col-span-2 col-start-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  تاریخ انقضا
+                </label>
+                <input
+                  type="date"
+                  value={currentItem?.expiryDate || ""}
+                  onChange={(e) =>
+                    setCurrentItem((s) => ({
+                      ...s,
+                      expiryDate: e.target.value,
+                    }))
+                  }
+                  className={inputStyle}
+                />
+              </div>
+              <div className="col-span-2 row-start-3">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   تعداد
                 </label>
@@ -224,7 +242,7 @@ function PurchaseForm({
                   className={inputStyle}
                 />
               </div>
-              <div className=" row-start-2 col-start-2">
+              <div className="col-span-2 row-start-3 col-start-3">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   قیمت یک
                 </label>

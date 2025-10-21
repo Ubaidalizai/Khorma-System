@@ -124,6 +124,7 @@ export const API_ENDPOINTS = {
   // Inventory/Stock
   STOCK: {
     LIST: "/stocks",
+    STATS: "/stocks/stats",
     INVENTORY: "/stocks?location=warehouse",
     STORE: "/stocks?location=store",
     DETAIL: (id) => `/stocks/${id}`,
@@ -143,7 +144,7 @@ export const API_ENDPOINTS = {
   // Purchases
   PURCHASES: {
     LIST: "/purchases",
-    DETAIL: (id) => `/purchase/${id}`,
+    DETAIL: (id) => `/purchases/${id}`,
     CREATE: "/purchases",
     UPDATE: (id) => `/purchases/${id}`,
     DELETE: (id) => `/purchases/${id}`,
@@ -180,10 +181,12 @@ export const API_ENDPOINTS = {
   // Accounts
   ACCOUNTS: {
     LIST: "/accounts",
+    SYSTEM: "/accounts/system",
     DETAIL: (id) => `/accounts/${id}`,
     CREATE: "/accounts",
     UPDATE: (id) => `/accounts/${id}`,
     DELETE: (id) => `/accounts/${id}`,
+    LEDGER: (id) => `/accounts/${id}/ledger`,
   },
 
   // Types

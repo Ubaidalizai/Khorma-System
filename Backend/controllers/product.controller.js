@@ -53,6 +53,8 @@ exports.getAllProducts = asyncHandler(async (req, res, next) => {
     ...(includeDeleted ? {} : { isDeleted: false }),
   };
 
+  console.log(search, filter);
+
   const total = await Product.countDocuments(filter);
 
   const products = await Product.find(filter)

@@ -1,0 +1,259 @@
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  ArrowLeftIcon,
+  CurrencyDollarIcon,
+  BanknotesIcon,
+  ChartBarIcon,
+  CalendarIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+} from "@heroicons/react/24/outline";
+import { useAccountLedger } from "../services/useApi";
+
+const AccountDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [transactionType, setTransactionType] = useState("");
+
+  const { data: ledgerData, isLoading, error } = useAccountLedger(id, {
+    startDate,
+    endDate,
+    type: transactionType,
+  });
+
+  const account = ledgerData?.account || "حساب";
+  const openingBalance = ledgerData?.openingBalance || 0;
+  const currentBalance = ledgerData?.currentBalance || 0;
+  const totalTransactions = ledgerData?.totalTransactions || 0;
+  const ledger = ledgerData?.ledger || [];
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fa-IR').format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('fa-IR');
+  };
+
+  const getTransactionTypeColor = (type) => {
+    switch (type) {
+      case 'Credit':
+      case 'Transfer':
+        return 'text-green-600 bg-green-100';
+      case 'Debit':
+        return 'text-red-600 bg-red-100';
+      case 'Expense':
+        return 'text-orange-600 bg-orange-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getTransactionTypeLabel = (type) => {
+    switch (type) {
+      case 'Credit':
+        return 'اعتبار';
+      case 'Debit':
+        return 'بدهی';
+      case 'Transfer':
+        return 'انتقال';
+      case 'Expense':
+        return 'مصرف';
+      default:
+        return type;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">خطا در بارگذاری اطلاعات حساب</p>
+          <button
+            onClick={() => navigate('/accounts')}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+          >
+            بازگشت به لیست حساب ها
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/accounts')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{account}</h1>
+            <p className="text-gray-600 mt-1">جزئیات حساب و تراکنش ها</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Account Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">موجودی فعلی</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {formatCurrency(currentBalance)} AFN
+              </p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <CurrencyDollarIcon className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">موجودی اولیه</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {formatCurrency(openingBalance)} AFN
+              </p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-lg">
+              <BanknotesIcon className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">تعداد تراکنش ها</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {totalTransactions}
+              </p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-lg">
+              <ChartBarIcon className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">فیلتر تراکنش ها</h3>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-gray-500" />
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                placeholder="از تاریخ"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-gray-500" />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                placeholder="تا تاریخ"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <FunnelIcon className="h-5 w-5 text-gray-500" />
+              <select
+                value={transactionType}
+                onChange={(e) => setTransactionType(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              >
+                <option value="">همه تراکنش ها</option>
+                <option value="Credit">اعتبار</option>
+                <option value="Debit">بدهی</option>
+                <option value="Transfer">انتقال</option>
+                <option value="Expense">مصرف</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Transactions Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">تراکنش ها</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاریخ</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">مبلغ</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">موجودی بعد از تراکنش</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">توضیحات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {ledger.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    تراکنشی یافت نشد
+                  </td>
+                </tr>
+              ) : (
+                ledger.map((transaction, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {formatDate(transaction.date)}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getTransactionTypeColor(transaction.type)}`}>
+                        {getTransactionTypeLabel(transaction.type)}
+                      </span>
+                    </td>
+                    <td className={`px-6 py-4 text-sm font-semibold ${
+                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)} AFN
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {formatCurrency(transaction.balanceAfter)} AFN
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {transaction.description || '-'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AccountDetails;

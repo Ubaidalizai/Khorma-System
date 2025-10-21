@@ -5,6 +5,8 @@ import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
 import Sales from "./pages/Sales";
 import Accounts from "./pages/Accounts";
+import AccountDetails from "./pages/AccountDetails";
+import PurchaseDetails from "./pages/PurchaseDetails";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
@@ -41,8 +43,10 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path='/inventory' element={<Inventory />} />
               <Route path='/purchases' element={<Purchases />} />
+              <Route path='/purchases/:id' element={<PurchaseDetails />} />
               <Route path='/sales' element={<Sales />} />
               <Route path='/accounts' element={<Accounts />} />
+              <Route path='/accounts/:id' element={<AccountDetails />} />
               <Route path='/reports' element={<Reports />} />
               <Route path='/admin' element={<AdminPanel />} />
             </Route>

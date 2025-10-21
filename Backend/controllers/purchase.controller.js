@@ -209,7 +209,21 @@ exports.getPurchaseById = asyncHandler(async (req, res, next) => {
   if (!purchase || purchase.isDeleted)
     throw new AppError('Purchase not found', 404);
 
-  res.status(200).json({ success: true, purchase });
+  // Fetch purchase items with populated product and unit
+  const items = await PurchaseItem.find({ 
+    purchase: purchase._id, 
+    isDeleted: false 
+  })
+    .populate('product', 'name')
+    .populate('unit', 'name conversion_to_base');
+
+  res.status(200).json({ 
+    success: true, 
+    purchase: {
+      ...purchase.toObject(),
+      items
+    }
+  });
 });
 
 // @desc Update purchase with items + accounts + stock + audit (transactional)

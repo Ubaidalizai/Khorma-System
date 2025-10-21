@@ -1,6 +1,5 @@
 import { ImPriceTag } from "react-icons/im";
 import SearchInput from "../components/SearchInput";
-import Select from "../components/Select";
 import Table from "../components/Table";
 import React, { useState } from "react";
 import TableBody from "../components/TableBody";
@@ -11,6 +10,11 @@ import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import { BiTransferAlt } from "react-icons/bi";
 import Confirmation from "../components/Confirmation";
+import { useStoreStocks } from "../services/useApi";
+import { getStockStatus } from "../utilies/stockStatus";
+import GloableModal from "../components/GloableModal";
+import TableHeader from "../components/TableHeader";
+// import { motion } from "framer-motion";
 import {
   useCreateStockTransfer,
   useDeleteStore,
@@ -31,6 +35,7 @@ const storeHeader = [
   { title: "قیمت خرید/واحد" },
   { title: "واحد" },
   { title: "تعداد" },
+  { title: "حالت" },
   { title: "عملیات" },
 ];
 
@@ -109,19 +114,7 @@ function Store({ stocks = [] }) {
         firstRow={
           <div className=" w-full flex  justify-between ">
             <div className=" w-[300px]">
-              <SearchInput placeholder="جستجو کنید" />
-            </div>
-            <div className=" w-[300px]">
-              <Select
-                id="sort"
-                name="sort"
-                options={[
-                  { value: "نام جنس" },
-                  { value: "واحد جنس" },
-                  { value: "همه" },
-                  { value: "واحد" },
-                ]}
-              />
+              <SearchInput placeholder="جستجو بر اساس نام محصول..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           </div>
         }
@@ -147,6 +140,11 @@ function Store({ stocks = [] }) {
               <TableColumn>{el?.unit?.name || el?.unit}</TableColumn>
               <TableColumn className="font-semibold">
                 {el?.quantity}
+              </TableColumn>
+              <TableColumn>
+                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStockStatus(el?.quantity, el?.product?.minLevel || 0).color}`}>
+                  {getStockStatus(el?.quantity, el?.product?.minLevel || 0).label}
+                </span>
               </TableColumn>
               <TableColumn>
                 <span
@@ -183,24 +181,14 @@ function Store({ stocks = [] }) {
                             >
                               نمایش
                             </Menus.Button>
-                            <Menus.Button
-                              icon={<BiTransferAlt size={24} />}
-                              onClick={() => {
-                                setSelectedData(el);
-                                setShowTransfer(true);
-                              }}
-                            >
-                              انتقال
-                            </Menus.Button>
-                            <Menus.Button
-                              icon={<HiTrash />}
-                              onClick={() => {
-                                setSelectedData(el);
-                                setShowDeleteConfirm(true);
-                              }}
-                            >
-                              حذف
-                            </Menus.Button>
+                            <Menus.Button icon={<HiPencil />} onClick={() => {
+                              setSelectedData(el);
+                              setShow(true);
+                            }}>ویرایش</Menus.Button>
+                            <Menus.Button icon={<HiTrash />} onClick={() => {
+                              setSelectedData(el);
+                              // You can wire up a confirmation modal similar to Product page
+                            }}>حذف</Menus.Button>
                           </Menus.List>
                         </Menus.Menu>
                       </Menus>

@@ -41,13 +41,13 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
       empStock.quantity_in_hand -= quantity;
       await empStock.save({ session });
     } else {
+      console.log(product, fromLocation);
       // deduct from regular stock (warehouse or store)
       const fromStock = await Stock.findOne({
         product,
         location: fromLocation,
         isDeleted: false,
       }).session(session);
-
       if (!fromStock || fromStock.quantity < quantity) {
         throw new AppError(`Insufficient stock in ${fromLocation}`, 400);
       }
@@ -96,12 +96,10 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
           tableName: 'StockTransfer',
           operation: 'INSERT',
           oldData: null,
-          newData: transfer.toObject(),
+          newData: transfer[0].toObject(),
           reason: notes || 'Stock transfer created',
           changedBy: req.user?.name || 'System',
           recordId: transfer[0]._id,
-          changedBy: req.user?.name || 'System',
-          changedAt: new Date(),
         },
       ],
       { session }
