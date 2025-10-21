@@ -18,7 +18,7 @@ import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import { useCreateProdcut, useProduct, useInventoryStats } from "../services/useApi";
+import { useCreateProdcut, useProduct, useInventoryStats, useStoreStocks } from "../services/useApi";
 import Product from "./Product";
 import Store from "./Store";
 import Warehouse from "./Warehouse";
@@ -27,8 +27,9 @@ import { BiLoaderAlt } from "react-icons/bi";
 
 const Inventory = () => {
   const { register, handleSubmit, formState, reset, control } = useForm();
-  const { data: productList, isLoading: isLoadingProducts } = useProduct();
+  const { isLoading: isLoadingProducts } = useProduct();
   const { data: inventoryStats, isLoading: isStatsLoading } = useInventoryStats();
+  const { data: storeStocksData, isLoading: isStoreLoading } = useStoreStocks();
   const { mutate: createProduct } = useCreateProdcut();
   function AddProductForm({ close }) {
     const onSubmit = async (data) => {
@@ -59,7 +60,7 @@ const Inventory = () => {
     store: { totalQuantity: 0, totalValue: 0, uniqueProducts: 0 },
     lowStockItems: 0
   };
-  if (isLoadingProducts || isStatsLoading)
+  if (isLoadingProducts || isStatsLoading || isStoreLoading)
     return (
       <div className="w-full h-full flex justify-center items-center">
         <BiLoaderAlt className=" text-2xl animate-spin" />
@@ -204,7 +205,7 @@ const Inventory = () => {
         )}
         {activeTab === "store" && (
           <div className="overflow-x-auto  -mx-6 px-6">
-            <Store />
+            <Store stocks={storeStocksData?.data || storeStocksData || []} />
           </div>
         )}
       </div>

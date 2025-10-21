@@ -10,22 +10,17 @@ import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import { BiTransferAlt } from "react-icons/bi";
 import Confirmation from "../components/Confirmation";
-import { useStoreStocks } from "../services/useApi";
 import { getStockStatus } from "../utilies/stockStatus";
 import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
-// import { motion } from "framer-motion";
 import {
   useCreateStockTransfer,
   useDeleteStore,
   useEmployees,
 } from "../services/useApi";
-import GloableModal from "../components/GloableModal";
-import TableHeader from "../components/TableHeader";
 import Button from "../components/Button";
 import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { motion } from "framer-motion";
 // Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
   { title: "نمبر بچ" },
@@ -46,6 +41,7 @@ function Store({ stocks = [] }) {
   const transferType = watch("transferType") || "store-warehouse";
   const quantity = watch("quantity");
   const employee = watch("employee");
+  const [search, setSearch] = useState("");
 
   // Example fromLocation/toLocation logic
 
