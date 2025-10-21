@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Bounce, toast } from "react-toastify";
 import {
   fetchProducts,
   fetchProductyById,
@@ -68,6 +69,8 @@ import {
   updateAccount,
   deleteAccount,
   createStockTransfer,
+  fetchStockTransfers,
+  deleteStockTransfer,
 } from "./apiUtiles";
 
 // Authentication hooks
@@ -108,7 +111,10 @@ export const useUserProfile = () => {
 export const useProduct = (opts = {}) => {
   const { search, includeDeleted } = opts;
   return useQuery({
-    queryKey: ["product", { search: search || "", includeDeleted: !!includeDeleted }],
+    queryKey: [
+      "product",
+      { search: search || "", includeDeleted: !!includeDeleted },
+    ],
     queryFn: () => fetchProducts({ search, includeDeleted }),
     keepPreviousData: true,
   });
@@ -535,15 +541,17 @@ export const useDeleteCompany = () => {
   });
 };
 
-
 export const useAccounts = (opts = {}) => {
   const { type, search, page = 1, limit = 10 } = opts;
   return useQuery({
-    queryKey:["accounts", { type: type || "", search: search || "", page, limit }],
+    queryKey: [
+      "accounts",
+      { type: type || "", search: search || "", page, limit },
+    ],
     queryFn: () => fetchAccounts({ type, search, page, limit }),
     keepPreviousData: true,
-  })
-}
+  });
+};
 
 export const useSystemAccounts = () => {
   return useQuery({
@@ -582,7 +590,7 @@ export const useDeleteAccount = () => {
 
 export const useAccountLedger = (accountId, params = {}) => {
   return useQuery({
-    queryKey: ['accountLedger', accountId, params],
+    queryKey: ["accountLedger", accountId, params],
     queryFn: () => fetchAccountLedger(accountId, params),
     enabled: !!accountId,
   });
@@ -704,6 +712,47 @@ export const useDashboardSummary = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
+export const useStockTransfers = () => {
+  return useQuery({
+    queryKey: ["stockTransfers"],
+    queryFn: fetchStockTransfers,
+  });
+};
+export const useStockTransferDelete = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteStockTransfer"],
+    mutationFn: deleteStockTransfer,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["stockTransfers"]);
+      toast.success(" شما با موفقیت موجودی را حذف کردید ", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
+    },
+    onError: () => {
+      toast.error(" عملیه غیر موفق بود", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
+    },
+  });
+};
+
 export const useCreateStockTransfer = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -711,10 +760,31 @@ export const useCreateStockTransfer = () => {
     mutationKey: ["newTransfer"],
     onSuccess: () => {
       queryClient.invalidateQueries(["inventory"]);
-      alert("Stock transferred successfully");
+      queryClient.invalidateQueries(["stockTransfers"]);
+      toast.success("انتقال موفقانه بود", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
     },
-    onError: (error) => {
-      alert("Error transferring stock: " + error.message);
+    onError: () => {
+      toast.error("نتقال موفقانه نبود", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
     },
   });
 };
