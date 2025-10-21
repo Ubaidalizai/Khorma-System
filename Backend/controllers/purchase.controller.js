@@ -22,7 +22,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
   const { error } = createPurchaseSchema.validate(req.body);
   if (error) throw new AppError(error.details[0].message, 400);
 
-  const { supplier, purchaseDate, items, paidAmount, paymentAccount } =
+  const { supplier, purchaseDate, items, paidAmount, paymentAccount, stockLocation = 'warehouse' } =
     req.body;
 
   // 1️⃣ Start transaction session
@@ -34,11 +34,15 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
     const supplierAccount = await Account.findOne({
       refId: supplier,
       type: 'supplier',
+      isDeleted: false
     });
     if (!supplierAccount) throw new AppError('Supplier account not found', 404);
 
     // 3️⃣ Validate payment account (Cash / Safe / Saraf)
-    const payAccount = await Account.findById(paymentAccount);
+    const payAccount = await Account.findOne({
+      _id: paymentAccount,
+      isDeleted: false
+    });
     if (!payAccount) throw new AppError('Invalid payment account', 400);
 
     // 4️⃣ Calculate totals
@@ -98,7 +102,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
 
       // ✅ Update or insert Stock
       await Stock.findOneAndUpdate(
-        { product: product._id, batchNumber: batchNum, location: 'store' },
+        { product: product._id, batchNumber: batchNum, location: stockLocation },
         {
           $inc: { quantity: item.quantity * unit.conversion_to_base },
           $set: {
@@ -106,6 +110,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
             purchasePricePerBaseUnit: item.unitPrice / unit.conversion_to_base,
             batchNumber: batchNum,
             unit: item.unit,
+            location: stockLocation,
           },
         },
         { upsert: true, new: true, session }
@@ -236,7 +241,7 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { supplier, purchaseDate, paidAmount, items, reason } = req.body;
+    const { supplier, purchaseDate, paidAmount, items, reason, stockLocation = 'warehouse' } = req.body;
 
     // 1️⃣ Fetch existing purchase and items
     const purchase = await Purchase.findById(req.params.id).session(session);
@@ -306,7 +311,7 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
           {
             product: product._id,
             batchNumber: newBatchNum,
-            location: 'store',
+            location: stockLocation,
           },
           {
             $inc: { quantity: item.quantity * unit.conversion_to_base },
@@ -316,6 +321,7 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
                 item.unitPrice / unit.conversion_to_base,
               batchNumber: newBatchNum,
               unit: item.unit,
+              location: stockLocation,
             },
           },
           { upsert: true, session }
@@ -543,7 +549,7 @@ exports.restorePurchase = asyncHandler(async (req, res, next) => {
         {
           product: item.product,
           batchNumber: batchNum,
-          location: 'store',
+          location: 'warehouse', // Default to warehouse for restore
         },
         {
           $inc: { quantity: item.quantity * unit.conversion_to_base },
@@ -552,6 +558,7 @@ exports.restorePurchase = asyncHandler(async (req, res, next) => {
             purchasePricePerBaseUnit: item.unitPrice / unit.conversion_to_base,
             batchNumber: batchNum,
             unit: item.unit,
+            location: 'warehouse', // Default to warehouse for restore
           },
         },
         { upsert: true, session }

@@ -261,7 +261,7 @@ export const usePurchases = (params = {}) => {
 export const usePurchase = (id) =>
   useQuery({
     queryKey: ["purchase", id],
-    queryFn: fetchPurchase,
+    queryFn: () => fetchPurchase(id),
   });
 
 export const useCreatePurchase = () => {
