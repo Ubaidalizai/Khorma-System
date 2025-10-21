@@ -143,7 +143,7 @@ export const API_ENDPOINTS = {
   // Purchases
   PURCHASES: {
     LIST: "/purchases",
-    DETAIL: (id) => `/purchase/${id}`,
+    DETAIL: (id) => `/purchases/${id}`,
     CREATE: "/purchases",
     UPDATE: (id) => `/purchases/${id}`,
     DELETE: (id) => `/purchases/${id}`,
@@ -184,6 +184,7 @@ export const API_ENDPOINTS = {
     CREATE: "/accounts",
     UPDATE: (id) => `/accounts/${id}`,
     DELETE: (id) => `/accounts/${id}`,
+    LEDGER: (id) => `/accounts/${id}/ledger`,
   },
 
   // Types

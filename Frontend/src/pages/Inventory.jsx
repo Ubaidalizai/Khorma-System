@@ -7,28 +7,18 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
   XCircleIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { toJalaali } from "jalaali-js";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import Button from "../components/Button";
-import Input from "../components/Input";
 import Modal from "../components/Modal";
-import NumberInput from "../components/NumberInput";
 import ProductForm from "../components/ProductForm";
-import Select from "../components/Select";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import TextArea from "../components/TextArea";
-import { useCreateProdcut, useInventory, useProduct } from "../services/useApi";
-import {
-  fetchProducts,
-  createProduct as createProductAPI,
-} from "../services/apiUtiles";
+import { useCreateProdcut, useProduct, useWarehouseStocks, useStoreStocks } from "../services/useApi";
 import Product from "./Product";
 import Store from "./Store";
 import Warehouse from "./Warehouse";
@@ -49,8 +39,9 @@ const getStatusColor = (status) => {
 
 const Inventory = () => {
   const { register, handleSubmit, formState, reset, control } = useForm();
-  const { data: totalProdcut } = useProduct();
-  const { data: productList, isLoadingProduct } = useProduct();
+  const { data: productList, isLoading: isLoadingProducts } = useProduct();
+  const { data: warehouseStocksData, isLoading: isWarehouseLoading } = useWarehouseStocks();
+  const { data: storeStocksData, isLoading: isStoreLoading } = useStoreStocks();
   const { mutate: createProduct } = useCreateProdcut();
   function AddProductForm({ close }) {
     const onSubmit = async (data) => {
@@ -68,26 +59,11 @@ const Inventory = () => {
       />
     );
   }
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
-  // Selected product and transfer state
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [transferQuantity, setTransferQuantity] = useState("");
-
-  // Inventory (stock) data
-  const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
 
   // Stock transfer history
-  const [transferHistory, setTransferHistory] = useState([]);
+  const [transferHistory] = useState([]);
 
-  // Calculate stock status
-  const calculateStockStatus = (product) => {
-    const totalStock = product.warehouseStock + product.storeStock;
-    if (totalStock === 0) return "موجود";
-    if (totalStock <= product.minStockLevel) return "کمبود موجودی";
-    return "In Stock";
-  };
 
   // Update product status on mount
   // setTransferHistory([
@@ -115,59 +91,27 @@ const Inventory = () => {
   //   return () => clearInterval(interval);
   // }, []);
 
-  // Get alerts
-  const getLowStockAlerts = () => {
-    return products?.data?.filter((p) => {
-      const total = p.warehouseStock + p.storeStock;
-      return total > 0 && total <= p.minStockLevel;
-    });
-  };
+  // (Removed local alerts; should come from backend when needed)
 
-  const getOutOfStockItems = () => {
-    return products?.data?.filter(
-      (p) => p?.warehouseStock === 0 && p?.storeStock === 0
-    );
-  };
 
-  // Filter products
-  const filteredProducts = products?.data?.filter((product) => {
-    // const matchesSearch =
-    //   product.name.includes(searchTerm.toLowerCase())
-    // product.sku.includes(searchTerm.toLowerCase()) ||
-    // product.category.includes(searchTerm.toLowerCase());
-
-    const matchesFilter =
-      filterType === "all" ||
-      product.status.toLowerCase().includes(filterType.toLowerCase());
-
-    let matchesTab = true;
-    if (activeTab === "warehouse") {
-      matchesTab = product.warehouseStock > 0;
-    } else if (activeTab === "store") {
-      matchesTab = product.storeStock > 0;
-    }
-
-    // return matchesSearch && matchesFilter && matchesTab;
-  });
-
-  // Split stocks by location to match Backend stock.model.js
-  const warehouseStocks = products?.data?.filter((s) => s?.location === "warehouse");
-  const storeStocks = products?.data?.filter((s) => s?.location === "store");
+  // Stocks from backend (filtered by location at the API level)
+  const warehouseStocks = warehouseStocksData?.data || warehouseStocksData || [];
+  const storeStocks = storeStocksData?.data || storeStocksData || [];
 
   // Calculate statistics
   const stats = {
-    totalProducts: totalProdcut?.length || 0,
+    totalProducts: productList?.length || 0,
     totalWarehouseStock:
-      products?.data?.reduce((sum, p) => sum + p.warehouseStock, 0) || 0,
+      productList?.reduce((sum, p) => sum + (p.warehouseStock || 0), 0) || 0,
     totalStoreStock:
-      products?.data?.reduce((sum, p) => sum + p.storeStock, 0) || 0,
+      productList?.reduce((sum, p) => sum + (p.storeStock || 0), 0) || 0,
     totalValue:
-      products?.data?.reduce(
-        (sum, p) => sum + (p.warehouseStock + p.storeStock) * p.unitPrice,
+      productList?.reduce(
+        (sum, p) => sum + ((p.warehouseStock || 0) + (p.storeStock || 0)) * (p.unitPrice || 0),
         0
       ) || 0,
   };
-  if (IsInventoryIsLoading)
+  if (isLoadingProducts)
     return (
       <div className="w-full h-full flex justify-center items-center">
         <BiLoaderAlt className=" text-2xl animate-spin" />
@@ -191,60 +135,11 @@ const Inventory = () => {
               </Button>
             </Modal.Toggle>
             <Modal.Window>
-              {/* AddProductForm will receive `close` injected by Modal.Window */}
               <AddProductForm />
             </Modal.Window>
           </Modal>
         </div>
-      </div>
-      {/* Stock Alerts Section */}
-      {(getLowStockAlerts()?.length > 0 ||
-        getOutOfStockItems()?.length > 0) && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
-            هشتدار موجودی
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {getLowStockAlerts().length > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-semibold text-yellow-800 mb-2 flex items-center gap-2">
-                  <ExclamationTriangleIcon className="h-5 w-5" />
-                  موجودی باقی مانده ({getLowStockAlerts().length})
-                </h4>
-                <ul className="space-y-2">
-                  {getLowStockAlerts().map((product) => (
-                    <li
-                      key={product.id}
-                      className="text-sm text-yellow-700 flex justify-between"
-                    >
-                      <span>{product.name}</span>
-                      <span className="font-semibold">
-                        {product.warehouseStock + product.storeStock} units
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {getOutOfStockItems().length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2">
-                  <XCircleIcon className="h-5 w-5" />
-                  موجودی تمام شده ({getOutOfStockItems().length})
-                </h4>
-                <ul className="space-y-2">
-                  {getOutOfStockItems().map((product) => (
-                    <li key={product.id} className="text-sm text-red-700">
-                      {product.name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      </div> 
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -344,19 +239,15 @@ const Inventory = () => {
           </nav>
         </div>
 
-        {activeTab === "all" && <Product properties={productList?.products} />} 
+        {activeTab === "all" && <Product properties={productList} />} 
         {activeTab === "warehouse" && (
           <div className="overflow-x-auto  -mx-6 px-6">
-            <Warehouse
-              getStatusColor={getStatusColor}
-              warehouses={warehouseStocks}
-              isLoading={IsInventoryIsLoading}
-            />
+            <Warehouse />
           </div>
         )}
         {activeTab === "store" && (
           <div className="overflow-x-auto  -mx-6 px-6">
-            <Store stocks={storeStocks} isLoading={IsInventoryIsLoading} />
+            <Store />
           </div>
         )}
       </div>

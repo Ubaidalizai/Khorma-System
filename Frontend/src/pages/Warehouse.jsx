@@ -63,20 +63,6 @@ function Warehouse({ warehouses, getStatusColor, isLoading }) {
             <div className=" flex-1  flex justify-start items-end">
               <SearchInput placeholder="جستجو کنید" />
             </div>
-            <div className=" flex justify-end flex-2">
-              <div className=" w-[50%]">
-                <Select
-                  defaultSelected="فلتر کنید"
-                  id=""
-                  options={[
-                    { value: "همه" },
-                    { value: "گدام" },
-                    { value: "جنس" },
-                    { value: "حالت" },
-                  ]}
-                ></Select>
-              </div>
-            </div>
           </div>
         }
       >

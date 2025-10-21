@@ -54,12 +54,20 @@ export const getUserProfile = async () => {
 };
 
 // Products
-export const fetchProducts = async () => {
+export const fetchProducts = async (params = {}) => {
   try {
-    const response = await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
-    // Handle both direct array response and paginated response with data property
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.includeDeleted !== undefined) query.set("includeDeleted", String(params.includeDeleted));
+    const url = query.toString()
+      ? `${API_ENDPOINTS.PRODUCTS.LIST}?${query.toString()}`
+      : API_ENDPOINTS.PRODUCTS.LIST;
+    const response = await apiRequest(url);
+    // Handle different response formats
     if (Array.isArray(response)) {
       return response;
+    } else if (response && Array.isArray(response.products)) {
+      return response.products;
     } else if (response && Array.isArray(response.data)) {
       return response.data;
     } else {
@@ -258,8 +266,16 @@ export const deleteType = async (id) => {
 };
 
 // Accounts
-export const fetchAccounts = async () => {
-  return await apiRequest(API_ENDPOINTS.ACCOUNTS.LIST);
+export const fetchAccounts = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.type) query.set("type", params.type);
+  if (params.search) query.set("search", params.search);
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  const url = query.toString()
+    ? `${API_ENDPOINTS.ACCOUNTS.LIST}?${query.toString()}`
+    : API_ENDPOINTS.ACCOUNTS.LIST;
+  return await apiRequest(url);
 };
 
 export const fetchAccount = async (id) => {
@@ -286,22 +302,37 @@ export const deleteAccount = async (id) => {
   });
 };
 
+export const fetchAccountLedger = async (accountId, params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.type) query.set("type", params.type);
+  
+  const url = query.toString()
+    ? `${API_ENDPOINTS.ACCOUNTS.LEDGER(accountId)}?${query.toString()}`
+    : API_ENDPOINTS.ACCOUNTS.LEDGER(accountId);
+  return await apiRequest(url);
+};
+
 // Purchases
-export const fetchPurchases = async () => {
+export const fetchPurchases = async (params = {}) => {
   try {
-    const response = await apiRequest(API_ENDPOINTS.PURCHASES.LIST);
-    // Handle both direct array response and paginated response with data property
-    if (Array.isArray(response)) {
-      return response;
-    } else if (response && Array.isArray(response.data)) {
-      return response.data;
-    } else {
-      console.warn("Unexpected purchases response format:", response);
-      return [];
-    }
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.supplier) query.set("supplier", params.supplier);
+    if (params.status) query.set("status", params.status);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    
+    const url = query.toString()
+      ? `${API_ENDPOINTS.PURCHASES.LIST}?${query.toString()}`
+      : API_ENDPOINTS.PURCHASES.LIST;
+    
+    const response = await apiRequest(url);
+    return response;
   } catch (error) {
     console.error("Error fetching purchases:", error);
-    return []; // Return empty array on error
+    throw error;
   }
 };
 
@@ -383,12 +414,22 @@ export const fetchStock = async () => {
   return await apiRequest(API_ENDPOINTS.STOCK.LIST);
 };
 
-export const fetchInventoryStock = async () => {
-  return await apiRequest(API_ENDPOINTS.STOCK.INVENTORY);
+export const fetchInventoryStock = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  const url = query.toString()
+    ? `${API_ENDPOINTS.STOCK.INVENTORY}?${query.toString()}`
+    : API_ENDPOINTS.STOCK.INVENTORY;
+  return await apiRequest(url);
 };
 
-export const fetchStoreStock = async () => {
-  return await apiRequest(API_ENDPOINTS.STOCK.STORE);
+export const fetchStoreStock = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  const url = query.toString()
+    ? `${API_ENDPOINTS.STOCK.STORE}?${query.toString()}`
+    : API_ENDPOINTS.STOCK.STORE;
+  return await apiRequest(url);
 };
 
 export const fetchStockItem = async (id) => {

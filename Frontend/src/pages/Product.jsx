@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import { CalendarDays, ClipboardList, Info, Package, User } from "lucide-react";
 import { useState } from "react";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
@@ -8,7 +8,6 @@ import EditProduct from "../components/EditProduct";
 import GloableModal from "../components/GloableModal";
 import Menus from "../components/Menu";
 import SearchInput from "../components/SearchInput";
-import Select from "../components/Select";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
@@ -17,16 +16,20 @@ import TableMenuModal from "../components/TableMenuModal";
 import TableRow from "../components/TableRow";
 import { useDeleteProdcut } from "../services/useApi";
 const headers = [
-  { title: "تاریخ" },
   { title: "اسم جنس" },
-  { title: "واحد اصلی" },
-  { title: "تعداد" },
-  { title: "توضیحات" },
+  { title: "واحد پایه" },
+  { title: "حداقل سطح" },
+  { title: "آخرین قیمت خرید" },
+  { title: "ردیابی بچ" },
   { title: "عملیات" },
 ];
 
-function Product({ properties: productList }) {
+import { useProduct } from "../services/useApi";
+
+function Product() {
   const { mutate: deleteProduct, isLoading: isDeleting } = useDeleteProdcut();
+  const [search, setSearch] = useState("");
+  const { data: productList } = useProduct({ search });
   const [isEditable, setIsEditable] = useState(false);
   const [showData, setShowData] = useState(false);
   const [show, setShow] = useState(false);
@@ -100,19 +103,7 @@ function Product({ properties: productList }) {
         firstRow={
           <div className=" w-full flex  justify-between ">
             <div className=" w-[300px]">
-              <SearchInput placeholder="جستجو کنید" />
-            </div>
-            <div className=" w-[300px]">
-              <Select
-                id="sort"
-                name="sort"
-                options={[
-                  { value: "نام جنس" },
-                  { value: "واحد جنس" },
-                  { value: "همه" },
-                  { value: "واحد" },
-                ]}
-              />
+              <SearchInput placeholder="جستجو بر اساس نام جنس..." value={search} onChange={(e) => setSearch(e?.target ? e.target.value : e)} />
             </div>
           </div>
         }
@@ -122,17 +113,22 @@ function Product({ properties: productList }) {
           {productList?.length > 0 ? (
             productList?.map((el) => (
             <TableRow key={el._id}>
-              <TableColumn>{new Date(el?.createdAt).toLocaleDateString('fa-IR')}</TableColumn>
               <TableColumn>{el?.name}</TableColumn>
               <TableColumn>{el?.baseUnit?.name || 'نامشخص'}</TableColumn>
-              
-              <TableColumn>{el?.minLevel || 0}</TableColumn>
+              <TableColumn>{el?.minLevel ?? 0}</TableColumn>
+              <TableColumn>{
+                typeof el?.latestPurchasePrice === 'number'
+                  ? `${el.latestPurchasePrice.toLocaleString('fa-IR')} `
+                  : 'نامشخص'
+              }</TableColumn>
               <TableColumn>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  el?.trackByBatch 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    el?.trackByBatch
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
                   {el?.trackByBatch ? 'فعال' : 'غیرفعال'}
                 </span>
               </TableColumn>

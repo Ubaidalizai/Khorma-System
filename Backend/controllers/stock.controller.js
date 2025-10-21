@@ -56,14 +56,28 @@ exports.createStock = asyncHandler(async (req, res) => {
   res.status(201).json({ status: 'success', data: stock });
 });
 
-// @desc    Get all stocks (with pagination + filter by location)
+// @desc    Get all stocks (with pagination, location & search by product name)
 // @route   GET /api/v1/stocks
 exports.getAllStocks = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, location } = req.query;
+  const { page = 1, limit = 10, location, search } = req.query;
 
   const query = { isDeleted: false };
-  if (location) query.location = location; // filter by Inventory/Pharmacy
+  if (location) query.location = location;
 
+  // Build search filter (case-insensitive) for product name
+  const searchFilter = search
+    ? { name: { $regex: search, $options: 'i' } }
+    : {};
+
+  // Step 1️⃣ — Find product IDs that match search (if search provided)
+  let productIds = [];
+  if (search) {
+    const matchingProducts = await Product.find(searchFilter).select('_id');
+    productIds = matchingProducts.map((p) => p._id);
+    query.product = { $in: productIds };
+  }
+
+  // Step 2️⃣ — Fetch paginated stocks
   const stocks = await Stock.find(query)
     .populate('product', 'name')
     .populate('unit', 'name')
@@ -81,6 +95,7 @@ exports.getAllStocks = asyncHandler(async (req, res) => {
     data: stocks,
   });
 });
+
 
 // @desc    Get single stock by ID
 // @route   GET /api/v1/stocks/:id

@@ -1,6 +1,5 @@
 import { ImPriceTag } from "react-icons/im";
 import SearchInput from "../components/SearchInput";
-import Select from "../components/Select";
 import Table from "../components/Table";
 import React, { useState } from "react";
 import TableBody from "../components/TableBody";
@@ -10,10 +9,10 @@ import TableMenuModal from "../components/TableMenuModal";
 import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import Confirmation from "../components/Confirmation";
-import { useDeleteStore, useUpdateStore } from "../services/useApi";
+import { useStoreStocks } from "../services/useApi";
 import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import Button from "../components/Button";
 import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
 
@@ -29,31 +28,24 @@ const storeHeader = [
   { title: "عملیات" },
 ];
 
-function Store({ stocks = [], isLoading = false }) {
-  const { mutate: deleteStore } = useDeleteStore();
-  const { mutate: updateStore } = useUpdateStore();
+function Store() {
   const [selectedData, setSelectedData] = useState(null);
-  const [editForm, setEditForm] = useState(false);
   const [show, setShow] = useState(false);
+  const [search, setSearch] = useState("");
+  const { data, isLoading } = useStoreStocks({ search });
+  const stocks = data?.data || data || [];
+  if (isLoading) {
+    return (
+      <div className=" w-full h-full flex justify-center items-center">در حال بارگذاری...</div>
+    );
+  }
   return (
     <section>
       <Table
         firstRow={
           <div className=" w-full flex  justify-between ">
             <div className=" w-[300px]">
-              <SearchInput placeholder="جستجو کنید" />
-            </div>
-            <div className=" w-[300px]">
-              <Select
-                id="sort"
-                name="sort"
-                options={[
-                  { value: "نام جنس" },
-                  { value: "واحد جنس" },
-                  { value: "همه" },
-                  { value: "واحد" },
-                ]}
-              />
+              <SearchInput placeholder="جستجو بر اساس نام محصول..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           </div>
         }
@@ -104,7 +96,7 @@ function Store({ stocks = [], isLoading = false }) {
                             </Menus.Button>
                             <Menus.Button icon={<HiPencil />} onClick={() => {
                               setSelectedData(el);
-                              setEditForm(true);
+                              setShow(true);
                             }}>ویرایش</Menus.Button>
                             <Menus.Button icon={<HiTrash />} onClick={() => {
                               setSelectedData(el);

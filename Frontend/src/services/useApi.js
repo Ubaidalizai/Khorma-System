@@ -34,6 +34,9 @@ import {
   createSale,
   updateSale,
   deleteSale,
+  fetchStock,
+  fetchInventoryStock,
+  fetchStoreStock,
   fetchUnits,
   fetchUnit,
   createUnit,
@@ -57,8 +60,11 @@ import {
   logoutUser,
   refreshUserToken,
   getUserProfile,
-  fetchAccount,
   fetchAccounts,
+  fetchAccountLedger,
+  createAccount,
+  updateAccount,
+  deleteAccount,
 } from "./apiUtiles";
 
 // Authentication hooks
@@ -96,9 +102,18 @@ export const useUserProfile = () => {
 };
 
 // ✅ Get all inventory items
-export const useProduct = () => {
+export const useProduct = (opts = {}) => {
+  const { search, includeDeleted } = opts;
   return useQuery({
-    queryKey: ["product"],
+    queryKey: ["product", { search: search || "", includeDeleted: !!includeDeleted }],
+    queryFn: () => fetchProducts({ search, includeDeleted }),
+    keepPreviousData: true,
+  });
+};
+
+export const useProducts = () => {
+  return useQuery({
+    queryKey: ["allProducts"],
     queryFn: fetchProducts,
   });
 };
@@ -233,10 +248,10 @@ export const useDeleteStore = () => {
 
 // Purchases
 
-export const usePurchases = () => {
+export const usePurchases = (params = {}) => {
   return useQuery({
-    queryKey: ["allPurchases"],
-    queryFn: fetchPurchases,
+    queryKey: ["allPurchases", params],
+    queryFn: () => fetchPurchases(params),
   });
 };
 
@@ -270,6 +285,32 @@ export const useDeletePurchase = () => {
     mutationKey: ["purchaseDelete"],
     mutationFn: deletePurchase,
     onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+  });
+};
+
+// Stock (backend-powered lists)
+export const useStocks = () => {
+  return useQuery({
+    queryKey: ["stocks"],
+    queryFn: fetchStock,
+  });
+};
+
+export const useWarehouseStocks = (opts = {}) => {
+  const { search } = opts;
+  return useQuery({
+    queryKey: ["stocks", "warehouse", { search: search || "" }],
+    queryFn: () => fetchInventoryStock({ search }),
+    keepPreviousData: true,
+  });
+};
+
+export const useStoreStocks = (opts = {}) => {
+  const { search } = opts;
+  return useQuery({
+    queryKey: ["stocks", "store", { search: search || "" }],
+    queryFn: () => fetchStoreStock({ search }),
+    keepPreviousData: true,
   });
 };
 
@@ -484,12 +525,49 @@ export const useDeleteCompany = () => {
 };
 
 
-export const useAccounts = () => {
+export const useAccounts = (opts = {}) => {
+  const { type, search, page = 1, limit = 10 } = opts;
   return useQuery({
-    queryKey:["accounts"],
-    queryFn: fetchAccounts,
+    queryKey:["accounts", { type: type || "", search: search || "", page, limit }],
+    queryFn: () => fetchAccounts({ type, search, page, limit }),
+    keepPreviousData: true,
   })
 }
+
+export const useCreateAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createAccount,
+    mutationKey: ["newAccount"],
+    onSuccess: () => queryClient.invalidateQueries(["accounts"]),
+  });
+};
+
+export const useUpdateAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateAccount"],
+    mutationFn: ({ id, accountData }) => updateAccount(id, accountData),
+    onSuccess: () => queryClient.invalidateQueries(["accounts"]),
+  });
+};
+
+export const useDeleteAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["deleteAccount"],
+    mutationFn: deleteAccount,
+    onSuccess: () => queryClient.invalidateQueries(["accounts"]),
+  });
+};
+
+export const useAccountLedger = (accountId, params = {}) => {
+  return useQuery({
+    queryKey: ['accountLedger', accountId, params],
+    queryFn: () => fetchAccountLedger(accountId, params),
+    enabled: !!accountId,
+  });
+};
 // USE THE employee
 
 export const useEmployees = () => {
