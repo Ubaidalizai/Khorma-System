@@ -9,14 +9,19 @@ import TableColumn from "../components/TableColumn";
 import TableMenuModal from "../components/TableMenuModal";
 import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
+import { BiTransferAlt } from "react-icons/bi";
 import Confirmation from "../components/Confirmation";
-import { useDeleteStore, useUpdateStore } from "../services/useApi";
+import {
+  useCreateStockTransfer,
+  useDeleteStore,
+  useEmployees,
+} from "../services/useApi";
 import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
-import { motion } from "framer-motion";
 import Button from "../components/Button";
 import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
-
+import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
 // Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
   { title: "نمبر بچ" },
@@ -29,12 +34,75 @@ const storeHeader = [
   { title: "عملیات" },
 ];
 
-function Store({ stocks = [], isLoading = false }) {
+function Store({ stocks = [] }) {
+  const { data: employees } = useEmployees();
+  const { register, handleSubmit, watch } = useForm();
+  const { mutate: createStockTransfer } = useCreateStockTransfer();
+  const transferType = watch("transferType") || "store-warehouse";
+  const quantity = watch("quantity");
+  const employee = watch("employee");
+
+  // Example fromLocation/toLocation logic
+
   const { mutate: deleteStore } = useDeleteStore();
-  const { mutate: updateStore } = useUpdateStore();
   const [selectedData, setSelectedData] = useState(null);
-  const [editForm, setEditForm] = useState(false);
   const [show, setShow] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [showTransferConf, setShwoTransferConf] = useState(false);
+
+  let fromLocation = selectedData?.location;
+  let toLocation =
+    transferType === "store-warehouse"
+      ? fromLocation === "store"
+        ? "warehouse"
+        : "store"
+      : transferType === "store-employee"
+      ? "employee"
+      : transferType === "employee-store"
+      ? "store"
+      : transferType === "warehouse-employee"
+      ? "employee"
+      : transferType === "employee-warehouse"
+      ? "warehouse"
+      : "unknown";
+
+  const needsEmployee = [
+    "store-employee",
+    "employee-store",
+    "warehouse-employee",
+    "employee-warehouse",
+  ].includes(transferType);
+
+  function onSubmit(data) {
+    if (!data.quantity || data.quantity <= 0) return;
+    setShwoTransferConf(true);
+  }
+
+  function confirmTransfer() {
+    const stockTransfer = {
+      product: selectedData.product?._id || selectedData.product,
+      fromLocation: fromLocation,
+      toLocation: toLocation,
+      employee: needsEmployee ? employee : undefined,
+      quantity: Number(quantity),
+      transferDate: new Date(),
+      transferredBy: "currentUserId", // replace if you have user context
+    };
+    createStockTransfer(stockTransfer, {
+      onSuccess: () => {
+        setShwoTransferConf(false);
+        setShowTransfer(false);
+        alert("Stock transferred successfully");
+      },
+      onError: (error) => {
+        alert("Error transferring stock: " + error.message);
+      },
+    });
+    // console.log(stockTransfer);
+    setShwoTransferConf(false);
+  }
+
   return (
     <section>
       <Table
@@ -63,12 +131,23 @@ function Store({ stocks = [], isLoading = false }) {
           {stocks?.map((el) => (
             <TableRow key={el?._id}>
               <TableColumn>{el?.batchNumber || "DEFAULT"}</TableColumn>
-              <TableColumn>{el?.location === 'store' ? 'فروشگاه' : el?.location}</TableColumn>
+              <TableColumn>
+                {el?.location === "store" ? "فروشگاه" : el?.location}
+              </TableColumn>
               <TableColumn>{el?.product?.name || el?.product}</TableColumn>
-              <TableColumn>{el?.expiryDate ? new Date(el.expiryDate).toLocaleDateString('fa-IR') : '—'}</TableColumn>
-              <TableColumn>{el?.purchasePricePerBaseUnit?.toLocaleString?.() || el?.purchasePricePerBaseUnit}</TableColumn>
+              <TableColumn>
+                {el?.expiryDate
+                  ? new Date(el.expiryDate).toLocaleDateString("fa-IR")
+                  : "—"}
+              </TableColumn>
+              <TableColumn>
+                {el?.purchasePricePerBaseUnit?.toLocaleString?.() ||
+                  el?.purchasePricePerBaseUnit}
+              </TableColumn>
               <TableColumn>{el?.unit?.name || el?.unit}</TableColumn>
-              <TableColumn className="font-semibold">{el?.quantity}</TableColumn>
+              <TableColumn className="font-semibold">
+                {el?.quantity}
+              </TableColumn>
               <TableColumn>
                 <span
                   className={`${
@@ -88,7 +167,9 @@ function Store({ stocks = [], isLoading = false }) {
                             parent={
                               "stores" +
                               el?._id +
-                              new Date(el?.expiryDate || Date.now()).getMilliseconds()
+                              new Date(
+                                el?.expiryDate || Date.now()
+                              ).getMilliseconds()
                             }
                             id={el?._id}
                             className="bg-white rounded-lg shadow-xl"
@@ -102,14 +183,24 @@ function Store({ stocks = [], isLoading = false }) {
                             >
                               نمایش
                             </Menus.Button>
-                            <Menus.Button icon={<HiPencil />} onClick={() => {
-                              setSelectedData(el);
-                              setEditForm(true);
-                            }}>ویرایش</Menus.Button>
-                            <Menus.Button icon={<HiTrash />} onClick={() => {
-                              setSelectedData(el);
-                              // You can wire up a confirmation modal similar to Product page
-                            }}>حذف</Menus.Button>
+                            <Menus.Button
+                              icon={<BiTransferAlt size={24} />}
+                              onClick={() => {
+                                setSelectedData(el);
+                                setShowTransfer(true);
+                              }}
+                            >
+                              انتقال
+                            </Menus.Button>
+                            <Menus.Button
+                              icon={<HiTrash />}
+                              onClick={() => {
+                                setSelectedData(el);
+                                setShowDeleteConfirm(true);
+                              }}
+                            >
+                              حذف
+                            </Menus.Button>
                           </Menus.List>
                         </Menus.Menu>
                       </Menus>
@@ -131,9 +222,13 @@ function Store({ stocks = [], isLoading = false }) {
             className="w-[500px] mx-auto bg-white rounded-sm shadow-sm overflow-hidden"
           >
             <div className=" p-6 text-slate-800 flex  items-center  gap-3 ">
-              <p className="text-2xl  font-black">{selectedData?._id?.slice(-6)}#</p>
+              <p className="text-2xl  font-black">
+                {selectedData?._id?.slice(-6)}#
+              </p>
               <h2 className="text-2xl font-bold text-palm-500">
-                {selectedData?.location === 'store' ? 'فروشگاه' : selectedData?.location}
+                {selectedData?.location === "store"
+                  ? "فروشگاه"
+                  : selectedData?.location}
               </h2>
             </div>
 
@@ -179,7 +274,11 @@ function Store({ stocks = [], isLoading = false }) {
                     <span className="ext-lg text-palm-500">تاریخ انقضا</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedData?.expiryDate ? new Date(selectedData.expiryDate).toLocaleDateString('fa-IR') : '—'}
+                    {selectedData?.expiryDate
+                      ? new Date(selectedData.expiryDate).toLocaleDateString(
+                          "fa-IR"
+                        )
+                      : "—"}
                   </p>
                 </div>
               </div>
@@ -193,7 +292,7 @@ function Store({ stocks = [], isLoading = false }) {
                   <span className="ext-[16px] text-palm-500">نمبر ردیابی</span>
                 </h3>
                 <p className="text-gray-800 leading-relaxed text-right">
-                  {selectedData?.batchNumber || 'DEFAULT'}
+                  {selectedData?.batchNumber || "DEFAULT"}
                 </p>
               </div>
             </div>
@@ -204,6 +303,136 @@ function Store({ stocks = [], isLoading = false }) {
             </div>
           </motion.div>
         )}
+      </GloableModal>
+      <GloableModal open={showDeleteConfirm} setOpen={setShowDeleteConfirm}>
+        <Confirmation
+          type="delete"
+          handleClick={() => {
+            deleteStore(selectedData._id);
+            setShowDeleteConfirm(false);
+          }}
+          handleCancel={() => setShowDeleteConfirm(false)}
+          close={() => setShowDeleteConfirm(false)}
+          message="آیا مطمئن هستید که این آیتم را حذف کنید؟"
+        />
+      </GloableModal>
+      <GloableModal open={showTransfer} setOpen={setShowTransfer}>
+        <form
+          noValidate
+          className="bg-white rounded-lg shadow-sm w-[600px]"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-900">انتقال موجودی</h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div>
+              <span>محصول: </span>
+              <span className="font-bold">
+                {selectedData?.product?.name || selectedData?.product}
+              </span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  نوع انتقال
+                </span>
+                <select
+                  className="w-full border rounded-md px-3 py-2"
+                  {...register("transferType")}
+                >
+                  <option value="store-warehouse">فروشگاه ↔ گدام</option>
+                  <option value="store-employee">فروشگاه → کارمند</option>
+                  <option value="employee-store">کارمند → فروشگاه</option>
+                  <option value="warehouse-employee">گدام → کارمند</option>
+                  <option value="employee-warehouse">کارمند → گدام</option>
+                </select>
+              </label>
+              {needsEmployee && (
+                <label className="flex-1">
+                  <span className="block text-sm font-medium text-gray-700 mb-2">
+                    کارمند
+                  </span>
+                  <select
+                    className="w-full border rounded-md px-3 py-2"
+                    {...register("employee")}
+                  >
+                    <option value="">کارمند را انتخاب کنید</option>
+                    {employees?.data?.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  از:{" "}
+                </span>
+                <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">
+                  {fromLocation === "warehouse"
+                    ? "گدام"
+                    : fromLocation === "store"
+                    ? "فروشگاه"
+                    : "کارمند"}
+                </span>
+              </label>
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  به:{" "}
+                </span>
+                <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">
+                  {toLocation === "warehouse"
+                    ? "گدام"
+                    : toLocation === "store"
+                    ? "فروشگاه"
+                    : "کارمند"}
+                </span>
+              </label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                تعداد (واحد پایه)
+              </label>
+              <input
+                className="w-full border rounded-md px-3 py-2"
+                type="number"
+                min="1"
+                {...register("quantity", { required: true, min: 1 })}
+              />
+            </div>
+          </div>
+          <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+            <Button
+              onClick={() => setShowTransfer(false)}
+              type="button"
+              className="bg-gray-500 text-white px-4 py-2 rounded-md"
+            >
+              بستن
+            </Button>
+            <Button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded-md"
+              disabled={
+                !quantity || quantity <= 0 || (needsEmployee && !employee)
+              }
+            >
+              انتقال موجودی
+            </Button>
+          </div>
+        </form>
+      </GloableModal>
+      <GloableModal open={showTransferConf} setOpen={setShowTransfer}>
+        <Confirmation
+          type="transfer"
+          handleClick={confirmTransfer}
+          handleCancel={() => setShwoTransferConf(false)}
+          close={() => setShwoTransferConf(false)}
+          message="آیا مطمئن هستید که این انتقال را انجام دهید؟"
+        />
       </GloableModal>
     </section>
   );

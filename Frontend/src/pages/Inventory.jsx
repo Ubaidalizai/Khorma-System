@@ -77,7 +77,7 @@ const Inventory = () => {
 
   // Inventory (stock) data
   const { data: products, isLoading: IsInventoryIsLoading } = useInventory();
-
+  console.log(products);
   // Stock transfer history
   const [transferHistory, setTransferHistory] = useState([]);
 
@@ -151,7 +151,9 @@ const Inventory = () => {
   });
 
   // Split stocks by location to match Backend stock.model.js
-  const warehouseStocks = products?.data?.filter((s) => s?.location === "warehouse");
+  const warehouseStocks = products?.data?.filter(
+    (s) => s?.location === "warehouse"
+  );
   const storeStocks = products?.data?.filter((s) => s?.location === "store");
 
   // Calculate statistics
@@ -343,8 +345,7 @@ const Inventory = () => {
             </button>
           </nav>
         </div>
-
-        {activeTab === "all" && <Product properties={productList?.products} />} 
+        {activeTab === "all" && <Product properties={productList?.products} />}
         {activeTab === "warehouse" && (
           <div className="overflow-x-auto  -mx-6 px-6">
             <Warehouse
