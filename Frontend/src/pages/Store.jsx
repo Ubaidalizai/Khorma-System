@@ -13,6 +13,7 @@ import Confirmation from "../components/Confirmation";
 import { getStockStatus } from "../utilies/stockStatus";
 import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
+import { motion } from "framer-motion";
 import {
   useCreateStockTransfer,
   useDeleteStore,
@@ -76,6 +77,7 @@ function Store({ stocks = [] }) {
   ].includes(transferType);
 
   function onSubmit(data) {
+    console.log(data);
     if (!data.quantity || data.quantity <= 0) return;
     setShwoTransferConf(true);
   }
@@ -90,16 +92,7 @@ function Store({ stocks = [] }) {
       transferDate: new Date(),
       transferredBy: "currentUserId", // replace if you have user context
     };
-    createStockTransfer(stockTransfer, {
-      onSuccess: () => {
-        setShwoTransferConf(false);
-        setShowTransfer(false);
-        alert("Stock transferred successfully");
-      },
-      onError: (error) => {
-        alert("Error transferring stock: " + error.message);
-      },
-    });
+    createStockTransfer(stockTransfer);
     // console.log(stockTransfer);
     setShwoTransferConf(false);
   }
@@ -110,7 +103,11 @@ function Store({ stocks = [] }) {
         firstRow={
           <div className=" w-full flex  justify-between ">
             <div className=" w-[300px]">
-              <SearchInput placeholder="جستجو بر اساس نام محصول..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <SearchInput
+                placeholder="جستجو بر اساس نام محصول..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
         }
@@ -138,8 +135,16 @@ function Store({ stocks = [] }) {
                 {el?.quantity}
               </TableColumn>
               <TableColumn>
-                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStockStatus(el?.quantity, el?.product?.minLevel || 0).color}`}>
-                  {getStockStatus(el?.quantity, el?.product?.minLevel || 0).label}
+                <span
+                  className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    getStockStatus(el?.quantity, el?.product?.minLevel || 0)
+                      .color
+                  }`}
+                >
+                  {
+                    getStockStatus(el?.quantity, el?.product?.minLevel || 0)
+                      .label
+                  }
                 </span>
               </TableColumn>
               <TableColumn>
@@ -177,14 +182,24 @@ function Store({ stocks = [] }) {
                             >
                               نمایش
                             </Menus.Button>
-                            <Menus.Button icon={<HiPencil />} onClick={() => {
-                              setSelectedData(el);
-                              setShow(true);
-                            }}>ویرایش</Menus.Button>
-                            <Menus.Button icon={<HiTrash />} onClick={() => {
-                              setSelectedData(el);
-                              // You can wire up a confirmation modal similar to Product page
-                            }}>حذف</Menus.Button>
+                            <Menus.Button
+                              icon={<BiTransferAlt size={24} />}
+                              onClick={() => {
+                                setSelectedData(el);
+                                setShowTransfer(true);
+                              }}
+                            >
+                              انتقال
+                            </Menus.Button>
+                            <Menus.Button
+                              icon={<HiTrash />}
+                              onClick={() => {
+                                setSelectedData(el);
+                                setShowDeleteConfirm(true);
+                              }}
+                            >
+                              حذف
+                            </Menus.Button>
                           </Menus.List>
                         </Menus.Menu>
                       </Menus>

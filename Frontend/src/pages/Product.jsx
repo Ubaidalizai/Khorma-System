@@ -15,6 +15,7 @@ import TableHeader from "../components/TableHeader";
 import TableMenuModal from "../components/TableMenuModal";
 import TableRow from "../components/TableRow";
 import { useDeleteProdcut } from "../services/useApi";
+import { motion } from "framer-motion";
 const headers = [
   { title: "اسم جنس" },
   { title: "واحد پایه" },
@@ -29,22 +30,14 @@ import { useProduct } from "../services/useApi";
 function Product() {
   const { mutate: deleteProduct, isLoading: isDeleting } = useDeleteProdcut();
   const [search, setSearch] = useState("");
-  const { data: productList } = useProduct({ search });
+  const { data: productList, isLoading } = useProduct({ search });
+
   const [isEditable, setIsEditable] = useState(false);
   const [showData, setShowData] = useState(false);
   const [show, setShow] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
- 
-  // Show loading state if data is being fetched
-  if (!productList) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-500">در حال بارگذاری...</div>
-      </div>
-    );
-  }
 
   // Handle delete product
   const handleDeleteProduct = (product) => {
@@ -57,13 +50,13 @@ function Product() {
     if (productToDelete) {
       deleteProduct(productToDelete._id, {
         onSuccess: () => {
-          console.log('محصول با موفقیت حذف شد');
+          console.log("محصول با موفقیت حذف شد");
           setShowDeleteConfirm(false);
           setProductToDelete(null);
         },
         onError: (error) => {
-          console.error('خطا در حذف محصول:', error);
-        }
+          console.error("خطا در حذف محصول:", error);
+        },
       });
     }
   };
@@ -96,98 +89,113 @@ function Product() {
     setShowData(false);
     setSelectedPro(null);
   };
-
+  // Show loading state if data is being fetched
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-500">در حال بارگذاری...</div>
+      </div>
+    );
+  }
   return (
     <section className="w-full">
       <Table
         firstRow={
           <div className=" w-full flex  justify-between ">
             <div className=" w-[300px]">
-              <SearchInput placeholder="جستجو بر اساس نام جنس..." value={search} onChange={(e) => setSearch(e?.target ? e.target.value : e)} />
+              <SearchInput
+                placeholder="جستجو بر اساس نام جنس..."
+                value={search}
+                onChange={(e) => setSearch(e?.target ? e.target.value : e)}
+              />
             </div>
           </div>
         }
       >
         <TableHeader headerData={headers} />
         <TableBody>
-          {productList?.length > 0 ? (
-            productList?.map((el) => (
-            <TableRow key={el._id}>
-              <TableColumn>{el?.name}</TableColumn>
-              <TableColumn>{el?.baseUnit?.name || 'نامشخص'}</TableColumn>
-              <TableColumn>{el?.minLevel ?? 0}</TableColumn>
-              <TableColumn>{
-                typeof el?.latestPurchasePrice === 'number'
-                  ? `${el.latestPurchasePrice.toLocaleString('fa-IR')} `
-                  : 'نامشخص'
-              }</TableColumn>
-              <TableColumn>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    el?.trackByBatch
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {el?.trackByBatch ? 'فعال' : 'غیرفعال'}
-                </span>
-              </TableColumn>
-              <TableColumn>
-                <span
-                  className={`${
-                    "itemavs" + el?._id + new Date(el?.createdAt).getMilliseconds()
-                  } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
-                >
-                  <div
-                    className={`  w-full h-full flex justify-center items-center`}
+          {productList?.data?.length > 0 ? (
+            productList?.data?.map((el) => (
+              <TableRow key={el._id}>
+                <TableColumn>{el?.name}</TableColumn>
+                <TableColumn>{el?.baseUnit?.name || "نامشخص"}</TableColumn>
+                <TableColumn>{el?.minLevel ?? 0}</TableColumn>
+                <TableColumn>
+                  {typeof el?.latestPurchasePrice === "number"
+                    ? `${el.latestPurchasePrice.toLocaleString("fa-IR")} `
+                    : "نامشخص"}
+                </TableColumn>
+                <TableColumn>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      el?.trackByBatch
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
                   >
-                    <TableMenuModal>
-                      <Menus>
-                        <Menus.Menu>
-                          <Menus.Toggle id={el?._id} />
-                          <Menus.List
-                            parent={
-                              "itemavs" +
-                              el?._id +
-                              new Date(el?.createdAt).getMilliseconds()
-                            }
-                            id={el?._id}
-                            className="bg-white rounded-lg shadow-xl"
-                          >
-                            <Menus.Button
-                              icon={<HiSquare2Stack />}
-                              onClick={() => handleViewProduct(el)}
+                    {el?.trackByBatch ? "فعال" : "غیرفعال"}
+                  </span>
+                </TableColumn>
+                <TableColumn>
+                  <span
+                    className={`${
+                      "itemavs" +
+                      el?._id +
+                      new Date(el?.createdAt).getMilliseconds()
+                    } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
+                  >
+                    <div
+                      className={`  w-full h-full flex justify-center items-center`}
+                    >
+                      <TableMenuModal>
+                        <Menus>
+                          <Menus.Menu>
+                            <Menus.Toggle id={el?._id} />
+                            <Menus.List
+                              parent={
+                                "itemavs" +
+                                el?._id +
+                                new Date(el?.createdAt).getMilliseconds()
+                              }
+                              id={el?._id}
+                              className="bg-white rounded-lg shadow-xl"
                             >
-                              نمایش
-                            </Menus.Button>
+                              <Menus.Button
+                                icon={<HiSquare2Stack />}
+                                onClick={() => handleViewProduct(el)}
+                              >
+                                نمایش
+                              </Menus.Button>
 
-                            <Menus.Button 
-                              icon={<HiPencil />}
-                              onClick={() => handleEditProduct(el)}
-                            >
-                              ویرایش
-                            </Menus.Button>
+                              <Menus.Button
+                                icon={<HiPencil />}
+                                onClick={() => handleEditProduct(el)}
+                              >
+                                ویرایش
+                              </Menus.Button>
 
-                            <Menus.Button 
-                              icon={<HiTrash />}
-                              onClick={() => handleDeleteProduct(el)}
-                              disabled={isDeleting}
-                            >
-                              {isDeleting ? 'در حال حذف...' : 'حذف'}
-                            </Menus.Button>
-                          </Menus.List>
-                        </Menus.Menu>
-
-                      </Menus>
-                    </TableMenuModal>
-                  </div>
-                </span>
-              </TableColumn>
-            </TableRow>
+                              <Menus.Button
+                                icon={<HiTrash />}
+                                onClick={() => handleDeleteProduct(el)}
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? "در حال حذف..." : "حذف"}
+                              </Menus.Button>
+                            </Menus.List>
+                          </Menus.Menu>
+                        </Menus>
+                      </TableMenuModal>
+                    </div>
+                  </span>
+                </TableColumn>
+              </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableColumn colSpan={7} className="text-center py-8 text-gray-500">
+              <TableColumn
+                colSpan={7}
+                className="text-center py-8 text-gray-500"
+              >
                 هیچ محصولی یافت نشد
               </TableColumn>
             </TableRow>
@@ -339,7 +347,9 @@ function Product() {
             className="w-[500px] mx-auto bg-white rounded-sm shadow-sm overflow-hidden"
           >
             <div className=" p-6 text-slate-800 flex  items-center  gap-3 ">
-              <p className="text-2xl  font-black">{selectedPro._id?.slice(-6)}#</p>
+              <p className="text-2xl  font-black">
+                {selectedPro._id?.slice(-6)}#
+              </p>
               <h2 className="text-2xl font-bold text-palm-500">
                 {selectedPro.name}
               </h2>
@@ -354,7 +364,7 @@ function Product() {
                     <span className="text-lg text-palm-500">واحد پایه</span>
                   </h3>
                   <p className="text-lg font-semibold text-palm-400">
-                    {selectedPro.baseUnit?.name || 'نامشخص'}
+                    {selectedPro.baseUnit?.name || "نامشخص"}
                   </p>
                 </div>
 
@@ -373,13 +383,14 @@ function Product() {
                 <div className="flex flex-col  items-start gap-x-2">
                   <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
                     <User className="text-2xl text-palm-500" />
-                    <span className="text-lg text-palm-500">آخرین قیمت خرید</span>
+                    <span className="text-lg text-palm-500">
+                      آخرین قیمت خرید
+                    </span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.latestPurchasePrice 
-                      ? `${selectedPro.latestPurchasePrice.toLocaleString()} افغانی` 
-                      : 'نامشخص'
-                    }
+                    {selectedPro.latestPurchasePrice
+                      ? `${selectedPro.latestPurchasePrice.toLocaleString()} افغانی`
+                      : "نامشخص"}
                   </p>
                 </div>
 
@@ -390,7 +401,7 @@ function Product() {
                     <span className="text-lg text-palm-500">ردیابی بچ</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro.trackByBatch ? 'فعال' : 'غیرفعال'}
+                    {selectedPro.trackByBatch ? "فعال" : "غیرفعال"}
                   </p>
                 </div>
 
@@ -401,7 +412,9 @@ function Product() {
                     <span className="text-lg text-palm-500">تاریخ ایجاد</span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {new Date(selectedPro.createdAt).toLocaleDateString('fa-IR')}
+                    {new Date(selectedPro.createdAt).toLocaleDateString(
+                      "fa-IR"
+                    )}
                   </p>
                 </div>
 
@@ -409,10 +422,14 @@ function Product() {
                 <div className="flex flex-col  items-start gap-x-2">
                   <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center justify-end gap-1">
                     <CalendarDays className="text-2xl text-palm-500" />
-                    <span className="text-lg text-palm-500">آخرین بروزرسانی</span>
+                    <span className="text-lg text-palm-500">
+                      آخرین بروزرسانی
+                    </span>
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {new Date(selectedPro.updatedAt).toLocaleDateString('fa-IR')}
+                    {new Date(selectedPro.updatedAt).toLocaleDateString(
+                      "fa-IR"
+                    )}
                   </p>
                 </div>
               </div>

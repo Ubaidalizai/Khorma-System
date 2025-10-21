@@ -16,10 +16,11 @@ import GloableModal from "../components/GloableModal";
 import Button from "../components/Button";
 import WarehouseForm from "../components/WarehouseForm";
 import { useForm } from "react-hook-form";
-import { useUpdateStore } from "../services/useApi";
+import { useCreateStockTransfer, useUpdateStore } from "../services/useApi";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useEmployees, useWarehouseStocks } from "../services/useApi";
 import { getStockStatus, getStatusColor } from "../utilies/stockStatus";
+
 // Headers aligned with Backend stock.model.js
 const tableHeader = [
   { title: "محصول" },
@@ -36,12 +37,72 @@ function Warehouse() {
   const { control, handleSubmit, reset } = useForm();
   const { mutate: updateInventory } = useUpdateStore();
   const [showTransfer, setShowTransfer] = useState(false);
+  const { register, watch } = useForm();
   const [show, setShow] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [search] = useState("");
+  const { mutate: createStockTransfer } = useCreateStockTransfer();
   const { data: warehouseData, isLoading } = useWarehouseStocks({ search });
   const warehouses = warehouseData?.data || warehouseData || [];
+  const transferType = watch("transferType") || "warehouse-store";
+  const quantity = watch("quantity");
+  const employee = watch("employee");
+  const [showTransferConf, setShwoTransferConf] = useState(false);
+
+  const { data: employees } = useEmployees();
+  // Example fromLocation/toLocation logic
+  let fromLocation = selectedPro?.location;
+  let toLocation =
+    transferType === "warehouse-store"
+      ? fromLocation === "store"
+        ? "warehouse"
+        : "store"
+      : transferType === "store-employee"
+      ? "employee"
+      : transferType === "employee-store"
+      ? "store"
+      : transferType === "warehouse-employee"
+      ? "employee"
+      : transferType === "employee-warehouse"
+      ? "warehouse"
+      : "unknown";
+
+  const needsEmployee = [
+    "warehouse-employee",
+    "employee-warehouse",
+    "store-employee",
+    "employee-store",
+  ].includes(transferType);
+  function onSubmit(data) {
+    if (!data.quantity || data.quantity <= 0) return;
+    setShwoTransferConf(true);
+  }
+  function confirmTransfer() {
+    const stockTransfer = {
+      product: selectedPro.product?._id || selectedPro.product,
+      fromLocation: fromLocation,
+      toLocation: toLocation,
+      employee: needsEmployee ? employee : undefined,
+      quantity: Number(quantity),
+      transferDate: new Date(),
+      transferredBy: "currentUserId", // replace if you have user context
+      unit: selectedPro.unit,
+      purchasePricePerBaseUnit: selectedPro.purchasePricePerBaseUnit,
+    };
+    createStockTransfer(stockTransfer, {
+      onSuccess: () => {
+        setShwoTransferConf(false);
+        setShowTransfer(false);
+      },
+      onError: (error) => {
+        console.error("Error transferring stock:", error);
+      },
+    });
+    // console.log(stockTransfer);
+    setShwoTransferConf(false);
+  }
+
   useEffect(
     function () {
       reset({ ...selectedPro });
@@ -77,19 +138,40 @@ function Warehouse() {
               <TableColumn>{row?.product?.name || row?.product}</TableColumn>
               <TableColumn>{row?.batchNumber || "DEFAULT"}</TableColumn>
               <TableColumn>{row?.unit?.name || row?.unit}</TableColumn>
-              <TableColumn>{row?.location === "warehouse" ? "گدام" : row?.location}</TableColumn>
-              <TableColumn>{row?.expiryDate ? new Date(row.expiryDate).toLocaleDateString('fa-IR') : "—"}</TableColumn>
-              <TableColumn>{row?.purchasePricePerBaseUnit?.toLocaleString?.() || row?.purchasePricePerBaseUnit}</TableColumn>
-              <TableColumn className="font-semibold">{row?.quantity}</TableColumn>
               <TableColumn>
-                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStockStatus(row?.quantity, row?.product?.minLevel || 0).color}`}>
-                  {getStockStatus(row?.quantity, row?.product?.minLevel || 0).label}
+                {row?.location === "warehouse" ? "گدام" : row?.location}
+              </TableColumn>
+              <TableColumn>
+                {row?.expiryDate
+                  ? new Date(row.expiryDate).toLocaleDateString("fa-IR")
+                  : "—"}
+              </TableColumn>
+              <TableColumn>
+                {row?.purchasePricePerBaseUnit?.toLocaleString?.() ||
+                  row?.purchasePricePerBaseUnit}
+              </TableColumn>
+              <TableColumn className="font-semibold">
+                {row?.quantity}
+              </TableColumn>
+              <TableColumn>
+                <span
+                  className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    getStockStatus(row?.quantity, row?.product?.minLevel || 0)
+                      .color
+                  }`}
+                >
+                  {
+                    getStockStatus(row?.quantity, row?.product?.minLevel || 0)
+                      .label
+                  }
                 </span>
               </TableColumn>
               <TableColumn
                 className={`${
                   "itemavs" +
-                  (row?.expiryDate ? new Date(row.expiryDate).getMilliseconds() : "0") +
+                  (row?.expiryDate
+                    ? new Date(row.expiryDate).getMilliseconds()
+                    : "0") +
                   row?._id
                 } relative`}
               >
@@ -101,7 +183,9 @@ function Warehouse() {
                         <Menus.List
                           parent={
                             "itemavs" +
-                            (row?.expiryDate ? new Date(row.expiryDate).getMilliseconds() : "0") +
+                            (row?.expiryDate
+                              ? new Date(row.expiryDate).getMilliseconds()
+                              : "0") +
                             row?._id
                           }
                           id={row?._id}
@@ -166,7 +250,7 @@ function Warehouse() {
                     نمبر بچ
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro?.batchNumber || 'DEFAULT'}
+                    {selectedPro?.batchNumber || "DEFAULT"}
                   </p>
                 </div>
                 <div>
@@ -190,7 +274,10 @@ function Warehouse() {
                     موجودی در انبار
                   </h3>
                   <p className="text-2xl font-bold text-purple-600">
-                    {selectedPro?.location === 'warehouse' ? selectedPro?.quantity : 0} عدد
+                    {selectedPro?.location === "warehouse"
+                      ? selectedPro?.quantity
+                      : 0}{" "}
+                    عدد
                   </p>
                 </div>
                 <div>
@@ -198,7 +285,10 @@ function Warehouse() {
                     موجودی در فروشگاه
                   </h3>
                   <p className="text-2xl font-bold text-green-600">
-                    {selectedPro?.location === 'store' ? selectedPro?.quantity : 0} عدد
+                    {selectedPro?.location === "store"
+                      ? selectedPro?.quantity
+                      : 0}{" "}
+                    عدد
                   </p>
                 </div>
                 <div>
@@ -215,10 +305,10 @@ function Warehouse() {
                   </h3>
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      selectedPro?.expiryDate ? 'موجود' : '—'
+                      selectedPro?.expiryDate ? "موجود" : "—"
                     )}`}
                   >
-                    {selectedPro?.expiryDate ? 'موجود' : '—'}
+                    {selectedPro?.expiryDate ? "موجود" : "—"}
                   </span>
                 </div>
                 <div>
@@ -234,7 +324,11 @@ function Warehouse() {
                     تاریخ انقضا
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro?.expiryDate ? new Date(selectedPro.expiryDate).toLocaleDateString('fa-IR') : "در دسترس نیست"}
+                    {selectedPro?.expiryDate
+                      ? new Date(selectedPro.expiryDate).toLocaleDateString(
+                          "fa-IR"
+                        )
+                      : "در دسترس نیست"}
                   </p>
                 </div>
                 <div>
@@ -244,7 +338,8 @@ function Warehouse() {
                   <p className="text-lg font-semibold text-amber-600">
                     $
                     {(
-                      selectedPro?.quantity * selectedPro?.purchasePricePerBaseUnit
+                      selectedPro?.quantity *
+                      selectedPro?.purchasePricePerBaseUnit
                     ).toFixed(2)}
                   </p>
                 </div>
@@ -253,7 +348,9 @@ function Warehouse() {
                     آخرین به‌روزرسانی
                   </h3>
                   <p className="text-sm text-gray-700">
-                    {new Date(selectedPro.updatedAt || selectedPro.createdAt).toLocaleString('fa-IR')}
+                    {new Date(
+                      selectedPro.updatedAt || selectedPro.createdAt
+                    ).toLocaleString("fa-IR")}
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -281,107 +378,125 @@ function Warehouse() {
         </div>
       </GloableModal>
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
-        {showTransfer && (
-          <StockTransferModal 
-            stock={selectedPro} 
-            onClose={() => { setShowTransfer(false); setSelectedPro(null); }} 
-          />
-        )}
+        <form
+          noValidate
+          className="bg-white rounded-lg shadow-sm w-[600px]"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-900">انتقال موجودی</h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div>
+              <span>محصول: </span>
+              <span className="font-bold">
+                {selectedPro?.product?.name || selectedPro?.product}
+              </span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  نوع انتقال
+                </span>
+                <select
+                  className="w-full border rounded-md px-3 py-2"
+                  {...register("transferType")}
+                >
+                  <option value="store-warehouse">فروشگاه ↔ گدام</option>
+                  <option value="store-employee">فروشگاه → کارمند</option>
+                  <option value="employee-store">کارمند → فروشگاه</option>
+                  <option value="warehouse-employee">گدام → کارمند</option>
+                  <option value="employee-warehouse">کارمند → گدام</option>
+                </select>
+              </label>
+              {needsEmployee && (
+                <label className="flex-1">
+                  <span className="block text-sm font-medium text-gray-700 mb-2">
+                    کارمند
+                  </span>
+                  <select
+                    className="w-full border rounded-md px-3 py-2"
+                    {...register("employee")}
+                  >
+                    <option value="">کارمند را انتخاب کنید</option>
+                    {employees?.data?.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  از:{" "}
+                </span>
+                <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">
+                  {fromLocation === "warehouse"
+                    ? "گدام"
+                    : fromLocation === "store"
+                    ? "فروشگاه"
+                    : "کارمند"}
+                </span>
+              </label>
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  به:{" "}
+                </span>
+                <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">
+                  {toLocation === "warehouse"
+                    ? "گدام"
+                    : toLocation === "store"
+                    ? "فروشگاه"
+                    : "کارمند"}
+                </span>
+              </label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                تعداد (واحد پایه)
+              </label>
+              <input
+                className="w-full border rounded-md px-3 py-2"
+                type="number"
+                min="1"
+                {...register("quantity", { required: true, min: 1 })}
+              />
+            </div>
+          </div>
+          <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+            <Button
+              onClick={() => setShowTransfer(false)}
+              type="button"
+              className="bg-gray-500 text-white px-4 py-2 rounded-md"
+            >
+              بستن
+            </Button>
+            <Button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded-md"
+              disabled={
+                !quantity || quantity <= 0 || (needsEmployee && !employee)
+              }
+            >
+              انتقال موجودی
+            </Button>
+          </div>
+        </form>
+      </GloableModal>
+      <GloableModal open={showTransferConf} setOpen={setShowTransfer}>
+        <Confirmation
+          type="transfer"
+          handleClick={confirmTransfer}
+          handleCancel={() => setShwoTransferConf(false)}
+          close={() => setShwoTransferConf(false)}
+          message="آیا مطمئن هستید که این انتقال را انجام دهید؟"
+        />
       </GloableModal>
     </section>
   );
 }
 
 export default Warehouse;
-
-function StockTransferModal({ stock, onClose }) {
-  const [transferType, setTransferType] = React.useState("warehouse-store");
-  const [quantity, setQuantity] = React.useState("");
-  const [employee, setEmployee] = React.useState("");
-  const { data: employees } = useEmployees();
-  // Example fromLocation/toLocation logic
-  let fromLocation = stock?.location;
-  let toLocation = transferType === "warehouse-store" ?
-      (fromLocation === "warehouse" ? "store" : "warehouse") :
-      transferType === "warehouse-employee" ? "employee" :
-      transferType === "employee-warehouse" ? "warehouse" :
-      transferType === "store-employee" ? "employee" :
-      transferType === "employee-store" ? "store" :
-      "unknown";
-
-  const needsEmployee = ["warehouse-employee", "employee-warehouse", "store-employee", "employee-store"].includes(transferType);
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (!quantity || quantity <= 0) return;
-    // fake mutation, replace with your real endpoint later
-    const stockTransfer = {
-      product: stock.product?._id || stock.product,
-      fromLocation: fromLocation,
-      toLocation: toLocation,
-      employee: needsEmployee ? employee : undefined,
-      quantity: Number(quantity),
-      transferDate: new Date(),
-      transferredBy: 'currentUserId', // replace if you have user context
-    };
-    alert("Would submit: " + JSON.stringify(stockTransfer, null, 2));
-    onClose();
-  }
-
-  return (
-    <form className="bg-white rounded-lg shadow-sm w-[600px]" onSubmit={handleSubmit}>
-      <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">انتقال موجودی</h2>
-      </div>
-      <div className="p-6 space-y-6">
-        <div>
-          <span>محصول: </span>
-          <span className="font-bold">{stock?.product?.name || stock?.product}</span>
-        </div>
-        <div className="flex flex-col md:flex-row gap-4">
-          <label className="flex-1">
-            <span className="block text-sm font-medium text-gray-700 mb-2">نوع انتقال</span>
-            <select className="w-full border rounded-md px-3 py-2" value={transferType} onChange={e => setTransferType(e.target.value)}>
-              <option value="warehouse-store">انبار ↔ فروشگاه</option>
-              <option value="warehouse-employee">انبار → کارمند</option>
-              <option value="employee-warehouse">کارمند → انبار</option>
-              <option value="store-employee">فروشگاه → کارمند</option>
-              <option value="employee-store">کارمند → فروشگاه</option>
-            </select>
-          </label>
-          {needsEmployee && (
-            <label className="flex-1">
-              <span className="block text-sm font-medium text-gray-700 mb-2">کارمند</span>
-              <select className="w-full border rounded-md px-3 py-2" value={employee} onChange={e => setEmployee(e.target.value)}>
-                <option value="">کارمند را انتخاب کنید</option>
-                {employees?.data?.map(emp => (
-                  <option key={emp._id} value={emp._id}>{emp.name}</option>
-                ))}
-              </select>
-            </label>
-          )}
-        </div>
-        <div className="flex flex-col md:flex-row gap-4">
-          <label className="flex-1">
-            <span className="block text-sm font-medium text-gray-700 mb-2">از: </span>
-            <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">{fromLocation === 'warehouse' ? 'انبار' : fromLocation === 'store' ? 'فروشگاه' : 'کارمند'}</span>
-          </label>
-          <label className="flex-1">
-            <span className="block text-sm font-medium text-gray-700 mb-2">به: </span>
-            <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">{toLocation === 'warehouse' ? 'انبار' : toLocation === 'store' ? 'فروشگاه' : 'کارمند'}</span>
-          </label>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">تعداد (واحد پایه)</label>
-          <input className="w-full border rounded-md px-3 py-2" type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} required />
-        </div>
-      </div>
-      <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
-        <Button onClick={onClose} type="button" className="bg-gray-500 text-white px-4 py-2 rounded-md">بستن</Button>
-        <Button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-md" disabled={!quantity || quantity<=0 || (needsEmployee && !employee)}>
-          انتقال موجودی
-        </Button>
-      </div>
-    </form>
-  );
-}
