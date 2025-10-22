@@ -11,7 +11,7 @@ import {
   PlusIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -35,8 +35,10 @@ import Warehouse from "./Warehouse";
 import { BiLoaderAlt } from "react-icons/bi";
 import GloableModal from "../components/GloableModal";
 import Confirmation from "../components/Confirmation";
+import { useSearchParams } from "react-router-dom";
 
 const Inventory = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [openConfirm, setOpenConfirm] = useState(false);
   const { register, handleSubmit, formState, reset, control } = useForm();
   const { isLoading: isLoadingProducts } = useProduct();
@@ -44,7 +46,6 @@ const Inventory = () => {
   const [id, setIds] = useState();
   const { data: inventoryStats, isLoading: isStatsLoading } =
     useInventoryStats();
-  const { data: storeStocksData, isLoading: isStoreLoading } = useStoreStocks();
   const { mutate: createProduct } = useCreateProdcut();
   const handleDelete = () => {
     deleteStockTransfer(id);
@@ -78,7 +79,16 @@ const Inventory = () => {
     store: { totalQuantity: 0, totalValue: 0, uniqueProducts: 0 },
     lowStockItems: 0,
   };
-  if (isLoadingProducts || isStatsLoading || isStoreLoading)
+  useEffect(
+    function () {
+      activeTab === "warehouse"
+        ? searchParams.set("location", "warehouse")
+        : searchParams.delete("location");
+      setSearchParams(searchParams);
+    },
+    [activeTab, searchParams, setSearchParams]
+  );
+  if (isLoadingProducts || isStatsLoading)
     return (
       <div className="w-full h-full flex justify-center items-center">
         <BiLoaderAlt className=" text-2xl animate-spin" />
@@ -221,91 +231,100 @@ const Inventory = () => {
         )}
         {activeTab === "store" && (
           <div className="overflow-x-auto  -mx-6 px-6">
-            <Store stocks={storeStocksData?.data || storeStocksData || []} />
+            <Store />
           </div>
         )}
       </div>
 
       {/* Stock Transfer History */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      {activeTab !== "all" && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"></h3>
           <ArrowPathIcon className="h-6 w-6 text-amber-600" />
           انتقالات اخیر موجودی
-        </h3>
-        <div className="overflow-x-auto h-auto -mx-6 px-6 ">
-          <Table>
-            <TableHeader
-              headerData={[
-                { title: "جنس" },
-                { title: "تعداد" },
-                { title: "فرستنده" },
-                { title: "گیرنده" },
-                { title: "تاریخ" },
-                { title: "کارمند" },
-                { title: "عملیات" },
-              ]}
-            />
-            <TableBody>
-              {transferHistoryData?.data
-                ?.filter((transfer) => {
-                  if (activeTab === "store") {
-                    return transfer.fromLocation?.toLowerCase() === "store";
-                  } else if (activeTab === "warehouse") {
-                    return transfer.fromLocation?.toLowerCase() === "warehouse";
-                  }
-                  return true; // Show all for "all" tab
-                })
-                ?.map((transfer) => (
-                  <TableRow key={transfer._id}>
-                    <TableColumn>
-                      {transfer.product?.name || "N/A"} units
-                    </TableColumn>
-                    <TableColumn>{transfer.quantity}</TableColumn>
-                    <TableColumn className="text-green-600">
-                      {transfer.fromLocation}
-                    </TableColumn>
-                    <TableColumn className=" text-purple-600">
-                      {transfer.toLocation}
-                    </TableColumn>
-                    <TableColumn>{transfer.transferDate}</TableColumn>
-                    <TableColumn>
-                      {transfer.transferredBy?.name ||
-                        transfer.transferredBy.email}
-                    </TableColumn>
-                    <TableColumn>
-                      <div className=" w-full flex justify-between items-center">
-                        <button
-                          onClick={() => {
-                            setIds(transfer?._id);
-                            setOpenConfirm(true);
-                          }}
-                        >
-                          <MdDelete className=" text-2xl text-red-500 " />
-                        </button>
-                        <button>
-                          <FiEdit className=" text-2xl  text-sky-500 " />
-                        </button>
-                        <button>
-                          <BsFillEyeFill className=" text-2xl text-blue-400  " />
-                        </button>
-                      </div>
-                    </TableColumn>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-          <GloableModal open={openConfirm} setOpen={setOpenConfirm}>
-            {openConfirm && (
-              <Confirmation
-                type="transfer"
-                handleClick={handleDelete}
-                handleCancel={() => setOpenConfirm(false)}
-                close={() => setOpenConfirm(false)}
+          <div className="overflow-x-auto h-auto -mx-6 px-6 ">
+            <Table>
+              <TableHeader
+                headerData={[
+                  { title: "جنس" },
+                  { title: "تعداد" },
+                  { title: "مکان گیرنده" },
+                  { title: "تاریخ" },
+                  { title: "کارمند" },
+                  { title: "عملیات" },
+                ]}
               />
-            )}
-          </GloableModal>
+              <TableBody>
+                {transferHistoryData?.data
+                  ?.filter((transfer) => {
+                    if (activeTab === "store") {
+                      return transfer.fromLocation?.toLowerCase() === "store";
+                    } else if (activeTab === "warehouse") {
+                      return (
+                        transfer.fromLocation?.toLowerCase() === "warehouse"
+                      );
+                    }
+                    return true; // Show all for "all" tab
+                  })
+                  ?.map((transfer) => (
+                    <TableRow key={transfer._id}>
+                      <TableColumn>
+                        {transfer.product?.name || "N/A"}
+                      </TableColumn>
+                      <TableColumn>{transfer.quantity}</TableColumn>
+
+                      <TableColumn className=" text-purple-600">
+                        <p className=" p-1 bg-purple-300/50 rounded-full">
+                          {transfer.toLocation}
+                        </p>
+                      </TableColumn>
+                      <TableColumn>
+                        {transfer?.transferDate
+                          ? new Date(transfer.transferDate).toLocaleDateString(
+                              "fa-IR"
+                            )
+                          : "—"}
+                      </TableColumn>
+                      <TableColumn>
+                        {transfer.transferredBy?.name ||
+                          transfer.transferredBy.email}
+                      </TableColumn>
+                      <TableColumn>
+                        <div className=" w-full flex justify-between items-center">
+                          <button
+                            className=" rounded-full p-1.5 hover:bg-red-100 transition-all duration-100 "
+                            onClick={() => {
+                              setIds(transfer?._id);
+                              setOpenConfirm(true);
+                            }}
+                          >
+                            <MdDelete className=" text-lg text-red-500 " />
+                          </button>
+                          <button className=" rounded-full p-1.5 hover:bg-sky-100 transition-all duration-100">
+                            <FiEdit className=" text-lg  text-sky-500 " />
+                          </button>
+                          <button className=" p-1.5 hover:b">
+                            <BsFillEyeFill className=" rounded-full text-lg text-blue-400 hover:bg-blue-100 transition-all duration-100 " />
+                          </button>
+                        </div>
+                      </TableColumn>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+            <GloableModal open={openConfirm} setOpen={setOpenConfirm}>
+              {openConfirm && (
+                <Confirmation
+                  type="transfer"
+                  handleClick={handleDelete}
+                  handleCancel={() => setOpenConfirm(false)}
+                  close={() => setOpenConfirm(false)}
+                />
+              )}
+            </GloableModal>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
