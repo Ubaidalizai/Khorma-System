@@ -12,7 +12,6 @@ const EmployeeStock = require('../models/employeeStock.model');
 // @desc    Transfer stock between locations (warehouse, store, employee)
 // @route   POST /api/v1/stock-transfers
 exports.transferStock = asyncHandler(async (req, res, next) => {
-  console.log(req.body);
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -42,15 +41,19 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
       empStock.quantity_in_hand -= quantity;
       await empStock.save({ session });
     } else {
-      console.log(product, fromLocation);
       // deduct from regular stock (warehouse or store)
       const fromStock = await Stock.findOne({
         product,
         location: fromLocation,
         isDeleted: false,
       }).session(session);
-      if (!fromStock || fromStock.quantity < quantity) {
-        throw new AppError(`Insufficient stock in ${fromLocation}`, 400);
+      
+      if (!fromStock) {
+        throw new AppError(`No stock found for this product in ${fromLocation}`, 404);
+      }
+      
+      if (fromStock.quantity < quantity) {
+        throw new AppError(`Insufficient stock in ${fromLocation}. Available: ${fromStock.quantity}, Requested: ${quantity}`, 400);
       }
 
       fromStock.quantity -= quantity;
@@ -59,7 +62,7 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
 
     // 2️⃣ Handle addition to destination
     if (toLocation === 'employee') {
-      // add to employee stock
+      // add to employee stock (EmployeeStock only tracks quantity, not detailed stock info)
       const empStock = await EmployeeStock.findOneAndUpdate(
         { employee, product, isDeleted: false },
         { $inc: { quantity_in_hand: quantity } },
@@ -67,11 +70,46 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
       );
     } else {
       // add to store/warehouse
-      const toStock = await Stock.findOneAndUpdate(
-        { product, location: toLocation, isDeleted: false },
-        { $inc: { quantity } },
-        { upsert: true, new: true, session }
-      );
+      // First, get the source stock to copy its details (unit, batch, price, expiry)
+      const sourceStock = await Stock.findOne({
+        product,
+        location: fromLocation,
+        isDeleted: false,
+      }).session(session);
+
+      if (!sourceStock) {
+        throw new AppError(`Source stock not found in ${fromLocation}`, 404);
+      }
+
+      // Check if destination stock already exists
+      const existingToStock = await Stock.findOne({
+        product,
+        location: toLocation,
+        isDeleted: false,
+      }).session(session);
+
+      if (existingToStock) {
+        // Update existing stock with quantity only (preserve existing details)
+        existingToStock.quantity += quantity;
+        await existingToStock.save({ session });
+      } else {
+        // Create new stock record with all details from source
+        // This preserves: unit, batchNumber, purchasePricePerBaseUnit, expiryDate
+        await Stock.create(
+          [
+            {
+              product: sourceStock.product,
+              unit: sourceStock.unit,
+              batchNumber: sourceStock.batchNumber,
+              purchasePricePerBaseUnit: sourceStock.purchasePricePerBaseUnit,
+              expiryDate: sourceStock.expiryDate,
+              location: toLocation,
+              quantity: quantity,
+            },
+          ],
+          { session }
+        );
+      }
     }
 
     // 3️⃣ Log transfer
@@ -261,11 +299,50 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
         { upsert: true, session }
       );
     } else {
-      await Stock.findOneAndUpdate(
-        { product: updatedProduct, location: newTo },
-        { $inc: { quantity: newQty } },
-        { upsert: true, session }
-      );
+      // Check if destination stock already exists
+      const existingToStock = await Stock.findOne({
+        product: updatedProduct,
+        location: newTo,
+        isDeleted: false,
+      }).session(session);
+
+      if (existingToStock) {
+        // Update existing stock with quantity only
+        existingToStock.quantity += newQty;
+        await existingToStock.save({ session });
+      } else {
+        // Get source stock details to copy
+        const sourceStock = await Stock.findOne({
+          product: updatedProduct,
+          location: newFrom,
+          isDeleted: false,
+        }).session(session);
+
+        if (sourceStock) {
+          // Create new stock record with all details from source
+          await Stock.create(
+            [
+              {
+                product: sourceStock.product,
+                unit: sourceStock.unit,
+                batchNumber: sourceStock.batchNumber,
+                purchasePricePerBaseUnit: sourceStock.purchasePricePerBaseUnit,
+                expiryDate: sourceStock.expiryDate,
+                location: newTo,
+                quantity: newQty,
+              },
+            ],
+            { session }
+          );
+        } else {
+          // Fallback: create with basic info
+          await Stock.findOneAndUpdate(
+            { product: updatedProduct, location: newTo },
+            { $inc: { quantity: newQty } },
+            { upsert: true, session }
+          );
+        }
+      }
     }
 
     // Update transfer record
@@ -460,11 +537,50 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
         { upsert: true, session }
       );
     } else {
-      await Stock.findOneAndUpdate(
-        { product, location: toLocation },
-        { $inc: { quantity } },
-        { upsert: true, session }
-      );
+      // Check if destination stock already exists
+      const existingToStock = await Stock.findOne({
+        product,
+        location: toLocation,
+        isDeleted: false,
+      }).session(session);
+
+      if (existingToStock) {
+        // Update existing stock with quantity only
+        existingToStock.quantity += quantity;
+        await existingToStock.save({ session });
+      } else {
+        // Get source stock details to copy
+        const sourceStock = await Stock.findOne({
+          product,
+          location: fromLocation,
+          isDeleted: false,
+        }).session(session);
+
+        if (sourceStock) {
+          // Create new stock record with all details from source
+          await Stock.create(
+            [
+              {
+                product: sourceStock.product,
+                unit: sourceStock.unit,
+                batchNumber: sourceStock.batchNumber,
+                purchasePricePerBaseUnit: sourceStock.purchasePricePerBaseUnit,
+                expiryDate: sourceStock.expiryDate,
+                location: toLocation,
+                quantity: quantity,
+              },
+            ],
+            { session }
+          );
+        } else {
+          // Fallback: create with basic info
+          await Stock.findOneAndUpdate(
+            { product, location: toLocation },
+            { $inc: { quantity } },
+            { upsert: true, session }
+          );
+        }
+      }
     }
 
     // Restore the record
@@ -560,11 +676,50 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
         { upsert: true, session }
       );
     } else {
-      await Stock.findOneAndUpdate(
-        { product, location: fromLocation, isDeleted: false },
-        { $inc: { quantity } },
-        { upsert: true, session }
-      );
+      // Check if source stock already exists
+      const existingFromStock = await Stock.findOne({
+        product,
+        location: fromLocation,
+        isDeleted: false,
+      }).session(session);
+
+      if (existingFromStock) {
+        // Update existing stock with quantity only
+        existingFromStock.quantity += quantity;
+        await existingFromStock.save({ session });
+      } else {
+        // Get destination stock details to copy (since we're rolling back)
+        const destStock = await Stock.findOne({
+          product,
+          location: toLocation,
+          isDeleted: false,
+        }).session(session);
+
+        if (destStock) {
+          // Create new stock record with all details from destination
+          await Stock.create(
+            [
+              {
+                product: destStock.product,
+                unit: destStock.unit,
+                batchNumber: destStock.batchNumber,
+                purchasePricePerBaseUnit: destStock.purchasePricePerBaseUnit,
+                expiryDate: destStock.expiryDate,
+                location: fromLocation,
+                quantity: quantity,
+              },
+            ],
+            { session }
+          );
+        } else {
+          // Fallback: create with basic info
+          await Stock.findOneAndUpdate(
+            { product, location: fromLocation, isDeleted: false },
+            { $inc: { quantity } },
+            { upsert: true, session }
+          );
+        }
+      }
     }
 
     // 🔹 STEP 3: Mark as rolled back
