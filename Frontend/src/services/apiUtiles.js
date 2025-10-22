@@ -54,7 +54,7 @@ export const getUserProfile = async () => {
 };
 
 // Products
-export const fetchProducts = async (params = {}) => {
+export const fetchProducts = async () => {
   try {
     const response = await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
    
@@ -366,26 +366,61 @@ export const restorePurchase = async (id) => {
 };
 
 // Sales
-export const fetchSales = async () => {
+export const fetchSales = async (params = {}) => {
   try {
-    const response = await apiRequest(API_ENDPOINTS.SALES.LIST);
-    // Handle both direct array response and paginated response with data property
-    if (Array.isArray(response)) {
-      return response;
-    } else if (response && Array.isArray(response.data)) {
-      return response.data;
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.customer) query.set("customer", params.customer);
+    if (params.status) query.set("status", params.status);
+    if (params.page) query.set("page", params.page);
+    if (params.limit) query.set("limit", params.limit);
+    
+    const url = query.toString() 
+      ? `${API_ENDPOINTS.SALES.LIST}?${query.toString()}`
+      : API_ENDPOINTS.SALES.LIST;
+    
+    const response = await apiRequest(url);
+    
+    // Handle backend response format
+    if (response && response.data && Array.isArray(response.data)) {
+      return {
+        sales: response.data,
+        total: response.pagination?.total || response.data.length,
+        pages: response.pagination?.totalPages || 1,
+        currentPage: response.pagination?.currentPage || 1
+      };
+    } else if (Array.isArray(response)) {
+      return {
+        sales: response,
+        total: response.length,
+        pages: 1,
+        currentPage: 1
+      };
     } else {
       console.warn("Unexpected sales response format:", response);
-      return [];
+      return { sales: [], total: 0, pages: 1, currentPage: 1 };
     }
   } catch (error) {
     console.error("Error fetching sales:", error);
-    return []; // Return empty array on error
+    return { sales: [], total: 0, pages: 1, currentPage: 1 };
   }
 };
 
 export const fetchSale = async (id) => {
-  return await apiRequest(API_ENDPOINTS.SALES.DETAIL(id));
+  try {
+    const response = await apiRequest(API_ENDPOINTS.SALES.DETAIL(id));
+    // Handle backend response format
+    if (response && response.data) {
+      return response.data;
+    } else if (response && response.sale && response.items) {
+      return { ...response.sale, items: response.items };
+    } else {
+      return response;
+    }
+  } catch (error) {
+    console.error("Error fetching sale:", error);
+    return null;
+  }
 };
 
 export const createSale = async (saleData) => {
@@ -458,6 +493,29 @@ export const deleteStockItem = async (id) => {
     method: "DELETE",
   });
 };
+
+export const fetchBatchesByProduct = async (productId, location = 'store') => {
+  try {
+    const response = await apiRequest(`${API_ENDPOINTS.STOCK.BATCHES_BY_PRODUCT(productId)}?location=${location}`);
+    return response.data || response || [];
+  } catch (error) {
+    console.error("Error fetching batches:", error);
+    return [];
+  }
+};
+
+// Fetch products from stock where location=store
+export const fetchProductsFromStock = async (location = 'store') => {
+  try {
+    const response = await apiRequest(`${API_ENDPOINTS.STOCK.LIST}?location=${location}`);
+    return response.data || response || [];
+  } catch (error) {
+    console.error("Error fetching products from stock:", error);
+    return [];
+  }
+};
+
+
 
 // Stock Transfers
 export const fetchStockTransfers = async () => {

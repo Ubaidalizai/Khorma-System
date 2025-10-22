@@ -20,7 +20,7 @@ router.route('/').post(createPurchase).get(getAllPurchases);
 router
   .route('/:id')
   .get(getPurchaseById)
-  .put(updatePurchase)
+  .patch(updatePurchase)
   .delete(softDeletePurchase);
 
 router.patch('/:id/restore', restorePurchase);

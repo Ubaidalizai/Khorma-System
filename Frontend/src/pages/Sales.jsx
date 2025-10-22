@@ -1,35 +1,46 @@
 import {
   BanknotesIcon,
   CurrencyDollarIcon,
-  PrinterIcon,
   ReceiptPercentIcon,
   ShoppingCartIcon,
+  PlusIcon,
+  EyeIcon,
+  PencilIcon,
   TrashIcon,
-  UserGroupIcon,
-  UsersIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import Button from "../components/Button";
-import Sale from "../components/Sale";
 import { formatCurrency } from "../utilies/helper";
 import Modal from "./../components/Modal";
 import { useForm } from "react-hook-form";
-import { useCreateSale } from "../services/useApi";
-import CustomerForm from "../components/CustomerForm";
-import SalesForm from "../components/SalesForm";
+import {
+  useSales, 
+  useSale,
+  useCustomers, 
+  useEmployees, 
+  useDeleteSales,
+  useCreateSale
+} from "../services/useApi";
 import SaleForm from "../components/SaleForm";
-import { createSale as createSaleAPI } from "../services/apiUtiles";
+import { XCircleIcon } from "lucide-react";
 
 const Sales = () => {
-  // Tab and filter states
+  // State management
+  const [search, setSearch] = useState("");
+  const [customerFilter, setCustomerFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [selectedSaleId, setSelectedSaleId] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [showAddSaleModal, setShowAddSaleModal] = useState(false);
+
+  // Form setup
   const {
     register,
     handleSubmit,
     watch,
-    reset,
-    control,
-    formState: { errors },
   } = useForm({
     defaultValues: {
       saleDate: new Date().toISOString().slice(0, 10),
@@ -40,258 +51,86 @@ const Sales = () => {
       discount: 0,
       tax: 0,
       notes: "",
-      items: [], // sale items (saleItemSchema fields)
+      items: [],
     },
   });
-  const { mutate: createSale } = useCreateSale();
-  const [activeTab, setActiveTab] = useState("sales");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterBillType, setFilterBillType] = useState("all");
-  const [filterEmployee, setFilterEmployee] = useState("all");
 
-  // Modal states
-  const [showAddSaleModal, setShowAddSaleModal] = useState(false);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
-
-  // Sale items state
-  const [saleItems, setSaleItems] = useState([]);
-  const [currentItem, setCurrentItem] = useState({
-    product: "",
-    unit: "",
-    batchNumber: "",
-    quantity: 0,
-    unitPrice: 0,
-    total: 0,
+  // API hooks
+  const { data: salesResp, isLoading } = useSales({ 
+    search, 
+    customer: customerFilter, 
+    status: statusFilter, 
+    page, 
+    limit 
   });
+  const { data: customers } = useCustomers();
+  const { data: employees } = useEmployees();
+  const { data: selectedSale, isLoading: isLoadingDetails } = useSale(selectedSaleId);
+  const deleteSaleMutation = useDeleteSales();
+  const createSaleMutation = useCreateSale();
+  
+  // Data processing
+  const sales = salesResp?.sales || [];
+  const total = salesResp?.total || 0;
+  const totalPages = salesResp?.pages || Math.max(1, Math.ceil(total / limit));
 
-  // New customer state
-  const [newCustomer, setNewCustomer] = useState({
-    name: "",
-    company: "",
-    phone: "",
-    email: "",
-    address: "",
-    customerType: "retail",
-    creditLimit: 0,
-    paymentTerms: "30",
-  });
-  const onSubmit = async (data) => {
-    try {
-      await createSaleAPI(data);
-      reset();
-      // Refresh the sales list
-      window.location.reload();
-    } catch (error) {
-      console.error("Failed to create sale:", error);
+  const findCustomer = (customerId) => {
+    return customers?.data?.find(cust => cust._id === customerId);
+  };
+
+  const findEmployee = (employeeId) => {
+    return employees?.data?.find(emp => emp._id === employeeId);
+  };
+
+  // Event handlers
+  const handleViewDetails = (saleId) => {
+    setSelectedSaleId(saleId);
+    setShowDetailsModal(true);
+  };
+
+  const handleEditSale = (sale) => {
+    // TODO: Implement edit functionality
+    console.log('Edit sale:', sale);
+  };
+
+  const handleDeleteSale = (saleId) => {
+    setDeleteConfirmId(saleId);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteSaleMutation.mutate(deleteConfirmId, {
+        onSuccess: () => {
+          setDeleteConfirmId(null);
+        },
+        onError: (error) => {
+          alert(`خطا در حذف فروش: ${error.message}`);
+        }
+      });
     }
   };
-  // Customers data
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      name: "Ahmad Khan",
-      company: "Ahmad Retail Store",
-      phone: "+93 700 111 222",
-      email: "ahmad@retailstore.com",
-      address: "Kabul, Afghanistan",
-      customerType: "retail",
-      totalPurchases: 25,
-      totalAmount: 12500,
-      amountPaid: 10000,
-      amountOwed: 2500,
-      creditLimit: 5000,
-      paymentTerms: "15 days",
-      status: "active",
-      lastPurchase: "2024-01-15",
-    },
-    {
-      id: 2,
-      name: "Sara Ahmed Wholesale",
-      company: "Sara Trading Co",
-      phone: "+93 700 333 444",
-      email: "sara@trading.com",
-      address: "Herat, Afghanistan",
-      customerType: "wholesale",
-      totalPurchases: 15,
-      totalAmount: 45000,
-      amountPaid: 40000,
-      amountOwed: 5000,
-      creditLimit: 20000,
-      paymentTerms: "30 days",
-      status: "active",
-      lastPurchase: "2024-01-15",
-    },
-  ]);
 
-  // Employees data
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "Ali Mohammad",
-      position: "Sales Associate",
-      phone: "+93 700 555 666",
-      totalSales: 50,
-      totalRevenue: 25000,
-      commission: 1250,
-      goodsGiven: 10000,
-      goodsReturned: 500,
-      status: "active",
-    },
-    {
-      id: 2,
-      name: "Fatima Hussain",
-      position: "Store Manager",
-      phone: "+93 700 777 888",
-      totalSales: 75,
-      totalRevenue: 38000,
-      commission: 1900,
-      goodsGiven: 15000,
-      goodsReturned: 200,
-      status: "active",
-    },
-  ]);
-
-  // Sales data
-  const [sales, setSales] = useState([
-    {
-      id: 1,
-      billNumber: "BILL-2024-001",
-      customer: "Ahmad Khan",
-      customerId: 1,
-      employee: "Ali Mohammad",
-      employeeId: 1,
-      items: [
-        {
-          product: "Fresh Dates - Medjool",
-          quantity: 10,
-          unitPrice: 15.99,
-          total: 159.9,
-        },
-        { product: "Chickpeas", quantity: 5, unitPrice: 8.5, total: 42.5 },
-      ],
-      subtotal: 202.4,
-      discount: 10,
-      tax: 19.24,
-      totalAmount: 211.64,
-      amountPaid: 211.64,
-      amountOwed: 0,
-      saleType: "cash",
-      billType: "small",
-      paymentStatus: "paid",
-      saleDate: "2024-01-15",
-      notes: "Regular customer",
-      createdBy: "Admin",
-      lastUpdated: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      billNumber: "BILL-2024-002",
-      customer: "Sara Ahmed Wholesale",
-      customerId: 2,
-      employee: "Fatima Hussain",
-      employeeId: 2,
-      items: [
-        {
-          product: "Fresh Dates - Medjool",
-          quantity: 100,
-          unitPrice: 14.99,
-          total: 1499,
-        },
-        {
-          product: "Chickpeas - Organic",
-          quantity: 50,
-          unitPrice: 7.5,
-          total: 375,
-        },
-      ],
-      subtotal: 1874,
-      discount: 100,
-      tax: 177.4,
-      totalAmount: 1951.4,
-      amountPaid: 1000,
-      amountOwed: 951.4,
-      saleType: "credit",
-      billType: "large",
-      paymentStatus: "partial",
-      saleDate: "2024-01-15",
-      notes: "Bulk order - 30 days payment terms",
-      createdBy: "Admin",
-      lastUpdated: new Date().toISOString(),
-    },
-  ]);
-
-  // Calculate sale totals
-  const calculateSaleTotals = () => {
-    const subtotal = saleItems.reduce((sum, item) => sum + item.total, 0);
-    const discountAmount = Number(watch("discount"));
-    const taxAmount =
-      ((subtotal - discountAmount) * Number(watch("tax"))) / 100;
-    const total = subtotal - discountAmount + taxAmount;
-    console.log(subtotal, discountAmount, taxAmount);
-    return {
-      subtotal: subtotal,
-      taxAmount: taxAmount,
-      total: total,
-    };
-  };
-
-  // Handle customer creation
-  const handleAddCustomer = () => {
-    const customer = {
-      id: customers.length + 1,
-      ...newCustomer,
-      totalPurchases: 0,
-      totalAmount: 0,
-      amountPaid: 0,
-      amountOwed: 0,
-      status: "active",
-      lastPurchase: null,
-    };
-
-    setCustomers([...customers, customer]);
-    setShowCustomerModal(false);
-    setNewCustomer({
-      name: "",
-      company: "",
-      phone: "",
-      email: "",
-      address: "",
-      customerType: "retail",
-      creditLimit: 0,
-      paymentTerms: "30",
+  const handleCreateSale = (saleData) => {
+    createSaleMutation.mutate(saleData, {
+      onSuccess: () => {
+        // Reset form and close modal
+        setShowAddSaleModal(false);
+        console.log('Sale created successfully');
+      },
+      onError: (error) => {
+        alert(`خطا در ایجاد فروش: ${error.message}`);
+      }
     });
   };
 
-  // Filter sales
-  const filteredSales = sales.filter((sale) => {
-    const matchesSearch =
-      sale.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.items.some((item) =>
-        item.product.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-    const matchesStatus =
-      filterStatus === "all" || sale.paymentStatus === filterStatus;
-    const matchesBillType =
-      filterBillType === "all" || sale.billType === filterBillType;
-    const matchesEmployee =
-      filterEmployee === "all" || sale.employee === filterEmployee;
-
-    return matchesSearch && matchesStatus && matchesBillType && matchesEmployee;
-  });
-
   // Calculate statistics
   const stats = {
-    totalSales: sales.length,
-    totalRevenue: sales.reduce((sum, s) => sum + s.totalAmount, 0),
-    cashSales: sales.filter((s) => s.saleType === "cash").length,
-    creditSales: sales.filter((s) => s.saleType === "credit").length,
-    smallBills: sales.filter((s) => s.billType === "small").length,
-    largeBills: sales.filter((s) => s.billType === "large").length,
-    totalPaid: sales.reduce((sum, s) => sum + s.amountPaid, 0),
-    totalOwed: sales.reduce((sum, s) => sum + s.amountOwed, 0),
+    totalSales: total || sales?.length || 0,
+    totalRevenue: sales?.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0) || 0,
+    totalPaid: sales?.reduce((sum, s) => sum + (parseFloat(s.paidAmount) || 0), 0) || 0,
+    totalOwed: sales?.reduce((sum, s) => sum + (parseFloat(s.dueAmount) || 0), 0) || 0,
+    pendingPayments: sales?.filter((s) => parseFloat(s.dueAmount) > 0).length || 0,
+    completedPayments: sales?.filter((s) => parseFloat(s.dueAmount) === 0).length || 0,
   };
 
   const getPaymentStatusColor = (status) => {
@@ -307,58 +146,25 @@ const Sales = () => {
     }
   };
 
-  const getBillTypeColor = (type) => {
-    return type === "large"
-      ? "bg-blue-100 text-blue-800 border border-blue-200"
-      : "bg-gray-100 text-gray-800 border border-gray-200";
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('fa-IR');
   };
 
   return (
     <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">مدیریت خرید</h1>
-          <p className="text-gray-600 mt-2">
-            مدیریت خرید، ایجاد فاکتور ها و ردیابی مشتریها و کارمندها
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">مدیریت فروش</h1>
+          <p className="text-gray-600 mt-2">مشاهده و مدیریت فروشها</p>
         </div>
-        <div className="flex w-2/5 gap-3">
-          <Modal>
-            <Modal.Toggle id="export">
-              <Button className=" bg-success-green">خروجی</Button>
-            </Modal.Toggle>
-            <Modal.Window name="export">
-              <div className="w-[400px] h-[300px] bg-white"></div>
-            </Modal.Window>
-          </Modal>
-          <Modal>
-            <Modal.Toggle id="addPurchase">
-              <Button className=" bg-deepdate-400">اضافه کردن فروش</Button>
-            </Modal.Toggle>
-            <Modal.Window name="addPurchase">
-              {/* <SalesForm
-                summary={() => calculateSaleTotals()}
-                currentItem={currentItem}
-                setCurrentItem={setCurrentItem}
-                items={saleItems}
-                setItems={setSaleItems}
-                reset={reset}
-                createSale={createSale}
-                onCancel={() => {}}
-                register={register}
-                handleSubmit={handleSubmit}
-                watch={watch}
-              /> */}
-              <SaleForm
-                register={register}
-                handleSubmit={handleSubmit}
-                watch={watch}
-                onClose={() => {}}
-              />
-            </Modal.Window>
-          </Modal>
-        </div>
+        <button 
+          onClick={() => setShowAddSaleModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+        >
+          <PlusIcon className="h-5 w-5" />
+          اضافه کردن فروش
+        </button>
       </div>
 
       {/* Statistics Cards */}
@@ -366,7 +172,7 @@ const Sales = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">مجموعه خرید</p>
+              <p className="text-sm text-gray-600">مجموع فروش</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.totalSales}
               </p>
@@ -380,9 +186,9 @@ const Sales = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">مجموعه عواید</p>
+              <p className="text-sm text-gray-600">مجموع عواید</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(stats.totalRevenue.toFixed(2))}
+                {formatCurrency(stats.totalRevenue?.toFixed(2))}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -396,7 +202,7 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-600">مبلغ جمع آوری شده</p>
               <p className="text-2xl font-bold text-green-600 mt-1">
-                {formatCurrency(stats.totalPaid.toFixed(2))}
+                {formatCurrency(stats.totalPaid?.toFixed(2))}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -408,9 +214,9 @@ const Sales = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">فروش اعتباری</p>
+              <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
               <p className="text-2xl font-bold text-red-600 mt-1">
-                {formatCurrency(stats.totalOwed.toFixed(2))}
+                {formatCurrency(stats.totalOwed?.toFixed(2))}
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
@@ -420,96 +226,153 @@ const Sales = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
-          <nav className="flex -mb-px">
-            <button
-              onClick={() => setActiveTab("sales")}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === "sales"
-                  ? "border-amber-600 text-amber-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <ShoppingCartIcon className="h-5 w-5" />
-              فروش
-            </button>
-            <button
-              onClick={() => setActiveTab("customers")}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === "customers"
-                  ? "border-amber-600 text-amber-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <UserGroupIcon className="h-5 w-5" />
-              مشتری ({customers.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("employees")}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === "employees"
-                  ? "border-amber-600 text-amber-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <UsersIcon className="h-5 w-5" />
-              پیگری کارمند
-            </button>
-          </nav>
-        </div>
-
-        {/* Sales Tab */}
-        {activeTab === "sales" && (
-          <div className="p-6">
-            <Sale
-              getBillTypeColor={getBillTypeColor}
-              getPaymentStatusColor={getPaymentStatusColor}
+      {/* Filters and Search */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-wrap gap-4">
+            <input
+              type="text"
+              placeholder="جستجو بر اساس نام مشتری..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             />
-          </div>
-        )}
-
-        {/* Customers Tab */}
-        {activeTab === "customers" && (
-          <div className="p-6">
-            <div className="mb-6 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">
-                حساب مشتریان
-              </h3>
-              <div className=" w-[200px]">
-                <Modal>
-                  <Modal.Toggle>
-                    <Button className="py-[14px] bg-success-green">
-                      اضافه کردن مشتری
-                    </Button>
-                  </Modal.Toggle>
-                  <Modal.Window>
-                    <CustomerForm />
-                  </Modal.Window>
-                </Modal>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {customers.map((customer, index) => (
-                <CustomerAccountComponent key={index} customer={customer} />
+            <select
+              value={customerFilter}
+              onChange={(e) => { setCustomerFilter(e.target.value); setPage(1); }}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="">همه مشتری ها</option>
+              {customers?.data?.map((customer) => (
+                <option key={customer._id} value={customer._id}>
+                  {customer.name}
+                </option>
               ))}
-            </div>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="">همه حالات</option>
+              <option value="paid">پرداخت شده</option>
+              <option value="partial">نسبی پرداخت شده</option>
+              <option value="pending">پرداخت معلق</option>
+            </select>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Employee Tracking Tab */}
-        {activeTab === "employees" && (
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">
-              موثریت کارمند در فروش
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {employees.map((employee, index) => (
-                <EmployeAccountComponent key={index} employee={employee} />
-              ))}
+      {/* Sales Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاریخ</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">مشتری</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">کارمند</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">قیمت مجموعی</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">پرداخت شده</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">باقی مانده</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">حالت</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">عملیات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                    در حال بارگذاری...
+                  </td>
+                </tr>
+              ) : sales.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                    فروشی یافت نشد
+                  </td>
+                </tr>
+              ) : (
+                sales.map((sale) => (
+                  <tr key={sale._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {formatDate(sale.saleDate)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {sale.customer?.name || findCustomer(sale.customer)?.name || 'نامشخص'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {sale.employee?.name || findEmployee(sale.employee)?.name || 'نامشخص'}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold text-purple-600">
+                      {formatCurrency(sale.totalAmount?.toFixed(2))}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold text-blue-600">
+                      {formatCurrency(sale.paidAmount?.toFixed(2))}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold text-orange-600">
+                      {formatCurrency(sale.dueAmount?.toFixed(2))}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                        sale.dueAmount > 0 ? "partial" : "paid"
+                      )}`}>
+                        {sale.dueAmount > 0 ? "نسبی پرداخت شده" : "تمام پرداخت شده"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleViewDetails(sale._id)}
+                          className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                          title="مشاهده جزئیات"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEditSale(sale)}
+                          className="text-green-600 hover:text-green-900 flex items-center gap-1"
+                          title="ویرایش"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSale(sale._id)}
+                          className="text-red-600 hover:text-red-900 flex items-center gap-1"
+                          title="حذف"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200">
+            <div className="text-sm text-gray-600">
+              صفحه {page} از {totalPages} (مجموع {total} فروش)
+            </div>
+            <div className="flex gap-2">
+              <button 
+                disabled={page <= 1} 
+                onClick={() => setPage((p) => Math.max(1, p - 1))} 
+                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                قبلی
+              </button>
+              <button 
+                disabled={page >= totalPages} 
+                onClick={() => setPage((p) => p + 1)} 
+                className="px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                بعدی
+              </button>
             </div>
           </div>
         )}
@@ -517,138 +380,199 @@ const Sales = () => {
 
       {/* Add Sale Modal */}
       {showAddSaleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"></div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <SaleForm
+              register={register}
+              handleSubmit={handleSubmit}
+              watch={watch}
+              onClose={() => setShowAddSaleModal(false)}
+              onSubmit={handleCreateSale}
+            />
+          </div>
+        </div>
       )}
 
-      {/* Add Customer Modal */}
-      {showCustomerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"></div>
+      {/* Sale Details Modal */}
+      {showDetailsModal && selectedSale && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">جزئیات فروش</h2>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XCircleIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            {isLoadingDetails ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">در حال بارگذاری...</p>
+              </div>
+            ) : (
+              <div className="p-4 space-y-4">
+                {/* Sale Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="bg-purple-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-600">قیمت مجموعی</p>
+                    <p className="text-lg font-semibold text-purple-600">
+                      {formatCurrency(selectedSale.totalAmount?.toFixed(2))}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-600">مبلغ پرداخت شده</p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {formatCurrency(selectedSale.paidAmount?.toFixed(2))}
+                    </p>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-600">مبلغ باقی مانده</p>
+                    <p className="text-lg font-semibold text-red-600">
+                      {formatCurrency(selectedSale.dueAmount?.toFixed(2))}
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-600">تعداد اجناس</p>
+                    <p className="text-lg font-semibold text-blue-600">
+                      {selectedSale.items?.length || 0}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sale Information */}
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">اطلاعات فروش</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">نمبر فاکتور</h4>
+                      <p className="text-sm font-medium text-gray-900">
+                        {selectedSale.billNumber || 'نامشخص'}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">تاریخ فروش</h4>
+                      <p className="text-sm font-medium text-gray-900">
+                        {formatDate(selectedSale.saleDate)}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">مشتری</h4>
+                      <p className="text-sm font-medium text-gray-900">
+                        {selectedSale.customer?.name || findCustomer(selectedSale.customer)?.name || 'نامشخص'}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">حالت پرداخت</h4>
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                        selectedSale.dueAmount > 0 ? "partial" : "paid"
+                      )}`}>
+                        {selectedSale.dueAmount > 0 ? "نسبی پرداخت شده" : "تمام پرداخت شده"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sale Items */}
+                <div className="bg-white border border-gray-200 rounded-lg">
+                  <div className="px-3 py-2 border-b border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-700">اجناس فروخته شده</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">محصول</th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">واحد</th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">تعداد</th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">قیمت یک دانه</th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">قیمت مجموعی</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {selectedSale.items?.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-3 py-6 text-center text-gray-500 text-sm">
+                              جنس یافت نشد
+                            </td>
+                          </tr>
+                        ) : (
+                          selectedSale.items?.map((item, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {item.product?.name || 'نامشخص'}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {item.unit?.name || '-'}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {item.quantity || 0}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {formatCurrency(item.unitPrice?.toFixed(2))}
+                              </td>
+                              <td className="px-3 py-2 text-sm font-medium text-purple-600">
+                                {formatCurrency(item.totalPrice?.toFixed(2))}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Total Summary */}
+                  <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
+                    <div className="flex justify-end">
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-gray-900">
+                          مجموع کل: {formatCurrency(selectedSale.totalAmount?.toFixed(2))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  );
-};
-const EmployeAccountComponent = ({ employee }) => {
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <div className="flex items-center gap-4 mb-4">
-        <div className="bg-amber-100 p-4 rounded-full">
-          <UsersIcon className="h-8 w-8 text-amber-600" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">{employee.name}</h3>
-          <p className="text-sm text-gray-600">{employee.position}</p>
-        </div>
-      </div>
 
-      <div className="space-y-3">
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">مجموعه فروشات:</span>
-          <span className="text-lg font-bold text-gray-900">
-            {employee.totalSales}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">مجموعه عواید:</span>
-          <span className="text-lg font-bold text-green-600">
-            {formatCurrency(employee.totalRevenue)}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">کمیسیون:</span>
-          <span className="text-lg font-bold text-amber-600">
-            {formatCurrency(employee.commission)}
-          </span>
-        </div>
-        <div className="pt-3 border-t border-gray-200">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">اجناس داده شده:</span>
-            <span className="font-semibold text-blue-600">
-              {formatCurrency(employee.goodsGiven)}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm mt-2">
-            <span className="text-gray-600">اجناس برگشت خورده:</span>
-            <span className="font-semibold text-purple-600">
-              {formatCurrency(employee.goodsReturned)}
-            </span>
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="bg-red-100 p-2 rounded-full mr-3">
+                  <TrashIcon className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">تأیید حذف</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                آیا مطمئن هستید که می‌خواهید این فروش را حذف کنید؟ این عمل قابل بازگشت نیست.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  لغو
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleteSaleMutation.isPending}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deleteSaleMutation.isPending ? 'در حال حذف...' : 'حذف'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <div className="flex-1">
-          <Button className="flex-1 px-3 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700">
-            View Details
-          </Button>
-        </div>
-        <div className="flex-1">
-          <Button className="bg-success-green">Sales History</Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-const CustomerAccountComponent = ({ customer }) => {
-  return (
-    <div className="bg-white  relative flex flex-col border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-      <div className="flex w-full  flex-1 items-start justify-between mb-4">
-        <div className="flex w-full  items-center gap-3 ">
-          <UserGroupIcon className="w-7 text-blue-600" />
-
-          <div className=" ">
-            <h3 className="text-lg font-medium w-full  text-gray-900">
-              {customer.name}
-            </h3>
-            <p className="text-sm text-gray-600">{customer.company}</p>
-            <span
-              className={`inline-flex mt-1 px-2 py-0.5 rounded text-xs font-medium ${
-                customer.customerType === "wholesale"
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {customer.customerType}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-2 flex-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">مجموعه خریدها:</span>
-          <span className="font-semibold text-gray-900">
-            {customer.totalPurchases}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">مجموعه مبلغ:</span>
-          <span className="font-semibold text-gray-900">
-            {formatCurrency(customer.totalAmount.toLocaleString())}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">مبلغ پرداخت شده:</span>
-          <span className="font-semibold text-green-600">
-            {formatCurrency(customer.amountPaid.toLocaleString())}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">مبلغ باقی مانده:</span>
-          <span className="font-semibold text-red-600">
-            {formatCurrency(customer.amountOwed.toLocaleString())}
-          </span>
-        </div>
-        <div className="pt-2 border-t border-gray-200">
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Credit Limit:</span>
-            <span>${customer.creditLimit.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 flex-1">
-        <Button>دیدن تمام جزئیات</Button>
-      </div>
+      )}
     </div>
   );
 };

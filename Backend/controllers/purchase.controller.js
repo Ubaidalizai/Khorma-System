@@ -16,6 +16,23 @@ const Stock = require('../models/stock.model');
 const Account = require('../models/account.model');
 const AccountTransaction = require('../models/accountTransaction.model');
 
+// Helper function to validate account balance
+const validateAccountBalance = async (accountId, requiredAmount, session) => {
+  const account = await Account.findById(accountId).session(session);
+  if (!account) throw new AppError('Account not found', 404);
+  
+  if (requiredAmount > 0) {
+    if (account.type === 'cashier' || account.type === 'safe') {
+      if (account.currentBalance < requiredAmount) {
+        throw new AppError(`Not enough money in ${account.type} account. Available: ${account.currentBalance}, Required: ${requiredAmount}`, 400);
+      }
+    }
+    // Saraf account can go negative, so no validation needed
+  }
+  
+  return account;
+};
+
 // @desc Create a complete purchase (with items, stock & accounts)
 // @route POST /api/v1/purchases
 exports.createPurchase = asyncHandler(async (req, res, next) => {
@@ -38,12 +55,8 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
     });
     if (!supplierAccount) throw new AppError('Supplier account not found', 404);
 
-    // 3️⃣ Validate payment account (Cash / Safe / Saraf)
-    const payAccount = await Account.findOne({
-      _id: paymentAccount,
-      isDeleted: false
-    });
-    if (!payAccount) throw new AppError('Invalid payment account', 400);
+    // 3️⃣ Validate payment account and check balance
+    const payAccount = await validateAccountBalance(paymentAccount, paidAmount, session);
 
     // 4️⃣ Calculate totals
     let totalAmount = 0;
@@ -182,12 +195,71 @@ exports.getAllPurchases = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const includeDeleted = req.query.includeDeleted === 'true';
+  const search = req.query.search;
+  const supplier = req.query.supplier;
+  const status = req.query.status;
 
-  const filter = includeDeleted ? {} : { isDeleted: false };
+  // Build filter object
+  let filter = includeDeleted ? {} : { isDeleted: false };
 
-  const total = await Purchase.countDocuments(filter);
+  // Add supplier filter
+  if (supplier) {
+    filter.supplier = supplier;
+  }
 
-  const purchases = await Purchase.find(filter)
+  // Add status filter (payment status)
+  if (status) {
+    if (status === 'paid') {
+      filter.dueAmount = 0;
+    } else if (status === 'partial') {
+      filter.dueAmount = { $gt: 0 };
+    } else if (status === 'pending') {
+      filter.paidAmount = 0;
+    }
+  }
+
+  // Build search query
+  let searchQuery = {};
+  if (search) {
+    // Search by supplier name (case insensitive)
+    const supplierIds = await Supplier.find({
+      name: { $regex: search, $options: 'i' }
+    }).select('_id');
+    
+    // Check if search is a valid ObjectId
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(search);
+    
+    // Build search conditions
+    const searchConditions = [];
+    
+    // Add supplier search if we found matching suppliers
+    if (supplierIds.length > 0) {
+      searchConditions.push({ supplier: { $in: supplierIds.map(s => s._id) } });
+    }
+    
+    // Add ObjectId search if the search term looks like an ObjectId
+    if (isObjectId) {
+      try {
+        const mongoose = require('mongoose');
+        const objectId = new mongoose.Types.ObjectId(search);
+        searchConditions.push({ _id: objectId });
+      } catch (err) {
+        // Invalid ObjectId, skip
+      }
+    }
+    
+    // Only apply search if we have conditions
+    if (searchConditions.length > 0) {
+      searchQuery = { $or: searchConditions };
+    }
+  }
+
+  // Combine filters
+  const finalFilter = { ...filter, ...searchQuery };
+
+  const total = await Purchase.countDocuments(finalFilter);
+
+  const purchases = await Purchase.find(finalFilter)
     .populate('supplier', 'name contactInfo')
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -223,7 +295,7 @@ exports.getPurchaseById = asyncHandler(async (req, res, next) => {
     .populate('unit', 'name conversion_to_base');
 
   res.status(200).json({ 
-    success: true, 
+    success: true,
     purchase: {
       ...purchase.toObject(),
       items
@@ -241,7 +313,7 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { supplier, purchaseDate, paidAmount, items, reason, stockLocation = 'warehouse' } = req.body;
+    const { supplier, purchaseDate, paidAmount, items, reason, stockLocation = 'warehouse', paymentAccount } = req.body;
 
     // 1️⃣ Fetch existing purchase and items
     const purchase = await Purchase.findById(req.params.id).session(session);
@@ -265,7 +337,20 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
     }
 
     if (purchaseDate) purchase.purchaseDate = purchaseDate;
-    if (paidAmount !== undefined) purchase.paidAmount = paidAmount;
+    if (paidAmount !== undefined) {
+      // Check if payment account has enough balance (for non-saraf accounts)
+      const payTxn = await AccountTransaction.findOne({
+        referenceType: 'purchase',
+        referenceId: purchase._id,
+        transactionType: 'Payment',
+      }).session(session);
+      
+      if (payTxn && paidAmount > 0) {
+        await validateAccountBalance(payTxn.account, paidAmount, session);
+      }
+      
+      purchase.paidAmount = paidAmount;
+    }
 
     // Recalculate total and due
     let newTotalAmount = 0;
@@ -386,16 +471,40 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
     }).session(session);
 
     if (payTxn) {
-      const payAcc = await Account.findById(payTxn.account).session(session);
-      const diff = paidAmount - Math.abs(payTxn.amount);
-      payAcc.currentBalance -= diff;
-      await payAcc.save({ session });
-      payTxn.amount = -paidAmount;
-      // ensure transactionType and created_by are consistent for payment records
-      payTxn.transactionType = 'Payment';
-      if (!payTxn.created_by)
-        payTxn.created_by = req.user?._id || payTxn.created_by;
-      await payTxn.save({ session });
+      // If payment account is being changed
+      if (paymentAccount && paymentAccount !== payTxn.account.toString()) {
+        // Validate new payment account
+        const newPayAcc = await validateAccountBalance(paymentAccount, paidAmount, session);
+        
+        // Reverse old payment account
+        const oldPayAcc = await Account.findById(payTxn.account).session(session);
+        oldPayAcc.currentBalance += Math.abs(payTxn.amount);
+        await oldPayAcc.save({ session });
+        
+        // Update transaction to new account
+        payTxn.account = newPayAcc._id;
+        payTxn.amount = -paidAmount;
+        payTxn.transactionType = 'Payment';
+        if (!payTxn.created_by)
+          payTxn.created_by = req.user?._id || payTxn.created_by;
+        await payTxn.save({ session });
+        
+        // Update new payment account
+        newPayAcc.currentBalance -= paidAmount;
+        await newPayAcc.save({ session });
+      } else {
+        // Just update amount for same account
+        const payAcc = await Account.findById(payTxn.account).session(session);
+        const diff = paidAmount - Math.abs(payTxn.amount);
+        payAcc.currentBalance -= diff;
+        await payAcc.save({ session });
+        payTxn.amount = -paidAmount;
+        // ensure transactionType and created_by are consistent for payment records
+        payTxn.transactionType = 'Payment';
+        if (!payTxn.created_by)
+          payTxn.created_by = req.user?._id || payTxn.created_by;
+        await payTxn.save({ session });
+      }
     }
 
     // 5️⃣ Audit Log entry
