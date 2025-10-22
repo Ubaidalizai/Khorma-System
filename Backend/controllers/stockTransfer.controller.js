@@ -12,6 +12,7 @@ const EmployeeStock = require('../models/employeeStock.model');
 // @desc    Transfer stock between locations (warehouse, store, employee)
 // @route   POST /api/v1/stock-transfers
 exports.transferStock = asyncHandler(async (req, res, next) => {
+  console.log(req.body);
   const session = await mongoose.startSession();
   session.startTransaction();
 

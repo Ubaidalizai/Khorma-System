@@ -57,7 +57,7 @@ export const getUserProfile = async () => {
 export const fetchProducts = async (params = {}) => {
   try {
     const response = await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
-   
+
     // Handle both direct array response and paginated response with data property
     if (Array.isArray(response)) {
       return { data: response };
@@ -306,7 +306,7 @@ export const fetchAccountLedger = async (accountId, params = {}) => {
   if (params.startDate) query.set("startDate", params.startDate);
   if (params.endDate) query.set("endDate", params.endDate);
   if (params.type) query.set("type", params.type);
-  
+
   const url = query.toString()
     ? `${API_ENDPOINTS.ACCOUNTS.LEDGER(accountId)}?${query.toString()}`
     : API_ENDPOINTS.ACCOUNTS.LEDGER(accountId);
@@ -322,11 +322,11 @@ export const fetchPurchases = async (params = {}) => {
     if (params.status) query.set("status", params.status);
     if (params.page) query.set("page", String(params.page));
     if (params.limit) query.set("limit", String(params.limit));
-    
+
     const url = query.toString()
       ? `${API_ENDPOINTS.PURCHASES.LIST}?${query.toString()}`
       : API_ENDPOINTS.PURCHASES.LIST;
-    
+
     const response = await apiRequest(url);
     return response;
   } catch (error) {
@@ -415,6 +415,7 @@ export const fetchStock = async () => {
 
 export const fetchInventoryStock = async (params = {}) => {
   const query = new URLSearchParams();
+  console.log(query);
   if (params.search) query.set("search", params.search);
   const url = query.toString()
     ? `${API_ENDPOINTS.STOCK.INVENTORY}?${query.toString()}`
@@ -469,6 +470,7 @@ export const fetchStockTransfer = async (id) => {
 };
 
 export const createStockTransfer = async (transferData) => {
+  console.log(transferData);
   return await apiRequest(API_ENDPOINTS.STOCK_TRANSFER.CREATE, {
     method: "POST",
     body: JSON.stringify(transferData),
@@ -578,12 +580,11 @@ export const createProductItem = async (productData) => {
 //   return await updateProduct(id, productData);
 // };
 
-
 // ACCOUNT
 
 export const fetchaccounts = async () => {
-  return await apiRequest(API_ENDPOINTS.ACCOUNTS.LIST)
-}
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.LIST);
+};
 
 // Dashboard Statistics - Fallback implementation using existing endpoints
 export const fetchDashboardStats = async () => {

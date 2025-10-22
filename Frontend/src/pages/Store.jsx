@@ -18,6 +18,7 @@ import {
   useCreateStockTransfer,
   useDeleteStore,
   useEmployees,
+  useStoreStocks,
 } from "../services/useApi";
 import Button from "../components/Button";
 import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
@@ -35,7 +36,8 @@ const storeHeader = [
   { title: "عملیات" },
 ];
 
-function Store({ stocks = [] }) {
+function Store() {
+  const { data: stocks } = useStoreStocks();
   const { data: employees } = useEmployees();
   const { register, handleSubmit, watch } = useForm();
   const { mutate: createStockTransfer } = useCreateStockTransfer();
@@ -114,7 +116,7 @@ function Store({ stocks = [] }) {
       >
         <TableHeader headerData={storeHeader} />
         <TableBody>
-          {stocks?.map((el) => (
+          {stocks?.data?.map((el) => (
             <TableRow key={el?._id}>
               <TableColumn>{el?.batchNumber || "DEFAULT"}</TableColumn>
               <TableColumn>

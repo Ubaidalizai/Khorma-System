@@ -738,7 +738,7 @@ export const useStockTransferDelete = () => {
       });
     },
     onError: () => {
-      toast.error(" عملیه غیر موفق بود", {
+      toast.error(" عملیه  نا  موفق بود", {
         position: "top-right",
         autoClose: 4000,
         hideProgressBar: true,
@@ -761,6 +761,7 @@ export const useCreateStockTransfer = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(["inventory"]);
       queryClient.invalidateQueries(["stockTransfers"]);
+      queryClient.invalidateQueries(["stocks"]);
       toast.success("انتقال موفقانه بود", {
         position: "top-right",
         autoClose: 4000,

@@ -37,7 +37,8 @@ function Warehouse() {
   const { control, handleSubmit, reset } = useForm();
   const { mutate: updateInventory } = useUpdateStore();
   const [showTransfer, setShowTransfer] = useState(false);
-  const { register, watch } = useForm();
+  const transferForm = useForm();
+  const { register, watch } = transferForm;
   const [show, setShow] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
@@ -45,6 +46,7 @@ function Warehouse() {
   const { mutate: createStockTransfer } = useCreateStockTransfer();
   const { data: warehouseData, isLoading } = useWarehouseStocks({ search });
   const warehouses = warehouseData?.data || warehouseData || [];
+
   const transferType = watch("transferType") || "warehouse-store";
   const quantity = watch("quantity");
   const employee = watch("employee");
@@ -85,22 +87,17 @@ function Warehouse() {
       toLocation: toLocation,
       employee: needsEmployee ? employee : undefined,
       quantity: Number(quantity),
-      transferDate: new Date(),
-      transferredBy: "currentUserId", // replace if you have user context
-      unit: selectedPro.unit,
-      purchasePricePerBaseUnit: selectedPro.purchasePricePerBaseUnit,
+      notes: "", // optional notes
     };
     createStockTransfer(stockTransfer, {
       onSuccess: () => {
-        setShwoTransferConf(false);
         setShowTransfer(false);
+        setShwoTransferConf(false);
       },
-      onError: (error) => {
-        console.error("Error transferring stock:", error);
+      onError: () => {
+        // Error toast is handled in the hook
       },
     });
-    // console.log(stockTransfer);
-    setShwoTransferConf(false);
   }
 
   useEffect(
@@ -116,7 +113,7 @@ function Warehouse() {
   };
   if (isLoading)
     return (
-      <div className=" w-full h-full flex justify-center items-center">
+      <div className=" w-full h-[250px] flex justify-center items-center">
         <BiLoaderAlt className=" text-2xl animate-spin" />
       </div>
     );
@@ -381,7 +378,7 @@ function Warehouse() {
         <form
           noValidate
           className="bg-white rounded-lg shadow-sm w-[600px]"
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={transferForm.handleSubmit(onSubmit)}
         >
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">انتقال موجودی</h2>
@@ -402,7 +399,7 @@ function Warehouse() {
                   className="w-full border rounded-md px-3 py-2"
                   {...register("transferType")}
                 >
-                  <option value="store-warehouse">فروشگاه ↔ گدام</option>
+                  <option value="warehouse-store">فروشگاه ↔ گدام</option>
                   <option value="store-employee">فروشگاه → کارمند</option>
                   <option value="employee-store">کارمند → فروشگاه</option>
                   <option value="warehouse-employee">گدام → کارمند</option>
