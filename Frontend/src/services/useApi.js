@@ -68,6 +68,8 @@ import {
   createAccount,
   updateAccount,
   deleteAccount,
+  fetchBatchesByProduct,
+  fetchProductsFromStock,
   createStockTransfer,
   fetchStockTransfers,
   deleteStockTransfer,
@@ -268,6 +270,7 @@ export const usePurchase = (id) =>
   useQuery({
     queryKey: ["purchase", id],
     queryFn: () => fetchPurchase(id),
+    enabled: !!id, // Only run query if id exists
   });
 
 export const useCreatePurchase = () => {
@@ -283,7 +286,7 @@ export const useUpdatePurchase = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["updatePurchase"],
-    mutationFn: () => updatePurchase,
+    mutationFn: ({ id, ...purchaseData }) => updatePurchase(id, purchaseData),
     onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
   });
 };
@@ -331,6 +334,16 @@ export const useInventoryStats = () => {
   });
 };
 
+export const useBatchesByProduct = (productId, location = 'store') => {
+  return useQuery({
+    queryKey: ["batches", productId, location],
+    queryFn: () => fetchBatchesByProduct(productId, location),
+    enabled: !!productId, // Only run query if productId exists
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+
 // Supplier CRUD operations
 
 export const useSuppliers = () => {
@@ -375,10 +388,11 @@ export const useDeleteSupplier = () => {
 
 // USE THE SALE
 
-export const useSales = () => {
+export const useSales = (params = {}) => {
   return useQuery({
-    queryKey: ["allSales"],
-    queryFn: fetchSales,
+    queryKey: ["allSales", params],
+    queryFn: () => fetchSales(params),
+    keepPreviousData: true,
   });
 };
 
@@ -558,6 +572,14 @@ export const useSystemAccounts = () => {
     queryKey: ["systemAccounts"],
     queryFn: fetchSystemAccounts,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useProductsFromStock = (location = 'store') => {
+  return useQuery({
+    queryKey: ["productsFromStock", location],
+    queryFn: () => fetchProductsFromStock(location),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 

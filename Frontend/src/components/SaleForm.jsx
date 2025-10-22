@@ -1,39 +1,126 @@
-import React, { useState, useEffect } from "react";
-import { fetchProducts, fetchCustomers } from "../services/apiUtiles";
+import React, { useState } from "react";
+import { useProductsFromStock, useCustomers, useEmployees, useSystemAccounts, useUnits, useBatchesByProduct } from "../services/useApi";
 
-function SaleForm({ register, handleSubmit, watch, onClose }) {
-  const [products, setProducts] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(false);
+// Searchable Select Component
+const SearchableSelect = ({ 
+  options = [], 
+  value, 
+  onChange, 
+  placeholder = "انتخاب کنید...",
+  searchPlaceholder = "جستجو...",
+  className = "",
+  disabled = false
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const filteredOptions = (Array.isArray(options) ? options : []).filter(option =>
+    option.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    option.label?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const selectedOption = (Array.isArray(options) ? options : []).find(option => option._id === value || option.value === value);
+  
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-right flex justify-between items-center ${className}`}
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={disabled}
+      >
+        <span className={selectedOption ? "text-gray-900" : "text-gray-500"}>
+          {selectedOption ? (selectedOption.name || selectedOption.label) : placeholder}
+        </span>
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+          <div className="p-2 border-b border-gray-200">
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-right"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            {filteredOptions.length === 0 ? (
+              <div className="px-3 py-2 text-gray-500 text-sm">نتیجه‌ای یافت نشد</div>
+            ) : (
+              filteredOptions.map((option) => (
+                <button
+                  key={option._id || option.value}
+                  type="button"
+                  className="w-full px-3 py-2 text-right hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                  onClick={() => {
+                    onChange(option._id || option.value);
+                    setIsOpen(false);
+                    setSearchTerm("");
+                  }}
+                >
+                  {option.name || option.label}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+function SaleForm({ register, handleSubmit, watch, onClose, onSubmit }) {
   const [items, setItems] = useState([
-    { product: "", batch_number: "", quantity: 0 },
+    { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 },
   ]);
-  const [discount, setDiscount] = useState(0);
+  const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
+  const [loading, setLoading] = useState(false);
+  
+  // API hooks
+  const { data: stockData, isLoading: productsLoading } = useProductsFromStock('store');
+  const { data: customers, isLoading: customersLoading } = useCustomers();
+  const { data: employees, isLoading: employeesLoading } = useEmployees();
+  const { data: accountsData, isLoading: accountsLoading } = useSystemAccounts();
+  const { data: units, isLoading: unitsLoading } = useUnits();
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [productsData, customersData] = await Promise.all([
-          fetchProducts(),
-          fetchCustomers(),
-        ]);
+  // Extract accounts array from the response
+  const accounts = accountsData?.accounts || accountsData || [];
+  
+  // Extract customers and employees arrays
+  const customersList = customers?.data || customers || [];
+  const employeesList = employees?.data || employees || [];
 
-        setProducts(productsData.map((p) => ({ value: p._id, label: p.name })));
-        setCustomers(
-          customersData.map((c) => ({ value: c._id, label: c.name }))
-        );
-      } catch (error) {
-        console.error("Failed to load data:", error);
-      } finally {
-        setLoading(false);
+  // Get unique products from stock data
+  const products = React.useMemo(() => {
+    if (!stockData || !Array.isArray(stockData)) return [];
+    
+    // Group by product ID to get unique products
+    const productMap = new Map();
+    stockData.forEach(stock => {
+      if (stock.product && !productMap.has(stock.product._id)) {
+        productMap.set(stock.product._id, {
+          _id: stock.product._id,
+          name: stock.product.name
+        });
       }
-    };
-    loadData();
-  }, []);
+    });
+    
+    return Array.from(productMap.values());
+  }, [stockData]);
+
+  // Get batches for selected product - only fetch when product is selected
+  const selectedProductId = items[0]?.product;
+  const { data: batchesData, isLoading: batchesLoading } = useBatchesByProduct(selectedProductId, 'store');
+  const batches = Array.isArray(batchesData) ? batchesData : [];
 
   const addItem = () => {
-    setItems([...items, { product: "", batch_number: "", quantity: 0 }]);
+    setItems([...items, { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 }]);
   };
 
   const removeItem = (index) => {
@@ -45,27 +132,83 @@ function SaleForm({ register, handleSubmit, watch, onClose }) {
   const updateItem = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
+    
+    // If product changes, reset unit, batch, and price
+    if (field === 'product') {
+      newItems[index].unit = "";
+      newItems[index].batchNumber = "";
+      newItems[index].unitPrice = 0;
+    }
+    
+    // If batch changes, update price
+    if (field === 'batchNumber') {
+      const batch = batches?.find(b => b.batchNumber === value);
+      if (batch) {
+        newItems[index].unitPrice = batch.purchasePricePerBaseUnit || 0;
+      }
+    }
+    
     setItems(newItems);
   };
 
   const calculateTotal = () => {
-    // This would need to be calculated based on product prices
-    // For now, just return a placeholder
-    return items.reduce((total, item) => total + item.quantity * 100, 0); // Assuming 100 as base price
+    return items.reduce((total, item) => {
+      const itemTotal = parseFloat(item.quantity || 0) * parseFloat(item.unitPrice || 0);
+      return total + itemTotal;
+    }, 0);
   };
 
-  const calculateFinalTotal = () => {
-    const total = calculateTotal();
-    return total - discount;
+  const handleFormSubmit = async (data) => {
+    setLoading(true);
+    try {
+      const saleData = {
+        customer: saleType === "customer" ? data.customer : null,
+        employee: saleType === "employee" ? data.employee : null,
+        saleDate: new Date().toISOString(),
+      items: items.filter((item) => item.product && item.quantity > 0).map(item => ({
+        product: item.product,
+        unit: item.unit,
+        quantity: parseFloat(item.quantity),
+        unitPrice: parseFloat(item.unitPrice)
+      })),
+        paidAmount: data.paidAmount || 0,
+        placedIn: data.placedIn || accounts?.[0]?._id,
+        invoiceType: data.invoiceType || "small",
+      };
+      
+      if (onSubmit) {
+        await onSubmit(saleData);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleFormSubmit = (data) => {
-    const saleData = {
-      items: items.filter((item) => item.product && item.quantity > 0),
-      discount: discount,
-    };
-    handleSubmit(saleData);
-  };
+  // Debug logging
+  console.log("SaleForm Debug:", {
+    accounts,
+    accountsLoading,
+    customersList,
+    employeesList,
+    products,
+    productsLoading,
+    batches,
+    selectedProductId
+  });
+
+  // Show loading state if data is being fetched
+  if (productsLoading || customersLoading || employeesLoading || accountsLoading || unitsLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -79,38 +222,120 @@ function SaleForm({ register, handleSubmit, watch, onClose }) {
         </h2>
       </div>
       <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Sale Type Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            نوع فروش
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="customer"
+                checked={saleType === "customer"}
+                onChange={(e) => setSaleType(e.target.value)}
+                className="ml-2"
+              />
+              <span className="mr-2 text-sm">مشتری</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="employee"
+                checked={saleType === "employee"}
+                onChange={(e) => setSaleType(e.target.value)}
+                className="ml-2"
+              />
+              <span className="mr-2 text-sm">کارمند</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="walkin"
+                checked={saleType === "walkin"}
+                onChange={(e) => setSaleType(e.target.value)}
+                className="ml-2"
+              />
+              <span className="mr-2 text-sm">مشتری عابر</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Customer/Employee Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              مشتری
+              {saleType === "customer" ? "مشتری" : saleType === "employee" ? "کارمند" : "مشتری عابر"}
+            </label>
+            {saleType === "customer" && (
+              <SearchableSelect
+                options={customersList}
+                value={watch("customer")}
+                onChange={(value) => register("customer").onChange({ target: { value } })}
+                placeholder="انتخاب مشتری"
+                searchPlaceholder="جستجو مشتری..."
+              />
+            )}
+            {saleType === "employee" && (
+              <SearchableSelect
+                options={employeesList}
+                value={watch("employee")}
+                onChange={(value) => register("employee").onChange({ target: { value } })}
+                placeholder="انتخاب کارمند"
+                searchPlaceholder="جستجو کارمند..."
+              />
+            )}
+            {saleType === "walkin" && (
+              <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 text-center">
+                مشتری عابر
+              </div>
+            )}
+          </div>
+
+
+          {/* Invoice Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              نوع فاکتور
             </label>
             <select
-              {...register("customer")}
+              {...register("invoiceType")}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             >
-              <option value="">انتخاب مشتری</option>
-              {customers?.data?.map((customer) => (
-                <option key={customer.value} value={customer.value}>
-                  {customer.label}
-                </option>
-              ))}
+              <option value="small">کوچک</option>
+              <option value="large">بزرگ</option>
             </select>
           </div>
 
+          {/* Account Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              تخفیف (افغانی)
+              حساب دریافت
+            </label>
+            <SearchableSelect
+              options={accounts || []}
+              value={watch("placedIn")}
+              onChange={(value) => register("placedIn").onChange({ target: { value } })}
+              placeholder="انتخاب حساب"
+              searchPlaceholder="جستجو حساب..."
+            />
+          </div>
+
+          {/* Paid Amount */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              مبلغ پرداخت شده
             </label>
             <input
               type="number"
               step="0.01"
-              value={discount}
-              onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+              {...register("paidAmount", { valueAsNumber: true })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               placeholder="0.00"
               min="0"
             />
           </div>
+
         </div>
 
         {/* Items Section */}
@@ -130,43 +355,60 @@ function SaleForm({ register, handleSubmit, watch, onClose }) {
             {items.map((item, index) => (
               <div
                 key={index}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-lg"
+                className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border border-gray-200 rounded-lg"
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     محصول *
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={products || []}
                     value={item.product}
-                    onChange={(e) =>
-                      updateItem(index, "product", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">انتخاب محصول</option>
-                    {products.map((product) => (
-                      <option key={product.value} value={product.value}>
-                        {product.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => updateItem(index, "product", value)}
+                    placeholder="انتخاب محصول"
+                    searchPlaceholder="جستجو محصول..."
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    شماره بچ *
+                    واحد *
                   </label>
-                  <input
-                    type="text"
-                    value={item.batch_number}
-                    onChange={(e) =>
-                      updateItem(index, "batch_number", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="BN-001"
-                    required
+                  <SearchableSelect
+                    options={units?.data || []}
+                    value={item.unit}
+                    onChange={(value) => updateItem(index, "unit", value)}
+                    placeholder="انتخاب واحد"
+                    searchPlaceholder="جستجو واحد..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    شماره بچ (اختیاری - برای وضوح)
+                  </label>
+                  <SearchableSelect
+                    options={batches?.map(batch => ({
+                      _id: batch.batchNumber,
+                      name: `${batch.batchNumber} (موجودی: ${batch.quantity})`,
+                      batchNumber: batch.batchNumber,
+                      quantity: batch.quantity
+                    })) || []}
+                    value={item.batchNumber}
+                    onChange={(value) => updateItem(index, "batchNumber", value)}
+                    placeholder="انتخاب بچ (اختیاری)"
+                    searchPlaceholder="جستجو بچ..."
+                  />
+                  {batchesLoading && selectedProductId && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      در حال بارگذاری بچ‌ها...
+                    </p>
+                  )}
+                  {!batchesLoading && batches.length === 0 && selectedProductId && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      هیچ بچ موجودی برای این محصول یافت نشد
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -190,12 +432,34 @@ function SaleForm({ register, handleSubmit, watch, onClose }) {
                   />
                 </div>
 
-                <div className="flex items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    قیمت واحد *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={item.unitPrice}
+                    onChange={(e) =>
+                      updateItem(
+                        index,
+                        "unitPrice",
+                        parseFloat(e.target.value) || 0
+                      )
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0.00"
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-end col-span-5">
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
                     disabled={items.length === 1}
-                    className="w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     حذف
                   </button>
@@ -217,17 +481,11 @@ function SaleForm({ register, handleSubmit, watch, onClose }) {
                 {calculateTotal().toFixed(2)} افغانی
               </span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">تخفیف:</span>
-              <span className="font-semibold text-red-600">
-                -{discount.toFixed(2)} افغانی
-              </span>
-            </div>
             <div className="pt-2 border-t border-gray-300">
               <div className="flex justify-between">
                 <span className="font-bold text-gray-900">مجموع نهایی:</span>
                 <span className="text-xl font-bold text-amber-600">
-                  {calculateFinalTotal().toFixed(2)} افغانی
+                  {calculateTotal().toFixed(2)} افغانی
                 </span>
               </div>
             </div>

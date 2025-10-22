@@ -34,6 +34,8 @@ exports.updatePurchaseSchema = Joi.object({
   supplier: Joi.string().custom(objectId).optional(),
   purchaseDate: Joi.date().optional(),
   paidAmount: Joi.number().min(0).optional(),
+  paymentAccount: Joi.string().custom(objectId).optional(), // Allow updating payment account
+  stockLocation: Joi.string().valid('warehouse', 'store').optional(), // Allow updating stock location
   reason: Joi.string().max(200).optional(),
 
   items: Joi.array()

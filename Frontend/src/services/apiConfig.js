@@ -131,6 +131,7 @@ export const API_ENDPOINTS = {
     CREATE: "/stocks",
     UPDATE: (id) => `/stocks/${id}`,
     DELETE: (id) => `/stocks/${id}`,
+    BATCHES_BY_PRODUCT: (productId) => `/stocks/${productId}/batches`,
   },
 
   // Stock Transfers
