@@ -13,7 +13,14 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   const { error } = createProductSchema.validate(req.body);
   if (error) throw new AppError(error.details[0].message, 400);
 
-  const { name, description, minLevel, baseUnit } = req.body;
+  const {
+    name,
+    description,
+    minLevel,
+    baseUnit,
+    latestPurchasePrice,
+    trackByBatch,
+  } = req.body;
 
   const existing = await Product.findOne({
     name: name.trim(),
@@ -30,6 +37,8 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     description,
     minLevel,
     baseUnit,
+    latestPurchasePrice,
+    trackByBatch,
   });
 
   res.status(201).json({

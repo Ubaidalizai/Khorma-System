@@ -1,122 +1,210 @@
-import React, { useState, useEffect } from "react";
 import {
+  ArchiveBoxIcon,
+  ArrowUturnLeftIcon,
   CubeIcon,
-  ShoppingCartIcon,
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
+  ReceiptRefundIcon,
+  DocumentTextIcon,
+  ChartBarIcon,
+  ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
-import Table from "../components/Table";
-import TableHeader from "./../components/TableHeader";
-import TableBody from "./../components/TableBody";
-import TableRow from "./../components/TableRow";
-import TableColumn from "./../components/TableColumn";
 import { TrendingDown, TrendingUp } from "lucide-react";
-import { formatCurrency } from "./../utilies/helper";
+import React, { useEffect, useState } from "react";
+import Table from "../components/Table";
 import {
+  useInventoryStats,
   useProduct,
-  useSales,
   usePurchases,
-  useDashboardStats,
   useRecentTransactions,
-  useLowStockItems,
+  useReverseTransaction,
+  useSales,
 } from "../services/useApi";
+import TableHeader from "./../components/TableHeader";
+import { formatCurrency } from "./../utilies/helper";
+import TableRow from "../components/TableRow";
+import TableColumn from "../components/TableColumn";
+import TableBody from "../components/TableBody";
 
 const Dashboard = () => {
   const headers = [
-    { title: "نوع" },
-    { title: "محصول" },
-    { title: "تعداد" },
+    { title: "حساب" },
+    { title: "نوع انتقال" },
+    { title: "انتقال دهنده" },
+    { title: "تاریخ" },
     { title: "مبلغ" },
-    { title: "زمان" },
+    { title: "عملیات" },
   ];
+
+  const getTypeColor = (type) => {
+    switch (type) {
+      case "Sale":
+        return "text-blue-600 ";
+      case "Purchase":
+        return "text-orange-600  ";
+      case "Payment":
+        return "text-green-600";
+      case "Transfer":
+        return "text-purple-600 ";
+      case "Expense":
+        return "text-red-600";
+      case "Credit":
+        return "text-green-700 ";
+      case "Debit":
+        return "text-red-700 ";
+      case "SaleReturn":
+        return "text-yellow-600 ";
+      default:
+        return "text-gray-800";
+    }
+  };
+
+  const getTransactionTypePersian = (type) => {
+    switch (type) {
+      case "Sale":
+        return "فروش";
+      case "Purchase":
+        return "خرید";
+      case "Payment":
+        return "پرداخت";
+      case "Transfer":
+        return "انتقال";
+      case "Expense":
+        return "هزینه";
+      case "Credit":
+        return "اعتبار";
+      case "Debit":
+        return "بدهی";
+      case "SaleReturn":
+        return "بازگشت فروش";
+      default:
+        return type;
+    }
+  };
 
   // API hooks
   const { data: products, isLoading: productsLoading } = useProduct();
   const { data: sales, isLoading: salesLoading } = useSales();
   const { data: purchases, isLoading: purchasesLoading } = usePurchases();
   // const { data: inventory, isLoading: inventoryLoading } = useInventory();
-  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats();
-  const { data: recentTransactions, isLoading: transactionsLoading } =
-    useRecentTransactions(5);
-  const { data: lowStockItems, isLoading: lowStockLoading } =
-    useLowStockItems();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(10);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [reason, setReason] = useState("");
+  const { data: recentTransactions, isLoading: statsLoading } =
+    useRecentTransactions({ page: currentPage, limit });
+  // const { data: lowStockItems, isLoading: lowStockLoading } =
+  //   useLowStockItems();
+  const { data: lowStock, isLoading: lowStockLoading } = useInventoryStats();
+  const { mutate: reverseTransaction, isLoading: reverseLoading } =
+    useReverseTransaction();
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalSales: 0,
     totalPurchases: 0,
     lowStockItems: 0,
+    totalStock: 0,
+    totalReceivables: 0,
+    totalPayables: 0,
+    netProfit: 0,
   });
+
+  const handleReverseClick = (transaction) => {
+    if (transaction && transaction._id && transaction._id !== "undefined") {
+      setSelectedTransaction(transaction);
+      setShowModal(true);
+    }
+  };
+
+  const handleConfirmReverse = () => {
+    if (reason.trim() && selectedTransaction && selectedTransaction._id) {
+      reverseTransaction({ id: selectedTransaction._id, reason });
+      setShowModal(false);
+      setReason("");
+      setSelectedTransaction(null);
+    }
+  };
 
   // Use dashboard stats from API or calculate from individual endpoints
   useEffect(() => {
-    if (dashboardStats) {
-      setStats({
-        totalProducts: dashboardStats.totalProducts || 0,
-        totalSales: dashboardStats.totalSales || 0,
-        totalPurchases: dashboardStats.totalPurchases || 0,
-        lowStockItems: dashboardStats.lowStockItems || 0,
-      });
-    } else if (products && sales && purchases) {
-      // Fallback calculation if dashboard stats not available
-      // Ensure sales is an array before calling reduce
-      const salesArray = Array.isArray(sales) ? sales : [];
-      const purchasesArray = Array.isArray(purchases) ? purchases : [];
+    console.log("Dashboard useEffect triggered");
+    console.log("Products data:", products);
+    console.log("Sales data:", sales);
+    console.log("Purchases data:", purchases);
+    console.log("LowStock data:", lowStock);
 
-      const totalSalesAmount =
-        salesArray.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0) || 0;
-      const totalPurchasesAmount =
-        purchasesArray.reduce(
-          (sum, purchase) => sum + (purchase.totalAmount || 0),
-          0
-        ) || 0;
+    // Fallback calculation if dashboard stats not available
+    // Ensure sales is an array before calling reduce
 
-      setStats({
-        totalProducts: Array.isArray(products) ? products.length : 0,
-        totalSales: totalSalesAmount,
-        totalPurchases: totalPurchasesAmount,
-        lowStockItems: Array.isArray(lowStockItems) ? lowStockItems.length : 0,
-      });
-    }
-  }, [dashboardStats, products, sales, purchases, lowStockItems]);
+    const totalSalesAmount =
+      sales?.data?.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0) || 0;
+    const totalPurchasesAmount =
+      purchases?.purchases?.reduce(
+        (sum, purchase) => sum + (purchase.totalAmount || 0),
+        0
+      ) || 0;
+    const totalStockQuantity =
+      products?.data?.reduce(
+        (sum, product) => sum + (product.quantity || 0),
+        0
+      ) || 0;
+    const totalReceivables =
+      sales?.data?.reduce((sum, sale) => sum + (sale.dueAmount || 0), 0) || 0;
+    const totalPayables =
+      purchases?.purchases?.reduce(
+        (sum, purchase) => sum + (purchase.dueAmount || 0),
+        0
+      ) || 0;
+    const netProfit = sales?.summary?.totalProfit || 0;
 
+    console.log("Calculated totalSalesAmount:", totalSalesAmount);
+    console.log("Calculated totalPurchasesAmount:", totalPurchasesAmount);
+    console.log("Calculated totalStockQuantity:", totalStockQuantity);
+    console.log("Calculated totalReceivables:", totalReceivables);
+    console.log("Calculated totalPayables:", totalPayables);
+    console.log("Calculated netProfit:", netProfit);
+
+    const newStats = {
+      totalProducts: Array.isArray(products?.data) ? products?.data.length : 0,
+      totalSales: totalSalesAmount,
+      totalPurchases: totalPurchasesAmount,
+      lowStockItems: lowStock?.data?.lowStockDetails?.length || 0,
+      totalStock: totalStockQuantity,
+      totalReceivables,
+      totalPayables,
+      netProfit,
+    };
+
+    console.log("Setting stats:", newStats);
+    setStats(newStats);
+  }, [products, sales, purchases, lowStock]);
   // Format recent transactions from API data
-  const formatRecentTransactions = () => {
-    if (!recentTransactions) return [];
-
-    return recentTransactions.map((transaction) => ({
-      id: transaction._id,
-      type: transaction.type || (transaction.saleId ? "Sale" : "Purchase"),
-      product:
-        transaction.productName || transaction.product || "Unknown Product",
-      quantity: transaction.quantity || 0,
-      amount: transaction.amount || transaction.totalAmount || 0,
-      time: formatTimeAgo(transaction.createdAt || transaction.date),
-    }));
-  };
 
   // Helper function to format time ago
   const formatTimeAgo = (dateString) => {
-    if (!dateString) return "Unknown time";
+    if (!dateString) return "زمان نامشخص";
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
 
-    if (diffInHours < 1) return "Just now";
-    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    if (diffInHours < 1) return "همین الان";
+    if (diffInHours < 24) return `${diffInHours} ساعت پیش`;
     const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} days ago`;
+    if (diffInDays < 7) return `${diffInDays} روز پیش`;
+    // For older dates, show the date in Dari format
+    return date.toLocaleDateString("fa-IR");
   };
 
   const StatCard = ({ title, value, icon, color = "#6366F1", change }) => {
     const isPositive = change > 0;
     return (
-      <div className='bg-white hover:translate-y-1.5 transition-all duration-200  cursor-pointer  rounded-lg shadow-sm border border-gray-200 p-6'>
-        <div className='flex items-center justify-between'>
+      <div className="bg-white hover:translate-y-1.5 transition-all duration-200  cursor-pointer  rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between">
           <div>
-            <p className='text-sm text-gray-600'>{title} </p>
-            <div className='text-2xl font-bold text-gray-900 mt-1'>
+            <p className="text-sm text-gray-600">{title} </p>
+            <div className="text-2xl font-bold text-gray-900 mt-1">
               {change ? (
                 <div
                   className={`mt-2 text-center  w-full  flex items-center gap-1 text-sm font-medium ${
@@ -125,30 +213,30 @@ const Dashboard = () => {
                       : "text-red-500 dark:text-red-400"
                   }`}
                 >
-                  <div className=' flex items-center justify-start'>
+                  <div className=" flex items-center justify-start">
                     {isPositive ? (
-                      <span className=' p-3'>
+                      <span className=" p-3">
                         <TrendingUp size={24} />
                       </span>
                     ) : (
-                      <span className=' p-3 '>
+                      <span className=" p-3 ">
                         <TrendingDown size={24} />
                       </span>
                     )}
-                    <span className=''>
+                    <span className="">
                       {isPositive ? "+" : "-"}%
                       {change > 0 ? change : change * -1}
                     </span>
                   </div>
                 </div>
               ) : (
-                value
+                <p style={{ color }}> {value}</p>
               )}
             </div>
           </div>
 
           <div
-            className='p-3 rounded-lg border border-slate-200'
+            className="p-3 rounded-lg border border-slate-200"
             style={{
               background: `linear-gradient(135deg, ${color}33, ${color}99)`,
             }}
@@ -165,7 +253,7 @@ const Dashboard = () => {
 
   return (
     <div
-      dir='rtl'
+      dir="rtl"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -175,7 +263,7 @@ const Dashboard = () => {
       {/* Page header */}
       <div>
         <h1
-          className='font-bold'
+          className="font-bold"
           style={{
             fontSize: "var(--h1-size)",
             color: "var(--text-dark)",
@@ -196,57 +284,65 @@ const Dashboard = () => {
 
       {/* Stats grid */}
       <div
-        className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
         style={{ gap: "var(--space-6)" }}
       >
         <StatCard
-          title='کل محصولات'
+          title="کل محصولات"
           value={statsLoading || productsLoading ? "..." : stats.totalProducts}
           icon={CubeIcon}
-          color='var(--info-blue)'
-          change={5.2}
+          color="var(--info-blue)"
+        />
+
+        <StatCard
+          title="موجودی کم"
+          value={statsLoading || lowStockLoading ? "..." : stats.lowStockItems}
+          icon={ExclamationTriangleIcon}
+          color="var(--error-red)"
         />
         <StatCard
-          title='کل فروش‌ها'
+          title="دریافتنی‌ها"
           value={
             statsLoading || salesLoading
               ? "..."
-              : formatCurrency(stats.totalSales)
+              : formatCurrency(stats.totalReceivables)
           }
-          icon={CurrencyDollarIcon}
-          color='var(--success-green)'
-          change={12.5}
+          icon={ReceiptRefundIcon}
+          color="var(--success-green)"
         />
         <StatCard
-          title='کل خریدها'
+          title="پرداختنی‌ها"
           value={
             statsLoading || purchasesLoading
               ? "..."
-              : formatCurrency(stats.totalPurchases)
+              : formatCurrency(stats.totalPayables)
           }
-          icon={ShoppingCartIcon}
-          color='var(--amber)'
-          change={-2.1}
+          icon={DocumentTextIcon}
+          color="var(--error-red)"
         />
         <StatCard
-          title='موجودی کم'
-          value={statsLoading || lowStockLoading ? "..." : stats.lowStockItems}
-          icon={ExclamationTriangleIcon}
-          color='var(--error-red)'
+          title="سود خالص"
+          value={
+            statsLoading || salesLoading
+              ? "..."
+              : formatCurrency(stats.netProfit)
+          }
+          icon={ChartBarIcon}
+          color="var(--success-green)"
         />
       </div>
 
       {/* Recent transactions */}
-      <div className='card'>
+      <div className="card">
         <div
-          className='px-6 py-4 border-b'
+          className="px-6 py-4 border-b"
           style={{
             borderColor: "var(--border)",
             backgroundColor: "var(--beige-light)",
           }}
         >
           <h2
-            className='font-semibold'
+            className="font-semibold"
             style={{
               fontSize: "var(--h4-size)",
               color: "var(--text-dark)",
@@ -255,56 +351,113 @@ const Dashboard = () => {
             تراکنش‌های اخیر
           </h2>
         </div>
-        <div className='overflow-x-auto'>
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader headerData={headers} />
             <TableBody>
-              {transactionsLoading ? (
+              {statsLoading ? (
                 <TableRow>
-                  <TableColumn colSpan={5} className='text-center py-4'>
-                    Loading transactions...
+                  <TableColumn>
+                    <p className="">در حال بارگیری...</p>
                   </TableColumn>
                 </TableRow>
-              ) : formatRecentTransactions().length > 0 ? (
-                formatRecentTransactions().map((tra) => (
-                  <TableRow key={tra.id}>
-                    <TableColumn
-                      className={`${
-                        tra.type === "Purchase"
-                          ? " text-orange-300"
-                          : "text-green-400"
-                      }`}
-                    >
-                      {tra.type}
-                    </TableColumn>
-                    <TableColumn>{tra.product}</TableColumn>
-                    <TableColumn>{tra.quantity}</TableColumn>
-                    <TableColumn>{formatCurrency(tra.amount)}</TableColumn>
-                    <TableColumn>{tra.time}</TableColumn>
-                  </TableRow>
-                ))
+              ) : recentTransactions?.data?.transactions?.length > 0 ? (
+                recentTransactions.data?.transactions?.map(
+                  (transaction, index) => (
+                    <TableRow key={index}>
+                      <TableColumn className="px-4 py-2">
+                        {transaction.account?.name || "Unknown"}
+                      </TableColumn>
+                      <TableColumn
+                        className={`font-semibold text-center ${getTypeColor(
+                          transaction.transactionType
+                        )}`}
+                      >
+                        {getTransactionTypePersian(transaction.transactionType)}
+                      </TableColumn>
+                      <TableColumn className="px-4">
+                        {transaction.created_by?.name || "Unknown"}
+                      </TableColumn>
+                      <TableColumn className="px-4">
+                        {formatTimeAgo(transaction.date)}
+                      </TableColumn>
+                      <TableColumn
+                        className={`px-4 font-semibold ${
+                          (transaction.amount || 0) > 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {formatCurrency(transaction.amount || 0)}
+                      </TableColumn>
+                      <TableColumn className="px-4">
+                        <button
+                          onClick={() => handleReverseClick(transaction)}
+                          disabled={reverseLoading}
+                          className="text-red-500 transition-all duration-200 hover:bg-red-100 p-0.5 rounded-full  hover:text-red-700 disabled:opacity-50"
+                          title="برگشت"
+                        >
+                          <ArrowUturnLeftIcon className="h-5 w-5" />
+                        </button>
+                      </TableColumn>
+                    </TableRow>
+                  )
+                )
               ) : (
-                <TableRow>
-                  <TableColumn
-                    colSpan={5}
-                    className='text-center py-4 text-gray-500'
-                  >
-                    No recent transactions found
-                  </TableColumn>
-                </TableRow>
+                <tr>
+                  <td colSpan={6} className="text-center py-4 text-gray-500">
+                    هیچ تراکنش اخیر یافت نشد
+                  </td>
+                </tr>
               )}
             </TableBody>
           </Table>
+          {/* Pagination */}
+          {recentTransactions?.data?.pagination &&
+            recentTransactions?.data?.pagination?.totalPages > 1 && (
+              <div className="flex justify-center items-center mt-4 space-x-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  قبلی
+                </button>
+                <span className="px-3 py-1">
+                  صفحه {currentPage} از{" "}
+                  {recentTransactions?.data?.pagination?.totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(
+                        prev + 1,
+                        recentTransactions?.data?.pagination?.totalPages
+                      )
+                    )
+                  }
+                  disabled={
+                    currentPage ===
+                    recentTransactions?.data?.pagination?.totalPages
+                  }
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  بعدی
+                </button>
+              </div>
+            )}
         </div>
       </div>
 
       {/* Quick actions */}
-      <div
-        className='grid grid-cols-1 md:grid-cols-3'
+      {/* <div
+        className="grid grid-cols-1 md:grid-cols-3"
         style={{ gap: "var(--space-6)" }}
       >
         <div
-          className='rounded-lg p-6 text-white hover-lift'
+          className="rounded-lg p-6 text-white hover-lift"
           style={{
             background:
               "linear-gradient(135deg, var(--info-blue), var(--info-blue))",
@@ -312,7 +465,7 @@ const Dashboard = () => {
           }}
         >
           <h3
-            className='font-semibold mb-2'
+            className="font-semibold mb-2"
             style={{
               fontSize: "var(--h5-size)",
               marginBottom: "var(--space-2)",
@@ -321,7 +474,7 @@ const Dashboard = () => {
             فروش سریع
           </h3>
           <p
-            className='mb-4'
+            className="mb-4"
             style={{
               opacity: 0.9,
               marginBottom: "var(--space-4)",
@@ -330,7 +483,7 @@ const Dashboard = () => {
             ثبت فروش جدید به سرعت
           </p>
           <button
-            className='px-4 py-2 rounded-lg font-medium transition-colors duration-200'
+            className="px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             style={{
               backgroundColor: "var(--surface)",
               color: "var(--info-blue)",
@@ -347,7 +500,7 @@ const Dashboard = () => {
         </div>
 
         <div
-          className='rounded-lg p-6 text-white hover-lift'
+          className="rounded-lg p-6 text-white hover-lift"
           style={{
             background:
               "linear-gradient(135deg, var(--success-green), var(--success-green))",
@@ -355,7 +508,7 @@ const Dashboard = () => {
           }}
         >
           <h3
-            className='font-semibold mb-2'
+            className="font-semibold mb-2"
             style={{
               fontSize: "var(--h5-size)",
               marginBottom: "var(--space-2)",
@@ -364,7 +517,7 @@ const Dashboard = () => {
             افزودن خرید
           </h3>
           <p
-            className='mb-4'
+            className="mb-4"
             style={{
               opacity: 0.9,
               marginBottom: "var(--space-4)",
@@ -373,7 +526,7 @@ const Dashboard = () => {
             ثبت خرید جدید موجودی
           </p>
           <button
-            className='px-4 py-2 rounded-lg font-medium transition-colors duration-200'
+            className="px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             style={{
               backgroundColor: "var(--surface)",
               color: "var(--success-green)",
@@ -390,7 +543,7 @@ const Dashboard = () => {
         </div>
 
         <div
-          className='rounded-lg p-6 text-white hover-lift'
+          className="rounded-lg p-6 text-white hover-lift"
           style={{
             background:
               "linear-gradient(135deg, var(--amber), var(--amber-dark))",
@@ -398,7 +551,7 @@ const Dashboard = () => {
           }}
         >
           <h3
-            className='font-semibold mb-2'
+            className="font-semibold mb-2"
             style={{
               fontSize: "var(--h5-size)",
               marginBottom: "var(--space-2)",
@@ -407,7 +560,7 @@ const Dashboard = () => {
             مشاهده گزارش‌ها
           </h3>
           <p
-            className='mb-4'
+            className="mb-4"
             style={{
               opacity: 0.9,
               marginBottom: "var(--space-4)",
@@ -416,7 +569,7 @@ const Dashboard = () => {
             بررسی تحلیل‌های کسب‌وکار
           </p>
           <button
-            className='px-4 py-2 rounded-lg font-medium transition-colors duration-200'
+            className="px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             style={{
               backgroundColor: "var(--surface)",
               color: "var(--amber-dark)",
@@ -431,7 +584,39 @@ const Dashboard = () => {
             مشاهده گزارش‌ها
           </button>
         </div>
-      </div>
+      </div> */}
+
+      {/* Modal for reverse confirmation */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">تأیید برگشت تراکنش</h3>
+            <p className="mb-4">لطفاً دلیل برگشت این تراکنش را وارد کنید:</p>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded mb-4"
+              rows="3"
+              placeholder="دلیل برگشت..."
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                لغو
+              </button>
+              <button
+                onClick={handleConfirmReverse}
+                disabled={!reason.trim() || reverseLoading}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+              >
+                {reverseLoading ? "در حال پردازش..." : "تأیید برگشت"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

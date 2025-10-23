@@ -6,6 +6,7 @@ exports.createProductSchema = Joi.object({
   minLevel: Joi.number().min(0).default(0),
   trackByBatch: Joi.boolean().default(false),
   baseUnit: Joi.string().required(), // must be valid ObjectId
+  latestPurchasePrice: Joi.number().min(0).default(0),
 });
 
 exports.updateProductSchema = Joi.object({

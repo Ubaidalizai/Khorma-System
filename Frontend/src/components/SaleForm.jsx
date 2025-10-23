@@ -1,26 +1,35 @@
 import React, { useState } from "react";
-import { useProductsFromStock, useAccounts, useSystemAccounts, useUnits, useBatchesByProduct } from "../services/useApi";
+import {
+  useProductsFromStock,
+  useAccounts,
+  useSystemAccounts,
+  useUnits,
+  useBatchesByProduct,
+} from "../services/useApi";
 
 // Searchable Select Component
-const SearchableSelect = ({ 
-  options = [], 
-  value, 
-  onChange, 
+const SearchableSelect = ({
+  options = [],
+  value,
+  onChange,
   placeholder = "انتخاب کنید...",
   searchPlaceholder = "جستجو...",
   className = "",
-  disabled = false
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const filteredOptions = (Array.isArray(options) ? options : []).filter(option =>
-    option.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    option.label?.toLowerCase().includes(searchTerm.toLowerCase())
+
+  const filteredOptions = (Array.isArray(options) ? options : []).filter(
+    (option) =>
+      option.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      option.label?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
-  const selectedOption = (Array.isArray(options) ? options : []).find(option => option._id === value || option.value === value);
-  
+
+  const selectedOption = (Array.isArray(options) ? options : []).find(
+    (option) => option._id === value || option.value === value
+  );
+
   return (
     <div className="relative">
       <button
@@ -30,13 +39,25 @@ const SearchableSelect = ({
         disabled={disabled}
       >
         <span className={selectedOption ? "text-gray-900" : "text-gray-500"}>
-          {selectedOption ? (selectedOption.name || selectedOption.label) : placeholder}
+          {selectedOption
+            ? selectedOption.name || selectedOption.label
+            : placeholder}
         </span>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
-      
+
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
           <div className="p-2 border-b border-gray-200">
@@ -51,7 +72,9 @@ const SearchableSelect = ({
           </div>
           <div className="max-h-48 overflow-y-auto">
             {filteredOptions.length === 0 ? (
-              <div className="px-3 py-2 text-gray-500 text-sm">نتیجه‌ای یافت نشد</div>
+              <div className="px-3 py-2 text-gray-500 text-sm">
+                نتیجه‌ای یافت نشد
+              </div>
             ) : (
               filteredOptions.map((option) => (
                 <button
@@ -75,53 +98,78 @@ const SearchableSelect = ({
   );
 };
 
-function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }) {
+function SaleForm({
+  register,
+  handleSubmit,
+  watch,
+  setValue,
+  onClose,
+  onSubmit,
+}) {
   const [items, setItems] = useState([
     { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 },
   ]);
   const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
   const [loading, setLoading] = useState(false);
-  
+
   // API hooks
-  const { data: stockData, isLoading: productsLoading } = useProductsFromStock('store');
+  const { data: stockData, isLoading: productsLoading } =
+    useProductsFromStock("store");
   // People accounts (customers/employees) instead of raw people
-  const { data: customerAccResp, isLoading: customersLoading } = useAccounts({ type: 'customer', page: 1, limit: 1000 });
-  const { data: employeeAccResp, isLoading: employeesLoading } = useAccounts({ type: 'employee', page: 1, limit: 1000 });
-  const { data: accountsData, isLoading: accountsLoading } = useSystemAccounts();
+  const { data: customerAccResp, isLoading: customersLoading } = useAccounts({
+    type: "customer",
+    page: 1,
+    limit: 1000,
+  });
+  const { data: employeeAccResp, isLoading: employeesLoading } = useAccounts({
+    type: "employee",
+    page: 1,
+    limit: 1000,
+  });
+  const { data: accountsData, isLoading: accountsLoading } =
+    useSystemAccounts();
   const { data: units, isLoading: unitsLoading } = useUnits();
 
   // Extract accounts array from the response
   const accounts = accountsData?.accounts || accountsData || [];
-  
+
   // Extract customer/employee accounts arrays
-  const customerAccounts = customerAccResp?.accounts || customerAccResp?.data || customerAccResp || [];
-  const employeeAccounts = employeeAccResp?.accounts || employeeAccResp?.data || employeeAccResp || [];
+  const customerAccounts =
+    customerAccResp?.accounts || customerAccResp?.data || customerAccResp || [];
+  const employeeAccounts =
+    employeeAccResp?.accounts || employeeAccResp?.data || employeeAccResp || [];
 
   // Get unique products from stock data
   const products = React.useMemo(() => {
     if (!stockData || !Array.isArray(stockData)) return [];
-    
+
     // Group by product ID to get unique products
     const productMap = new Map();
-    stockData.forEach(stock => {
+    stockData.forEach((stock) => {
       if (stock.product && !productMap.has(stock.product._id)) {
         productMap.set(stock.product._id, {
           _id: stock.product._id,
-          name: stock.product.name
+          name: stock.product.name,
         });
       }
     });
-    
+
     return Array.from(productMap.values());
   }, [stockData]);
 
   // Get batches for selected product - only fetch when product is selected
   const selectedProductId = items[0]?.product;
-  const { data: batchesData, isLoading: batchesLoading } = useBatchesByProduct(selectedProductId, 'store');
+  const { data: batchesData, isLoading: batchesLoading } = useBatchesByProduct(
+    selectedProductId,
+    "store"
+  );
   const batches = Array.isArray(batchesData) ? batchesData : [];
 
   const addItem = () => {
-    setItems([...items, { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 }]);
+    setItems([
+      ...items,
+      { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 },
+    ]);
   };
 
   const removeItem = (index) => {
@@ -133,28 +181,29 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
   const updateItem = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
-    
+
     // If product changes, reset unit, batch, and price
-    if (field === 'product') {
+    if (field === "product") {
       newItems[index].unit = "";
       newItems[index].batchNumber = "";
       newItems[index].unitPrice = 0;
     }
-    
+
     // If batch changes, update price
-    if (field === 'batchNumber') {
-      const batch = batches?.find(b => b.batchNumber === value);
+    if (field === "batchNumber") {
+      const batch = batches?.find((b) => b.batchNumber === value);
       if (batch) {
         newItems[index].unitPrice = batch.purchasePricePerBaseUnit || 0;
       }
     }
-    
+
     setItems(newItems);
   };
 
   const calculateTotal = () => {
     return items.reduce((total, item) => {
-      const itemTotal = parseFloat(item.quantity || 0) * parseFloat(item.unitPrice || 0);
+      const itemTotal =
+        parseFloat(item.quantity || 0) * parseFloat(item.unitPrice || 0);
       return total + itemTotal;
     }, 0);
   };
@@ -166,17 +215,19 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
         customer: saleType === "customer" ? data.customer : null,
         employee: saleType === "employee" ? data.employee : null,
         saleDate: new Date().toISOString(),
-      items: items.filter((item) => item.product && item.quantity > 0).map(item => ({
-        product: item.product,
-        unit: item.unit,
-        quantity: parseFloat(item.quantity),
-        unitPrice: parseFloat(item.unitPrice)
-      })),
+        items: items
+          .filter((item) => item.product && item.quantity > 0)
+          .map((item) => ({
+            product: item.product,
+            unit: item.unit,
+            quantity: parseFloat(item.quantity),
+            unitPrice: parseFloat(item.unitPrice),
+          })),
         paidAmount: data.paidAmount || 0,
         placedIn: data.placedIn || accounts?.[0]?._id,
         invoiceType: data.invoiceType || "small",
       };
-      
+
       if (onSubmit) {
         await onSubmit(saleData);
       }
@@ -201,21 +252,27 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
     customerAccResp,
     employeeAccResp,
     customersLoading,
-    employeesLoading
+    employeesLoading,
   });
 
   // Show loading state if data is being fetched
-  if (productsLoading || customersLoading || employeesLoading || accountsLoading || unitsLoading) {
+  if (
+    productsLoading ||
+    customersLoading ||
+    employeesLoading ||
+    accountsLoading ||
+    unitsLoading
+  ) {
     return (
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto flex justify-center items-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
           <p className="text-gray-600">در حال بارگذاری...</p>
           <p className="text-sm text-gray-500 mt-2">
-            Loading: Products={productsLoading ? 'Yes' : 'No'}, 
-            Customers={customersLoading ? 'Yes' : 'No'}, 
-            Employees={employeesLoading ? 'Yes' : 'No'}, 
-            Accounts={accountsLoading ? 'Yes' : 'No'}
+            Loading: Products={productsLoading ? "Yes" : "No"}, Customers=
+            {customersLoading ? "Yes" : "No"}, Employees=
+            {employeesLoading ? "Yes" : "No"}, Accounts=
+            {accountsLoading ? "Yes" : "No"}
           </p>
         </div>
       </div>
@@ -277,12 +334,19 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
           {/* Customer/Employee Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {saleType === "customer" ? "مشتری" : saleType === "employee" ? "کارمند" : "مشتری عابر"}
+              {saleType === "customer"
+                ? "مشتری"
+                : saleType === "employee"
+                ? "کارمند"
+                : "مشتری عابر"}
             </label>
             {saleType === "customer" && (
               <div>
                 <SearchableSelect
-                  options={customerAccounts.map(acc => ({ _id: acc.refId, name: acc.name }))}
+                  options={customerAccounts.map((acc) => ({
+                    _id: acc.refId,
+                    name: acc.name,
+                  }))}
                   value={watch("customer")}
                   onChange={(value) => setValue("customer", value)}
                   placeholder="انتخاب مشتری (حساب)"
@@ -296,7 +360,10 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
             {saleType === "employee" && (
               <div>
                 <SearchableSelect
-                  options={employeeAccounts.map(acc => ({ _id: acc.refId, name: acc.name }))}
+                  options={employeeAccounts.map((acc) => ({
+                    _id: acc.refId,
+                    name: acc.name,
+                  }))}
                   value={watch("employee")}
                   onChange={(value) => setValue("employee", value)}
                   placeholder="انتخاب کارمند (حساب)"
@@ -313,7 +380,6 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
               </div>
             )}
           </div>
-
 
           {/* Invoice Type */}
           <div>
@@ -337,7 +403,9 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
             <SearchableSelect
               options={accounts || []}
               value={watch("placedIn")}
-              onChange={(value) => register("placedIn").onChange({ target: { value } })}
+              onChange={(value) =>
+                register("placedIn").onChange({ target: { value } })
+              }
               placeholder="انتخاب حساب"
               searchPlaceholder="جستجو حساب..."
             />
@@ -357,7 +425,6 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
               min="0"
             />
           </div>
-
         </div>
 
         {/* Items Section */}
@@ -410,14 +477,18 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
                     شماره بچ (اختیاری - برای وضوح)
                   </label>
                   <SearchableSelect
-                    options={batches?.map(batch => ({
-                      _id: batch.batchNumber,
-                      name: `${batch.batchNumber} (موجودی: ${batch.quantity})`,
-                      batchNumber: batch.batchNumber,
-                      quantity: batch.quantity
-                    })) || []}
+                    options={
+                      batches?.map((batch) => ({
+                        _id: batch.batchNumber,
+                        name: `${batch.batchNumber} (موجودی: ${batch.quantity})`,
+                        batchNumber: batch.batchNumber,
+                        quantity: batch.quantity,
+                      })) || []
+                    }
                     value={item.batchNumber}
-                    onChange={(value) => updateItem(index, "batchNumber", value)}
+                    onChange={(value) =>
+                      updateItem(index, "batchNumber", value)
+                    }
                     placeholder="انتخاب بچ (اختیاری)"
                     searchPlaceholder="جستجو بچ..."
                   />
@@ -426,11 +497,13 @@ function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }
                       در حال بارگذاری بچ‌ها...
                     </p>
                   )}
-                  {!batchesLoading && batches.length === 0 && selectedProductId && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      هیچ بچ موجودی برای این محصول یافت نشد
-                    </p>
-                  )}
+                  {!batchesLoading &&
+                    batches.length === 0 &&
+                    selectedProductId && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        هیچ بچ موجودی برای این محصول یافت نشد
+                      </p>
+                    )}
                 </div>
 
                 <div>

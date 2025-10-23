@@ -257,10 +257,15 @@ export const API_ENDPOINTS = {
     SUMMARY: "/income/summary",
   },
 
+  // Account Transactions
+  ACCOUNT_TRANSACTIONS: {
+    LIST: "/account-transactions",
+  },
+
   // Dashboard Statistics
   DASHBOARD: {
     STATS: "/dashboard/stats",
-    RECENT_TRANSACTIONS: "/dashboard/recent-transactions",
+    RECENT_TRANSACTIONS: "/account-transactions/getAllTransactions",
     LOW_STOCK: "/dashboard/low-stock",
     SUMMARY: "/dashboard/summary",
   },

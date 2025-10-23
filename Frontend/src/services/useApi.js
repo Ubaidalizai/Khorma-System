@@ -1,80 +1,78 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bounce, toast } from "react-toastify";
 import {
-  fetchProducts,
-  fetchProductyById,
-  createProductItem,
-  updateProductItem,
-  deleteProductItem,
-  fetchInventory,
-  fetchInventoryById,
+  createAccount,
+  createCompnay,
+  createCustomer,
+  createEmployee,
   createInventoryItem,
-  updateInventoryItem,
-  deleteInventoryItem,
-  fetchStores,
-  fetchStore,
-  createStore,
-  updateStore,
-  deleteStore,
-  fetchPurchases,
-  fetchPurchase,
+  createProductItem,
   createPurchase,
-  updatePurchase,
-  deletePurchase,
-  getSuppliers,
-  fetchSupplier,
-  createSupplier,
-  updateSupplier,
-  deleteSupplier,
-  fetchSales,
-  fetchSale,
-  fetchDashboardStats,
-  fetchRecentTransactions,
-  fetchLowStockItems,
-  fetchDashboardSummary,
   createSale,
-  updateSale,
-  deleteSale,
-  fetchStock,
-  fetchInventoryStock,
-  fetchStoreStock,
-  fetchEmployeeStock,
-  fetchInventoryStats,
-  fetchUnits,
-  fetchUnit,
+  createStockTransfer,
+  createStore,
+  createSupplier,
   createUnit,
-  updateUnit,
+  deleteAccount,
+  deleteCompany,
+  deleteCustomer,
+  deleteEmployee,
+  deleteInventoryItem,
+  deleteProductItem,
+  deletePurchase,
+  deleteSale,
+  deleteStockTransfer,
+  deleteStore,
+  deleteSupplier,
   deleteUnit,
+  fetchAccountLedger,
+  fetchAccounts,
+  fetchAccountTransactions,
+  fetchBatchesByProduct,
+  fetchCompanies,
   fetchCustomer,
   fetchCustomers,
-  createCustomer,
-  updateCustomer,
-  deleteCustomer,
   fetchEmployee,
   fetchEmployees,
-  createEmployee,
-  updateEmployee,
-  deleteEmployee,
-  fetchCompanies,
-  createCompnay,
-  updateCompany,
-  deleteCompany,
+  fetchEmployeeStock,
+  fetchInventory,
+  fetchInventoryById,
+  fetchInventoryStats,
+  fetchInventoryStock,
+  fetchProducts,
+  fetchProductsFromStock,
+  fetchProductyById,
+  fetchPurchase,
+  fetchPurchases,
+  fetchSale,
+  fetchSales,
+  fetchStock,
+  fetchStockTransfers,
+  fetchStore,
+  fetchStores,
+  fetchStoreStock,
+  fetchSupplier,
+  fetchSupplierAccounts,
+  fetchSystemAccounts,
+  fetchUnit,
+  fetchUnits,
+  getSuppliers,
+  getUserProfile,
   loginUser,
   logoutUser,
   refreshUserToken,
-  getUserProfile,
-  fetchAccounts,
-  fetchSystemAccounts,
-  fetchSupplierAccounts,
-  fetchAccountLedger,
-  createAccount,
+  reverseAccountTransaction,
   updateAccount,
-  deleteAccount,
-  fetchBatchesByProduct,
-  fetchProductsFromStock,
-  createStockTransfer,
-  fetchStockTransfers,
-  deleteStockTransfer,
+  updateCompany,
+  updateCustomer,
+  updateEmployee,
+  updateInventoryItem,
+  updateProductItem,
+  updatePurchase,
+  updateSale,
+  updateStore,
+  updateSupplier,
+  updateUnit,
 } from "./apiUtiles";
 
 // Authentication hooks
@@ -148,6 +146,30 @@ export const useCreateProdcut = () => {
     mutationKey: ["newProduct"],
     onSuccess: () => {
       queryClient.invalidateQueries(["product"]);
+      toast.success("محصول  موفقانه اضافه شد", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
+    },
+    onError: () => {
+      toast.error("مشکل در ساختن محصول", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
     },
   });
 };
@@ -608,7 +630,7 @@ export const useSupplierAccounts = () => {
   });
 };
 
-export const useProductsFromStock = (location = 'store') => {
+export const useProductsFromStock = (location = "store") => {
   return useQuery({
     queryKey: ["productsFromStock", location],
     queryFn: () => fetchProductsFromStock(location),
@@ -736,37 +758,38 @@ export const useDeleteUnit = () => {
 };
 
 // Dashboard Hooks
-export const useDashboardStats = () => {
-  return useQuery({
-    queryKey: ["dashboardStats"],
-    queryFn: fetchDashboardStats,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+// export const useDashboardStats = () => {
+//   return useQuery({
+//     queryKey: ["dashboardStats"],
+//     queryFn: fetchDashboardStats,
+//     staleTime: 5 * 60 * 1000, // 5 minutes
+//   });
+// };
 
-export const useRecentTransactions = (limit = 10) => {
+export const useRecentTransactions = (params = {}) => {
+  const { page = 1, limit = 10 } = params;
   return useQuery({
-    queryKey: ["recentTransactions", limit],
-    queryFn: () => fetchRecentTransactions(limit),
+    queryKey: ["recentTransactions", { page, limit }],
+    queryFn: () => fetchAccountTransactions({ page, limit }),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
-export const useLowStockItems = () => {
-  return useQuery({
-    queryKey: ["lowStockItems"],
-    queryFn: fetchLowStockItems,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+// export const useLowStockItems = () => {
+//   return useQuery({
+//     queryKey: ["lowStockItems"],
+//     queryFn: fetchLowStockItems,
+//     staleTime: 5 * 60 * 1000, // 5 minutes
+//   });
+// };
 
-export const useDashboardSummary = () => {
-  return useQuery({
-    queryKey: ["dashboardSummary"],
-    queryFn: fetchDashboardSummary,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+// export const useDashboardSummary = () => {
+//   return useQuery({
+//     queryKey: ["dashboardSummary"],
+//     queryFn: fetchDashboardSummary,
+//     staleTime: 5 * 60 * 1000, // 5 minutes
+//   });
+// };
 export const useStockTransfers = () => {
   return useQuery({
     queryKey: ["stockTransfers"],
@@ -831,6 +854,42 @@ export const useCreateStockTransfer = () => {
     },
     onError: () => {
       toast.error("نتقال موفقانه نبود", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
+    },
+  });
+};
+
+// Reverse Transaction
+export const useReverseTransaction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }) => reverseAccountTransaction(id, reason),
+    mutationKey: ["reverseTransaction"],
+    onSuccess: () => {
+      queryClient.invalidateQueries(["recentTransactions"]);
+      toast.success("تراکنش با موفقیت برگردانده شد", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
+    },
+    onError: (error) => {
+      toast.error(`خطا در برگرداندن تراکنش: ${error.message}`, {
         position: "top-right",
         autoClose: 4000,
         hideProgressBar: true,

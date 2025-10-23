@@ -670,6 +670,70 @@ export const createProductItem = async (productData) => {
 //   return await updateProduct(id, productData);
 // };
 
+// Account Transactions
+export const fetchAccountTransactions = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  if (params.type) query.set("type", params.type);
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  const url = query.toString()
+    ? `${API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST}?${query.toString()}`
+    : API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST;
+
+  try {
+    const response = await apiRequest(url);
+    return response;
+  } catch (error) {
+    console.error("fetchAccountTransactions error:", error);
+    throw error;
+  }
+};
+
+export const fetchAccountTransaction = async (id) => {
+  return await apiRequest(`${API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST}/${id}`);
+};
+
+export const createAccountTransaction = async (transactionData) => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST, {
+    method: "POST",
+    body: JSON.stringify(transactionData),
+  });
+};
+
+export const updateAccountTransaction = async (id, transactionData) => {
+  return await apiRequest(`${API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST}/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(transactionData),
+  });
+};
+
+export const deleteAccountTransaction = async (id) => {
+  return await apiRequest(`${API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST}/${id}`, {
+    method: "DELETE",
+  });
+};
+
+export const reverseAccountTransaction = async (id, reason) => {
+  return await apiRequest(
+    `${API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST}/${id}/reverse`,
+    {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }
+  );
+};
+
+export const transferBetweenAccounts = async (transferData) => {
+  return await apiRequest(
+    `${API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST}/transfer`,
+    {
+      method: "POST",
+      body: JSON.stringify(transferData),
+    }
+  );
+};
+
 // ACCOUNT
 
 export const fetchaccounts = async () => {
@@ -677,105 +741,105 @@ export const fetchaccounts = async () => {
 };
 
 // Dashboard Statistics - Fallback implementation using existing endpoints
-export const fetchDashboardStats = async () => {
-  try {
-    // Try to fetch from dedicated dashboard endpoint first
-    return await apiRequest(API_ENDPOINTS.DASHBOARD.STATS);
-  } catch {
-    // Fallback: calculate stats from existing endpoints
-    const [sales, purchases, products, inventory] = await Promise.all([
-      fetchSales(),
-      fetchPurchases(),
-      fetchProducts(),
-      fetchInventory(),
-    ]);
+// export const fetchDashboardStats = async () => {
+//   try {
+//     // Try to fetch from dedicated dashboard endpoint first
+//     return await apiRequest(API_ENDPOINTS.DASHBOARD.STATS);
+//   } catch {
+//     // Fallback: calculate stats from existing endpoints
+//     const [sales, purchases, products, inventory] = await Promise.all([
+//       fetchSales(),
+//       fetchPurchases(),
+//       fetchProducts(),
+//       fetchInventory(),
+//     ]);
 
-    const totalSales =
-      sales?.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0) || 0;
-    const totalPurchases =
-      purchases?.reduce(
-        (sum, purchase) => sum + (purchase.totalAmount || 0),
-        0
-      ) || 0;
-    const lowStockItems =
-      inventory?.filter((item) => item.quantity <= (item.minLevel || 0))
-        .length || 0;
+//     const totalSales =
+//       sales?.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0) || 0;
+//     const totalPurchases =
+//       purchases?.reduce(
+//         (sum, purchase) => sum + (purchase.totalAmount || 0),
+//         0
+//       ) || 0;
+//     const lowStockItems =
+//       inventory?.filter((item) => item.quantity <= (item.minLevel || 0))
+//         .length || 0;
 
-    return {
-      totalProducts: products?.length || 0,
-      totalSales,
-      totalPurchases,
-      lowStockItems,
-      totalRevenue: totalSales - totalPurchases,
-    };
-  }
-};
+//     return {
+//       totalProducts: products?.length || 0,
+//       totalSales,
+//       totalPurchases,
+//       lowStockItems,
+//       totalRevenue: totalSales - totalPurchases,
+//     };
+//   }
+// };
 
-export const fetchRecentTransactions = async (limit = 10) => {
-  try {
-    // Try to fetch from dedicated endpoint first
-    return await apiRequest(
-      `${API_ENDPOINTS.DASHBOARD.RECENT_TRANSACTIONS}?limit=${limit}`
-    );
-  } catch {
-    // Fallback: combine recent sales and purchases
-    const [sales, purchases] = await Promise.all([
-      fetchSales(),
-      fetchPurchases(),
-    ]);
+// export const fetchRecentTransactions = async (limit = 10) => {
+//   try {
+//     // Try to fetch from dedicated endpoint first
+//     return await apiRequest(
+//       `${API_ENDPOINTS.DASHBOARD.RECENT_TRANSACTIONS}?limit=${limit}`
+//     );
+//   } catch {
+//     // Fallback: combine recent sales and purchases
+//     const [sales, purchases] = await Promise.all([
+//       fetchSales(),
+//       fetchPurchases(),
+//     ]);
 
-    const recentSales = (sales || [])
-      .slice(0, Math.ceil(limit / 2))
-      .map((sale) => ({
-        ...sale,
-        type: "Sale",
-        transactionType: "sale",
-      }));
+//     const recentSales = (sales || [])
+//       .slice(0, Math.ceil(limit / 2))
+//       .map((sale) => ({
+//         ...sale,
+//         type: "Sale",
+//         transactionType: "sale",
+//       }));
 
-    const recentPurchases = (purchases || [])
-      .slice(0, Math.floor(limit / 2))
-      .map((purchase) => ({
-        ...purchase,
-        type: "Purchase",
-        transactionType: "purchase",
-      }));
+//     const recentPurchases = (purchases || [])
+//       .slice(0, Math.floor(limit / 2))
+//       .map((purchase) => ({
+//         ...purchase,
+//         type: "Purchase",
+//         transactionType: "purchase",
+//       }));
 
-    const allTransactions = [...recentSales, ...recentPurchases]
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
-      )
-      .slice(0, limit);
+//     const allTransactions = [...recentSales, ...recentPurchases]
+//       .sort(
+//         (a, b) =>
+//           new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
+//       )
+//       .slice(0, limit);
 
-    return allTransactions;
-  }
-};
+//     return allTransactions;
+//   }
+// };
 
-export const fetchLowStockItems = async () => {
-  try {
-    // Try to fetch from dedicated endpoint first
-    return await apiRequest(API_ENDPOINTS.DASHBOARD.LOW_STOCK);
-  } catch {
-    // Fallback: get low stock items from inventory
-    const inventory = await fetchInventory();
-    return (
-      inventory?.filter((item) => item.quantity <= (item.minLevel || 0)) || []
-    );
-  }
-};
+// export const fetchLowStockItems = async () => {
+//   try {
+//     // Try to fetch from dedicated endpoint first
+//     return await apiRequest(API_ENDPOINTS.DASHBOARD.LOW_STOCK);
+//   } catch {
+//     // Fallback: get low stock items from inventory
+//     const inventory = await fetchInventory();
+//     return (
+//       inventory?.filter((item) => item.quantity <= (item.minLevel || 0)) || []
+//     );
+//   }
+// };
 
-export const fetchDashboardSummary = async () => {
-  try {
-    return await apiRequest(API_ENDPOINTS.DASHBOARD.SUMMARY);
-  } catch {
-    // Fallback: return basic summary
-    const stats = await fetchDashboardStats();
-    return {
-      summary: stats,
-      lastUpdated: new Date().toISOString(),
-    };
-  }
-};
+// export const fetchDashboardSummary = async () => {
+//   try {
+//     return await apiRequest(API_ENDPOINTS.DASHBOARD.SUMMARY);
+//   } catch {
+//     // Fallback: return basic summary
+//     const stats = await fetchDashboardStats();
+//     return {
+//       summary: stats,
+//       lastUpdated: new Date().toISOString(),
+//     };
+//   }
+// };
 
 export const deleteProductItem = async (id) => {
   return await deleteProduct(id);
