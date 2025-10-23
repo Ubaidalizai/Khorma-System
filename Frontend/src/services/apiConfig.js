@@ -88,7 +88,7 @@ export const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const config = {
     headers: getDefaultHeaders(),
-    credentials: 'include', // Include cookies for authentication
+    credentials: "include", // Include cookies for authentication
     ...options,
   };
 
@@ -160,7 +160,14 @@ export const API_ENDPOINTS = {
     UPDATE: (id) => `/sales/${id}`,
     DELETE: (id) => `/sales/${id}`,
   },
+  // Employee stock
 
+  EMPLOYEES_STOCK: {
+    LIST: "/employee-stocks",
+    DETAIL_ONE_EMP: (id) => `/employee-stocks/${id}`,
+    DETAIL: (id) => `/employee-stocks/${id}`,
+    RETURN_STOCK_EMPLOYEE: `/employee-stocks/return`,
+  },
   // Suppliers
   SUPPLIERS: {
     LIST: "/suppliers",

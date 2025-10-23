@@ -2,7 +2,6 @@ import { BiTransferAlt } from "react-icons/bi";
 import { BiLoaderAlt } from "react-icons/bi";
 import React, { useEffect, useState } from "react";
 import SearchInput from "../components/SearchInput";
-import Select from "../components/Select";
 import TableHeader from "../components/TableHeader";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
@@ -17,7 +16,6 @@ import Button from "../components/Button";
 import WarehouseForm from "../components/WarehouseForm";
 import { useForm } from "react-hook-form";
 import { useCreateStockTransfer, useUpdateStore } from "../services/useApi";
-import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useEmployees, useWarehouseStocks } from "../services/useApi";
 import { getStockStatus, getStatusColor } from "../utilies/stockStatus";
 
@@ -60,7 +58,7 @@ function Warehouse() {
       ? fromLocation === "store"
         ? "warehouse"
         : "store"
-      : transferType === "store-employee"
+      : transferType === "warehouse-employee"
       ? "employee"
       : transferType === "employee-store"
       ? "store"
@@ -197,16 +195,17 @@ function Warehouse() {
                           >
                             نمایش
                           </Menus.Button>
-                          <Menus.Button
-                            icon={<BiTransferAlt size={24} />}
-                            onClick={() => {
-                              setSelectedPro(row);
-                              setShowTransfer(true);
-                            }}
-                          >
-                            انتقال
-                          </Menus.Button>
-
+                          {row?.quantity > 0 && (
+                            <Menus.Button
+                              icon={<BiTransferAlt size={24} />}
+                              onClick={() => {
+                                setSelectedPro(row);
+                                setShowTransfer(true);
+                              }}
+                            >
+                              انتقال
+                            </Menus.Button>
+                          )}
                           <Menus.Button
                             icon={<HiPencil />}
                             onClick={() => {
@@ -400,10 +399,7 @@ function Warehouse() {
                   {...register("transferType")}
                 >
                   <option value="warehouse-store">فروشگاه ↔ گدام</option>
-                  <option value="store-employee">فروشگاه → کارمند</option>
-                  <option value="employee-store">کارمند → فروشگاه</option>
-                  <option value="warehouse-employee">گدام → کارمند</option>
-                  <option value="employee-warehouse">کارمند → گدام</option>
+                  <option value="warehouse-employee">فروشگاه → کارمند</option>
                 </select>
               </label>
               {needsEmployee && (

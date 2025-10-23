@@ -15,14 +15,14 @@ export const inputStyle =
 function ProductForm({ register, handleSubmit, formState, control, onClose }) {
   const { errors } = formState || {};
   const { data: units, isLoading: isUnitLoading } = useUnits();
-  
+
   if (isUnitLoading) return <Spinner />;
 
   return (
     <form
       noValidate
       onSubmit={handleSubmit}
-      className="max-w-2xl w-full bg-white p-6 rounded-lg shadow-lg"
+      className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Product Name */}
@@ -68,7 +68,9 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
             )}
           />
           {errors?.baseUnit && (
-            <p className="text-red-600 text-sm mt-1">{errors.baseUnit.message}</p>
+            <p className="text-red-600 text-sm mt-1">
+              {errors.baseUnit.message}
+            </p>
           )}
         </div>
 
@@ -89,10 +91,38 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
             min="0"
           />
           {errors?.minLevel && (
-            <p className="text-red-600 text-sm mt-1">{errors.minLevel.message}</p>
+            <p className="text-red-600 text-sm mt-1">
+              {errors.minLevel.message}
+            </p>
           )}
         </div>
-
+        <div>
+          <label
+            htmlFor="latestPurchasePrice"
+            className="block text-sm font-medium text-slate-700 mb-2"
+          >
+            قیمت اولیه
+          </label>
+          <input
+            type="number"
+            className={inputStyle}
+            {...register("latestPurchasePrice")}
+          />
+        </div>
+        <div>
+          <label
+            id="description"
+            className="block text-sm font-medium text-slate-700 mb-2"
+          >
+            توضیحات
+          </label>
+          <textarea
+            className={inputStyle}
+            rows={2}
+            id="description"
+            {...register("description")}
+          />
+        </div>
         {/* Track by Batch */}
         <div className="md:col-span-1 flex items-center">
           <div className="flex items-center space-x-2">

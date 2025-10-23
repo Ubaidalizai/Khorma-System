@@ -13,7 +13,7 @@ import Confirmation from "../components/Confirmation";
 import { getStockStatus } from "../utilies/stockStatus";
 import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
-import { motion } from "framer-motion";
+
 import {
   useCreateStockTransfer,
   useDeleteStore,
@@ -63,12 +63,6 @@ function Store() {
         : "store"
       : transferType === "store-employee"
       ? "employee"
-      : transferType === "employee-store"
-      ? "store"
-      : transferType === "warehouse-employee"
-      ? "employee"
-      : transferType === "employee-warehouse"
-      ? "warehouse"
       : "unknown";
 
   const needsEmployee = [
@@ -184,15 +178,17 @@ function Store() {
                             >
                               نمایش
                             </Menus.Button>
-                            <Menus.Button
-                              icon={<BiTransferAlt size={24} />}
-                              onClick={() => {
-                                setSelectedData(el);
-                                setShowTransfer(true);
-                              }}
-                            >
-                              انتقال
-                            </Menus.Button>
+                            {el?.quantity > 0 && (
+                              <Menus.Button
+                                icon={<BiTransferAlt size={24} />}
+                                onClick={() => {
+                                  setSelectedData(el);
+                                  setShowTransfer(true);
+                                }}
+                              >
+                                انتقال
+                              </Menus.Button>
+                            )}
                             <Menus.Button
                               icon={<HiTrash />}
                               onClick={() => {
@@ -215,10 +211,7 @@ function Store() {
       </Table>
       <GloableModal open={show} setOpen={setShow}>
         {selectedData && (
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+          <div
             dir="rtl"
             className="w-[500px] mx-auto bg-white rounded-sm shadow-sm overflow-hidden"
           >
@@ -302,7 +295,7 @@ function Store() {
             <div className="bg-gray-50 border-t border-gray-200 p-4 flex justify-end">
               <Button onClick={() => setShow(false)}>بسته کردن</Button>
             </div>
-          </motion.div>
+          </div>
         )}
       </GloableModal>
       <GloableModal open={showDeleteConfirm} setOpen={setShowDeleteConfirm}>
@@ -344,9 +337,6 @@ function Store() {
                 >
                   <option value="store-warehouse">فروشگاه ↔ گدام</option>
                   <option value="store-employee">فروشگاه → کارمند</option>
-                  <option value="employee-store">کارمند → فروشگاه</option>
-                  <option value="warehouse-employee">گدام → کارمند</option>
-                  <option value="employee-warehouse">کارمند → گدام</option>
                 </select>
               </label>
               {needsEmployee && (

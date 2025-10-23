@@ -38,6 +38,7 @@ import {
   fetchStock,
   fetchInventoryStock,
   fetchStoreStock,
+  fetchEmployeeStock,
   fetchInventoryStats,
   fetchUnits,
   fetchUnit,
@@ -326,6 +327,24 @@ export const useStoreStocks = (opts = {}) => {
   });
 };
 
+export const useEmployeeStocks = (opts = {}) => {
+  const { search } = opts;
+  return useQuery({
+    queryKey: ["stocks", "employee", { search: search || "" }],
+    queryFn: () => fetchEmployeeStock({ search }),
+    keepPreviousData: true,
+  });
+};
+
+export const useReturnEmployeeStock = (opts = {}) => {
+  const { search } = opts;
+  return useQuery({
+    queryKey: ["stocks", "employee", "returnStock", { search: search || "" }],
+    queryFn: () => fetchEmployeeStock({ search }),
+    keepPreviousData: true,
+  });
+};
+
 export const useInventoryStats = () => {
   return useQuery({
     queryKey: ["inventoryStats"],
@@ -334,7 +353,7 @@ export const useInventoryStats = () => {
   });
 };
 
-export const useBatchesByProduct = (productId, location = 'store') => {
+export const useBatchesByProduct = (productId, location = "store") => {
   return useQuery({
     queryKey: ["batches", productId, location],
     queryFn: () => fetchBatchesByProduct(productId, location),
@@ -342,7 +361,6 @@ export const useBatchesByProduct = (productId, location = 'store') => {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
-
 
 // Supplier CRUD operations
 
@@ -575,7 +593,7 @@ export const useSystemAccounts = () => {
   });
 };
 
-export const useProductsFromStock = (location = 'store') => {
+export const useProductsFromStock = (location = "store") => {
   return useQuery({
     queryKey: ["productsFromStock", location],
     queryFn: () => fetchProductsFromStock(location),
