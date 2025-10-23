@@ -5,6 +5,144 @@ const Account = require('../models/account.model');
 const AccountTransaction = require('../models/accountTransaction.model');
 const AuditLog = require('../models/auditLog.model');
 
+// @desc Get all account transactions with pagination and filters
+// @route GET /api/v1/account-transactions
+exports.getAllTransactions = asyncHandler(async (req, res, next) => {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = 'date',
+    sortOrder = 'desc',
+    accountId,
+    transactionType,
+    referenceType,
+    startDate,
+    endDate,
+    minAmount,
+    maxAmount,
+    isReversed,
+    search,
+  } = req.query;
+
+  // Build query object
+  const query = { isDeleted: false };
+
+  // Filter by account
+  if (accountId) {
+    query.account = accountId;
+  }
+
+  // Filter by transaction type
+  if (transactionType) {
+    query.transactionType = transactionType;
+  }
+
+  // Filter by reference type
+  if (referenceType) {
+    query.referenceType = referenceType;
+  }
+
+  // Filter by date range
+  if (startDate && endDate) {
+    query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+  } else if (startDate) {
+    query.date = { $gte: new Date(startDate) };
+  } else if (endDate) {
+    query.date = { $lte: new Date(endDate) };
+  }
+
+  // Filter by amount range
+  if (minAmount !== undefined || maxAmount !== undefined) {
+    query.amount = {};
+    if (minAmount !== undefined) query.amount.$gte = parseFloat(minAmount);
+    if (maxAmount !== undefined) query.amount.$lte = parseFloat(maxAmount);
+  }
+
+  // Filter by reversal status
+  if (isReversed !== undefined) {
+    query.reversed = isReversed === 'true';
+  }
+
+  // Search in description
+  if (search) {
+    query.description = { $regex: search, $options: 'i' };
+  }
+
+  // Calculate pagination
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+
+  // Build sort object
+  const sort = {};
+  sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+  // Execute query with pagination
+  const transactions = await AccountTransaction.find(query)
+    .populate('account', 'name type')
+    .populate('created_by', 'name')
+    .populate('reversedBy', 'name')
+    .sort(sort)
+    .skip(skip)
+    .limit(limitNum);
+
+  // Get total count for pagination
+  const totalTransactions = await AccountTransaction.countDocuments(query);
+  const totalPages = Math.ceil(totalTransactions / limitNum);
+
+  // Calculate summary statistics
+  const summaryPipeline = [
+    { $match: query },
+    {
+      $group: {
+        _id: null,
+        totalAmount: { $sum: '$amount' },
+        totalCredit: { $sum: { $cond: [{ $gt: ['$amount', 0] }, '$amount', 0] } },
+        totalDebit: { $sum: { $cond: [{ $lt: ['$amount', 0] }, '$amount', 0] } },
+        avgAmount: { $avg: '$amount' },
+        maxAmount: { $max: '$amount' },
+        minAmount: { $min: '$amount' },
+      },
+    },
+  ];
+
+  const summary = await AccountTransaction.aggregate(summaryPipeline);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      transactions,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalTransactions,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+        limit: limitNum,
+      },
+      summary: summary[0] || {
+        totalAmount: 0,
+        totalCredit: 0,
+        totalDebit: 0,
+        avgAmount: 0,
+        maxAmount: 0,
+        minAmount: 0,
+      },
+      filters: {
+        accountId,
+        transactionType,
+        referenceType,
+        startDate,
+        endDate,
+        minAmount,
+        maxAmount,
+        isReversed,
+        search,
+      },
+    },
+  });
+});
+
 // @desc Get Ledger of a specific account
 // @route GET /api/v1/accounts/:id/ledger
 exports.getAccountLedger = asyncHandler(async (req, res, next) => {

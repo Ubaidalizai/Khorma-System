@@ -47,13 +47,19 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
         location: fromLocation,
         isDeleted: false,
       }).session(session);
-      
+
       if (!fromStock) {
-        throw new AppError(`No stock found for this product in ${fromLocation}`, 404);
+        throw new AppError(
+          `No stock found for this product in ${fromLocation}`,
+          404
+        );
       }
-      
+
       if (fromStock.quantity < quantity) {
-        throw new AppError(`Insufficient stock in ${fromLocation}. Available: ${fromStock.quantity}, Requested: ${quantity}`, 400);
+        throw new AppError(
+          `Insufficient stock in ${fromLocation}. Available: ${fromStock.quantity}, Requested: ${quantity}`,
+          400
+        );
       }
 
       fromStock.quantity -= quantity;
@@ -70,15 +76,39 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
       );
     } else {
       // add to store/warehouse
-      // First, get the source stock to copy its details (unit, batch, price, expiry)
-      const sourceStock = await Stock.findOne({
-        product,
-        location: fromLocation,
-        isDeleted: false,
-      }).session(session);
+      let sourceStock;
+      if (fromLocation === 'employee') {
+        // For transfers from employee, find any existing stock for the product to copy details
+        sourceStock = await Stock.findOne({
+          product,
+          isDeleted: false,
+        }).session(session);
+      } else {
+        // Normal transfer, get from source location
+        sourceStock = await Stock.findOne({
+          product,
+          location: fromLocation,
+          isDeleted: false,
+        }).session(session);
+      }
 
       if (!sourceStock) {
-        throw new AppError(`Source stock not found in ${fromLocation}`, 404);
+        if (fromLocation === 'employee') {
+          // If no stock exists, get product details
+          const productDoc = await Product.findById(product)
+            .populate('unit')
+            .session(session);
+          if (!productDoc) throw new AppError('Product not found', 404);
+          sourceStock = {
+            product,
+            unit: productDoc.unit._id,
+            batchNumber: 'DEFAULT',
+            purchasePricePerBaseUnit: 0,
+            expiryDate: null,
+          };
+        } else {
+          throw new AppError(`Source stock not found in ${fromLocation}`, 404);
+        }
       }
 
       // Check if destination stock already exists
@@ -312,11 +342,21 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
         await existingToStock.save({ session });
       } else {
         // Get source stock details to copy
-        const sourceStock = await Stock.findOne({
-          product: updatedProduct,
-          location: newFrom,
-          isDeleted: false,
-        }).session(session);
+        let sourceStock;
+        if (newFrom === 'employee') {
+          // For transfers from employee, find any existing stock for the product to copy details
+          sourceStock = await Stock.findOne({
+            product: updatedProduct,
+            isDeleted: false,
+          }).session(session);
+        } else {
+          // Normal transfer, get from source location
+          sourceStock = await Stock.findOne({
+            product: updatedProduct,
+            location: newFrom,
+            isDeleted: false,
+          }).session(session);
+        }
 
         if (sourceStock) {
           // Create new stock record with all details from source
@@ -335,12 +375,42 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
             { session }
           );
         } else {
-          // Fallback: create with basic info
-          await Stock.findOneAndUpdate(
-            { product: updatedProduct, location: newTo },
-            { $inc: { quantity: newQty } },
-            { upsert: true, session }
-          );
+          if (newFrom === 'employee') {
+            // If no stock exists, get product details
+            const productDoc = await Product.findById(updatedProduct)
+              .populate('unit')
+              .session(session);
+            if (!productDoc) throw new AppError('Product not found', 404);
+            sourceStock = {
+              product: updatedProduct,
+              unit: productDoc.unit._id,
+              batchNumber: 'DEFAULT',
+              purchasePricePerBaseUnit: 0,
+              expiryDate: null,
+            };
+            await Stock.create(
+              [
+                {
+                  product: sourceStock.product,
+                  unit: sourceStock.unit,
+                  batchNumber: sourceStock.batchNumber,
+                  purchasePricePerBaseUnit:
+                    sourceStock.purchasePricePerBaseUnit,
+                  expiryDate: sourceStock.expiryDate,
+                  location: newTo,
+                  quantity: newQty,
+                },
+              ],
+              { session }
+            );
+          } else {
+            // Fallback: create with basic info
+            await Stock.findOneAndUpdate(
+              { product: updatedProduct, location: newTo },
+              { $inc: { quantity: newQty } },
+              { upsert: true, session }
+            );
+          }
         }
       }
     }

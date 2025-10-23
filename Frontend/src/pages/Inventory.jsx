@@ -1,3 +1,4 @@
+import { FaUserTag } from "react-icons/fa";
 import { BsFillEyeFill } from "react-icons/bs";
 import { FiEdit } from "react-icons/fi";
 import { MdDelete } from "react-icons/md";
@@ -25,7 +26,6 @@ import {
   useCreateProdcut,
   useProduct,
   useInventoryStats,
-  useStoreStocks,
   useStockTransfers,
   useStockTransferDelete,
 } from "../services/useApi";
@@ -36,6 +36,7 @@ import { BiLoaderAlt } from "react-icons/bi";
 import GloableModal from "../components/GloableModal";
 import Confirmation from "../components/Confirmation";
 import { useSearchParams } from "react-router-dom";
+import Employee from "../components/Employee";
 
 const Inventory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -220,6 +221,17 @@ const Inventory = () => {
               <BuildingStorefrontIcon className="h-5 w-5" />
               فروشگاه
             </button>
+            <button
+              onClick={() => setActiveTab("employee")}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === "employee"
+                  ? "border-amber-600 text-amber-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <FaUserTag className="h-5 w-5" />
+              فروشنده
+            </button>
           </nav>
         </div>
 
@@ -232,6 +244,11 @@ const Inventory = () => {
         {activeTab === "store" && (
           <div className="overflow-x-auto  -mx-6 px-6">
             <Store />
+          </div>
+        )}
+        {activeTab === "employee" && (
+          <div className="overflow-x-auto  -mx-6 px-6">
+            <Employee />
           </div>
         )}
       </div>
@@ -263,6 +280,10 @@ const Inventory = () => {
                       return (
                         transfer.fromLocation?.toLowerCase() === "warehouse"
                       );
+                    } else if (activeTab === "employee") {
+                      return (
+                        transfer.fromLocation?.toLowerCase() === "employee"
+                      );
                     }
                     return true; // Show all for "all" tab
                   })
@@ -273,8 +294,28 @@ const Inventory = () => {
                       </TableColumn>
                       <TableColumn>{transfer.quantity}</TableColumn>
 
-                      <TableColumn className=" text-purple-600">
-                        <p className=" p-1 bg-purple-300/50 rounded-full">
+                      <TableColumn
+                        className={` ${
+                          transfer.toLocation === "warehouse"
+                            ? "text-purple-600"
+                            : "text-blue-600"
+                        } ${
+                          transfer.toLocation === "store"
+                            ? "text-green-600"
+                            : ""
+                        }`}
+                      >
+                        <p
+                          className={`p-1  ${
+                            transfer.toLocation === "warehouse"
+                              ? "bg-purple-300/50"
+                              : " bg-blue-100/50"
+                          }  ${
+                            transfer.toLocation === "store"
+                              ? "bg-green-100/50"
+                              : ""
+                          } rounded-full`}
+                        >
                           {transfer.toLocation}
                         </p>
                       </TableColumn>
@@ -290,7 +331,7 @@ const Inventory = () => {
                           transfer.transferredBy.email}
                       </TableColumn>
                       <TableColumn>
-                        <div className=" w-full flex justify-between items-center">
+                        <div className=" w-full flex  justify-center items-center">
                           <button
                             className=" rounded-full p-1.5 hover:bg-red-100 transition-all duration-100 "
                             onClick={() => {
@@ -299,12 +340,6 @@ const Inventory = () => {
                             }}
                           >
                             <MdDelete className=" text-lg text-red-500 " />
-                          </button>
-                          <button className=" rounded-full p-1.5 hover:bg-sky-100 transition-all duration-100">
-                            <FiEdit className=" text-lg  text-sky-500 " />
-                          </button>
-                          <button className=" p-1.5 hover:b">
-                            <BsFillEyeFill className=" rounded-full text-lg text-blue-400 hover:bg-blue-100 transition-all duration-100 " />
                           </button>
                         </div>
                       </TableColumn>

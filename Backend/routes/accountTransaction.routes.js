@@ -1,5 +1,6 @@
 const express = require('express');
 const {
+  getAllTransactions,
   createManualTransaction,
   transferBetweenAccounts,
   reverseTransaction,
@@ -10,6 +11,9 @@ const router = express.Router();
 
 // Protect all account transaction routes
 router.use(authenticate);
+
+// Get all account transactions with pagination and filters
+router.get('/', getAllTransactions);
 
 // Create a manual transaction (Credit/Debit/Expense)
 router.post('/', createManualTransaction);
