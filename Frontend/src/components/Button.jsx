@@ -5,7 +5,7 @@ function Button({ children, icon, className, ...props }) {
     <button
       {...props}
       className={`${
-        className ? className : " bg-dategold-300 hover:bg-dategold-400"
+        className ? className : " bg-warning-orange hover:bg-warning-orange/90"
       } cursor-pointer group w-full   text-zinc-200 flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200`}
     >
       {icon && (

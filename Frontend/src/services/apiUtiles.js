@@ -384,27 +384,27 @@ export const fetchSales = async (params = {}) => {
     if (params.status) query.set("status", params.status);
     if (params.page) query.set("page", params.page);
     if (params.limit) query.set("limit", params.limit);
-    
-    const url = query.toString() 
+
+    const url = query.toString()
       ? `${API_ENDPOINTS.SALES.LIST}?${query.toString()}`
       : API_ENDPOINTS.SALES.LIST;
-    
+
     const response = await apiRequest(url);
-    
+
     // Handle backend response format
     if (response && response.data && Array.isArray(response.data)) {
       return {
         sales: response.data,
         total: response.pagination?.total || response.data.length,
         pages: response.pagination?.totalPages || 1,
-        currentPage: response.pagination?.currentPage || 1
+        currentPage: response.pagination?.currentPage || 1,
       };
     } else if (Array.isArray(response)) {
       return {
         sales: response,
         total: response.length,
         pages: 1,
-        currentPage: 1
+        currentPage: 1,
       };
     } else {
       console.warn("Unexpected sales response format:", response);
@@ -476,6 +476,26 @@ export const fetchStoreStock = async (params = {}) => {
   return await apiRequest(url);
 };
 
+export const fetchEmployeeStock = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  const url = query.toString()
+    ? `${API_ENDPOINTS.EMPLOYEES_STOCK.LIST}?${query.toString()}`
+    : API_ENDPOINTS.EMPLOYEES_STOCK.LIST;
+  return await apiRequest(url);
+};
+
+export const fetchReturnEmployeeStock = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  const url = query.toString()
+    ? `${
+        API_ENDPOINTS.EMPLOYEES_STOCK.RETURN_STOCK_EMPLOYEE
+      }?${query.toString()}`
+    : API_ENDPOINTS.EMPLOYEES_STOCK.RETURN_STOCK_EMPLOYEE;
+  return await apiRequest(url);
+};
+
 export const fetchInventoryStats = async () => {
   return await apiRequest(API_ENDPOINTS.STOCK.STATS);
 };
@@ -504,9 +524,13 @@ export const deleteStockItem = async (id) => {
   });
 };
 
-export const fetchBatchesByProduct = async (productId, location = 'store') => {
+export const fetchBatchesByProduct = async (productId, location = "store") => {
   try {
-    const response = await apiRequest(`${API_ENDPOINTS.STOCK.BATCHES_BY_PRODUCT(productId)}?location=${location}`);
+    const response = await apiRequest(
+      `${API_ENDPOINTS.STOCK.BATCHES_BY_PRODUCT(
+        productId
+      )}?location=${location}`
+    );
     return response.data || response || [];
   } catch (error) {
     console.error("Error fetching batches:", error);
@@ -515,17 +539,17 @@ export const fetchBatchesByProduct = async (productId, location = 'store') => {
 };
 
 // Fetch products from stock where location=store
-export const fetchProductsFromStock = async (location = 'store') => {
+export const fetchProductsFromStock = async (location = "store") => {
   try {
-    const response = await apiRequest(`${API_ENDPOINTS.STOCK.LIST}?location=${location}`);
+    const response = await apiRequest(
+      `${API_ENDPOINTS.STOCK.LIST}?location=${location}`
+    );
     return response.data || response || [];
   } catch (error) {
     console.error("Error fetching products from stock:", error);
     return [];
   }
 };
-
-
 
 // Stock Transfers
 export const fetchStockTransfers = async () => {
