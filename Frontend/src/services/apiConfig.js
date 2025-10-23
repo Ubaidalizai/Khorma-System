@@ -190,6 +190,7 @@ export const API_ENDPOINTS = {
   ACCOUNTS: {
     LIST: "/accounts",
     SYSTEM: "/accounts/system",
+    SUPPLIERS: "/accounts/suppliers",
     DETAIL: (id) => `/accounts/${id}`,
     CREATE: "/accounts",
     UPDATE: (id) => `/accounts/${id}`,

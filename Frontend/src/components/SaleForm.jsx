@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useProductsFromStock, useCustomers, useEmployees, useSystemAccounts, useUnits, useBatchesByProduct } from "../services/useApi";
+import { useProductsFromStock, useAccounts, useSystemAccounts, useUnits, useBatchesByProduct } from "../services/useApi";
 
 // Searchable Select Component
 const SearchableSelect = ({ 
@@ -75,7 +75,7 @@ const SearchableSelect = ({
   );
 };
 
-function SaleForm({ register, handleSubmit, watch, onClose, onSubmit }) {
+function SaleForm({ register, handleSubmit, watch, setValue, onClose, onSubmit }) {
   const [items, setItems] = useState([
     { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 },
   ]);
@@ -84,17 +84,18 @@ function SaleForm({ register, handleSubmit, watch, onClose, onSubmit }) {
   
   // API hooks
   const { data: stockData, isLoading: productsLoading } = useProductsFromStock('store');
-  const { data: customers, isLoading: customersLoading } = useCustomers();
-  const { data: employees, isLoading: employeesLoading } = useEmployees();
+  // People accounts (customers/employees) instead of raw people
+  const { data: customerAccResp, isLoading: customersLoading } = useAccounts({ type: 'customer', page: 1, limit: 1000 });
+  const { data: employeeAccResp, isLoading: employeesLoading } = useAccounts({ type: 'employee', page: 1, limit: 1000 });
   const { data: accountsData, isLoading: accountsLoading } = useSystemAccounts();
   const { data: units, isLoading: unitsLoading } = useUnits();
 
   // Extract accounts array from the response
   const accounts = accountsData?.accounts || accountsData || [];
   
-  // Extract customers and employees arrays
-  const customersList = customers?.data || customers || [];
-  const employeesList = employees?.data || employees || [];
+  // Extract customer/employee accounts arrays
+  const customerAccounts = customerAccResp?.accounts || customerAccResp?.data || customerAccResp || [];
+  const employeeAccounts = employeeAccResp?.accounts || employeeAccResp?.data || employeeAccResp || [];
 
   // Get unique products from stock data
   const products = React.useMemo(() => {
@@ -190,12 +191,17 @@ function SaleForm({ register, handleSubmit, watch, onClose, onSubmit }) {
   console.log("SaleForm Debug:", {
     accounts,
     accountsLoading,
-    customersList,
-    employeesList,
+    customerAccounts,
+    employeeAccounts,
     products,
     productsLoading,
     batches,
-    selectedProductId
+    selectedProductId,
+    // Raw API responses
+    customerAccResp,
+    employeeAccResp,
+    customersLoading,
+    employeesLoading
   });
 
   // Show loading state if data is being fetched
@@ -205,6 +211,12 @@ function SaleForm({ register, handleSubmit, watch, onClose, onSubmit }) {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
           <p className="text-gray-600">در حال بارگذاری...</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Loading: Products={productsLoading ? 'Yes' : 'No'}, 
+            Customers={customersLoading ? 'Yes' : 'No'}, 
+            Employees={employeesLoading ? 'Yes' : 'No'}, 
+            Accounts={accountsLoading ? 'Yes' : 'No'}
+          </p>
         </div>
       </div>
     );
@@ -268,22 +280,32 @@ function SaleForm({ register, handleSubmit, watch, onClose, onSubmit }) {
               {saleType === "customer" ? "مشتری" : saleType === "employee" ? "کارمند" : "مشتری عابر"}
             </label>
             {saleType === "customer" && (
-              <SearchableSelect
-                options={customersList}
-                value={watch("customer")}
-                onChange={(value) => register("customer").onChange({ target: { value } })}
-                placeholder="انتخاب مشتری"
-                searchPlaceholder="جستجو مشتری..."
-              />
+              <div>
+                <SearchableSelect
+                  options={customerAccounts.map(acc => ({ _id: acc.refId, name: acc.name }))}
+                  value={watch("customer")}
+                  onChange={(value) => setValue("customer", value)}
+                  placeholder="انتخاب مشتری (حساب)"
+                  searchPlaceholder="جستجو حساب مشتری..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Found {customerAccounts.length} customer accounts
+                </p>
+              </div>
             )}
             {saleType === "employee" && (
-              <SearchableSelect
-                options={employeesList}
-                value={watch("employee")}
-                onChange={(value) => register("employee").onChange({ target: { value } })}
-                placeholder="انتخاب کارمند"
-                searchPlaceholder="جستجو کارمند..."
-              />
+              <div>
+                <SearchableSelect
+                  options={employeeAccounts.map(acc => ({ _id: acc.refId, name: acc.name }))}
+                  value={watch("employee")}
+                  onChange={(value) => setValue("employee", value)}
+                  placeholder="انتخاب کارمند (حساب)"
+                  searchPlaceholder="جستجو حساب کارمند..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Found {employeeAccounts.length} employee accounts
+                </p>
+              </div>
             )}
             {saleType === "walkin" && (
               <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 text-center">

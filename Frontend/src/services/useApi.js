@@ -65,6 +65,7 @@ import {
   getUserProfile,
   fetchAccounts,
   fetchSystemAccounts,
+  fetchSupplierAccounts,
   fetchAccountLedger,
   createAccount,
   updateAccount,
@@ -582,6 +583,12 @@ export const useAccounts = (opts = {}) => {
     ],
     queryFn: () => fetchAccounts({ type, search, page, limit }),
     keepPreviousData: true,
+    onSuccess: (data) => {
+      console.log("useAccounts success:", data);
+    },
+    onError: (error) => {
+      console.error("useAccounts error:", error);
+    },
   });
 };
 
@@ -593,7 +600,15 @@ export const useSystemAccounts = () => {
   });
 };
 
-export const useProductsFromStock = (location = "store") => {
+export const useSupplierAccounts = () => {
+  return useQuery({
+    queryKey: ["supplierAccounts"],
+    queryFn: fetchSupplierAccounts,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useProductsFromStock = (location = 'store') => {
   return useQuery({
     queryKey: ["productsFromStock", location],
     queryFn: () => fetchProductsFromStock(location),

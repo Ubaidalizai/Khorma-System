@@ -88,7 +88,6 @@ export const createProduct = async (productData) => {
 
 // ✅ Update an item
 export const updateProductItem = async ({ id, updatedItem }) => {
-  console.log(updatedItem);
   const res = await fetch(`${import.meta.env.VITE_API_URL}/product/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -270,11 +269,22 @@ export const fetchAccounts = async (params = {}) => {
   const url = query.toString()
     ? `${API_ENDPOINTS.ACCOUNTS.LIST}?${query.toString()}`
     : API_ENDPOINTS.ACCOUNTS.LIST;
-  return await apiRequest(url);
+
+  try {
+    const response = await apiRequest(url);
+    return response;
+  } catch (error) {
+    console.error("fetchAccounts error:", error);
+    throw error;
+  }
 };
 
 export const fetchSystemAccounts = async () => {
   return await apiRequest(API_ENDPOINTS.ACCOUNTS.SYSTEM);
+};
+
+export const fetchSupplierAccounts = async () => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.SUPPLIERS);
 };
 
 export const fetchAccount = async (id) => {
@@ -450,7 +460,6 @@ export const fetchStock = async () => {
 
 export const fetchInventoryStock = async (params = {}) => {
   const query = new URLSearchParams();
-  console.log(query);
   if (params.search) query.set("search", params.search);
   const url = query.toString()
     ? `${API_ENDPOINTS.STOCK.INVENTORY}?${query.toString()}`
@@ -552,7 +561,6 @@ export const fetchStockTransfer = async (id) => {
 };
 
 export const createStockTransfer = async (transferData) => {
-  console.log(transferData);
   return await apiRequest(API_ENDPOINTS.STOCK_TRANSFER.CREATE, {
     method: "POST",
     body: JSON.stringify(transferData),

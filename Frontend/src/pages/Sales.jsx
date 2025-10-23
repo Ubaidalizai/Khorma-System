@@ -41,6 +41,7 @@ const Sales = () => {
     register,
     handleSubmit,
     watch,
+    setValue,
   } = useForm({
     defaultValues: {
       saleDate: new Date().toISOString().slice(0, 10),
@@ -386,6 +387,7 @@ const Sales = () => {
               register={register}
               handleSubmit={handleSubmit}
               watch={watch}
+              setValue={setValue}
               onClose={() => setShowAddSaleModal(false)}
               onSubmit={handleCreateSale}
             />
