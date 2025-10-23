@@ -51,10 +51,14 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
     }
   };
 
+  const isSystemAccount = () => {
+    return ['cashier', 'safe', 'saraf'].includes(accountType);
+  };
+
   const handleFormSubmit = (data) => {
     const accountData = {
       type: data.type,
-      refId: data.refId,
+      refId: isSystemAccount() ? null : data.refId,
       name: data.name,
       openingBalance: parseFloat(data.openingBalance) || 0,
       currentBalance: parseFloat(data.currentBalance) || 0,
@@ -91,28 +95,31 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
               <option value='supplier'>تامین کننده</option>
               <option value='customer'>مشتری</option>
               <option value='employee'>کارمند</option>
-              <option value='bank'>بانک</option>
-              <option value='cash'>نقد</option>
+              <option value='cashier'>صندوق</option>
+              <option value='safe'>صندوق امانات</option>
+              <option value='saraf'>صراف</option>
             </select>
           </div>
 
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              مرجع *
-            </label>
-            <select
-              {...register("refId")}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
-              required
-            >
-              <option value=''>انتخاب مرجع</option>
-              {getReferenceOptions().map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isSystemAccount() && (
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                مرجع *
+              </label>
+              <select
+                {...register("refId")}
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+                required
+              >
+                <option value=''>انتخاب مرجع</option>
+                {getReferenceOptions().map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>

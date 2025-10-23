@@ -64,6 +64,7 @@ import {
   getUserProfile,
   fetchAccounts,
   fetchSystemAccounts,
+  fetchSupplierAccounts,
   fetchAccountLedger,
   createAccount,
   updateAccount,
@@ -564,6 +565,12 @@ export const useAccounts = (opts = {}) => {
     ],
     queryFn: () => fetchAccounts({ type, search, page, limit }),
     keepPreviousData: true,
+    onSuccess: (data) => {
+      console.log("useAccounts success:", data);
+    },
+    onError: (error) => {
+      console.error("useAccounts error:", error);
+    },
   });
 };
 
@@ -571,6 +578,14 @@ export const useSystemAccounts = () => {
   return useQuery({
     queryKey: ["systemAccounts"],
     queryFn: fetchSystemAccounts,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useSupplierAccounts = () => {
+  return useQuery({
+    queryKey: ["supplierAccounts"],
+    queryFn: fetchSupplierAccounts,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

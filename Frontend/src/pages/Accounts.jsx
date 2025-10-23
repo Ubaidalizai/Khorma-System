@@ -12,7 +12,7 @@ import {
   EyeIcon,
 } from "@heroicons/react/24/outline";
 import { useForm } from "react-hook-form";
-import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount } from "../services/useApi";
+import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useSuppliers, useCustomers, useEmployees } from "../services/useApi";
 
 const Accounts = () => {
   const navigate = useNavigate();
@@ -22,23 +22,51 @@ const Accounts = () => {
   const [limit, setLimit] = useState(10);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, watch } = useForm();
 
   const { data: accountsResp, isLoading } = useAccounts({ type, search, page, limit });
   const accounts = accountsResp?.accounts || accountsResp?.data || [];
   const total = accountsResp?.total || accounts.length || 0;
   const totalPages = accountsResp?.pages || Math.max(1, Math.ceil(total / limit));
 
+  // Fetch entities for reference selection
+  const { data: suppliersData } = useSuppliers();
+  const { data: customersData } = useCustomers();
+  const { data: employeesData } = useEmployees();
+
   const createAccountMutation = useCreateAccount();
   const updateAccountMutation = useUpdateAccount();
   const deleteAccountMutation = useDeleteAccount();
 
+  // Helper functions
+  const isSystemAccount = (accountType) => {
+    return ['cashier', 'safe', 'saraf'].includes(accountType);
+  };
+
+  const getReferenceOptions = (accountType) => {
+    switch (accountType) {
+      case "supplier":
+        return suppliersData?.data || [];
+      case "customer":
+        return customersData?.data || [];
+      case "employee":
+        return employeesData?.data || [];
+      default:
+        return [];
+    }
+  };
+
   const onSubmitAccount = async (data) => {
     try {
+      const accountData = {
+        ...data,
+        refId: isSystemAccount(data.type) ? null : data.refId,
+      };
+      
       if (editingAccount) {
-        await updateAccountMutation.mutateAsync({ id: editingAccount._id, accountData: data });
+        await updateAccountMutation.mutateAsync({ id: editingAccount._id, accountData });
       } else {
-        await createAccountMutation.mutateAsync(data);
+        await createAccountMutation.mutateAsync(accountData);
       }
       setShowAccountModal(false);
       setEditingAccount(null);
@@ -260,6 +288,24 @@ const Accounts = () => {
                   <option value='saraf'>صراف</option>
                 </select>
               </div>
+              
+              {/* Reference field - only show for entity accounts */}
+              {!isSystemAccount(watch('type')) && (
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>مرجع *</label>
+                  <select 
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500' 
+                    {...register('refId', { required: !isSystemAccount(watch('type')) })}
+                  >
+                    <option value=''>انتخاب مرجع</option>
+                    {getReferenceOptions(watch('type')).map((entity) => (
+                      <option key={entity._id} value={entity._id}>
+                        {entity.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>نام حساب *</label>
                 <input 

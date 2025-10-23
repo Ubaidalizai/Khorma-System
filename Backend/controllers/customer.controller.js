@@ -1,6 +1,6 @@
 const Customer = require('../models/customer.model');
 const asyncHandler = require('../middlewares/asyncHandler');
-const AppError = require('../utils/appError');
+const AppError = require('../utils/AppError');
 
 // @desc    Create new customer
 // @route   POST /api/v1/customers
