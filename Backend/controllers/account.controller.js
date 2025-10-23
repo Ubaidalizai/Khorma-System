@@ -110,6 +110,20 @@ exports.getSystemAccounts = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Get supplier accounts
+// @route   GET /api/v1/accounts/suppliers
+exports.getSupplierAccounts = asyncHandler(async (req, res, next) => {
+  const accounts = await Account.find({
+    type: 'supplier',
+    isDeleted: false
+  }).sort({ name: 1 });
+
+  res.status(200).json({
+    success: true,
+    accounts,
+  });
+});
+
 // @desc    Get single account
 // @route   GET /api/v1/accounts/:id
 exports.getAccount = asyncHandler(async (req, res, next) => {
