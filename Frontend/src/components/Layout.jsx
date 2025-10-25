@@ -8,7 +8,7 @@ const Layout = () => {
 
   return (
     <section
-      className='h-screen flex overflow-hidden max-w-[1440px] mx-auto min-w-[768px] '
+      className="h-screen flex  overflow-hidden w-full lg:max-w-[1440px] lg:mx-auto"
       style={{
         backgroundColor: "var(--background)",
         fontFamily: "var(--font-family)",
@@ -18,13 +18,13 @@ const Layout = () => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main content wrapper */}
-      <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header - sticky at top */}
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page content - scrollable area */}
-        <main className='flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6'>
-          <div className='max-w-full'>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6">
+          <div className="max-w-full">
             <Outlet />
           </div>
         </main>

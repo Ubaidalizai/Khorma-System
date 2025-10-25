@@ -35,7 +35,7 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
           </label>
           <input
             id="name"
-            {...register("name", { required: "Name is required" })}
+            {...register("name", { required: "نام محصول الزامی است" })}
             type="text"
             className={inputStyle}
             placeholder="نام محصول را وارد کنید"
@@ -56,6 +56,7 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
           <Controller
             control={control}
             name="baseUnit"
+            rules={{ required: "واحد پایه الزامی است" }}
             render={({ field }) => (
               <select {...field} id="baseUnit" className={inputStyle}>
                 <option value="">انتخاب واحد</option>

@@ -55,7 +55,6 @@ const Inventory = () => {
   function AddProductForm({ close }) {
     const onSubmit = async (data) => {
       createProduct({ ...data });
-      if (typeof close === "function") close();
       reset();
     };
     return (
