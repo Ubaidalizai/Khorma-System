@@ -10,7 +10,7 @@ import Spinner from "./Spinner";
  * - onClose: optional close callback
  */
 export const inputStyle =
-  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-3 transition duration-300 ease focus:outline-none focus:border-blue-500 hover:border-slate-300 shadow-sm";
+  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-3 transition duration-300 ease focus:outline-none focus:border-[var(--primary-brown)] hover:border-[var(--primary-brown-light)] shadow-sm";
 
 function ProductForm({ register, handleSubmit, formState, control, onClose }) {
   const { errors } = formState || {};
@@ -24,6 +24,10 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
       onSubmit={handleSubmit}
       className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg"
     >
+      <div className=" w-full py-2 border-b border-slate-300 my-4 text-md font-semibold">
+        {" "}
+        اضافه کردن محصول جدید
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Product Name */}
         <div className="md:col-span-1">
@@ -75,55 +79,6 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
           )}
         </div>
 
-        {/* Minimum Level */}
-        <div className="md:col-span-1">
-          <label
-            htmlFor="minLevel"
-            className="block text-sm font-medium text-slate-700 mb-2"
-          >
-            کمترین اندازه
-          </label>
-          <input
-            {...register("minLevel", { valueAsNumber: true })}
-            type="number"
-            id="minLevel"
-            className={inputStyle}
-            placeholder="0"
-            min="0"
-          />
-          {errors?.minLevel && (
-            <p className="text-red-600 text-sm mt-1">
-              {errors.minLevel.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label
-            htmlFor="latestPurchasePrice"
-            className="block text-sm font-medium text-slate-700 mb-2"
-          >
-            قیمت اولیه
-          </label>
-          <input
-            type="number"
-            className={inputStyle}
-            {...register("latestPurchasePrice")}
-          />
-        </div>
-        <div>
-          <label
-            id="description"
-            className="block text-sm font-medium text-slate-700 mb-2"
-          >
-            توضیحات
-          </label>
-          <textarea
-            className={inputStyle}
-            rows={2}
-            id="description"
-            {...register("description")}
-          />
-        </div>
         {/* Track by Batch */}
         <div className="md:col-span-1 flex items-center">
           <div className="flex items-center space-x-2">
@@ -141,20 +96,22 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-slate-200">
-        <Button
-          type="button"
-          className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition duration-200"
-          onClick={onClose}
-        >
-          لغو کردن
-        </Button>
-        <Button
-          type="submit"
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-200"
-        >
-          ذخیره
-        </Button>
+      <div className="flex justify-end items-center space-x-3 mt-6 pt-4 border-t border-slate-200">
+        <div className=" w-[50%] flex gap-2">
+          <Button
+            type="button"
+            className="px-6 py-2 bg-transparent   border border-slate-500 text-black rounded-md"
+            onClick={onClose}
+          >
+            انصراف
+          </Button>
+          <Button
+            type="submit"
+            className="px-6 py-2 bg-[#A0522D] hover:bg-[#a0522d]/90 text-white rounded-md transition duration-200"
+          >
+            ذخیره
+          </Button>
+        </div>
       </div>
     </form>
   );

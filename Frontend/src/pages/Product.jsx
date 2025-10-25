@@ -19,8 +19,6 @@ import { motion } from "framer-motion";
 const headers = [
   { title: "اسم جنس" },
   { title: "واحد پایه" },
-  { title: "حداقل سطح" },
-  { title: "آخرین قیمت خرید" },
   { title: "ردیابی بچ" },
   { title: "عملیات" },
 ];
@@ -119,12 +117,7 @@ function Product() {
               <TableRow key={el._id}>
                 <TableColumn>{el?.name}</TableColumn>
                 <TableColumn>{el?.baseUnit?.name || "نامشخص"}</TableColumn>
-                <TableColumn>{el?.minLevel ?? 0}</TableColumn>
-                <TableColumn>
-                  {typeof el?.latestPurchasePrice === "number"
-                    ? `${el.latestPurchasePrice.toLocaleString("fa-IR")} `
-                    : "نامشخص"}
-                </TableColumn>
+
                 <TableColumn>
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${
