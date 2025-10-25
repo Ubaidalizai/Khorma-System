@@ -202,13 +202,19 @@ exports.createManualTransaction = asyncHandler(async (req, res, next) => {
     const account = await Account.findById(accountId).session(session);
     if (!account) throw new AppError('Account not found', 404);
 
+    // Determine the actual amount to add to balance based on transaction type
+    let actualAmount = amount;
+    if (transactionType === 'Debit' || transactionType === 'Expense') {
+      actualAmount = -amount; // Debit and Expense should decrease balance
+    }
+
     // Create transaction
     const transaction = await AccountTransaction.create(
       [
         {
           account: account._id,
           transactionType,
-          amount,
+          amount: actualAmount, // Store the actual amount (positive/negative)
           description,
           created_by: req.user._id,
         },
@@ -217,7 +223,7 @@ exports.createManualTransaction = asyncHandler(async (req, res, next) => {
     );
 
     // Update account balance
-    account.currentBalance += amount;
+    account.currentBalance += actualAmount;
     await account.save({ session });
 
     // After saving account

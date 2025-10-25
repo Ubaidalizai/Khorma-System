@@ -21,7 +21,6 @@ router.use(authenticate);
 
 router.route('/').post(createAccount).get(getAllAccounts);
 router.get('/system', getSystemAccounts);
-router.get('/suppliers', getSupplierAccounts);
 router.route('/:id').get(getAccount).patch(updateAccount).delete(deleteAccount);
 router.patch('/:id/restore', restoreAccount);
 router.get('/:id/ledger', getAccountLedger);

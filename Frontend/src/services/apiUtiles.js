@@ -323,6 +323,19 @@ export const fetchAccountLedger = async (accountId, params = {}) => {
   return await apiRequest(url);
 };
 
+export const createManualTransaction = async (transactionData) => {
+  try {
+    const response = await apiRequest(API_ENDPOINTS.ACCOUNT_TRANSACTIONS.CREATE, {
+      method: "POST",
+      body: JSON.stringify(transactionData),
+    });
+    return response;
+  } catch (error) {
+    console.error("createManualTransaction error:", error);
+    throw error;
+  }
+};
+
 // Purchases
 export const fetchPurchases = async (params = {}) => {
   try {

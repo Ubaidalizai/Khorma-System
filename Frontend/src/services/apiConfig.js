@@ -198,6 +198,14 @@ export const API_ENDPOINTS = {
     LEDGER: (id) => `/accounts/${id}/ledger`,
   },
 
+  // Account Transactions
+  ACCOUNT_TRANSACTIONS: {
+    LIST: "/account-transactions",
+    CREATE: "/account-transactions",
+    TRANSFER: "/account-transactions/transfer",
+    REVERSE: (id) => `/account-transactions/${id}/reverse`,
+  },
+
   // Types
   TYPES: {
     LIST: "/types",

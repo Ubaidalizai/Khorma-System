@@ -9,7 +9,7 @@ const employeeSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['salesman', 'riding_man', 'cashier', 'manager', 'admin'],
+      enum: ['salesman', 'riding_man'],
       required: [true, 'Employee role is required'],
     },
     contact_info: {

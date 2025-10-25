@@ -10,9 +10,12 @@ import {
   BuildingOfficeIcon,
   CurrencyDollarIcon,
   EyeIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
 } from "@heroicons/react/24/outline";
 import { useForm } from "react-hook-form";
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useSuppliers, useCustomers, useEmployees } from "../services/useApi";
+import { createManualTransaction } from "../services/apiUtiles";
 
 const Accounts = () => {
   const navigate = useNavigate();
@@ -21,6 +24,8 @@ const Accounts = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [editingAccount, setEditingAccount] = useState(null);
   const { register, handleSubmit, reset, watch } = useForm();
 
@@ -96,6 +101,41 @@ const Accounts = () => {
       } catch (e) {
         console.error(e);
       }
+    }
+  };
+
+  const handleAddTransaction = (acc) => {
+    setSelectedAccount(acc);
+    setShowTransactionModal(true);
+    reset({
+      transactionType: 'Credit',
+      amount: '',
+      description: ''
+    });
+  };
+
+  const onSubmitTransaction = async (data) => {
+    try {
+      const transactionData = {
+        accountId: selectedAccount._id,
+        transactionType: data.transactionType,
+        amount: parseFloat(data.amount),
+        description: data.description || `Manual ${data.transactionType} transaction`
+      };
+      
+      await createManualTransaction(transactionData);
+      setShowTransactionModal(false);
+      setSelectedAccount(null);
+      reset();
+      
+      // Show success message
+      alert('تراکنش با موفقیت اضافه شد!');
+      
+      // Refresh accounts data
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to create transaction:", error);
+      alert('خطا در ایجاد تراکنش: ' + error.message);
     }
   };
 
@@ -207,6 +247,13 @@ const Accounts = () => {
                           title='مشاهده جزئیات'
                         >
                           <EyeIcon className='h-4 w-4' />
+                        </button>
+                        <button 
+                          className='text-green-600 hover:text-green-900' 
+                          onClick={() => handleAddTransaction(acc)}
+                          title='افزودن تراکنش'
+                        >
+                          <ArrowUpIcon className='h-4 w-4' />
                         </button>
                         <button 
                           className='text-indigo-600 hover:text-indigo-900' 
@@ -345,6 +392,116 @@ const Accounts = () => {
                   className='px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700'
                 >
                   {editingAccount ? 'ذخیره تغییرات' : 'ایجاد حساب'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Transaction Modal */}
+      {showTransactionModal && selectedAccount && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+          <div className='bg-white rounded-lg shadow-xl max-w-md w-full'>
+            <div className='p-6 border-b flex justify-between items-center'>
+              <h2 className='text-2xl font-bold text-gray-900'>
+                افزودن تراکنش دستی
+              </h2>
+              <button 
+                onClick={() => { setShowTransactionModal(false); setSelectedAccount(null); }} 
+                className='text-gray-500 hover:text-gray-700'
+              >
+                <XMarkIcon className='h-6 w-6' />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit(onSubmitTransaction)} className='p-6 space-y-4'>
+              <div className='bg-blue-50 p-4 rounded-lg'>
+                <h3 className='font-semibold text-blue-900 mb-2'>حساب: {selectedAccount.name}</h3>
+                <p className='text-sm text-blue-700'>موجودی فعلی: {selectedAccount.currentBalance?.toLocaleString?.() ?? selectedAccount.currentBalance} AFN</p>
+              </div>
+              
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>نوع تراکنش *</label>
+                <select 
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500' 
+                  {...register('transactionType', { required: true })}
+                >
+                  <option value='Credit'>اعتبار (موجودی حساب افزایش می‌یابد)</option>
+                  <option value='Debit'>بدهی (موجودی حساب کاهش می‌یابد)</option>
+                  <option value='Expense'>مصرف (هزینه - موجودی کاهش می‌یابد)</option>
+                </select>
+                <div className='mt-2 p-3 rounded-lg bg-gray-50'>
+                  <p className='text-sm font-medium text-gray-700 mb-2'>مثال‌های کاربردی:</p>
+                  <div className='text-xs text-gray-600 space-y-1'>
+                    {watch('transactionType') === 'Credit' && (
+                      <>
+                        <p>• مشتری پول پرداخت کرد → موجودی حساب مشتری افزایش می‌یابد</p>
+                        <p>• شما به تهیه‌کننده پول پرداخت کردید → موجودی حساب تهیه‌کننده کاهش می‌یابد (بدهی شما کم شد)</p>
+                        <p>• حقوق کارمند پرداخت شد → موجودی حساب کارمند افزایش می‌یابد</p>
+                      </>
+                    )}
+                    {watch('transactionType') === 'Debit' && (
+                      <>
+                        <p>• شما به مشتری پول پرداخت کردید → موجودی حساب مشتری کاهش می‌یابد</p>
+                        <p>• تهیه‌کننده پول برگشت داد → موجودی حساب تهیه‌کننده کاهش می‌یابد</p>
+                        <p>• کارمند پول برگشت داد → موجودی حساب کارمند کاهش می‌یابد</p>
+                      </>
+                    )}
+                    {watch('transactionType') === 'Expense' && (
+                      <>
+                        <p>• خرید ملزومات اداری → موجودی حساب صندوق کاهش می‌یابد</p>
+                        <p>• پرداخت اجاره → موجودی حساب صندوق کاهش می‌یابد</p>
+                        <p>• هزینه تعمیرات → موجودی حساب صندوق کاهش می‌یابد</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>مبلغ *</label>
+                <input 
+                  type='number' 
+                  step='0.01' 
+                  min='0'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500' 
+                  placeholder='مبلغ به AFN' 
+                  {...register('amount', { required: true, min: 0.01 })} 
+                />
+              </div>
+              
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>توضیحات</label>
+                <textarea 
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500' 
+                  rows={3}
+                  placeholder='توضیح کوتاه در مورد این تراکنش...' 
+                  {...register('description')} 
+                />
+              </div>
+              
+              <div className='bg-yellow-50 p-3 rounded-lg'>
+                <p className='text-sm text-yellow-800'>
+                  <strong>نکته:</strong> 
+                  {watch('transactionType') === 'Credit' && ' این تراکنش موجودی حساب را افزایش می‌دهد.'}
+                  {watch('transactionType') === 'Debit' && ' این تراکنش موجودی حساب را کاهش می‌دهد.'}
+                  {watch('transactionType') === 'Expense' && ' این تراکنش موجودی حساب را کاهش می‌دهد.'}
+                </p>
+              </div>
+              
+              <div className='flex justify-end gap-2 pt-4'>
+                <button 
+                  type='button' 
+                  onClick={() => { setShowTransactionModal(false); setSelectedAccount(null); }} 
+                  className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50'
+                >
+                  انصراف
+                </button>
+                <button 
+                  type='submit' 
+                  className='px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700'
+                >
+                  افزودن تراکنش
                 </button>
               </div>
             </form>
