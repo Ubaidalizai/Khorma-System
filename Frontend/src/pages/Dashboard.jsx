@@ -21,10 +21,11 @@ import {
   useReverseTransaction,
   useSales,
 } from "../services/useApi";
-import { useAuditLogsByTable } from "../services/useAuditLogs";
+import { useAuditLogsByTable, useAuditLogs } from "../services/useAuditLogs";
 import TableHeader from "./../components/TableHeader";
 import { formatCurrency } from "./../utilies/helper";
-import { inputStyle } from "./../components/ProductForm";
+import Select from "../components/Select";
+import Pagination from "../components/Pagination";
 
 const Dashboard = () => {
   const headers = [
@@ -152,32 +153,60 @@ const Dashboard = () => {
   // const { data: inventory, isLoading: inventoryLoading } = useInventory();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState(10);
+  const [transactionLimit, setTransactionLimit] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [reason, setReason] = useState("");
   const [activeTab, setActiveTab] = useState("transaction");
   const { data: recentTransactions, isLoading: statsLoading } =
-    useRecentTransactions({ page: currentPage, limit });
+    useRecentTransactions({ page: currentPage, limit: transactionLimit });
   // const { data: lowStockItems, isLoading: lowStockLoading } =
   //   useLowStockItems();
   const { data: lowStock, isLoading: lowStockLoading } = useInventoryStats();
   const { mutate: reverseTransaction, isLoading: reverseLoading } =
     useReverseTransaction();
-
   // Audit logs hooks
   const [auditPage, setAuditPage] = useState(1);
-  const [auditLimit] = useState(10);
-  const [selectedTable, setSelectedTable] = useState("Sale");
+  const [auditLimit, setAuditLimit] = useState(10);
+  const [selectedTable, setSelectedTable] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
 
-  const tableLogs = useAuditLogsByTable(selectedTable, {
+  const tableOptions = [
+    { value: "all", label: "همه" },
+    { value: "Account", label: "حساب" },
+    { value: "AccountTransaction", label: "تراکنش حساب" },
+    { value: "AuditLog", label: "لاگ حسابرسی" },
+    { value: "Brand", label: "برند" },
+    { value: "Category", label: "دسته‌بندی" },
+    { value: "Company", label: "شرکت" },
+    { value: "Customer", label: "مشتری" },
+    { value: "Employee", label: "کارمند" },
+    { value: "EmployeeStock", label: "موجودی کارمند" },
+    { value: "Expense", label: "هزینه" },
+    { value: "Income", label: "درآمد" },
+    { value: "Product", label: "محصول" },
+    { value: "Purchase", label: "خرید" },
+    { value: "PurchaseItem", label: "آیتم خرید" },
+    { value: "Sale", label: "فروش" },
+    { value: "SaleItem", label: "آیتم فروش" },
+    { value: "SaleReturn", label: "بازگشت فروش" },
+    { value: "Stock", label: "موجودی" },
+    { value: "StockTransfer", label: "انتقال موجودی" },
+    { value: "Supplier", label: "تامین‌کننده" },
+    { value: "Type", label: "نوع" },
+    { value: "Unit", label: "واحد" },
+    { value: "User", label: "کاربر" },
+  ];
+
+  const allAuditLogs = useAuditLogs({ page: auditPage, limit: auditLimit });
+
+  const tableAuditLogs = useAuditLogsByTable(selectedTable, {
     page: auditPage,
     limit: auditLimit,
   });
-
+  const tableLogs = selectedTable === "all" ? allAuditLogs : tableAuditLogs;
   const auditLogs = tableLogs.data;
   const auditLoading = tableLogs.isLoading;
 
@@ -271,27 +300,27 @@ const Dashboard = () => {
   const StatCard = ({ title, value, icon, color = "#6366F1", change }) => {
     const isPositive = change > 0;
     return (
-      <div className="bg-white hover:translate-y-1.5 transition-all duration-200  cursor-pointer  rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">{title} </p>
-            <div className="text-2xl font-bold text-gray-900 mt-1">
+      <div className="bg-white hover:translate-y-1.5 transition-all duration-200 cursor-pointer rounded-lg shadow-sm border border-gray-200 p-4 min-h-[120px] flex flex-col justify-between">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-600 truncate">{title}</p>
+            <div className="text-xl font-bold text-gray-900 mt-1 break-words">
               {change ? (
                 <div
-                  className={`mt-2 text-center  w-full  flex items-center gap-1 text-sm font-medium ${
+                  className={`mt-2 text-center w-full flex items-center gap-1 text-sm font-medium ${
                     isPositive
                       ? "text-green-500 dark:text-green-400"
                       : "text-red-500 dark:text-red-400"
                   }`}
                 >
-                  <div className=" flex items-center justify-start">
+                  <div className="flex items-center justify-start">
                     {isPositive ? (
-                      <span className=" p-3">
-                        <TrendingUp size={24} />
+                      <span className="p-2">
+                        <TrendingUp size={20} />
                       </span>
                     ) : (
-                      <span className=" p-3 ">
-                        <TrendingDown size={24} />
+                      <span className="p-2">
+                        <TrendingDown size={20} />
                       </span>
                     )}
                     <span className="">
@@ -301,19 +330,21 @@ const Dashboard = () => {
                   </div>
                 </div>
               ) : (
-                <p style={{ color }}> {value}</p>
+                <p className="text-lg break-words" style={{ color }}>
+                  {value}
+                </p>
               )}
             </div>
           </div>
 
           <div
-            className="p-3 rounded-lg border border-slate-200"
+            className="p-2 rounded-lg border border-slate-200 flex-shrink-0 ml-2"
             style={{
               background: `linear-gradient(135deg, ${color}33, ${color}99)`,
             }}
           >
             {React.createElement(icon, {
-              className: "h-6 w-6",
+              className: "h-5 w-5",
               style: { color },
             })}
           </div>
@@ -432,6 +463,48 @@ const Dashboard = () => {
       </div>
       {activeTab === "transaction" && (
         <div className="card">
+          {/* Search and Pagination Row */}
+          <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="جستجو در تراکنش‌ها..."
+                  className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-4 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              {recentTransactions?.data?.pagination &&
+                recentTransactions?.data?.pagination?.totalPages > 1 && (
+                  <Pagination
+                    page={currentPage}
+                    limit={transactionLimit}
+                    total={recentTransactions?.data?.pagination?.total || 0}
+                    onPageChange={setCurrentPage}
+                    onRowsPerPageChange={(newLimit) => {
+                      setTransactionLimit(newLimit);
+                      setCurrentPage(1);
+                    }}
+                  />
+                )}
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader headerData={headers} />
@@ -495,65 +568,24 @@ const Dashboard = () => {
                 )}
               </TableBody>
             </Table>
-            {recentTransactions?.data?.pagination &&
-              recentTransactions?.data?.pagination?.totalPages > 1 && (
-                <div className="flex justify-center items-center mt-4 space-x-2">
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                  >
-                    قبلی
-                  </button>
-                  <span className="px-3 py-1">
-                    صفحه {currentPage} از{" "}
-                    {recentTransactions?.data?.pagination?.totalPages}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) =>
-                        Math.min(
-                          prev + 1,
-                          recentTransactions?.data?.pagination?.totalPages
-                        )
-                      )
-                    }
-                    disabled={
-                      currentPage ===
-                      recentTransactions?.data?.pagination?.totalPages
-                    }
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                  >
-                    بعدی
-                  </button>
-                </div>
-              )}
           </div>
         </div>
       )}
       {activeTab === "logs" && (
         <div className="card">
-          <div className="mb-6 space-y-4">
-            <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="mb-6 space-y-4 flex  items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4   items-end">
               <div className="">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   انتخاب جدول برای نمایش لاگ‌ها
                 </label>
-                <div className="relative">
-                  <select
-                    value={selectedTable}
-                    onChange={(e) => setSelectedTable(e.target.value)}
-                    className={inputStyle}
-                  >
-                    <option value="Sale">فروش</option>
-                    <option value="Purchase">خرید</option>
-                    <option value="Transaction">تراکنش‌ها</option>
-                    <option value="Stock">موجودی</option>
-                    <option value="Account">انتقال</option>
-                  </select>
-                </div>
+                <Select
+                  label=""
+                  id="table-select"
+                  options={tableOptions}
+                  value={selectedTable}
+                  onChange={(value) => setSelectedTable(value)}
+                />
               </div>
               <div className="">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -565,7 +597,7 @@ const Dashboard = () => {
                     placeholder="جستجو بر اساس دلیل، تغییر دهنده یا عملیات..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`${inputStyle} pr-10`}
+                    className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-4 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg
@@ -585,32 +617,22 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
-          {auditLogs?.pagination && auditLogs.pagination.totalPages > 1 && (
-            <div className="flex justify-center items-center mb-4 space-x-2">
-              <button
-                onClick={() => setAuditPage((prev) => Math.max(prev - 1, 1))}
-                disabled={auditPage === 1}
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-              >
-                قبلی
-              </button>
-              <span className="px-3 py-1">
-                صفحه {auditPage} از {auditLogs.pagination.totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setAuditPage((prev) =>
-                    Math.min(prev + 1, auditLogs.pagination.totalPages)
-                  )
-                }
-                disabled={auditPage === auditLogs.pagination.totalPages}
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-              >
-                بعدی
-              </button>
+            <div className=" flex items-center pl-10  ">
+              {auditLogs?.pagination?.totalPages > 1 && (
+                <Pagination
+                  page={auditPage}
+                  limit={auditLimit}
+                  total={auditLogs?.pagination?.total || 0}
+                  totalPages={auditLogs?.pagination?.totalPages}
+                  onPageChange={setAuditPage}
+                  onRowsPerPageChange={(newLimit) => {
+                    setAuditLimit(newLimit);
+                    setAuditPage(1);
+                  }}
+                />
+              )}
             </div>
-          )}
+          </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader
@@ -675,31 +697,6 @@ const Dashboard = () => {
                 )}
               </TableBody>
             </Table>
-            {auditLogs?.pagination && auditLogs.pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center mt-4 space-x-2">
-                <button
-                  onClick={() => setAuditPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={auditPage === 1}
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  قبلی
-                </button>
-                <span className="px-3 py-1">
-                  صفحه {auditPage} از {auditLogs.pagination.totalPages}
-                </span>
-                <button
-                  onClick={() =>
-                    setAuditPage((prev) =>
-                      Math.min(prev + 1, auditLogs.pagination.totalPages)
-                    )
-                  }
-                  disabled={auditPage === auditLogs.pagination.totalPages}
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  بعدی
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}

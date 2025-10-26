@@ -1,10 +1,22 @@
 export function formatCurrency(amount) {
   if (isNaN(amount)) return "؋0.00";
 
-  return new Intl.NumberFormat("fa-AF", {
-    style: "currency",
-    currency: "AFN",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  // Format large numbers with Dari suffixes
+  const formatNumber = (num) => {
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + " میلیارد";
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + " میلیون";
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, "") + " هزار";
+    }
+    return num.toString();
+  };
+
+  const formattedAmount = formatNumber(Math.abs(amount));
+  const sign = amount < 0 ? "-" : "";
+
+  return `${sign}؋${formattedAmount}`;
 }
