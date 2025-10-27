@@ -11,6 +11,7 @@ const {
   getSaleReturn,
   updateSaleReturn,
   deleteSaleReturn,
+  recordSalePayment,
 } = require('../controllers/sale.controller');
 
 const { authenticate } = require('../middlewares/authMiddleware');
@@ -32,5 +33,6 @@ router.route('/').post(createSale).get(getAllSales);
 router.route('/:id').get(getSale).patch(updateSale).delete(deleteSale);
 
 router.patch('/:id/restore', restoreSale);
+router.post('/:id/payment', recordSalePayment);
 
 module.exports = router;

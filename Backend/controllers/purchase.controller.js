@@ -22,12 +22,16 @@ const validateAccountBalance = async (accountId, requiredAmount, session) => {
   if (!account) throw new AppError('Account not found', 404);
   
   if (requiredAmount > 0) {
+    // Only validate cashier and safe accounts - they cannot go negative
     if (account.type === 'cashier' || account.type === 'safe') {
       if (account.currentBalance < requiredAmount) {
-        throw new AppError(`Not enough money in ${account.type} account. Available: ${account.currentBalance}, Required: ${requiredAmount}`, 400);
+        throw new AppError(
+          `موجودی ناکافی! در حساب ${account.name} موجودی: ${account.currentBalance.toLocaleString()} افغانی، مبلغ مورد نیاز: ${requiredAmount.toLocaleString()} افغانی`,
+          400
+        );
       }
     }
-    // Saraf account can go negative, so no validation needed
+    // Saraf account can go negative (credit account), so no validation needed
   }
   
   return account;
@@ -85,7 +89,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
 
       // ✅ Assign consistent batch number ONCE
       const batchNum = product.trackByBatch
-        ? item.batchNumber || `AUTO-${Date.now()}-${product._id}`
+        ? (item.batchNumber && item.batchNumber.trim() ? item.batchNumber : `AUTO-${Date.now()}-${product._id}`)
         : 'DEFAULT';
 
       // ✅ Assign expiryDate correctly (even if product is not batch-tracked)
@@ -151,8 +155,9 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
     supplierAccount.currentBalance += totalAmount;
     await supplierAccount.save({ session });
 
-    // Payment Account (Credit)
+    // Payment Account (Credit) - When paying cashier balance decreases, supplier balance decreases
     if (paidAmount > 0) {
+      // Payment reduces cashier balance
       await AccountTransaction.create(
         [
           {
@@ -170,6 +175,25 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
 
       payAccount.currentBalance -= paidAmount;
       await payAccount.save({ session });
+
+      // Payment reduces supplier balance (what you owe them)
+      await AccountTransaction.create(
+        [
+          {
+            account: supplierAccount._id,
+            transactionType: 'Payment',
+            amount: -paidAmount,
+            referenceType: 'purchase',
+            referenceId: purchase[0]._id,
+            created_by: req.user._id,
+            description: `Payment received for purchase`,
+          },
+        ],
+        { session }
+      );
+
+      supplierAccount.currentBalance -= paidAmount;
+      await supplierAccount.save({ session });
     }
 
     // 8️⃣ Commit transaction
@@ -389,7 +413,7 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
 
         // Add back new stock
         const newBatchNum = product.trackByBatch
-          ? item.batchNumber || `AUTO-${Date.now()}-${product._id}`
+          ? (item.batchNumber && item.batchNumber.trim() ? item.batchNumber : `AUTO-${Date.now()}-${product._id}`)
           : 'DEFAULT';
 
         await Stock.findOneAndUpdate(
@@ -717,5 +741,131 @@ exports.restorePurchase = asyncHandler(async (req, res, next) => {
     await session.abortTransaction();
     session.endSession();
     throw new AppError(err.message || 'Failed to restore purchase', 500);
+  }
+});
+
+// @desc Record additional payment against a purchase
+// @route POST /api/v1/purchases/:id/payment
+exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
+  const { amount, paymentAccount, description } = req.body;
+  const purchaseId = req.params.id;
+
+  if (!amount || amount <= 0) {
+    throw new AppError('Payment amount must be greater than 0', 400);
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // 1️⃣ Find the purchase
+    const purchase = await Purchase.findById(purchaseId).session(session);
+    if (!purchase || purchase.isDeleted) {
+      throw new AppError('Purchase not found', 404);
+    }
+
+    // 2️⃣ Calculate remaining due
+    const remainingDue = purchase.totalAmount - purchase.paidAmount;
+    
+    if (amount > remainingDue) {
+      throw new AppError(
+        `Payment amount (${amount}) exceeds remaining due (${remainingDue})`,
+        400
+      );
+    }
+
+    // 3️⃣ Find supplier account
+    const supplierAccount = await Account.findOne({
+      refId: purchase.supplier,
+      type: 'supplier',
+      isDeleted: false
+    }).session(session);
+    
+    if (!supplierAccount) {
+      throw new AppError('Supplier account not found', 404);
+    }
+
+    // 4️⃣ Validate payment account and check balance
+    const payAccount = await validateAccountBalance(paymentAccount, amount, session);
+
+    // 5️⃣ Create payment transactions
+    // Reduce cashier balance
+    await AccountTransaction.create(
+      [
+        {
+          account: payAccount._id,
+          transactionType: 'Payment',
+          amount: -amount,
+          referenceType: 'purchase',
+          referenceId: purchase._id,
+          created_by: req.user._id,
+          description: description || `Additional payment for purchase`,
+        },
+      ],
+      { session }
+    );
+
+    payAccount.currentBalance -= amount;
+    await payAccount.save({ session });
+
+    // Reduce supplier balance
+    await AccountTransaction.create(
+      [
+        {
+          account: supplierAccount._id,
+          transactionType: 'Payment',
+          amount: -amount,
+          referenceType: 'purchase',
+          referenceId: purchase._id,
+          created_by: req.user._id,
+          description: description || `Payment received for purchase`,
+        },
+      ],
+      { session }
+    );
+
+    supplierAccount.currentBalance -= amount;
+    await supplierAccount.save({ session });
+
+    // 6️⃣ Update purchase paid amount
+    purchase.paidAmount += amount;
+    purchase.dueAmount = purchase.totalAmount - purchase.paidAmount;
+    await purchase.save({ session });
+
+    // 7️⃣ Audit Log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Purchase',
+          recordId: purchase._id,
+          operation: 'UPDATE',
+          oldData: { paidAmount: purchase.paidAmount - amount },
+          newData: { paidAmount: purchase.paidAmount },
+          reason: description || `Additional payment recorded`,
+          changedBy: req.user?.name || 'System',
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment recorded successfully',
+      purchase: {
+        _id: purchase._id,
+        totalAmount: purchase.totalAmount,
+        paidAmount: purchase.paidAmount,
+        dueAmount: purchase.dueAmount,
+      },
+      paymentAmount: amount,
+      supplierBalance: supplierAccount.currentBalance,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new AppError(err.message || 'Failed to record payment', 500);
   }
 });

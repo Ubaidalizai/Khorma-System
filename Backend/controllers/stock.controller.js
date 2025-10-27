@@ -60,10 +60,15 @@ exports.createStock = asyncHandler(async (req, res) => {
 // @desc    Get all stocks (with pagination, location & search by product name)
 // @route   GET /api/v1/stocks
 exports.getAllStocks = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, location, search } = req.query;
+  const { page = 1, limit = 10, location, search, includeZeroQuantity = false } = req.query;
 
   const query = { isDeleted: false };
   if (location) query.location = location;
+  
+  // Filter by quantity - by default exclude zero quantity, unless includeZeroQuantity is true
+  if (includeZeroQuantity !== 'true') {
+    query.quantity = { $gt: 0 };
+  }
 
   // Build search filter (case-insensitive) for product name
   const searchFilter = search

@@ -7,6 +7,8 @@ import {
   EyeIcon,
   PencilIcon,
   TrashIcon,
+  XMarkIcon,
+  PrinterIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import Button from "../components/Button";
@@ -19,10 +21,13 @@ import {
   useCustomers, 
   useEmployees, 
   useDeleteSales,
-  useCreateSale
+  useCreateSale,
+  useAccounts
 } from "../services/useApi";
 import SaleForm from "../components/SaleForm";
 import { XCircleIcon } from "lucide-react";
+import { recordSalePayment, fetchAccounts } from "../services/apiUtiles";
+import SaleBillPrint from "../components/SaleBillPrint";
 
 const Sales = () => {
   // State management
@@ -35,6 +40,15 @@ const Sales = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [showAddSaleModal, setShowAddSaleModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState("");
+  const [paymentDescription, setPaymentDescription] = useState("");
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [saleToPrint, setSaleToPrint] = useState(null);
+  const [customerToPrint, setCustomerToPrint] = useState(null);
+  const [customerAccountToPrint, setCustomerAccountToPrint] = useState(null);
 
   // Form setup
   const {
@@ -68,6 +82,8 @@ const Sales = () => {
   const { data: employees } = useEmployees();
   const { data: selectedSale, isLoading: isLoadingDetails } = useSale(selectedSaleId);
   const deleteSaleMutation = useDeleteSales();
+  const { data: accountsData } = useAccounts({ type: "cashier" });
+  const accounts = accountsData?.accounts || [];
   const createSaleMutation = useCreateSale();
   
   // Data processing
@@ -113,15 +129,119 @@ const Sales = () => {
 
   const handleCreateSale = (saleData) => {
     createSaleMutation.mutate(saleData, {
-      onSuccess: () => {
+      onSuccess: async (createdSale) => {
         // Reset form and close modal
         setShowAddSaleModal(false);
-        console.log('Sale created successfully');
+        
+        // Find customer info
+        const sale = createdSale.sale || createdSale;
+        const customerId = sale.customer?._id || sale.customer;
+        const customer = customers?.data?.find(c => c._id === customerId);
+        
+        // Find customer account if exists
+        if (customerId) {
+          try {
+            const accountsData = await fetchAccounts({ 
+              type: 'customer',
+              // Note: refId filter should be added to API if needed
+            });
+            const customerAccount = accountsData?.accounts?.find(
+              acc => acc.refId === customerId
+            );
+            
+            setSaleToPrint(sale);
+            setCustomerToPrint(customer);
+            setCustomerAccountToPrint(customerAccount || null);
+            setShowPrintModal(true);
+          } catch (error) {
+            console.error('Error fetching customer account:', error);
+            setSaleToPrint(sale);
+            setCustomerToPrint(customer);
+            setCustomerAccountToPrint(null);
+            setShowPrintModal(true);
+          }
+        } else {
+          // No customer, just show sale
+          setSaleToPrint(sale);
+          setCustomerToPrint(null);
+          setCustomerAccountToPrint(null);
+          setShowPrintModal(true);
+        }
       },
       onError: (error) => {
         alert(`خطا در ایجاد فروش: ${error.message}`);
       }
     });
+  };
+
+  const handlePrintSale = async (sale) => {
+    console.log('Printing sale:', sale);
+    
+    // Get customer ID (either from nested object or direct value)
+    const customerId = sale.customer?._id || sale.customer;
+    const customer = customers?.data?.find(c => c._id === customerId);
+    console.log('Found customer:', customer);
+    
+    // Fetch customer account if exists
+    if (customerId) {
+      try {
+        const accountsData = await fetchAccounts({ type: 'customer' });
+        console.log('Fetched accounts data:', accountsData);
+        const customerAccount = accountsData?.accounts?.find(
+          acc => acc.refId === customerId
+        );
+        console.log('Found customer account:', customerAccount);
+        
+        setSaleToPrint(sale);
+        setCustomerToPrint(customer);
+        setCustomerAccountToPrint(customerAccount || null);
+        setShowPrintModal(true);
+      } catch (error) {
+        console.error('Error fetching customer account:', error);
+        setSaleToPrint(sale);
+        setCustomerToPrint(customer);
+        setCustomerAccountToPrint(null);
+        setShowPrintModal(true);
+      }
+    } else {
+      setSaleToPrint(sale);
+      setCustomerToPrint(null);
+      setCustomerAccountToPrint(null);
+      setShowPrintModal(true);
+    }
+  };
+
+  const handleRecordPayment = async () => {
+    if (!paymentAmount || !selectedAccount) {
+      alert("لطفاً مبلغ و حساب پرداخت را وارد کنید");
+      return;
+    }
+
+    const amount = parseFloat(paymentAmount);
+    if (amount <= 0 || amount > selectedSale.dueAmount) {
+      alert(`مبلغ وارد شده باید بین 0 و ${selectedSale.dueAmount} باشد`);
+      return;
+    }
+
+    setIsSubmittingPayment(true);
+    try {
+      await recordSalePayment(selectedSaleId, {
+        amount,
+        paymentAccount: selectedAccount,
+        description: paymentDescription || `Payment for sale`,
+      });
+      
+      alert("پرداخت با موفقیت ثبت شد!");
+      setShowPaymentModal(false);
+      setPaymentAmount("");
+      setSelectedAccount("");
+      setPaymentDescription("");
+      window.location.reload();
+    } catch (error) {
+      alert("خطا در ثبت پرداخت: " + error.message);
+    } finally {
+      setIsSubmittingPayment(false);
+    }
   };
 
   // Calculate statistics
@@ -331,6 +451,13 @@ const Sales = () => {
                           <EyeIcon className="h-4 w-4" />
                         </button>
                         <button
+                          onClick={() => handlePrintSale(sale)}
+                          className="text-purple-600 hover:text-purple-900 flex items-center gap-1"
+                          title="چاپ فاکتور"
+                        >
+                          <PrinterIcon className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={() => handleEditSale(sale)}
                           className="text-green-600 hover:text-green-900 flex items-center gap-1"
                           title="ویرایش"
@@ -527,7 +654,18 @@ const Sales = () => {
                   
                   {/* Total Summary */}
                   <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
-                    <div className="flex justify-end">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        {selectedSale.dueAmount > 0 && (
+                          <button
+                            onClick={() => setShowPaymentModal(true)}
+                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
+                          >
+                            <BanknotesIcon className="h-4 w-4" />
+                            ثبت پرداخت
+                          </button>
+                        )}
+                      </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold text-gray-900">
                           مجموع کل: {formatCurrency(selectedSale.totalAmount?.toFixed(2))}
@@ -538,6 +676,84 @@ const Sales = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedSale && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">ثبت پرداخت</h2>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-blue-900">مبلغ باقی‌مانده: {formatCurrency(selectedSale.dueAmount)} AFN</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مبلغ پرداخت *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="مبلغ را وارد کنید"
+                  max={selectedSale.dueAmount}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">حساب دریافت *</label>
+                <select
+                  value={selectedAccount}
+                  onChange={(e) => setSelectedAccount(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                >
+                  <option value="">انتخاب حساب</option>
+                  {accounts.map((acc) => (
+                    <option key={acc._id} value={acc._id}>
+                      {acc.name} ({formatCurrency(acc.currentBalance)} AFN)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">توضیحات</label>
+                <textarea
+                  value={paymentDescription}
+                  onChange={(e) => setPaymentDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  rows={3}
+                  placeholder="توضیحات اختیاری..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={handleRecordPayment}
+                  disabled={isSubmittingPayment}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                >
+                  {isSubmittingPayment ? "در حال ثبت..." : "ثبت پرداخت"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -574,6 +790,22 @@ const Sales = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Print Modal */}
+      {showPrintModal && saleToPrint && (
+        <SaleBillPrint
+          sale={saleToPrint}
+          customer={customerToPrint}
+          customerAccount={customerAccountToPrint}
+          onClose={() => {
+            setShowPrintModal(false);
+            setSaleToPrint(null);
+            setCustomerToPrint(null);
+            setCustomerAccountToPrint(null);
+          }}
+          autoPrint={false}
+        />
       )}
     </div>
   );

@@ -37,7 +37,7 @@ const storeHeader = [
 ];
 
 function Store() {
-  const { data: stocks } = useStoreStocks();
+  const { data: stocks } = useStoreStocks({ includeZeroQuantity: true });
   const { data: employees } = useEmployees();
   const { register, handleSubmit, watch } = useForm();
   const { mutate: createStockTransfer } = useCreateStockTransfer();

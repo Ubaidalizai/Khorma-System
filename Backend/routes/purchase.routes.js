@@ -6,6 +6,7 @@ const {
   updatePurchase,
   softDeletePurchase,
   restorePurchase,
+  recordPurchasePayment,
 } = require('../controllers/purchase.controller');
 
 const { authenticate } = require('../middlewares/authMiddleware');
@@ -24,5 +25,6 @@ router
   .delete(softDeletePurchase);
 
 router.patch('/:id/restore', restorePurchase);
+router.post('/:id/payment', recordPurchasePayment);
 
 module.exports = router;

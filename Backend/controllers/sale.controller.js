@@ -17,6 +17,27 @@ const AccountTransaction = require('../models/accountTransaction.model');
 const AuditLog = require('../models/auditLog.model');
 const EmployeeStock = require('../models/employeeStock.model');
 
+// Helper function to validate account balance
+const validateAccountBalance = async (accountId, requiredAmount, session) => {
+  const account = await Account.findById(accountId).session(session);
+  if (!account) throw new AppError('Account not found', 404);
+  
+  if (requiredAmount > 0) {
+    // Only validate cashier and safe accounts - they cannot go negative
+    if (account.type === 'cashier' || account.type === 'safe') {
+      if (account.currentBalance < requiredAmount) {
+        throw new AppError(
+          `موجودی ناکافی! در حساب ${account.name} موجودی: ${account.currentBalance.toLocaleString()} افغانی، مبلغ مورد نیاز: ${requiredAmount.toLocaleString()} افغانی`,
+          400
+        );
+      }
+    }
+    // Saraf account can go negative (credit account), so no validation needed
+  }
+  
+  return account;
+};
+
 // @desc Create a sale (transactional)
 // @route POST /api/v1/sales
 exports.createSale = asyncHandler(async (req, res, next) => {
@@ -261,8 +282,9 @@ exports.createSale = asyncHandler(async (req, res, next) => {
 
     // 3️⃣ ACCOUNT TRANSACTIONS
     // Customer debit (if customer provided) — customer owes totalAmount
+    let customerAccount = null;
     if (customer) {
-      const customerAccount = await Account.findOne({
+      customerAccount = await Account.findOne({
         refId: customer,
         type: 'customer',
       }).session(session);
@@ -288,8 +310,9 @@ exports.createSale = asyncHandler(async (req, res, next) => {
       await customerAccount.save({ session });
     }
 
-    // Payment account credit (Dakhal / Tajri / Saraf)
+    // Payment account credit (Dakhal / Tajri / Saraf) - Customer pays you
     if (paidAmount > 0) {
+      // Payment increases cashier balance (you receive money)
       await AccountTransaction.create(
         [
           {
@@ -307,6 +330,27 @@ exports.createSale = asyncHandler(async (req, res, next) => {
 
       account.currentBalance += paidAmount;
       await account.save({ session });
+
+      // Payment reduces customer balance (their debt decreases)
+      if (customer) {
+        await AccountTransaction.create(
+          [
+            {
+              account: customerAccount._id,
+              transactionType: 'Payment',
+              amount: -paidAmount,
+              referenceType: 'sale',
+              referenceId: saleDoc._id,
+              description: `Payment made for sale`,
+              created_by: req.user?._id,
+            },
+          ],
+          { session }
+        );
+
+        customerAccount.currentBalance -= paidAmount;
+        await customerAccount.save({ session });
+      }
     }
 
     // 4️⃣ Audit Log
@@ -1490,5 +1534,142 @@ exports.restoreSaleReturn = asyncHandler(async (req, res, next) => {
     await session.abortTransaction();
     session.endSession();
     throw new AppError(err.message || 'Failed to restore sale return', 500);
+  }
+});
+
+// @desc Record additional payment against a sale
+// @route POST /api/v1/sales/:id/payment
+exports.recordSalePayment = asyncHandler(async (req, res, next) => {
+  const { amount, paymentAccount, description } = req.body;
+  const saleId = req.params.id;
+
+  if (!amount || amount <= 0) {
+    throw new AppError('Payment amount must be greater than 0', 400);
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // 1️⃣ Find the sale
+    const sale = await Sale.findById(saleId).session(session);
+    if (!sale || sale.isDeleted) {
+      throw new AppError('Sale not found', 404);
+    }
+
+    // 2️⃣ Calculate remaining due
+    const remainingDue = sale.totalAmount - sale.paidAmount;
+    
+    if (amount > remainingDue) {
+      throw new AppError(
+        `Payment amount (${amount}) exceeds remaining due (${remainingDue})`,
+        400
+      );
+    }
+
+    // 3️⃣ Find customer account (if sale has customer)
+    let customerAccount = null;
+    if (sale.customer) {
+      customerAccount = await Account.findOne({
+        refId: sale.customer,
+        type: 'customer',
+        isDeleted: false
+      }).session(session);
+      
+      if (!customerAccount) {
+        throw new AppError('Customer account not found', 404);
+      }
+    }
+
+    // 4️⃣ Validate payment account
+    const payAccount = await Account.findById(paymentAccount).session(session);
+    if (!payAccount || payAccount.isDeleted) {
+      throw new AppError('Payment account not found', 404);
+    }
+
+    // 5️⃣ Create payment transactions
+    // Increase cashier balance (you receive money)
+    await AccountTransaction.create(
+      [
+        {
+          account: payAccount._id,
+          transactionType: 'Payment',
+          amount: amount,
+          referenceType: 'sale',
+          referenceId: sale._id,
+          created_by: req.user._id,
+          description: description || `Additional payment for sale`,
+        },
+      ],
+      { session }
+    );
+
+    payAccount.currentBalance += amount;
+    await payAccount.save({ session });
+
+    // Reduce customer balance (their debt decreases)
+    if (customerAccount) {
+      await AccountTransaction.create(
+        [
+          {
+            account: customerAccount._id,
+            transactionType: 'Payment',
+            amount: -amount,
+            referenceType: 'sale',
+            referenceId: sale._id,
+            created_by: req.user._id,
+            description: description || `Payment made for sale`,
+          },
+        ],
+        { session }
+      );
+
+      customerAccount.currentBalance -= amount;
+      await customerAccount.save({ session });
+    }
+
+    // 6️⃣ Update sale paid amount
+    sale.paidAmount += amount;
+    sale.dueAmount = sale.totalAmount - sale.paidAmount;
+    await sale.save({ session });
+
+    // 7️⃣ Audit Log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Sale',
+          recordId: sale._id,
+          operation: 'UPDATE',
+          oldData: { paidAmount: sale.paidAmount - amount },
+          newData: { paidAmount: sale.paidAmount },
+          reason: description || `Additional payment recorded`,
+          changedBy: req.user?.name || 'System',
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment recorded successfully',
+      sale: {
+        _id: sale._id,
+        totalAmount: sale.totalAmount,
+        paidAmount: sale.paidAmount,
+        dueAmount: sale.dueAmount,
+      },
+      paymentAmount: amount,
+      apiResponse: {
+        customerBalance: customerAccount?.currentBalance,
+        cashierBalance: payAccount.currentBalance,
+      },
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new AppError(err.message || 'Failed to record payment', 500);
   }
 });

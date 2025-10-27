@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const saleSchema = new mongoose.Schema(
   {
+    billNumber: {
+      type: String,
+      unique: true,
+      required: false, // Auto-generated, but can be overridden
+    },
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Customer',
@@ -53,5 +58,31 @@ const saleSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Auto-generate bill number before saving
+saleSchema.pre('save', async function (next) {
+  // Only generate if billNumber is not provided
+  if (!this.billNumber || this.billNumber.trim() === '') {
+    try {
+      // Get the total count of all sales to create a sequential number
+      const query = {};
+      
+      // Exclude current document if this is an update
+      if (!this.isNew) {
+        query._id = { $ne: this._id };
+      }
+      
+      const totalSalesCount = await mongoose.model('Sale').countDocuments(query);
+      
+      // Format: BILL-XXXXXX (e.g., BILL-000001, BILL-000002, etc.)
+      // Sequential number that never resets, starting from 000001
+      const sequence = String(totalSalesCount + 1).padStart(6, '0');
+      this.billNumber = `BILL-${sequence}`;
+    } catch (error) {
+      return next(error);
+    }
+  }
+  next();
+});
 
 module.exports = mongoose.model('Sale', saleSchema);

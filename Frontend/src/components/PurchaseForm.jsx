@@ -45,7 +45,7 @@ function PurchaseForm({
       {
         product: currentItem.product,
         unit: currentItem.unit,
-        batchNumber: currentItem.batchNumber || null,
+        batchNumber: currentItem.batchNumber || "",
         expiryDate: currentItem.expiryDate && currentItem.expiryDate !== '' ? currentItem.expiryDate : null,
         quantity,
         unitPrice,
