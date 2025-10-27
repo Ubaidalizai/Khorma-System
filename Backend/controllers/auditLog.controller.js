@@ -15,6 +15,7 @@ exports.getAllAuditLogs = asyncHandler(async (req, res, next) => {
     startDate,
     endDate,
     recordId,
+    search,
     sortBy = 'changedAt',
     sortOrder = 'desc',
   } = req.query;
@@ -31,6 +32,14 @@ exports.getAllAuditLogs = asyncHandler(async (req, res, next) => {
     filter.changedAt = {};
     if (startDate) filter.changedAt.$gte = new Date(startDate);
     if (endDate) filter.changedAt.$lte = new Date(endDate);
+  }
+
+  if (search) {
+    filter.$or = [
+      { reason: { $regex: search, $options: 'i' } },
+      { changedBy: { $regex: search, $options: 'i' } },
+      { operation: { $regex: search, $options: 'i' } },
+    ];
   }
 
   // Pagination
@@ -112,6 +121,7 @@ exports.getAuditLogsByTable = asyncHandler(async (req, res, next) => {
     changedBy,
     startDate,
     endDate,
+    search,
     sortBy = 'changedAt',
     sortOrder = 'desc',
   } = req.query;
@@ -125,6 +135,14 @@ exports.getAuditLogsByTable = asyncHandler(async (req, res, next) => {
     filter.changedAt = {};
     if (startDate) filter.changedAt.$gte = new Date(startDate);
     if (endDate) filter.changedAt.$lte = new Date(endDate);
+  }
+
+  if (search) {
+    filter.$or = [
+      { reason: { $regex: search, $options: 'i' } },
+      { changedBy: { $regex: search, $options: 'i' } },
+      { operation: { $regex: search, $options: 'i' } },
+    ];
   }
 
   // Pagination

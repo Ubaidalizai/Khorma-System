@@ -154,12 +154,17 @@ const Dashboard = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [transactionLimit, setTransactionLimit] = useState(10);
+  const [transactionSearch, setTransactionSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [reason, setReason] = useState("");
   const [activeTab, setActiveTab] = useState("transaction");
   const { data: recentTransactions, isLoading: statsLoading } =
-    useRecentTransactions({ page: currentPage, limit: transactionLimit });
+    useRecentTransactions({
+      page: currentPage,
+      limit: transactionLimit,
+      search: transactionSearch,
+    });
   // const { data: lowStockItems, isLoading: lowStockLoading } =
   //   useLowStockItems();
   const { data: lowStock, isLoading: lowStockLoading } = useInventoryStats();
@@ -200,11 +205,16 @@ const Dashboard = () => {
     { value: "User", label: "کاربر" },
   ];
 
-  const allAuditLogs = useAuditLogs({ page: auditPage, limit: auditLimit });
+  const allAuditLogs = useAuditLogs({
+    page: auditPage,
+    limit: auditLimit,
+    search: searchTerm,
+  });
 
   const tableAuditLogs = useAuditLogsByTable(selectedTable, {
     page: auditPage,
     limit: auditLimit,
+    search: searchTerm,
   });
   const tableLogs = selectedTable === "all" ? allAuditLogs : tableAuditLogs;
   const auditLogs = tableLogs.data;
@@ -470,6 +480,8 @@ const Dashboard = () => {
                 <input
                   type="text"
                   placeholder="جستجو در تراکنش‌ها..."
+                  value={transactionSearch}
+                  onChange={(e) => setTransactionSearch(e.target.value)}
                   className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-4 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -490,19 +502,16 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              {recentTransactions?.data?.pagination &&
-                recentTransactions?.data?.pagination?.totalPages > 1 && (
-                  <Pagination
-                    page={currentPage}
-                    limit={transactionLimit}
-                    total={recentTransactions?.data?.pagination?.total || 0}
-                    onPageChange={setCurrentPage}
-                    onRowsPerPageChange={(newLimit) => {
-                      setTransactionLimit(newLimit);
-                      setCurrentPage(1);
-                    }}
-                  />
-                )}
+              <Pagination
+                page={currentPage}
+                limit={transactionLimit}
+                total={recentTransactions?.data?.pagination?.total || 0}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={(newLimit) => {
+                  setTransactionLimit(newLimit);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -618,19 +627,17 @@ const Dashboard = () => {
               </div>
             </div>
             <div className=" flex items-center pl-10  ">
-              {auditLogs?.pagination?.totalPages > 1 && (
-                <Pagination
-                  page={auditPage}
-                  limit={auditLimit}
-                  total={auditLogs?.pagination?.total || 0}
-                  totalPages={auditLogs?.pagination?.totalPages}
-                  onPageChange={setAuditPage}
-                  onRowsPerPageChange={(newLimit) => {
-                    setAuditLimit(newLimit);
-                    setAuditPage(1);
-                  }}
-                />
-              )}
+              <Pagination
+                page={auditPage}
+                limit={auditLimit}
+                total={auditLogs?.pagination?.total || 0}
+                totalPages={auditLogs?.pagination?.totalPages}
+                onPageChange={setAuditPage}
+                onRowsPerPageChange={(newLimit) => {
+                  setAuditLimit(newLimit);
+                  setAuditPage(1);
+                }}
+              />
             </div>
           </div>
           <div className="overflow-x-auto">

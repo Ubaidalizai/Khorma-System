@@ -54,7 +54,7 @@ const Header = ({ onMenuClick }) => {
         boxShadow: "0 2px 4px var(--shadow)",
       }}
     >
-      <div className="flex items-center justify-between px-4 py-4 sm:px-6">
+      <div className="flex items-center justify-between px-4 py-2 sm:px-6">
         {/* Left side */}
         <div className="flex items-center">
           <button
@@ -76,7 +76,7 @@ const Header = ({ onMenuClick }) => {
             <Bars3Icon className="h-6 w-6" />
           </button>
 
-          <div className="hidden lg:block">
+          {/* <div className="hidden lg:block">
             <h1
               className="font-bold"
               style={{
@@ -90,7 +90,7 @@ const Header = ({ onMenuClick }) => {
             <p className="text-sm" style={{ color: "var(--text-medium)" }}>
               مدیریت کارآمد کسب‌وکار شما
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Right side */}
