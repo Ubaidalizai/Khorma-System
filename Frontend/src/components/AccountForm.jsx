@@ -11,6 +11,7 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [accountType, setAccountType] = useState("supplier");
+  const [currentBalance, setCurrentBalance] = useState("0");
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,12 +62,21 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
       refId: isSystemAccount() ? null : data.refId,
       name: data.name,
       openingBalance: parseFloat(data.openingBalance) || 0,
-      currentBalance: parseFloat(data.currentBalance) || 0,
+      currentBalance: parseFloat(data.openingBalance) || 0, // Always set currentBalance = openingBalance for new accounts
       currency: data.currency || "AFN",
       isDeleted: false,
     };
     handleSubmit(accountData);
   };
+
+  // Watch openingBalance to auto-update currentBalance
+  const openingBalance = watch("openingBalance");
+  
+  useEffect(() => {
+    if (openingBalance !== undefined) {
+      setCurrentBalance(openingBalance || "0");
+    }
+  }, [openingBalance]);
 
   return (
     <form
@@ -169,11 +179,14 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
             <input
               type='number'
               step='0.01'
-              {...register("currentBalance")}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+              value={currentBalance}
+              readOnly
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed'
               placeholder='0.00'
-              required
             />
+            <p className='text-xs text-gray-500 mt-1'>
+              (برابر با موجودی اولیه تنظیم می‌شود)
+            </p>
           </div>
         </div>
       </div>

@@ -466,6 +466,22 @@ export const deleteSale = async (id) => {
   });
 };
 
+// Record payment against a sale
+export const recordSalePayment = async (saleId, paymentData) => {
+  return await apiRequest(`${API_ENDPOINTS.SALES.LIST}/${saleId}/payment`, {
+    method: "POST",
+    body: JSON.stringify(paymentData),
+  });
+};
+
+// Record payment against a purchase
+export const recordPurchasePayment = async (purchaseId, paymentData) => {
+  return await apiRequest(`${API_ENDPOINTS.PURCHASES.LIST}/${purchaseId}/payment`, {
+    method: "POST",
+    body: JSON.stringify(paymentData),
+  });
+};
+
 // Stock
 export const fetchStock = async () => {
   return await apiRequest(API_ENDPOINTS.STOCK.LIST);
@@ -474,18 +490,20 @@ export const fetchStock = async () => {
 export const fetchInventoryStock = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
+  if (params.includeZeroQuantity) query.set("includeZeroQuantity", "true");
   const url = query.toString()
-    ? `${API_ENDPOINTS.STOCK.INVENTORY}?${query.toString()}`
-    : API_ENDPOINTS.STOCK.INVENTORY;
+    ? `${API_ENDPOINTS.STOCK.LIST}?location=warehouse&${query.toString()}`
+    : `${API_ENDPOINTS.STOCK.LIST}?location=warehouse`;
   return await apiRequest(url);
 };
 
 export const fetchStoreStock = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
+  if (params.includeZeroQuantity) query.set("includeZeroQuantity", "true");
   const url = query.toString()
-    ? `${API_ENDPOINTS.STOCK.STORE}?${query.toString()}`
-    : API_ENDPOINTS.STOCK.STORE;
+    ? `${API_ENDPOINTS.STOCK.LIST}?location=store&${query.toString()}`
+    : `${API_ENDPOINTS.STOCK.LIST}?location=store`;
   return await apiRequest(url);
 };
 
@@ -552,11 +570,10 @@ export const fetchBatchesByProduct = async (productId, location = "store") => {
 };
 
 // Fetch products from stock where location=store
-export const fetchProductsFromStock = async (location = "store") => {
+export const fetchProductsFromStock = async (location = "store", includeZeroQuantity = false) => {
   try {
-    const response = await apiRequest(
-      `${API_ENDPOINTS.STOCK.LIST}?location=${location}`
-    );
+    const url = `${API_ENDPOINTS.STOCK.LIST}?location=${location}${includeZeroQuantity ? '&includeZeroQuantity=true' : ''}`;
+    const response = await apiRequest(url);
     return response.data || response || [];
   } catch (error) {
     console.error("Error fetching products from stock:", error);

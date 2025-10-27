@@ -333,19 +333,19 @@ export const useStocks = () => {
 };
 
 export const useWarehouseStocks = (opts = {}) => {
-  const { search } = opts;
+  const { search, includeZeroQuantity } = opts;
   return useQuery({
-    queryKey: ["stocks", "warehouse", { search: search || "" }],
-    queryFn: () => fetchInventoryStock({ search }),
+    queryKey: ["stocks", "warehouse", { search: search || "", includeZeroQuantity }],
+    queryFn: () => fetchInventoryStock({ search, includeZeroQuantity }),
     keepPreviousData: true,
   });
 };
 
 export const useStoreStocks = (opts = {}) => {
-  const { search } = opts;
+  const { search, includeZeroQuantity } = opts;
   return useQuery({
-    queryKey: ["stocks", "store", { search: search || "" }],
-    queryFn: () => fetchStoreStock({ search }),
+    queryKey: ["stocks", "store", { search: search || "", includeZeroQuantity }],
+    queryFn: () => fetchStoreStock({ search, includeZeroQuantity }),
     keepPreviousData: true,
   });
 };
@@ -630,10 +630,10 @@ export const useSupplierAccounts = () => {
   });
 };
 
-export const useProductsFromStock = (location = "store") => {
+export const useProductsFromStock = (location = "store", includeZeroQuantity = false) => {
   return useQuery({
-    queryKey: ["productsFromStock", location],
-    queryFn: () => fetchProductsFromStock(location),
+    queryKey: ["productsFromStock", location, includeZeroQuantity],
+    queryFn: () => fetchProductsFromStock(location, includeZeroQuantity),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

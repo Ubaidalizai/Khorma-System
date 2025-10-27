@@ -9,7 +9,7 @@ exports.createPurchaseSchema = Joi.object({
       Joi.object({
         product: Joi.string().required(),
         unit: Joi.string().required(),
-        batchNumber: Joi.string().optional(),
+        batchNumber: Joi.string().allow(null, '').optional(),
         expiryDate: Joi.date().allow(null, '').optional(),
         quantity: Joi.number().positive().required(),
         unitPrice: Joi.number().positive().required(),
@@ -47,7 +47,7 @@ exports.updatePurchaseSchema = Joi.object({
         unit: Joi.string().custom(objectId).required().messages({
           'any.required': 'Unit ID is required for each item',
         }),
-        batchNumber: Joi.string().optional(),
+        batchNumber: Joi.string().allow(null, '').optional(),
         expiryDate: Joi.date().allow(null, '').optional(),
         quantity: Joi.number().positive().precision(3).required().messages({
           'number.base': 'Quantity must be a number',
