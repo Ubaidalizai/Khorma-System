@@ -1,17 +1,18 @@
 import {
-  ArchiveBoxIcon,
   ArrowUturnLeftIcon,
+  BuildingOffice2Icon,
+  ChartBarIcon,
   CubeIcon,
-  CurrencyDollarIcon,
+  DocumentTextIcon,
   ExclamationTriangleIcon,
   ReceiptRefundIcon,
-  DocumentTextIcon,
-  ChartBarIcon,
-  ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import Table from "../components/Table";
+import TableBody from "../components/TableBody";
+import TableColumn from "../components/TableColumn";
+import TableRow from "../components/TableRow";
 import {
   useInventoryStats,
   useProduct,
@@ -20,11 +21,11 @@ import {
   useReverseTransaction,
   useSales,
 } from "../services/useApi";
+import { useAuditLogsByTable, useAuditLogs } from "../services/useAuditLogs";
 import TableHeader from "./../components/TableHeader";
 import { formatCurrency } from "./../utilies/helper";
-import TableRow from "../components/TableRow";
-import TableColumn from "../components/TableColumn";
-import TableBody from "../components/TableBody";
+import Select from "../components/Select";
+import Pagination from "../components/Pagination";
 
 const Dashboard = () => {
   const headers = [
@@ -36,6 +37,43 @@ const Dashboard = () => {
     { title: "عملیات" },
   ];
 
+  // Helper function to render values nicely
+  const renderValue = (value, depth = 0) => {
+    if (value === null || value === undefined) {
+      return <span className="text-gray-500">خالی</span>;
+    }
+    if (typeof value === "object") {
+      if (Array.isArray(value)) {
+        return (
+          <div className={`ml-${depth * 4} mt-1`}>
+            <div className="text-xs text-gray-600 mb-1">
+              آرایه ({value.length} آیتم):
+            </div>
+            {value.map((item, index) => (
+              <div key={index} className="border-l-2 border-gray-200 pl-2 mb-1">
+                <span className="text-xs text-gray-500">[{index}]:</span>
+                {renderValue(item, depth + 1)}
+              </div>
+            ))}
+          </div>
+        );
+      } else {
+        return (
+          <div className={`ml-${depth * 4} mt-1`}>
+            <div className="text-xs text-gray-600 mb-1">شیء:</div>
+            {Object.entries(value).map(([key, val]) => (
+              <div key={key} className="border-l-2 border-gray-200 pl-2 mb-1">
+                <span className="font-medium text-xs">{key}:</span>
+                {renderValue(val, depth + 1)}
+              </div>
+            ))}
+          </div>
+        );
+      }
+    } else {
+      return <span className="text-sm">{String(value)}</span>;
+    }
+  };
   const getTypeColor = (type) => {
     switch (type) {
       case "Sale":
@@ -82,6 +120,32 @@ const Dashboard = () => {
     }
   };
 
+  const getOperationPersian = (operation) => {
+    switch (operation) {
+      case "INSERT":
+        return "درج";
+      case "UPDATE":
+        return "بروزرسانی";
+      case "DELETE":
+        return "حذف";
+      default:
+        return operation;
+    }
+  };
+
+  const getOperationColor = (operation) => {
+    switch (operation) {
+      case "INSERT":
+        return "text-green-600";
+      case "UPDATE":
+        return "text-yellow-600";
+      case "DELETE":
+        return "text-red-600";
+      default:
+        return "text-gray-800";
+    }
+  };
+
   // API hooks
   const { data: products, isLoading: productsLoading } = useProduct();
   const { data: sales, isLoading: salesLoading } = useSales();
@@ -89,17 +153,77 @@ const Dashboard = () => {
   // const { data: inventory, isLoading: inventoryLoading } = useInventory();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState(10);
+  const [transactionLimit, setTransactionLimit] = useState(10);
+  const [transactionSearch, setTransactionSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [reason, setReason] = useState("");
+  const [activeTab, setActiveTab] = useState("transaction");
   const { data: recentTransactions, isLoading: statsLoading } =
-    useRecentTransactions({ page: currentPage, limit });
+    useRecentTransactions({
+      page: currentPage,
+      limit: transactionLimit,
+      search: transactionSearch,
+    });
   // const { data: lowStockItems, isLoading: lowStockLoading } =
   //   useLowStockItems();
   const { data: lowStock, isLoading: lowStockLoading } = useInventoryStats();
   const { mutate: reverseTransaction, isLoading: reverseLoading } =
     useReverseTransaction();
+  // Audit logs hooks
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditLimit, setAuditLimit] = useState(10);
+  const [selectedTable, setSelectedTable] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+
+  const tableOptions = [
+    { value: "all", label: "همه" },
+    { value: "Account", label: "حساب" },
+    { value: "AccountTransaction", label: "تراکنش حساب" },
+    { value: "AuditLog", label: "لاگ حسابرسی" },
+    { value: "Brand", label: "برند" },
+    { value: "Category", label: "دسته‌بندی" },
+    { value: "Company", label: "شرکت" },
+    { value: "Customer", label: "مشتری" },
+    { value: "Employee", label: "کارمند" },
+    { value: "EmployeeStock", label: "موجودی کارمند" },
+    { value: "Expense", label: "هزینه" },
+    { value: "Income", label: "درآمد" },
+    { value: "Product", label: "محصول" },
+    { value: "Purchase", label: "خرید" },
+    { value: "PurchaseItem", label: "آیتم خرید" },
+    { value: "Sale", label: "فروش" },
+    { value: "SaleItem", label: "آیتم فروش" },
+    { value: "SaleReturn", label: "بازگشت فروش" },
+    { value: "Stock", label: "موجودی" },
+    { value: "StockTransfer", label: "انتقال موجودی" },
+    { value: "Supplier", label: "تامین‌کننده" },
+    { value: "Type", label: "نوع" },
+    { value: "Unit", label: "واحد" },
+    { value: "User", label: "کاربر" },
+  ];
+
+  const allAuditLogs = useAuditLogs({
+    page: auditPage,
+    limit: auditLimit,
+    search: searchTerm,
+  });
+
+  const tableAuditLogs = useAuditLogsByTable(selectedTable, {
+    page: auditPage,
+    limit: auditLimit,
+    search: searchTerm,
+  });
+  const tableLogs = selectedTable === "all" ? allAuditLogs : tableAuditLogs;
+  const auditLogs = tableLogs.data;
+  const auditLoading = tableLogs.isLoading;
+
+  useEffect(() => {
+    setAuditPage(1);
+  }, [selectedTable]);
+
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalSales: 0,
@@ -129,12 +253,6 @@ const Dashboard = () => {
 
   // Use dashboard stats from API or calculate from individual endpoints
   useEffect(() => {
-    console.log("Dashboard useEffect triggered");
-    console.log("Products data:", products);
-    console.log("Sales data:", sales);
-    console.log("Purchases data:", purchases);
-    console.log("LowStock data:", lowStock);
-
     // Fallback calculation if dashboard stats not available
     // Ensure sales is an array before calling reduce
 
@@ -159,13 +277,6 @@ const Dashboard = () => {
       ) || 0;
     const netProfit = sales?.summary?.totalProfit || 0;
 
-    console.log("Calculated totalSalesAmount:", totalSalesAmount);
-    console.log("Calculated totalPurchasesAmount:", totalPurchasesAmount);
-    console.log("Calculated totalStockQuantity:", totalStockQuantity);
-    console.log("Calculated totalReceivables:", totalReceivables);
-    console.log("Calculated totalPayables:", totalPayables);
-    console.log("Calculated netProfit:", netProfit);
-
     const newStats = {
       totalProducts: Array.isArray(products?.data) ? products?.data.length : 0,
       totalSales: totalSalesAmount,
@@ -177,7 +288,6 @@ const Dashboard = () => {
       netProfit,
     };
 
-    console.log("Setting stats:", newStats);
     setStats(newStats);
   }, [products, sales, purchases, lowStock]);
   // Format recent transactions from API data
@@ -200,27 +310,27 @@ const Dashboard = () => {
   const StatCard = ({ title, value, icon, color = "#6366F1", change }) => {
     const isPositive = change > 0;
     return (
-      <div className="bg-white hover:translate-y-1.5 transition-all duration-200  cursor-pointer  rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">{title} </p>
-            <div className="text-2xl font-bold text-gray-900 mt-1">
+      <div className="bg-white hover:translate-y-1.5 transition-all duration-200 cursor-pointer rounded-lg shadow-sm border border-gray-200 p-4 min-h-[120px] flex flex-col justify-between">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-600 truncate">{title}</p>
+            <div className="text-xl font-bold text-gray-900 mt-1 break-words">
               {change ? (
                 <div
-                  className={`mt-2 text-center  w-full  flex items-center gap-1 text-sm font-medium ${
+                  className={`mt-2 text-center w-full flex items-center gap-1 text-sm font-medium ${
                     isPositive
                       ? "text-green-500 dark:text-green-400"
                       : "text-red-500 dark:text-red-400"
                   }`}
                 >
-                  <div className=" flex items-center justify-start">
+                  <div className="flex items-center justify-start">
                     {isPositive ? (
-                      <span className=" p-3">
-                        <TrendingUp size={24} />
+                      <span className="p-2">
+                        <TrendingUp size={20} />
                       </span>
                     ) : (
-                      <span className=" p-3 ">
-                        <TrendingDown size={24} />
+                      <span className="p-2">
+                        <TrendingDown size={20} />
                       </span>
                     )}
                     <span className="">
@@ -230,19 +340,21 @@ const Dashboard = () => {
                   </div>
                 </div>
               ) : (
-                <p style={{ color }}> {value}</p>
+                <p className="text-lg break-words" style={{ color }}>
+                  {value}
+                </p>
               )}
             </div>
           </div>
 
           <div
-            className="p-3 rounded-lg border border-slate-200"
+            className="p-2 rounded-lg border border-slate-200 flex-shrink-0 ml-2"
             style={{
               background: `linear-gradient(135deg, ${color}33, ${color}99)`,
             }}
           >
             {React.createElement(icon, {
-              className: "h-6 w-6",
+              className: "h-5 w-5",
               style: { color },
             })}
           </div>
@@ -332,261 +444,270 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Recent transactions */}
-      <div className="card">
-        <div
-          className="px-6 py-4 border-b"
-          style={{
-            borderColor: "var(--border)",
-            backgroundColor: "var(--beige-light)",
-          }}
-        >
-          <h2
-            className="font-semibold"
-            style={{
-              fontSize: "var(--h4-size)",
-              color: "var(--text-dark)",
-            }}
-          >
-            تراکنش‌های اخیر
-          </h2>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
+            <button
+              onClick={() => setActiveTab("transaction")}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "transaction"
+                  ? "border-amber-600 text-amber-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              انتقالات اخیر
+            </button>
+            <button
+              onClick={() => setActiveTab("logs")}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === "logs"
+                  ? "border-amber-600 text-amber-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <BuildingOffice2Icon className="h-5 w-5" />
+              لاگ های سیستم
+            </button>
+          </nav>
         </div>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader headerData={headers} />
-            <TableBody>
-              {statsLoading ? (
-                <TableRow>
-                  <TableColumn>
-                    <p className="">در حال بارگیری...</p>
-                  </TableColumn>
-                </TableRow>
-              ) : recentTransactions?.data?.transactions?.length > 0 ? (
-                recentTransactions.data?.transactions?.map(
-                  (transaction, index) => (
+      </div>
+      {activeTab === "transaction" && (
+        <div className="card">
+          {/* Search and Pagination Row */}
+          <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="جستجو در تراکنش‌ها..."
+                  value={transactionSearch}
+                  onChange={(e) => setTransactionSearch(e.target.value)}
+                  className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-4 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Pagination
+                page={currentPage}
+                limit={transactionLimit}
+                total={recentTransactions?.data?.pagination?.total || 0}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={(newLimit) => {
+                  setTransactionLimit(newLimit);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader headerData={headers} />
+              <TableBody>
+                {statsLoading ? (
+                  <TableRow>
+                    <TableColumn>
+                      <p className="">در حال بارگیری...</p>
+                    </TableColumn>
+                  </TableRow>
+                ) : recentTransactions?.data?.transactions?.length > 0 ? (
+                  recentTransactions.data?.transactions?.map(
+                    (transaction, index) => (
+                      <TableRow key={index}>
+                        <TableColumn className="px-4 py-2">
+                          {transaction.account?.name || "Unknown"}
+                        </TableColumn>
+                        <TableColumn
+                          className={`font-semibold text-center ${getTypeColor(
+                            transaction.transactionType
+                          )}`}
+                        >
+                          {getTransactionTypePersian(
+                            transaction.transactionType
+                          )}
+                        </TableColumn>
+                        <TableColumn className="px-4">
+                          {transaction.created_by?.name || "Unknown"}
+                        </TableColumn>
+                        <TableColumn className="px-4">
+                          {formatTimeAgo(transaction.date)}
+                        </TableColumn>
+                        <TableColumn
+                          className={`px-4 font-semibold ${
+                            (transaction.amount || 0) > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {formatCurrency(transaction.amount || 0)}
+                        </TableColumn>
+                        <TableColumn className="px-4">
+                          <button
+                            onClick={() => handleReverseClick(transaction)}
+                            disabled={reverseLoading}
+                            className="text-red-500 transition-all duration-200 hover:bg-red-100 p-0.5 rounded-full  hover:text-red-700 disabled:opacity-50"
+                            title="برگشت"
+                          >
+                            <ArrowUturnLeftIcon className="h-5 w-5" />
+                          </button>
+                        </TableColumn>
+                      </TableRow>
+                    )
+                  )
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
+                      هیچ تراکنش اخیر یافت نشد
+                    </td>
+                  </tr>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+      {activeTab === "logs" && (
+        <div className="card">
+          <div className="mb-6 space-y-4 flex  items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4   items-end">
+              <div className="">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  انتخاب جدول برای نمایش لاگ‌ها
+                </label>
+                <Select
+                  label=""
+                  id="table-select"
+                  options={tableOptions}
+                  value={selectedTable}
+                  onChange={(value) => setSelectedTable(value)}
+                />
+              </div>
+              <div className="">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  جستجو در لاگ‌ها
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="جستجو بر اساس دلیل، تغییر دهنده یا عملیات..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-4 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className=" flex items-center pl-10  ">
+              <Pagination
+                page={auditPage}
+                limit={auditLimit}
+                total={auditLogs?.pagination?.total || 0}
+                totalPages={auditLogs?.pagination?.totalPages}
+                onPageChange={setAuditPage}
+                onRowsPerPageChange={(newLimit) => {
+                  setAuditLimit(newLimit);
+                  setAuditPage(1);
+                }}
+              />
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader
+                headerData={[
+                  { title: "تاریخ تغییر" },
+                  { title: "جدول" },
+                  { title: "دلیل" },
+                  { title: "تغییر دهنده" },
+                  { title: "نوعیت عملیات" },
+                  { title: "جزئیات" },
+                ]}
+              />
+              <TableBody>
+                {auditLoading ? (
+                  <TableRow>
+                    <TableColumn>
+                      <p className="">در حال بارگیری...</p>
+                    </TableColumn>
+                  </TableRow>
+                ) : auditLogs?.data?.length > 0 ? (
+                  auditLogs.data.map((log, index) => (
                     <TableRow key={index}>
                       <TableColumn className="px-4 py-2">
-                        {transaction.account?.name || "Unknown"}
+                        {formatTimeAgo(log.changedAt)}
+                      </TableColumn>
+                      <TableColumn className="px-4">
+                        {log.tableName || "نامشخص"}
+                      </TableColumn>
+                      <TableColumn className="px-4">
+                        {log.reason || "بدون دلیل"}
+                      </TableColumn>
+                      <TableColumn className="px-4">
+                        {log.changedBy || "نامشخص"}
                       </TableColumn>
                       <TableColumn
-                        className={`font-semibold text-center ${getTypeColor(
-                          transaction.transactionType
+                        className={`px-4 font-semibold ${getOperationColor(
+                          log.operation
                         )}`}
                       >
-                        {getTransactionTypePersian(transaction.transactionType)}
-                      </TableColumn>
-                      <TableColumn className="px-4">
-                        {transaction.created_by?.name || "Unknown"}
-                      </TableColumn>
-                      <TableColumn className="px-4">
-                        {formatTimeAgo(transaction.date)}
-                      </TableColumn>
-                      <TableColumn
-                        className={`px-4 font-semibold ${
-                          (transaction.amount || 0) > 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {formatCurrency(transaction.amount || 0)}
+                        {getOperationPersian(log.operation)}
                       </TableColumn>
                       <TableColumn className="px-4">
                         <button
-                          onClick={() => handleReverseClick(transaction)}
-                          disabled={reverseLoading}
-                          className="text-red-500 transition-all duration-200 hover:bg-red-100 p-0.5 rounded-full  hover:text-red-700 disabled:opacity-50"
-                          title="برگشت"
+                          onClick={() => {
+                            setSelectedLog(log);
+                            setShowDetailsModal(true);
+                          }}
+                          className="text-blue-500 hover:bg-blue-100 p-1 rounded transition-colors"
+                          title="مشاهده جزئیات"
                         >
-                          <ArrowUturnLeftIcon className="h-5 w-5" />
+                          <DocumentTextIcon className="h-5 w-5" />
                         </button>
                       </TableColumn>
                     </TableRow>
-                  )
-                )
-              ) : (
-                <tr>
-                  <td colSpan={6} className="text-center py-4 text-gray-500">
-                    هیچ تراکنش اخیر یافت نشد
-                  </td>
-                </tr>
-              )}
-            </TableBody>
-          </Table>
-          {/* Pagination */}
-          {recentTransactions?.data?.pagination &&
-            recentTransactions?.data?.pagination?.totalPages > 1 && (
-              <div className="flex justify-center items-center mt-4 space-x-2">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  قبلی
-                </button>
-                <span className="px-3 py-1">
-                  صفحه {currentPage} از{" "}
-                  {recentTransactions?.data?.pagination?.totalPages}
-                </span>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(
-                        prev + 1,
-                        recentTransactions?.data?.pagination?.totalPages
-                      )
-                    )
-                  }
-                  disabled={
-                    currentPage ===
-                    recentTransactions?.data?.pagination?.totalPages
-                  }
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  بعدی
-                </button>
-              </div>
-            )}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
+                      هیچ لاگ حسابرسی یافت نشد
+                    </td>
+                  </tr>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Quick actions */}
-      {/* <div
-        className="grid grid-cols-1 md:grid-cols-3"
-        style={{ gap: "var(--space-6)" }}
-      >
-        <div
-          className="rounded-lg p-6 text-white hover-lift"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--info-blue), var(--info-blue))",
-            textAlign: "right",
-          }}
-        >
-          <h3
-            className="font-semibold mb-2"
-            style={{
-              fontSize: "var(--h5-size)",
-              marginBottom: "var(--space-2)",
-            }}
-          >
-            فروش سریع
-          </h3>
-          <p
-            className="mb-4"
-            style={{
-              opacity: 0.9,
-              marginBottom: "var(--space-4)",
-            }}
-          >
-            ثبت فروش جدید به سرعت
-          </p>
-          <button
-            className="px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-            style={{
-              backgroundColor: "var(--surface)",
-              color: "var(--info-blue)",
-            }}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "var(--info-light)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "var(--surface)")
-            }
-          >
-            شروع فروش
-          </button>
-        </div>
-
-        <div
-          className="rounded-lg p-6 text-white hover-lift"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--success-green), var(--success-green))",
-            textAlign: "right",
-          }}
-        >
-          <h3
-            className="font-semibold mb-2"
-            style={{
-              fontSize: "var(--h5-size)",
-              marginBottom: "var(--space-2)",
-            }}
-          >
-            افزودن خرید
-          </h3>
-          <p
-            className="mb-4"
-            style={{
-              opacity: 0.9,
-              marginBottom: "var(--space-4)",
-            }}
-          >
-            ثبت خرید جدید موجودی
-          </p>
-          <button
-            className="px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-            style={{
-              backgroundColor: "var(--surface)",
-              color: "var(--success-green)",
-            }}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "var(--success-light)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "var(--surface)")
-            }
-          >
-            افزودن خرید
-          </button>
-        </div>
-
-        <div
-          className="rounded-lg p-6 text-white hover-lift"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--amber), var(--amber-dark))",
-            textAlign: "right",
-          }}
-        >
-          <h3
-            className="font-semibold mb-2"
-            style={{
-              fontSize: "var(--h5-size)",
-              marginBottom: "var(--space-2)",
-            }}
-          >
-            مشاهده گزارش‌ها
-          </h3>
-          <p
-            className="mb-4"
-            style={{
-              opacity: 0.9,
-              marginBottom: "var(--space-4)",
-            }}
-          >
-            بررسی تحلیل‌های کسب‌وکار
-          </p>
-          <button
-            className="px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-            style={{
-              backgroundColor: "var(--surface)",
-              color: "var(--amber-dark)",
-            }}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "var(--amber-light)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "var(--surface)")
-            }
-          >
-            مشاهده گزارش‌ها
-          </button>
-        </div>
-      </div> */}
-
-      {/* Modal for reverse confirmation */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
@@ -612,6 +733,241 @@ const Dashboard = () => {
                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
               >
                 {reverseLoading ? "در حال پردازش..." : "تأیید برگشت"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDetailsModal && selectedLog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">جزئیات لاگ حسابرسی</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    جدول
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {selectedLog.tableName || "نامشخص"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    نوع عملیات
+                  </label>
+                  <p
+                    className={`mt-1 text-sm font-semibold ${getOperationColor(
+                      selectedLog.operation
+                    )}`}
+                  >
+                    {getOperationPersian(selectedLog.operation)}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    تغییر دهنده
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {selectedLog.changedBy || "نامشخص"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    تاریخ تغییر
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {formatTimeAgo(selectedLog.changedAt)}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  دلیل
+                </label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {selectedLog.reason || "بدون دلیل"}
+                </p>
+              </div>
+              {selectedLog.operation === "INSERT" && selectedLog.newData && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    داده‌های جدید اضافه شده
+                  </label>
+                  <div className="bg-green-50 p-4 rounded border overflow-x-auto">
+                    <table className="min-w-full table-auto">
+                      <thead>
+                        <tr className="bg-green-100">
+                          <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                            فیلد
+                          </th>
+                          <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                            مقدار
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(selectedLog.newData).map(
+                          ([key, value], index) => (
+                            <tr
+                              key={key}
+                              className={
+                                index % 2 === 0 ? "bg-green-50" : "bg-white"
+                              }
+                            >
+                              <td className="px-4 py-2 font-medium text-green-800 border-b border-green-200">
+                                {key}
+                              </td>
+                              <td className="px-4 py-2 text-green-700 border-b border-green-200">
+                                {renderValue(value)}
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              {selectedLog.operation === "UPDATE" &&
+                (selectedLog.oldData || selectedLog.newData) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      مقایسه داده‌ها: قبل و بعد از تغییر
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedLog.oldData && (
+                        <div className="bg-red-50 p-4 rounded border overflow-x-auto">
+                          <h4 className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-2">
+                            <span>🔴</span> داده‌های قدیمی (قبل از تغییر)
+                          </h4>
+                          <table className="min-w-full table-auto">
+                            <thead>
+                              <tr className="bg-red-100">
+                                <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                                  فیلد
+                                </th>
+                                <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                                  مقدار قدیمی
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Object.entries(selectedLog.oldData).map(
+                                ([key, value], index) => (
+                                  <tr
+                                    key={key}
+                                    className={
+                                      index % 2 === 0 ? "bg-red-50" : "bg-white"
+                                    }
+                                  >
+                                    <td className="px-4 py-2 font-medium text-red-800 border-b border-red-200">
+                                      {key}
+                                    </td>
+                                    <td className="px-4 py-2 text-red-700 border-b border-red-200">
+                                      {renderValue(value)}
+                                    </td>
+                                  </tr>
+                                )
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                      {selectedLog.newData && (
+                        <div className="bg-green-50 p-4 rounded border overflow-x-auto">
+                          <h4 className="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
+                            <span>🟢</span> داده‌های جدید (بعد از تغییر)
+                          </h4>
+                          <table className="min-w-full table-auto">
+                            <thead>
+                              <tr className="bg-green-100">
+                                <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                                  فیلد
+                                </th>
+                                <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                                  مقدار جدید
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Object.entries(selectedLog.newData).map(
+                                ([key, value], index) => (
+                                  <tr
+                                    key={key}
+                                    className={
+                                      index % 2 === 0
+                                        ? "bg-green-50"
+                                        : "bg-white"
+                                    }
+                                  >
+                                    <td className="px-4 py-2 font-medium text-green-800 border-b border-green-200">
+                                      {key}
+                                    </td>
+                                    <td className="px-4 py-2 text-green-700 border-b border-green-200">
+                                      {renderValue(value)}
+                                    </td>
+                                  </tr>
+                                )
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              {selectedLog.operation === "DELETE" && selectedLog.oldData && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    داده‌های حذف شده
+                  </label>
+                  <div className="bg-red-50 p-4 rounded border overflow-x-auto">
+                    <table className="min-w-full table-auto">
+                      <thead>
+                        <tr className="bg-red-100">
+                          <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                            فیلد
+                          </th>
+                          <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                            مقدار حذف شده
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(selectedLog.oldData).map(
+                          ([key, value], index) => (
+                            <tr
+                              key={key}
+                              className={
+                                index % 2 === 0 ? "bg-red-50" : "bg-white"
+                              }
+                            >
+                              <td className="px-4 py-2 font-medium text-red-800 border-b border-red-200">
+                                {key}
+                              </td>
+                              <td className="px-4 py-2 text-red-700 border-b border-red-200">
+                                {renderValue(value)}
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedLog(null);
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                بستن
               </button>
             </div>
           </div>

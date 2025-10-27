@@ -10,18 +10,27 @@ function Select({
   register,
   name,
   defaultSelected,
+  onChange,
+  value,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(value || defaultSelected || "");
   const ref = useClickOutSide(() => setIsOpen(false));
   const filteredOptions = options?.filter((opt) =>
-    opt.value.toLowerCase().includes(search.toLowerCase())
+    (opt.label || opt.value).toLowerCase().includes(search.toLowerCase())
   );
 
   const handleSelect = (value) => {
     setSelected(value);
     setIsOpen(false);
+    if (onChange) onChange(value);
+  };
+
+  const getSelectedLabel = () => {
+    if (!selected) return defaultSelected || "انتخاب نکردید";
+    const option = options?.find((opt) => opt.value === selected);
+    return option ? option.label || option.value : selected;
   };
 
   return (
@@ -38,9 +47,7 @@ function Select({
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full bg-transparent capitalize  placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-4 py-2 md:py-[14px] transition duration-300 ease focus:outline-none hover:border-slate-300 shadow-sm focus:shadow cursor-pointer flex justify-between items-center`}
       >
-        <span className=" text-[16px] font-[400]">
-          {selected || defaultSelected || "انتخاب نکردید"}
-        </span>
+        <span className=" text-[16px] font-[400]">{getSelectedLabel()}</span>
         <RiArrowDownSLine
           className={` ${
             isOpen ? " rotate-180" : ""
@@ -54,7 +61,7 @@ function Select({
           {/* Search box */}
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="جستجو..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full mb-2 px-3 py-1 text-sm border border-slate-200 rounded-sm focus:outline-none focus:border-slate-300 dark:bg-primary-dark-400 dark:slate-accent-300"
@@ -71,12 +78,12 @@ function Select({
                     selected === option.value ? "bg-slate-100 " : ""
                   }`}
                 >
-                  {option.value}
+                  {option.label || option.value}
                 </div>
               ))
             ) : (
               <p className="text-sm text-slate-400 text-center py-2">
-                No results found
+                هیچ نتیجه‌ای یافت نشد
               </p>
             )}
           </div>
