@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-/* Import Persian fonts - must come first */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
-
-/* Custom CSS Variables for TDMS Design System */
 @theme {
   --color-tan-100: #edeae3;
   --color-tan-200: #d7d1bc;
@@ -39,6 +34,9 @@
   --color-error-red: #DC143C;
   --color-success-green: #228B22;
   --color-success-light: #90EE90;
+  --color-primary-brown: #8B4513;
+  --color-primary-brown-light: #A0522D;
+  --color-primary-brown-dark: #654321;
 }
 
 :root {

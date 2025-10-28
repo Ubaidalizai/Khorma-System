@@ -4,7 +4,6 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
@@ -22,6 +21,7 @@ import { ToastContainer } from "react-toastify";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Bounce } from "react-toastify";
+import Layout from "./components/Layout";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -1,3 +1,6 @@
+import { AiFillEdit } from "react-icons/ai";
+import { AiFillDelete } from "react-icons/ai";
+import { AiFillEye } from "react-icons/ai";
 // import { motion } from "framer-motion";
 import { CalendarDays, ClipboardList, Info, Package, User } from "lucide-react";
 import { useState } from "react";
@@ -130,56 +133,20 @@ function Product() {
                   </span>
                 </TableColumn>
                 <TableColumn>
-                  <span
-                    className={`${
-                      "itemavs" +
-                      el?._id +
-                      new Date(el?.createdAt).getMilliseconds()
-                    } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
-                  >
-                    <div
-                      className={`  w-full h-full flex justify-center items-center`}
-                    >
-                      <TableMenuModal>
-                        <Menus>
-                          <Menus.Menu>
-                            <Menus.Toggle id={el?._id} />
-                            <Menus.List
-                              parent={
-                                "itemavs" +
-                                el?._id +
-                                new Date(el?.createdAt).getMilliseconds()
-                              }
-                              id={el?._id}
-                              className="bg-white rounded-lg shadow-xl"
-                            >
-                              <Menus.Button
-                                icon={<HiSquare2Stack />}
-                                onClick={() => handleViewProduct(el)}
-                              >
-                                نمایش
-                              </Menus.Button>
-
-                              <Menus.Button
-                                icon={<HiPencil />}
-                                onClick={() => handleEditProduct(el)}
-                              >
-                                ویرایش
-                              </Menus.Button>
-
-                              <Menus.Button
-                                icon={<HiTrash />}
-                                onClick={() => handleDeleteProduct(el)}
-                                disabled={isDeleting}
-                              >
-                                {isDeleting ? "در حال حذف..." : "حذف"}
-                              </Menus.Button>
-                            </Menus.List>
-                          </Menus.Menu>
-                        </Menus>
-                      </TableMenuModal>
-                    </div>
-                  </span>
+                  <div className=" flex items-center gap-x-2">
+                    <AiFillEye
+                      className=" text-[18px] text-yellow-500"
+                      onClick={() => handleViewProduct(el)}
+                    />
+                    <AiFillDelete
+                      className=" text-[18px] text-red-500"
+                      onClick={() => handleDeleteProduct(el)}
+                    />
+                    <AiFillEdit
+                      className=" text-[18px] text-green-500"
+                      onClick={() => handleEditProduct(el)}
+                    />
+                  </div>
                 </TableColumn>
               </TableRow>
             ))

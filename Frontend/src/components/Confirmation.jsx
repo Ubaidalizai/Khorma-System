@@ -43,25 +43,15 @@ function Confirmation({ type, handleClick, handleCancel, close, message }) {
       <div className=" flex-1 flex justify-around items-center gap-3 py-3">
         <Button
           onClick={onConfirm}
-          className={`${
-            type === "delete"
-              ? " bg-warning-orange hover:bg-warning-orange/90"
-              : " bg-success-green hover:bg-success-green/90"
-          }`}
-          icon={
-            type === "delete" ? (
-              <BiTrashAlt className="text-red-400" />
-            ) : (
-              <BsPencilSquare className=" text-green-400" />
-            )
-          }
+          className={``}
+          icon={type === "delete" && <BiTrashAlt className="text-red-400" />}
         >
           {type === "delete" ? "بلی، حذف کنید" : "بلی ویرایش کنید"}
         </Button>
         <Button
           onClick={onCancel}
-          className={` bg-red-500`}
-          icon={<GiCancel className=" text-green-500" />}
+          className={" bg-transparent border border-slate-700 text-slate-900"}
+          icon={<GiCancel className="" />}
         >
           نه کنسل کنید
         </Button>

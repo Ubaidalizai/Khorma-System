@@ -99,8 +99,8 @@ const Inventory = () => {
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">مدیریت موجودی</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-xl font-bold text-gray-900">مدیریت موجودی</h1>
+          <p className="text-gray-600 mt-1">
             مدیریت کردن تمام دیتا های و نماینده گی های تان
           </p>
         </div>
@@ -119,7 +119,7 @@ const Inventory = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -293,30 +293,32 @@ const Inventory = () => {
                       </TableColumn>
                       <TableColumn>{transfer.quantity}</TableColumn>
 
-                      <TableColumn
-                        className={` ${
-                          transfer.toLocation === "warehouse"
-                            ? "text-purple-600"
-                            : "text-blue-600"
-                        } ${
-                          transfer.toLocation === "store"
-                            ? "text-green-600"
-                            : ""
-                        }`}
-                      >
-                        <p
-                          className={`p-1  ${
+                      <TableColumn>
+                        <div
+                          className={` ${
                             transfer.toLocation === "warehouse"
-                              ? "bg-purple-300/50"
-                              : " bg-blue-100/50"
-                          }  ${
+                              ? "text-purple-600"
+                              : "text-blue-600"
+                          } ${
                             transfer.toLocation === "store"
-                              ? "bg-green-100/50"
+                              ? "text-green-600"
                               : ""
-                          } rounded-full`}
+                          } w-fit`}
                         >
-                          {transfer.toLocation}
-                        </p>
+                          <p
+                            className={`p-1  ${
+                              transfer.toLocation === "warehouse"
+                                ? "bg-purple-300/50"
+                                : " bg-blue-100/50"
+                            }  ${
+                              transfer.toLocation === "store"
+                                ? "bg-green-100/50"
+                                : ""
+                            } rounded-full px-2`}
+                          >
+                            {transfer.toLocation}
+                          </p>
+                        </div>
                       </TableColumn>
                       <TableColumn>
                         {transfer?.transferDate
@@ -349,7 +351,7 @@ const Inventory = () => {
             <GloableModal open={openConfirm} setOpen={setOpenConfirm}>
               {openConfirm && (
                 <Confirmation
-                  type="transfer"
+                  type="delete"
                   handleClick={handleDelete}
                   handleCancel={() => setOpenConfirm(false)}
                   close={() => setOpenConfirm(false)}

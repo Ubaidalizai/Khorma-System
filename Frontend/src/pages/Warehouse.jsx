@@ -1,23 +1,25 @@
-import { BiTransferAlt } from "react-icons/bi";
-import { BiLoaderAlt } from "react-icons/bi";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { BiLoaderAlt, BiPencil, BiTransferAlt } from "react-icons/bi";
+import { CgEye } from "react-icons/cg";
+import Button from "../components/Button";
+import Confirmation from "../components/Confirmation";
+import GloableModal from "../components/GloableModal";
 import SearchInput from "../components/SearchInput";
-import TableHeader from "../components/TableHeader";
+import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
-import TableMenuModal from "../components/TableMenuModal";
-import Menus from "../components/Menu";
-import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
-import Confirmation from "../components/Confirmation";
+import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import Table from "../components/Table";
-import GloableModal from "../components/GloableModal";
-import Button from "../components/Button";
 import WarehouseForm from "../components/WarehouseForm";
-import { useForm } from "react-hook-form";
-import { useCreateStockTransfer, useUpdateStore } from "../services/useApi";
-import { useEmployees, useWarehouseStocks } from "../services/useApi";
-import { getStockStatus, getStatusColor } from "../utilies/stockStatus";
+import {
+  useCreateStockTransfer,
+  useEmployees,
+  useUpdateStore,
+  useWarehouseStocks,
+} from "../services/useApi";
+import { getStatusColor, getStockStatus } from "../utilies/stockStatus";
+import { inputStyle } from "./../components/ProductForm";
 
 // Headers aligned with Backend stock.model.js
 const tableHeader = [
@@ -161,65 +163,30 @@ function Warehouse() {
                   }
                 </span>
               </TableColumn>
-              <TableColumn
-                className={`${
-                  "itemavs" +
-                  (row?.expiryDate
-                    ? new Date(row.expiryDate).getMilliseconds()
-                    : "0") +
-                  row?._id
-                } relative`}
-              >
-                <span>
-                  <TableMenuModal>
-                    <Menus>
-                      <Menus.Menu>
-                        <Menus.Toggle id={row?._id} />
-                        <Menus.List
-                          parent={
-                            "itemavs" +
-                            (row?.expiryDate
-                              ? new Date(row.expiryDate).getMilliseconds()
-                              : "0") +
-                            row?._id
-                          }
-                          id={row?._id}
-                          className="bg-white rounded-lg shadow-xl"
-                        >
-                          <Menus.Button
-                            icon={<HiSquare2Stack />}
-                            onClick={() => {
-                              setSelectedPro(row);
-                              setShow(true);
-                            }}
-                          >
-                            نمایش
-                          </Menus.Button>
-                          {row?.quantity > 0 && (
-                            <Menus.Button
-                              icon={<BiTransferAlt size={24} />}
-                              onClick={() => {
-                                setSelectedPro(row);
-                                setShowTransfer(true);
-                              }}
-                            >
-                              انتقال
-                            </Menus.Button>
-                          )}
-                          <Menus.Button
-                            icon={<HiPencil />}
-                            onClick={() => {
-                              setSelectedPro(row);
-                              setShowEdit(true);
-                            }}
-                          >
-                            ویرایش
-                          </Menus.Button>
-                        </Menus.List>
-                      </Menus.Menu>
-                    </Menus>
-                  </TableMenuModal>
-                </span>
+              <TableColumn>
+                <div className=" flex items-center gap-2">
+                  <CgEye
+                    className=" text-[18px] hover:bg-slate-200 text-yellow-400 rounded-full"
+                    onClick={() => {
+                      setSelectedPro(row);
+                      setShow(true);
+                    }}
+                  />
+                  <BiTransferAlt
+                    className=" text-[18px] hover:bg-slate-200 text-red-400 rounded-full"
+                    onClick={() => {
+                      setSelectedPro(row);
+                      setShowTransfer(true);
+                    }}
+                  />
+                  <BiPencil
+                    className=" text-[18px] hover:bg-slate-200 text-green-500 rounded-full"
+                    onClick={() => {
+                      setSelectedPro(row);
+                      setShowEdit(true);
+                    }}
+                  />
+                </div>
               </TableColumn>
             </TableRow>
           ))}
@@ -376,41 +343,35 @@ function Warehouse() {
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
         <form
           noValidate
-          className="bg-white rounded-lg shadow-sm w-[600px]"
+          className="bg-white rounded-lg  w-[480px] p-2 h-[500px]"
           onSubmit={transferForm.handleSubmit(onSubmit)}
         >
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">انتقال موجودی</h2>
+            <h2 className="text-xl font-bold text-gray-900">انتقال موجودی</h2>
           </div>
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-2">
             <div>
               <span>محصول: </span>
-              <span className="font-bold">
+              <span className="font-bold text-amber-700 underline">
                 {selectedPro?.product?.name || selectedPro?.product}
               </span>
             </div>
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col  items-center  gap-1 md:flex-row ga-2">
               <label className="flex-1">
-                <span className="block text-sm font-medium text-gray-700 mb-2">
+                <span className="block text-[12px] font-medium text-gray-600 mb-1">
                   نوع انتقال
                 </span>
-                <select
-                  className="w-full border rounded-md px-3 py-2"
-                  {...register("transferType")}
-                >
-                  <option value="warehouse-store">فروشگاه ↔ گدام</option>
-                  <option value="warehouse-employee">فروشگاه → کارمند</option>
+                <select className={inputStyle} {...register("transferType")}>
+                  <option value="warehouse-store">گدام ↔ فروشگاه</option>
+                  <option value="warehouse-employee">گدام → کارمند</option>
                 </select>
               </label>
               {needsEmployee && (
                 <label className="flex-1">
-                  <span className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="block text-[12px] font-medium text-gray-600 mb-1">
                     کارمند
                   </span>
-                  <select
-                    className="w-full border rounded-md px-3 py-2"
-                    {...register("employee")}
-                  >
+                  <select className={inputStyle} {...register("employee")}>
                     <option value="">کارمند را انتخاب کنید</option>
                     {employees?.data?.map((emp) => (
                       <option key={emp._id} value={emp._id}>
@@ -423,10 +384,10 @@ function Warehouse() {
             </div>
             <div className="flex flex-col md:flex-row gap-4">
               <label className="flex-1">
-                <span className="block text-sm font-medium text-gray-700 mb-2">
+                <span className="block pb-1 text-sm font-medium text-gray-700 mb-2">
                   از:{" "}
                 </span>
-                <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">
+                <span className={inputStyle}>
                   {fromLocation === "warehouse"
                     ? "گدام"
                     : fromLocation === "store"
@@ -435,10 +396,10 @@ function Warehouse() {
                 </span>
               </label>
               <label className="flex-1">
-                <span className="block text-sm font-medium text-gray-700 mb-2">
+                <span className="block text-sm pb-1 font-medium text-gray-700 mb-2">
                   به:{" "}
                 </span>
-                <span className="inline-block border rounded-md px-3 py-2 bg-gray-50">
+                <span className={inputStyle}>
                   {toLocation === "warehouse"
                     ? "گدام"
                     : toLocation === "store"
@@ -447,13 +408,14 @@ function Warehouse() {
                 </span>
               </label>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className=" py-1">
+              <label className="block text-sm font-[400] text-gray-700 mb-2">
                 تعداد (واحد پایه)
               </label>
               <input
-                className="w-full border rounded-md px-3 py-2"
+                className={inputStyle}
                 type="number"
+                placeholder="تعداد مورد نظر"
                 min="1"
                 {...register("quantity", { required: true, min: 1 })}
               />
@@ -469,7 +431,7 @@ function Warehouse() {
             </Button>
             <Button
               type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded-md"
+              className=" bg-primary-brown-light text-white px-4 py-2 rounded-md"
               disabled={
                 !quantity || quantity <= 0 || (needsEmployee && !employee)
               }

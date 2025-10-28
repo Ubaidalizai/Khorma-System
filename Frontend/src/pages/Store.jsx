@@ -1,3 +1,4 @@
+import { AiFillDelete } from "react-icons/ai";
 import { ImPriceTag } from "react-icons/im";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
@@ -8,7 +9,7 @@ import TableColumn from "../components/TableColumn";
 import TableMenuModal from "../components/TableMenuModal";
 import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
-import { BiTransferAlt } from "react-icons/bi";
+import { BiPencil, BiTransferAlt } from "react-icons/bi";
 import Confirmation from "../components/Confirmation";
 import { getStockStatus } from "../utilies/stockStatus";
 import GloableModal from "../components/GloableModal";
@@ -23,6 +24,8 @@ import {
 import Button from "../components/Button";
 import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { inputStyle } from "../components/ProductForm";
+import { CgEye } from "react-icons/cg";
 // Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
   { title: "نمبر بچ" },
@@ -144,66 +147,29 @@ function Store() {
                 </span>
               </TableColumn>
               <TableColumn>
-                <span
-                  className={`${
-                    "stores" +
-                    el?._id +
-                    new Date(el?.expiryDate || Date.now()).getMilliseconds()
-                  } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
-                >
-                  <div
-                    className={`  w-full h-full flex justify-center items-center`}
-                  >
-                    <TableMenuModal>
-                      <Menus>
-                        <Menus.Menu>
-                          <Menus.Toggle id={el?._id} />
-                          <Menus.List
-                            parent={
-                              "stores" +
-                              el?._id +
-                              new Date(
-                                el?.expiryDate || Date.now()
-                              ).getMilliseconds()
-                            }
-                            id={el?._id}
-                            className="bg-white rounded-lg shadow-xl"
-                          >
-                            <Menus.Button
-                              icon={<HiSquare2Stack />}
-                              onClick={() => {
-                                setSelectedData(el);
-                                setShow(true);
-                              }}
-                            >
-                              نمایش
-                            </Menus.Button>
-                            {el?.quantity > 0 && (
-                              <Menus.Button
-                                icon={<BiTransferAlt size={24} />}
-                                onClick={() => {
-                                  setSelectedData(el);
-                                  setShowTransfer(true);
-                                }}
-                              >
-                                انتقال
-                              </Menus.Button>
-                            )}
-                            <Menus.Button
-                              icon={<HiTrash />}
-                              onClick={() => {
-                                setSelectedData(el);
-                                setShowDeleteConfirm(true);
-                              }}
-                            >
-                              حذف
-                            </Menus.Button>
-                          </Menus.List>
-                        </Menus.Menu>
-                      </Menus>
-                    </TableMenuModal>
-                  </div>
-                </span>
+                <div className={`  w-full h-full flex gap-x-3 items-center`}>
+                  <CgEye
+                    className=" text-[18px] hover:bg-slate-200 text-yellow-400 rounded-full"
+                    onClick={() => {
+                      setSelectedData(el);
+                      setShow(true);
+                    }}
+                  />
+                  <BiTransferAlt
+                    className=" text-[18px] hover:bg-slate-200 text-green-400 rounded-full"
+                    onClick={() => {
+                      setSelectedData(el);
+                      setShowTransfer(true);
+                    }}
+                  />
+                  <AiFillDelete
+                    className=" text-[18px] hover:bg-slate-200 text-red-500 rounded-full"
+                    onClick={() => {
+                      setSelectedData(el);
+                      setShowDeleteConfirm(true);
+                    }}
+                  />
+                </div>
               </TableColumn>
             </TableRow>
           ))}
@@ -313,6 +279,106 @@ function Store() {
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
         <form
           noValidate
+          className="bg-white rounded-lg  w-[480px] p-2 h-[500px]"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-gray-900">انتقال موجودی</h2>
+          </div>
+          <div className="p-6 space-y-2">
+            <div>
+              <span>محصول: </span>
+              <span className="font-bold text-amber-700 underline">
+                {selectedData?.product?.name || selectedData?.product}
+              </span>
+            </div>
+            <div className="flex flex-col  items-center  gap-1 md:flex-row ga-2">
+              <label className="flex-1">
+                <span className="block text-[12px] font-medium text-gray-600 mb-1">
+                  نوع انتقال
+                </span>
+                <select className={inputStyle} {...register("transferType")}>
+                  <option value="store-warehouse">فروشگاه ↔ گدام</option>
+                  <option value="store-employee">فروشگاه → کارمند</option>
+                </select>
+              </label>
+              {needsEmployee && (
+                <label className="flex-1">
+                  <span className="block text-[12px] font-medium text-gray-600 mb-1">
+                    کارمند
+                  </span>
+                  <select className={inputStyle} {...register("employee")}>
+                    <option value="">کارمند را انتخاب کنید</option>
+                    {employees?.data?.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <label className="flex-1">
+                <span className="block pb-1 text-sm font-medium text-gray-700 mb-2">
+                  از:{" "}
+                </span>
+                <span className={inputStyle}>
+                  {fromLocation === "warehouse"
+                    ? "گدام"
+                    : fromLocation === "store"
+                    ? "فروشگاه"
+                    : "کارمند"}
+                </span>
+              </label>
+              <label className="flex-1">
+                <span className="block text-sm pb-1 font-medium text-gray-700 mb-2">
+                  به:{" "}
+                </span>
+                <span className={inputStyle}>
+                  {toLocation === "warehouse"
+                    ? "گدام"
+                    : toLocation === "store"
+                    ? "فروشگاه"
+                    : "کارمند"}
+                </span>
+              </label>
+            </div>
+            <div className=" py-1">
+              <label className="block text-sm font-[400] text-gray-700 mb-2">
+                تعداد (واحد پایه)
+              </label>
+              <input
+                className={inputStyle}
+                type="number"
+                placeholder="تعداد مورد نظر"
+                min="1"
+                {...register("quantity", { required: true, min: 1 })}
+              />
+            </div>
+          </div>
+          <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+            <Button
+              onClick={() => setShowTransfer(false)}
+              type="button"
+              className="bg-gray-500 text-white px-4 py-2 rounded-md"
+            >
+              بستن
+            </Button>
+            <Button
+              type="submit"
+              className=" bg-primary-brown-light text-white px-4 py-2 rounded-md"
+              disabled={
+                !quantity || quantity <= 0 || (needsEmployee && !employee)
+              }
+            >
+              انتقال موجودی
+            </Button>
+          </div>
+        </form>
+        {/* 
+        <form
+          noValidate
           className="bg-white rounded-lg shadow-sm w-[600px]"
           onSubmit={handleSubmit(onSubmit)}
         >
@@ -414,7 +480,7 @@ function Store() {
               انتقال موجودی
             </Button>
           </div>
-        </form>
+        </form> */}
       </GloableModal>
       <GloableModal open={showTransferConf} setOpen={setShowTransfer}>
         <Confirmation

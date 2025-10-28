@@ -44,7 +44,7 @@ function Window({ children, name }) {
           }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.23 }}
-          className="bg-text-400/20 dark:bg-white/20 backdrop-blur h-screen  mx-auto   fixed inset-0 z-50 grid place-items-center  cursor-pointer"
+          className=" w-full   bg-black/20 h-screen  mx-auto   fixed inset-0 z-50 grid place-items-center  cursor-pointer"
         >
           <div className=" w-auto h-auto relative p-2" ref={ref}>
             <AiOutlineClose

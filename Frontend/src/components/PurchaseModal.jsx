@@ -7,8 +7,15 @@ import {
   CurrencyDollarIcon,
   ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
-import { useSuppliers, useProducts, useUnits, useSystemAccounts, useCreatePurchase } from "../services/useApi";
+import {
+  useSuppliers,
+  useProducts,
+  useUnits,
+  useSystemAccounts,
+  useCreatePurchase,
+} from "../services/useApi";
 import { formatCurrency } from "../utilies/helper";
+import GloableModal from "./GloableModal";
 
 const PurchaseModal = ({ isOpen, onClose }) => {
   const { register, handleSubmit, watch, reset, setValue } = useForm();
@@ -31,7 +38,10 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   const watchedValues = watch();
 
   // Calculate totals
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0
+  );
   const paidAmount = Number(watchedValues.paidAmount) || 0;
   const dueAmount = Math.max(subtotal - paidAmount, 0);
 
@@ -52,7 +62,12 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   }, [isOpen, reset]);
 
   const addItem = () => {
-    if (!currentItem.product || !currentItem.unit || currentItem.quantity <= 0 || currentItem.unitPrice <= 0) {
+    if (
+      !currentItem.product ||
+      !currentItem.unit ||
+      currentItem.quantity <= 0 ||
+      currentItem.unitPrice <= 0
+    ) {
       alert("لطفاً تمام فیلدهای مورد نیاز را پر کنید");
       return;
     }
@@ -74,7 +89,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   };
 
   const removeItem = (itemId) => {
-    setItems(items.filter(item => item.id !== itemId));
+    setItems(items.filter((item) => item.id !== itemId));
   };
 
   const onSubmit = (data) => {
@@ -88,13 +103,14 @@ const PurchaseModal = ({ isOpen, onClose }) => {
       purchaseDate: data.purchaseDate || new Date().toISOString(),
       paidAmount: Number(data.paidAmount) || 0,
       paymentAccount: data.paymentAccount,
-      items: items.map(item => ({
+      items: items.map((item) => ({
         product: item.product,
         unit: item.unit,
         quantity: Number(item.quantity),
         unitPrice: Number(item.unitPrice),
         batchNumber: item.batchNumber || null,
-        expiryDate: item.expiryDate && item.expiryDate !== '' ? item.expiryDate : null,
+        expiryDate:
+          item.expiryDate && item.expiryDate !== "" ? item.expiryDate : null,
       })),
     };
 
@@ -113,9 +129,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <GloableModal isClose={true} open={isOpen}>
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="bg-amber-100 p-2 rounded-lg">
@@ -195,7 +210,9 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
           {/* Add Item Form */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">اضافه کردن جنس</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              اضافه کردن جنس
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -203,7 +220,9 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 </label>
                 <select
                   value={currentItem.product}
-                  onChange={(e) => setCurrentItem({ ...currentItem, product: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentItem({ ...currentItem, product: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 >
                   <option value="">انتخاب محصول</option>
@@ -221,7 +240,9 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 </label>
                 <select
                   value={currentItem.unit}
-                  onChange={(e) => setCurrentItem({ ...currentItem, unit: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentItem({ ...currentItem, unit: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 >
                   <option value="">انتخاب واحد</option>
@@ -241,7 +262,12 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                   type="number"
                   step="0.01"
                   value={currentItem.quantity}
-                  onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      quantity: Number(e.target.value),
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="0"
                 />
@@ -255,7 +281,12 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                   type="number"
                   step="0.01"
                   value={currentItem.unitPrice}
-                  onChange={(e) => setCurrentItem({ ...currentItem, unitPrice: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      unitPrice: Number(e.target.value),
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="0"
                 />
@@ -268,7 +299,12 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 <input
                   type="text"
                   value={currentItem.batchNumber}
-                  onChange={(e) => setCurrentItem({ ...currentItem, batchNumber: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      batchNumber: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="اختیاری"
                 />
@@ -281,7 +317,12 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 <input
                   type="date"
                   value={currentItem.expiryDate}
-                  onChange={(e) => setCurrentItem({ ...currentItem, expiryDate: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      expiryDate: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
@@ -302,32 +343,50 @@ const PurchaseModal = ({ isOpen, onClose }) => {
           {/* Items List */}
           {items.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">اجناس انتخاب شده</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                اجناس انتخاب شده
+              </h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">محصول</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">واحد</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">تعداد</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">قیمت واحد</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">مجموع</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">عملیات</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        محصول
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        واحد
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        تعداد
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        قیمت واحد
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        مجموع
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        عملیات
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {items.map((item) => {
-                      const product = products?.data?.find(p => p._id === item.product);
-                      const unit = units?.data?.find(u => u._id === item.unit);
+                      const product = products?.data?.find(
+                        (p) => p._id === item.product
+                      );
+                      const unit = units?.data?.find(
+                        (u) => u._id === item.unit
+                      );
                       const total = item.quantity * item.unitPrice;
-                      
+
                       return (
                         <tr key={item.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-900">
-                            {product?.name || 'نامشخص'}
+                            {product?.name || "نامشخص"}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900">
-                            {unit?.name || 'نامشخص'}
+                            {unit?.name || "نامشخص"}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900">
                             {item.quantity}
@@ -363,7 +422,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 مجموع کل: {formatCurrency(subtotal)}
               </div>
               <div className="text-sm text-gray-600">
-                پرداخت شده: {formatCurrency(paidAmount)} | باقی مانده: {formatCurrency(dueAmount)}
+                پرداخت شده: {formatCurrency(paidAmount)} | باقی مانده:{" "}
+                {formatCurrency(dueAmount)}
               </div>
             </div>
           </div>
@@ -382,12 +442,17 @@ const PurchaseModal = ({ isOpen, onClose }) => {
               disabled={createPurchaseMutation.isPending}
               className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {createPurchaseMutation.isPending ? "در حال ایجاد..." : "ایجاد خرید"}
+              {createPurchaseMutation.isPending
+                ? "در حال ایجاد..."
+                : "ایجاد خرید"}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </GloableModal>
+    // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+
+    // </div>
   );
 };
 
