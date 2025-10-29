@@ -545,23 +545,12 @@ const Purchases = () => {
       />
 
       {/* Purchase Details Modal */}
-      {showDetailsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">جزئیات خرید</h2>
-              <button
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  clearUrlParams();
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <XCircleIcon className="h-6 w-6" />
-              </button>
       <GloableModal
         open={showDetailsModal}
-        setOpen={setShowDetailsModal}
+        setOpen={(open) => {
+          setShowDetailsModal(open);
+          if (!open) clearUrlParams();
+        }}
         isClose={true}
       >
         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -668,37 +657,6 @@ const Purchases = () => {
                 </div>
               </div>
 
-                {/* Purchase Information */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">اطلاعات خرید</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">نمبر بیل</h4>
-                      <p className="text-sm font-medium text-gray-900">
-                        {selectedPurchase.purchase?.batchNumber || 'نامشخص'}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">تاریخ خرید</h4>
-                      <p className="text-sm font-medium text-gray-900">
-                        {formatDate(selectedPurchase.purchase?.purchaseDate)}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">تهیه کننده</h4>
-                      <p className="text-sm font-medium text-gray-900">
-                        {selectedPurchase.purchase?.supplier?.name || findSupplier(selectedPurchase.purchase?.supplier)?.name || 'نامشخص'}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">حالت پرداخت</h4>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
-                        selectedPurchase.purchase?.dueAmount > 0 ? "partial" : "paid"
-                      )}`}>
-                        {selectedPurchase.purchase?.dueAmount > 0 ? "نسبی پرداخت شده" : "تمام پرداخت شده"}
-                      </span>
-                    </div>
-                  </div>
               {/* Purchase Items */}
               <div className="bg-white border border-gray-200 rounded-lg">
                 <div className="px-3 py-2 border-b border-gray-200">
@@ -764,35 +722,21 @@ const Purchases = () => {
 
                 {/* Total Summary */}
                 <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
-                  <div className="flex justify-end">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      {selectedPurchase.purchase?.dueAmount > 0 && (
+                        <button
+                          onClick={() => setShowPaymentModal(true)}
+                          className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
+                        >
+                          <BanknotesIcon className="h-4 w-4" />
+                          ثبت پرداخت
+                        </button>
+                      )}
+                    </div>
                     <div className="text-right">
                       <div className="text-sm font-semibold text-gray-900">
-                        مجموع کل:{" "}
-                        {formatCurrency(
-                          selectedPurchase.purchase?.totalAmount?.toFixed(2)
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  {/* Total Summary */}
-                  <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        {selectedPurchase.purchase?.dueAmount > 0 && (
-                          <button
-                            onClick={() => setShowPaymentModal(true)}
-                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
-                          >
-                            <BanknotesIcon className="h-4 w-4" />
-                            ثبت پرداخت
-                          </button>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold text-gray-900">
-                          مجموع کل: {formatCurrency(selectedPurchase.purchase?.totalAmount?.toFixed(2))}
-                        </div>
+                        مجموع کل: {formatCurrency(selectedPurchase.purchase?.totalAmount?.toFixed(2))}
                       </div>
                     </div>
                   </div>

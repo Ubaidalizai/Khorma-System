@@ -30,6 +30,8 @@ import SaleForm from "../components/SaleForm";
 import { XCircleIcon } from "lucide-react";
 import { recordSalePayment, fetchAccounts } from "../services/apiUtiles";
 import SaleBillPrint from "../components/SaleBillPrint";
+import GloableModal from "../components/GloableModal";
+import { inputStyle } from "../components/ProductForm";
 
 const Sales = () => {
   // URL parameters for payment flow
@@ -950,7 +952,7 @@ const Sales = () => {
             </div>
           </div>
         </div>
-      )}
+      </GloableModal>
 
       {/* Print Modal */}
       {showPrintModal && saleToPrint && (
