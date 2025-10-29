@@ -165,7 +165,7 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
     .populate('created_by', 'name')
     .sort({ date: 1 });
 
-  let runningBalance = account.openingBalance;
+  let runningBalance = (account.openingBalance);
   const ledger = transactions.map((txn) => {
     runningBalance += txn.amount;
     return {
@@ -174,6 +174,9 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
       amount: txn.amount,
       description: txn.description,
       balanceAfter: runningBalance,
+      referenceType: txn.referenceType,
+      referenceId: txn.referenceId,
+      transactionId: txn._id,
     };
   });
 
@@ -186,6 +189,27 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
     ledger,
   });
 });
+
+// Helper function to validate account balance
+const validateAccountBalance = async (accountId, requiredAmount, session) => {
+  const account = await Account.findById(accountId).session(session);
+  if (!account) throw new AppError('Account not found', 404);
+  
+  if (requiredAmount > 0) {
+    // Only validate cashier and safe accounts - they cannot go negative
+    if (account.type === 'cashier' || account.type === 'safe') {
+      if (account.currentBalance < requiredAmount) {
+        throw new AppError(
+          `موجودی ناکافی! در حساب ${account.name} موجودی: ${account.currentBalance.toLocaleString()} افغانی، مبلغ مورد نیاز: ${requiredAmount.toLocaleString()} افغانی`,
+          400
+        );
+      }
+    }
+    // Saraf account can go negative (credit account), so no validation needed
+  }
+  
+  return account;
+};
 
 // @desc Add manual transaction (Credit/Debit/Expense etc.)
 // @route POST /api/v1/account-transactions
@@ -206,6 +230,9 @@ exports.createManualTransaction = asyncHandler(async (req, res, next) => {
     let actualAmount = amount;
     if (transactionType === 'Debit' || transactionType === 'Expense') {
       actualAmount = -amount; // Debit and Expense should decrease balance
+      
+      // Validate that the account has enough balance before decreasing it
+      await validateAccountBalance(accountId, amount, session);
     }
 
     // Create transaction
@@ -281,8 +308,18 @@ exports.transferBetweenAccounts = asyncHandler(async (req, res, next) => {
     if (!toAccount || toAccount.isDeleted)
       throw new AppError('Destination account not found', 404);
 
-    if (fromAccount.currentBalance < amount)
+    // Validate that source account has enough balance (only for cashier/safe accounts)
+    if (fromAccount.type === 'cashier' || fromAccount.type === 'safe') {
+      if (fromAccount.currentBalance < amount) {
+        throw new AppError(
+          `موجودی ناکافی! در حساب ${fromAccount.name} موجودی: ${fromAccount.currentBalance.toLocaleString()} افغانی، مبلغ مورد نیاز: ${amount.toLocaleString()} افغانی`,
+          400
+        );
+      }
+    } else if (fromAccount.currentBalance < amount) {
+      // For other account types, still check but with generic message
       throw new AppError('Insufficient balance in source account', 400);
+    }
 
     // Create a shared reference id to link both sides of this transfer
     const transferGroupId = new mongoose.Types.ObjectId();

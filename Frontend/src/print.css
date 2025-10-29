@@ -1,0 +1,47 @@
+/* Print Styles for Bills */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-content, .print-content * {
+    visibility: visible;
+  }
+  
+  .print-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  /* Hide buttons and non-printable elements */
+  button,
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Page breaks */
+  .page-break {
+    page-break-after: always;
+  }
+  
+  /* Adjust bill size */
+  @page {
+    size: auto;
+    margin: 0;
+  }
+  
+  /* Small bill specific */
+  .small-bill {
+    width: 80mm !important;
+    padding: 5mm !important;
+  }
+  
+  /* Large bill specific */
+  .large-bill {
+    width: 297mm !important;
+    padding: 15mm !important;
+  }
+}
+

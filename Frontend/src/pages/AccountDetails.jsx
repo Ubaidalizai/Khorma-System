@@ -62,9 +62,29 @@ const AccountDetails = () => {
         return 'انتقال';
       case 'Expense':
         return 'مصرف';
+      case 'Purchase':
+        return 'خرید';
+      case 'Sale':
+        return 'فروش';
+      case 'Payment':
+        return 'پرداخت';
       default:
         return type;
     }
+  };
+
+  const handleTransactionClick = (transaction) => {
+    if (transaction.referenceType && transaction.referenceId) {
+      if (transaction.referenceType === 'purchase') {
+        navigate(`/purchases/${transaction.referenceId}`);
+      } else if (transaction.referenceType === 'sale') {
+        navigate(`/sales/${transaction.referenceId}`);
+      }
+    }
+  };
+
+  const isClickable = (transaction) => {
+    return transaction.referenceType && transaction.referenceId;
   };
 
   if (isLoading) {
@@ -225,7 +245,13 @@ const AccountDetails = () => {
                 </tr>
               ) : (
                 ledger.map((transaction, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr 
+                    key={index} 
+                    className={`hover:bg-gray-50 ${
+                      isClickable(transaction) ? 'cursor-pointer' : ''
+                    }`}
+                    onClick={() => handleTransactionClick(transaction)}
+                  >
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {formatDate(transaction.date)}
                     </td>
@@ -244,6 +270,9 @@ const AccountDetails = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {transaction.description || '-'}
+                      {isClickable(transaction) && (
+                        <span className="ml-2 text-xs text-blue-600">(کلیک برای مشاهده)</span>
+                      )}
                     </td>
                   </tr>
                 ))

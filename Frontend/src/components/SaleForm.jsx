@@ -115,7 +115,7 @@ function SaleForm({
 
   // API hooks
   const { data: stockData, isLoading: productsLoading } =
-    useProductsFromStock("store");
+    useProductsFromStock("store", false); // false = exclude products with zero quantity
   // People accounts (customers/employees) instead of raw people
   const { data: customerAccResp, isLoading: customersLoading } = useAccounts({
     type: "customer",

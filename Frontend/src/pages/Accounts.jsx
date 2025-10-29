@@ -478,6 +478,9 @@ const Accounts = () => {
                   defaultValue={0}
                   {...register("openingBalance", { valueAsNumber: true })}
                 />
+                <p className='text-xs text-gray-500 mt-1'>
+                  (موجودی فعلی به صورت خودکار برابر با موجودی اولیه تنظیم می‌شود)
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
