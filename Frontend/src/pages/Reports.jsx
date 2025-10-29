@@ -1,10 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ChartBarIcon,
   DocumentArrowDownIcon,
   PrinterIcon,
   EyeIcon,
 } from "@heroicons/react/24/outline";
+import { useSalesReports } from "../services/useApi";
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const Reports = () => {
   const [selectedReport, setSelectedReport] = useState("sales");
@@ -19,25 +34,46 @@ const Reports = () => {
     { id: "profit", name: "Profit & Loss", icon: ChartBarIcon },
   ];
 
-  const salesData = {
-    daily: [
-      { date: "2024-01-15", sales: 2500, purchases: 1200, profit: 1300 },
-      { date: "2024-01-14", sales: 3200, purchases: 1500, profit: 1700 },
-      { date: "2024-01-13", sales: 1800, purchases: 900, profit: 900 },
-      { date: "2024-01-12", sales: 4100, purchases: 2000, profit: 2100 },
-      { date: "2024-01-11", sales: 2900, purchases: 1400, profit: 1500 },
-    ],
-    weekly: [
-      { week: "Week 1", sales: 12000, purchases: 6000, profit: 6000 },
-      { week: "Week 2", sales: 15000, purchases: 7500, profit: 7500 },
-      { week: "Week 3", sales: 18000, purchases: 9000, profit: 9000 },
-    ],
-    monthly: [
-      { month: "January", sales: 45000, purchases: 22500, profit: 22500 },
-      { month: "December", sales: 42000, purchases: 21000, profit: 21000 },
-      { month: "November", sales: 38000, purchases: 19000, profit: 19000 },
-    ],
+  // Calculate date range based on selected period
+  const getDateRange = (range) => {
+    const now = new Date();
+    const startDate = new Date();
+    
+    switch (range) {
+      case "daily":
+        startDate.setDate(now.getDate() - 7); // Last 7 days
+        break;
+      case "weekly":
+        startDate.setDate(now.getDate() - 30); // Last 30 days
+        break;
+      case "monthly":
+        startDate.setMonth(now.getMonth() - 6); // Last 6 months
+        break;
+      default:
+        startDate.setMonth(now.getMonth() - 6);
+    }
+    
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: now.toISOString().split('T')[0],
+    };
   };
+
+  const dateParams = getDateRange(dateRange);
+  
+  // Map UI range to backend groupBy values
+  const groupByMap = {
+    daily: 'day',
+    weekly: 'week',
+    monthly: 'month',
+  };
+
+  // Fetch sales reports data
+  const { data: salesReportsData, isLoading: salesReportsLoading } = useSalesReports({
+    startDate: dateParams.startDate,
+    endDate: dateParams.endDate,
+    groupBy: groupByMap[dateRange] || 'day',
+  });
 
   const inventoryData = [
     { product: "Fresh Dates", currentStock: 150, minStock: 50, status: "Good" },
@@ -46,15 +82,34 @@ const Reports = () => {
     { product: "Sugar", currentStock: 100, minStock: 50, status: "Good" },
   ];
 
+  // Get current data based on selected report
   const getCurrentData = () => {
     switch (selectedReport) {
       case "sales":
-        return salesData[dateRange] || salesData.daily;
+        return salesReportsData?.data?.summary || [];
       case "inventory":
         return inventoryData;
       default:
         return [];
     }
+  };
+
+  // Chart data for sales reports
+  const chartData = useMemo(() => {
+    const data = getCurrentData();
+    return data.map(item => ({
+      ...item,
+      sales: item.sales || 0,
+      paid: item.paid || 0,
+      due: item.due || 0,
+    }));
+  }, [salesReportsData, selectedReport]);
+
+  // System colors for charts
+  const chartColors = {
+    sales: '#10B981', // green-500
+    paid: '#3B82F6', // blue-500
+    due: '#EF4444', // red-500
   };
 
   const getStatusColor = (status) => {
@@ -168,59 +223,75 @@ const Reports = () => {
 
         <div className="p-6">
           {selectedReport === "sales" && (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {dateRange === "daily"
-                        ? "Date"
-                        : dateRange === "weekly"
-                        ? "Week"
-                        : "Month"}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sales
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Purchases
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Profit
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {getCurrentData().map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {dateRange === "daily"
-                          ? item.date
-                          : dateRange === "weekly"
-                          ? item.week
-                          : item.month}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${item.sales.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${item.purchases.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                        ${item.profit.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-blue-600 hover:text-blue-900">
-                          <EyeIcon className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className='space-y-6'>
+              {salesReportsLoading ? (
+                <div className='text-center text-gray-500'>Loading sales data...</div>
+              ) : chartData.length === 0 ? (
+                <div className='text-center text-gray-500'>No sales data found for the selected period.</div>
+              ) : (
+                <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+                  {/* Sales Trend Chart */}
+                  <div className='bg-gray-50 p-4 rounded-lg'>
+                    <h4 className='text-lg font-semibold text-gray-900 mb-4'>Sales Trend</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          formatter={(value, name) => [
+                            `$${value.toLocaleString()}`, 
+                            name === 'sales' ? 'Sales' : name
+                          ]}
+                          labelStyle={{ color: '#374151' }}
+                        />
+                        <Legend />
+                        <Area
+                          type="monotone"
+                          dataKey="sales"
+                          stroke={chartColors.sales}
+                          fill={chartColors.sales}
+                          fillOpacity={0.6}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Paid vs Due Chart */}
+                  <div className='bg-gray-50 p-4 rounded-lg'>
+                    <h4 className='text-lg font-semibold text-gray-900 mb-4'>Paid vs Due</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          formatter={(value, name) => [
+                            `$${value.toLocaleString()}`, 
+                            name === 'paid' ? 'Paid' : 'Due'
+                          ]}
+                          labelStyle={{ color: '#374151' }}
+                        />
+                        <Legend />
+                        <Bar dataKey="paid" fill={chartColors.paid} />
+                        <Bar dataKey="due" fill={chartColors.due} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -296,20 +367,17 @@ const Reports = () => {
       </div>
 
       {/* Summary cards */}
-      {selectedReport === "sales" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+      {selectedReport === "sales" && salesReportsData?.data?.totals && (
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+            <div className='flex items-center'>
+              <div className='p-3 rounded-full bg-green-500'>
+                <ChartBarIcon className='h-6 w-6 text-white' />
               </div>
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  $
-                  {getCurrentData()
-                    .reduce((sum, item) => sum + item.sales, 0)
-                    .toLocaleString()}
+              <div className='mr-4'>
+                <p className='text-sm font-medium text-gray-600'>Total Sales</p>
+                <p className='text-2xl font-bold text-gray-900'>
+                  ${salesReportsData.data.totals.totalSales.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -320,15 +388,10 @@ const Reports = () => {
               <div className="p-3 rounded-full bg-blue-500">
                 <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Purchases
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  $
-                  {getCurrentData()
-                    .reduce((sum, item) => sum + item.purchases, 0)
-                    .toLocaleString()}
+              <div className='mr-4'>
+                <p className='text-sm font-medium text-gray-600'>Total Paid</p>
+                <p className='text-2xl font-bold text-gray-900'>
+                  ${salesReportsData.data.totals.totalPaid.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -339,15 +402,10 @@ const Reports = () => {
               <div className="p-3 rounded-full bg-amber-500">
                 <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Profit
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  $
-                  {getCurrentData()
-                    .reduce((sum, item) => sum + item.profit, 0)
-                    .toLocaleString()}
+              <div className='mr-4'>
+                <p className='text-sm font-medium text-gray-600'>Total Due</p>
+                <p className='text-2xl font-bold text-gray-900'>
+                  ${salesReportsData.data.totals.totalDue.toLocaleString()}
                 </p>
               </div>
             </div>

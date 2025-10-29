@@ -68,10 +68,37 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
 
     // 2️⃣ Handle addition to destination
     if (toLocation === 'employee') {
-      // add to employee stock (EmployeeStock only tracks quantity, not detailed stock info)
+      // Get source stock details to copy purchasePricePerBaseUnit
+      let sourceStock;
+      if (fromLocation === 'employee') {
+        // For transfers from employee, find any existing stock for the product to copy details
+        sourceStock = await Stock.findOne({
+          product,
+          isDeleted: false,
+        }).session(session);
+      } else {
+        // Normal transfer, get from source location
+        sourceStock = await Stock.findOne({
+          product,
+          location: fromLocation,
+          isDeleted: false,
+        }).session(session);
+      }
+
+      // Get purchasePricePerBaseUnit from source stock or default to 0
+      const purchasePricePerBaseUnit = sourceStock?.purchasePricePerBaseUnit || 0;
+      const batchNumber = sourceStock?.batchNumber || 'DEFAULT';
+
+      // add to employee stock with purchasePricePerBaseUnit and batchNumber
       const empStock = await EmployeeStock.findOneAndUpdate(
-        { employee, product, isDeleted: false },
-        { $inc: { quantity_in_hand: quantity } },
+        { employee, product, batchNumber, isDeleted: false },
+        { 
+          $inc: { quantity_in_hand: quantity },
+          $set: { 
+            purchasePricePerBaseUnit: purchasePricePerBaseUnit,
+            batchNumber: batchNumber
+          }
+        },
         { upsert: true, new: true, session }
       );
     } else {
@@ -260,10 +287,20 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
 
     // Reverse previous transfer effect first
     if (transfer.toLocation === 'employee') {
-      const empStock = await EmployeeStock.findOne({
+      // Try to find employee stock by batchNumber, fallback to any batch
+      let empStock = await EmployeeStock.findOne({
         employee: transfer.employee,
         product: transfer.product,
+        batchNumber: transfer.batchNumber || 'DEFAULT',
       }).session(session);
+
+      // If not found by batch, try to find any batch for this employee/product
+      if (!empStock) {
+        empStock = await EmployeeStock.findOne({
+          employee: transfer.employee,
+          product: transfer.product,
+        }).session(session);
+      }
 
       if (empStock) {
         empStock.quantity_in_hand -= transfer.quantity;
@@ -278,10 +315,26 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
     }
 
     if (transfer.fromLocation === 'employee') {
+      // Get purchasePricePerBaseUnit from destination stock or default to 0
+      const destStock = await Stock.findOne({
+        product: transfer.product,
+        location: transfer.toLocation,
+        isDeleted: false,
+      }).session(session);
+
+      const purchasePricePerBaseUnit = destStock?.purchasePricePerBaseUnit || 0;
+      const batchNumber = destStock?.batchNumber || 'DEFAULT';
+
       await EmployeeStock.findOneAndUpdate(
-        { employee: transfer.employee, product: transfer.product },
-        { $inc: { quantity_in_hand: transfer.quantity } },
-        { session }
+        { employee: transfer.employee, product: transfer.product, batchNumber, isDeleted: false },
+        { 
+          $inc: { quantity_in_hand: transfer.quantity },
+          $set: { 
+            purchasePricePerBaseUnit: purchasePricePerBaseUnit,
+            batchNumber: batchNumber
+          }
+        },
+        { upsert: true, session }
       );
     } else {
       await Stock.findOneAndUpdate(
@@ -323,9 +376,36 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
 
     // Add to new destination
     if (newTo === 'employee') {
+      // Get source stock details to copy purchasePricePerBaseUnit
+      let sourceStock;
+      if (newFrom === 'employee') {
+        // For transfers from employee, find any existing stock for the product to copy details
+        sourceStock = await Stock.findOne({
+          product: updatedProduct,
+          isDeleted: false,
+        }).session(session);
+      } else {
+        // Normal transfer, get from source location
+        sourceStock = await Stock.findOne({
+          product: updatedProduct,
+          location: newFrom,
+          isDeleted: false,
+        }).session(session);
+      }
+
+      // Get purchasePricePerBaseUnit from source stock or default to 0
+      const purchasePricePerBaseUnit = sourceStock?.purchasePricePerBaseUnit || 0;
+      const batchNumber = sourceStock?.batchNumber || 'DEFAULT';
+
       await EmployeeStock.findOneAndUpdate(
-        { employee: updatedEmployee, product: updatedProduct },
-        { $inc: { quantity_in_hand: newQty } },
+        { employee: updatedEmployee, product: updatedProduct, batchNumber, isDeleted: false },
+        { 
+          $inc: { quantity_in_hand: newQty },
+          $set: { 
+            purchasePricePerBaseUnit: purchasePricePerBaseUnit,
+            batchNumber: batchNumber
+          }
+        },
         { upsert: true, session }
       );
     } else {
@@ -472,10 +552,20 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
 
     // Reverse stock movement
     if (transfer.toLocation === 'employee') {
-      const empStock = await EmployeeStock.findOne({
+      // Try to find employee stock by batchNumber, fallback to any batch
+      let empStock = await EmployeeStock.findOne({
         employee: transfer.employee,
         product: transfer.product,
+        batchNumber: transfer.batchNumber || 'DEFAULT',
       }).session(session);
+
+      // If not found by batch, try to find any batch for this employee/product
+      if (!empStock) {
+        empStock = await EmployeeStock.findOne({
+          employee: transfer.employee,
+          product: transfer.product,
+        }).session(session);
+      }
 
       if (!empStock || empStock.quantity_in_hand < transfer.quantity) {
         throw new AppError(
@@ -502,9 +592,25 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
     }
 
     if (transfer.fromLocation === 'employee') {
+      // Get purchasePricePerBaseUnit from destination stock or default to 0
+      const destStock = await Stock.findOne({
+        product: transfer.product,
+        location: transfer.toLocation,
+        isDeleted: false,
+      }).session(session);
+
+      const purchasePricePerBaseUnit = destStock?.purchasePricePerBaseUnit || 0;
+      const batchNumber = destStock?.batchNumber || 'DEFAULT';
+
       await EmployeeStock.findOneAndUpdate(
-        { employee: transfer.employee, product: transfer.product },
-        { $inc: { quantity_in_hand: transfer.quantity } },
+        { employee: transfer.employee, product: transfer.product, batchNumber, isDeleted: false },
+        { 
+          $inc: { quantity_in_hand: transfer.quantity },
+          $set: { 
+            purchasePricePerBaseUnit: purchasePricePerBaseUnit,
+            batchNumber: batchNumber
+          }
+        },
         { upsert: true, session }
       );
     } else {
@@ -601,9 +707,26 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
 
     // Add again to the destination
     if (toLocation === 'employee') {
+      // Get source stock details to copy purchasePricePerBaseUnit
+      const sourceStock = await Stock.findOne({
+        product,
+        location: fromLocation,
+        isDeleted: false,
+      }).session(session);
+
+      // Get purchasePricePerBaseUnit from source stock or default to 0
+      const purchasePricePerBaseUnit = sourceStock?.purchasePricePerBaseUnit || 0;
+      const batchNumber = sourceStock?.batchNumber || 'DEFAULT';
+
       await EmployeeStock.findOneAndUpdate(
-        { employee, product },
-        { $inc: { quantity_in_hand: quantity } },
+        { employee, product, batchNumber, isDeleted: false },
+        { 
+          $inc: { quantity_in_hand: quantity },
+          $set: { 
+            purchasePricePerBaseUnit: purchasePricePerBaseUnit,
+            batchNumber: batchNumber
+          }
+        },
         { upsert: true, session }
       );
     } else {
@@ -740,9 +863,26 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
 
     // 🔹 STEP 2: Add quantity back to source
     if (fromLocation === 'employee') {
+      // Get destination stock details to copy purchasePricePerBaseUnit (since we're rolling back)
+      const destStock = await Stock.findOne({
+        product,
+        location: toLocation,
+        isDeleted: false,
+      }).session(session);
+
+      // Get purchasePricePerBaseUnit from destination stock or default to 0
+      const purchasePricePerBaseUnit = destStock?.purchasePricePerBaseUnit || 0;
+      const batchNumber = destStock?.batchNumber || 'DEFAULT';
+
       await EmployeeStock.findOneAndUpdate(
-        { employee, product, isDeleted: false },
-        { $inc: { quantity_in_hand: quantity } },
+        { employee, product, batchNumber, isDeleted: false },
+        { 
+          $inc: { quantity_in_hand: quantity },
+          $set: { 
+            purchasePricePerBaseUnit: purchasePricePerBaseUnit,
+            batchNumber: batchNumber
+          }
+        },
         { upsert: true, session }
       );
     } else {

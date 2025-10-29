@@ -6,6 +6,7 @@ import {
   useSystemAccounts,
   useUnits,
   useBatchesByProduct,
+  useEmployeeStocks,
 } from "../services/useApi";
 
 // Searchable Select Component
@@ -106,12 +107,22 @@ function SaleForm({
   setValue,
   onClose,
   onSubmit,
+  editMode = false,
+  saleToEdit = null,
 }) {
   const [items, setItems] = useState([
     { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 },
   ]);
   const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
   const [loading, setLoading] = useState(false);
+
+  // Get selected employee from form
+  const selectedEmployee = watch("employee");
+
+  // Fetch employee stock if employee is selected
+  const { data: employeeStockData } = useEmployeeStocks({
+    employeeId: selectedEmployee || null,
+  });
 
   // API hooks
   const { data: stockData, isLoading: productsLoading } =
@@ -140,13 +151,29 @@ function SaleForm({
   const employeeAccounts =
     employeeAccResp?.accounts || employeeAccResp?.data || employeeAccResp || [];
 
-  // Get unique products from stock data
+  console.log('SaleForm - Form state debug:');
+  console.log('- saleType:', saleType);
+  console.log('- selectedEmployee from watch:', selectedEmployee);
+  console.log('- employeeAccounts length:', employeeAccounts.length);
+
+  // Get unique products from stock data or employee stock data
   const products = React.useMemo(() => {
-    if (!stockData || !Array.isArray(stockData)) return [];
+    // Use employee stock if employee is selected
+    const dataSource = selectedEmployee && employeeStockData 
+      ? employeeStockData.data || employeeStockData 
+      : stockData;
+    
+    console.log('SaleForm Debug:');
+    console.log('- selectedEmployee:', selectedEmployee);
+    console.log('- employeeStockData:', employeeStockData);
+    console.log('- stockData:', stockData);
+    console.log('- dataSource:', dataSource);
+    
+    if (!dataSource || !Array.isArray(dataSource)) return [];
 
     // Group by product ID to get unique products
     const productMap = new Map();
-    stockData.forEach((stock) => {
+    dataSource.forEach((stock) => {
       if (stock.product && !productMap.has(stock.product._id)) {
         productMap.set(stock.product._id, {
           _id: stock.product._id,
@@ -155,16 +182,57 @@ function SaleForm({
       }
     });
 
-    return Array.from(productMap.values());
-  }, [stockData]);
+    const result = Array.from(productMap.values());
+    console.log('- products result:', result);
+    return result;
+  }, [stockData, employeeStockData, selectedEmployee]);
 
   // Get batches for selected product - only fetch when product is selected
+  // Use employee location if employee is selected
   const selectedProductId = items[0]?.product;
+  const locationForBatches = selectedEmployee ? "employee" : "store";
   const { data: batchesData, isLoading: batchesLoading } = useBatchesByProduct(
     selectedProductId,
-    "store"
+    locationForBatches
   );
   const batches = Array.isArray(batchesData) ? batchesData : [];
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editMode && saleToEdit) {
+      // Set sale type based on customer/employee
+      if (saleToEdit.customer) {
+        setSaleType("customer");
+        setValue("customer", saleToEdit.customer._id || saleToEdit.customer);
+      } else if (saleToEdit.employee) {
+        setSaleType("employee");
+        setValue("employee", saleToEdit.employee._id || saleToEdit.employee);
+      }
+
+      // Set items from sale
+      if (saleToEdit.items && saleToEdit.items.length > 0) {
+        const formattedItems = saleToEdit.items.map((item) => ({
+          product: item.product?._id || item.product || "",
+          unit: item.unit?._id || item.unit || "",
+          batchNumber: item.batchNumber || "",
+          quantity: item.quantity || 0,
+          unitPrice: item.unitPrice || 0,
+        }));
+        setItems(formattedItems);
+      }
+
+      // Set other fields
+      if (saleToEdit.placedIn) {
+        setValue("placedIn", saleToEdit.placedIn._id || saleToEdit.placedIn);
+      }
+      if (saleToEdit.invoiceType) {
+        setValue("invoiceType", saleToEdit.invoiceType);
+      }
+      if (saleToEdit.paidAmount !== undefined) {
+        setValue("paidAmount", saleToEdit.paidAmount);
+      }
+    }
+  }, [editMode, saleToEdit, setValue]);
 
   const addItem = () => {
     setItems([
@@ -604,7 +672,7 @@ function SaleForm({
           className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
           disabled={loading}
         >
-          {loading ? "در حال بارگذاری..." : "اضافه کردن فروش"}
+          {loading ? "در حال بارگذاری..." : editMode ? "ویرایش فروش" : "اضافه کردن فروش"}
         </button>
       </div>
     </form>

@@ -17,6 +17,15 @@ const employeeStockSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    purchasePricePerBaseUnit: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    batchNumber: {
+      type: String,
+      default: 'DEFAULT',
+    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -25,8 +34,8 @@ const employeeStockSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Ensure unique stock record per employee + product
-employeeStockSchema.index({ employee: 1, product: 1 }, { unique: true });
+// Ensure unique stock record per employee + product + batchNumber
+employeeStockSchema.index({ employee: 1, product: 1, batchNumber: 1 }, { unique: true });
 
 const EmployeeStock = mongoose.model('EmployeeStock', employeeStockSchema);
 

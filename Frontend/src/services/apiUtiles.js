@@ -474,6 +474,20 @@ export const recordSalePayment = async (saleId, paymentData) => {
   });
 };
 
+// Fetch sales reports with date range and grouping
+export const fetchSalesReports = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.groupBy) query.set("groupBy", params.groupBy);
+  
+  const url = query.toString()
+    ? `${API_ENDPOINTS.SALES.REPORTS}?${query.toString()}`
+    : API_ENDPOINTS.SALES.REPORTS;
+  
+  return await apiRequest(url);
+};
+
 // Record payment against a purchase
 export const recordPurchasePayment = async (purchaseId, paymentData) => {
   return await apiRequest(`${API_ENDPOINTS.PURCHASES.LIST}/${purchaseId}/payment`, {
@@ -509,21 +523,30 @@ export const fetchStoreStock = async (params = {}) => {
 
 export const fetchEmployeeStock = async (params = {}) => {
   const query = new URLSearchParams();
+  if (params.employeeId) query.set("employeeId", params.employeeId);
   if (params.search) query.set("search", params.search);
   const url = query.toString()
-    ? `${API_ENDPOINTS.EMPLOYEES_STOCK.LIST}?${query.toString()}`
-    : API_ENDPOINTS.EMPLOYEES_STOCK.LIST;
-  return await apiRequest(url);
+    ? `${API_ENDPOINTS.EMPLOYEE_STOCK.LIST}?${query.toString()}`
+    : API_ENDPOINTS.EMPLOYEE_STOCK.LIST;
+  
+  console.log('fetchEmployeeStock - URL:', url);
+  console.log('fetchEmployeeStock - params:', params);
+  
+  const result = await apiRequest(url);
+  console.log('fetchEmployeeStock - result:', result);
+  return result;
+};
+
+export const fetchEmployeeStockByEmployee = async (employeeId) => {
+  return await apiRequest(API_ENDPOINTS.EMPLOYEE_STOCK.BY_EMPLOYEE(employeeId));
 };
 
 export const fetchReturnEmployeeStock = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
   const url = query.toString()
-    ? `${
-        API_ENDPOINTS.EMPLOYEES_STOCK.RETURN_STOCK_EMPLOYEE
-      }?${query.toString()}`
-    : API_ENDPOINTS.EMPLOYEES_STOCK.RETURN_STOCK_EMPLOYEE;
+    ? `${API_ENDPOINTS.EMPLOYEE_STOCK.RETURN}?${query.toString()}`
+    : API_ENDPOINTS.EMPLOYEE_STOCK.RETURN;
   return await apiRequest(url);
 };
 
@@ -573,7 +596,9 @@ export const fetchBatchesByProduct = async (productId, location = "store") => {
 export const fetchProductsFromStock = async (location = "store", includeZeroQuantity = false) => {
   try {
     const url = `${API_ENDPOINTS.STOCK.LIST}?location=${location}${includeZeroQuantity ? '&includeZeroQuantity=true' : ''}`;
+    console.log('fetchProductsFromStock - URL:', url);
     const response = await apiRequest(url);
+    console.log('fetchProductsFromStock - response:', response);
     return response.data || response || [];
   } catch (error) {
     console.error("Error fetching products from stock:", error);

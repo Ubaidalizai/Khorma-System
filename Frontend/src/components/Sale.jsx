@@ -22,7 +22,7 @@ import Confirmation from "./Confirmation";
 import GloableModal from "./GloableModal";
 import Button from "./Button";
 const salesHeader = [
-  { title: "نمبر فاکتور" },
+  { title: "نمبر بیل" },
   { title: "تاریخ" },
   { title: "مشتری" },
   { title: "کارمند" },

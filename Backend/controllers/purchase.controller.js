@@ -146,7 +146,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
           referenceType: 'purchase',
           referenceId: purchase[0]._id,
           created_by: req.user._id,
-          description: `Purchase from supplier ${supplierAccount.name}`,
+          description: `خریداری از تاجر ${supplierAccount.name} - بل نمبر: ${purchase[0].purchaseNumber || 'N/A'}`,
         },
       ],
       { session }
@@ -167,7 +167,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
             referenceType: 'purchase',
             referenceId: purchase[0]._id,
             created_by: req.user._id,
-            description: 'Payment for purchase',
+            description: `پرداخت برای خریداری - بل نمبر: ${purchase[0].purchaseNumber || 'N/A'}`,
           },
         ],
         { session }
@@ -186,7 +186,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
             referenceType: 'purchase',
             referenceId: purchase[0]._id,
             created_by: req.user._id,
-            description: `Payment received for purchase`,
+            description: `پرداخت برای خریداری - بل نمبر: ${purchase[0].purchaseNumber || 'N/A'}`,
           },
         ],
         { session }
@@ -799,7 +799,7 @@ exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
           referenceType: 'purchase',
           referenceId: purchase._id,
           created_by: req.user._id,
-          description: description || `Additional payment for purchase`,
+          description: description || `پرداخت اضافی برای خریداری - بل نمبر: ${purchase.purchaseNumber || 'N/A'}`,
         },
       ],
       { session }
@@ -818,7 +818,7 @@ exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
           referenceType: 'purchase',
           referenceId: purchase._id,
           created_by: req.user._id,
-          description: description || `Payment received for purchase`,
+          description: description || `پرداخت اضافی برای خریداری - بل نمبر: ${purchase.purchaseNumber || 'N/A'}`,
         },
       ],
       { session }

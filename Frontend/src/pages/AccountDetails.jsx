@@ -25,6 +25,7 @@ const AccountDetails = () => {
   });
 
   const account = ledgerData?.account || "حساب";
+  const accountType = ledgerData?.accountType || "unknown";
   const openingBalance = ledgerData?.openingBalance || 0;
   const currentBalance = ledgerData?.currentBalance || 0;
   const totalTransactions = ledgerData?.totalTransactions || 0;
@@ -36,6 +37,58 @@ const AccountDetails = () => {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fa-IR');
+  };
+
+  const getBalanceInfo = (balance, accountType) => {
+    if (accountType === 'cashier' || accountType === 'safe') {
+      // For cashier/safe accounts, positive balance means you have money
+      return {
+        label: balance >= 0 ? 'موجودی موجود' : 'کسر موجودی',
+        color: balance >= 0 ? 'text-green-600' : 'text-red-600',
+        bgColor: balance >= 0 ? 'bg-green-50' : 'bg-red-50',
+        iconColor: balance >= 0 ? 'text-green-600' : 'text-red-600'
+      };
+    } else if (accountType === 'saraf') {
+      // For saraf accounts, positive balance means you owe them money
+      return {
+        label: balance >= 0 ? 'بدهی شما به صراف' : 'طلب شما از صراف',
+        color: balance >= 0 ? 'text-red-600' : 'text-green-600',
+        bgColor: balance >= 0 ? 'bg-red-50' : 'bg-green-50',
+        iconColor: balance >= 0 ? 'text-red-600' : 'text-green-600'
+      };
+    } else if (accountType === 'supplier') {
+      // For supplier accounts, positive balance means you owe them money
+      return {
+        label: balance >= 0 ? 'بدهی شما به تاجر' : 'طلب شما از تاجر',
+        color: balance >= 0 ? 'text-red-600' : 'text-green-600',
+        bgColor: balance >= 0 ? 'bg-red-50' : 'bg-green-50',
+        iconColor: balance >= 0 ? 'text-red-600' : 'text-green-600'
+      };
+    } else if (accountType === 'customer') {
+      // For customer accounts, positive balance means they owe you money
+      return {
+        label: balance >= 0 ? 'طلب شما از مشتری' : 'بدهی شما به مشتری',
+        color: balance >= 0 ? 'text-green-600' : 'text-red-600',
+        bgColor: balance >= 0 ? 'bg-green-50' : 'bg-red-50',
+        iconColor: balance >= 0 ? 'text-green-600' : 'text-red-600'
+      };
+    } else if (accountType === 'employee') {
+      // For employee accounts, positive balance means they owe you money
+      return {
+        label: balance >= 0 ? 'طلب شما از کارمند' : 'بدهی شما به کارمند',
+        color: balance >= 0 ? 'text-green-600' : 'text-red-600',
+        bgColor: balance >= 0 ? 'bg-green-50' : 'bg-red-50',
+        iconColor: balance >= 0 ? 'text-green-600' : 'text-red-600'
+      };
+    } else {
+      // Default case
+      return {
+        label: 'موجودی',
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        iconColor: 'text-gray-600'
+      };
+    }
   };
 
   const getTransactionTypeColor = (type) => {
@@ -76,9 +129,11 @@ const AccountDetails = () => {
   const handleTransactionClick = (transaction) => {
     if (transaction.referenceType && transaction.referenceId) {
       if (transaction.referenceType === 'purchase') {
-        navigate(`/purchases/${transaction.referenceId}`);
+        // Navigate to purchases page with modal action
+        navigate(`/purchases?openId=${transaction.referenceId}&action=view`);
       } else if (transaction.referenceType === 'sale') {
-        navigate(`/sales/${transaction.referenceId}`);
+        // Navigate to sales page with view action (show details modal first)
+        navigate(`/sales?openId=${transaction.referenceId}&action=view`);
       }
     }
   };
@@ -134,16 +189,16 @@ const AccountDetails = () => {
 
       {/* Account Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className={`rounded-lg shadow-sm border border-gray-200 p-6 ${getBalanceInfo(currentBalance, accountType).bgColor}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">موجودی فعلی</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(currentBalance)} AFN
+              <p className="text-sm text-gray-600">{getBalanceInfo(currentBalance, accountType).label}</p>
+              <p className={`text-2xl font-bold mt-1 ${getBalanceInfo(currentBalance, accountType).color}`}>
+                {formatCurrency(Math.abs(currentBalance))} AFN
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <CurrencyDollarIcon className="h-6 w-6 text-blue-600" />
+            <div className={`p-3 rounded-lg ${getBalanceInfo(currentBalance, accountType).bgColor}`}>
+              <CurrencyDollarIcon className={`h-6 w-6 ${getBalanceInfo(currentBalance, accountType).iconColor}`} />
             </div>
           </div>
         </div>
@@ -153,7 +208,7 @@ const AccountDetails = () => {
             <div>
               <p className="text-sm text-gray-600">موجودی اولیه</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(openingBalance)} AFN
+                {formatCurrency(Math.abs(openingBalance))} AFN
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">

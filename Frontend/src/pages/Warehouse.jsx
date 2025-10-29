@@ -148,12 +148,12 @@ function Warehouse() {
               <TableColumn>
                 <span
                   className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    getStockStatus(row?.quantity, row?.product?.minLevel || 0)
+                    getStockStatus(row?.quantity, row?.minLevel || 0)
                       .color
                   }`}
                 >
                   {
-                    getStockStatus(row?.quantity, row?.product?.minLevel || 0)
+                    getStockStatus(row?.quantity, row?.minLevel || 0)
                       .label
                   }
                 </span>

@@ -193,7 +193,7 @@ const PurchaseDetails = () => {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">اطلاعات خرید</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">نمبر فاکتور</h4>
+            <h4 className="text-sm font-medium text-gray-500 mb-1">نمبر بیل</h4>
             <p className="text-lg font-semibold text-gray-900">
               {purchase._id?.slice(-8)}
             </p>
