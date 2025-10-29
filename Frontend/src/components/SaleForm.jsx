@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { CgClose } from "react-icons/cg";
+import React, { useState } from "react";
 import {
   useProductsFromStock,
   useAccounts,
@@ -351,12 +352,15 @@ function SaleForm({
     <form
       noValidate
       onSubmit={handleSubmit(handleFormSubmit)}
-      className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+      className="bg-white w-full"
     >
-      <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+      <div className="p-6 relative  border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">
           اضافه کردن فروش جدید
         </h2>
+        <div className=" ">
+          <CgClose className=" text-[20px]" onClick={onClose} />
+        </div>
       </div>
       <div className="p-6">
         {/* Sale Type Selection */}

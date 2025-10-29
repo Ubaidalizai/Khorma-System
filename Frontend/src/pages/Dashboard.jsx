@@ -373,13 +373,11 @@ const Dashboard = () => {
       }}
     >
       {/* Page header */}
-      <div>
+      <div className=" ">
         <h1
-          className="font-bold"
+          className="font-bold text-xl pb-2"
           style={{
-            fontSize: "var(--h1-size)",
             color: "var(--text-dark)",
-            marginBottom: "var(--space-2)",
           }}
         >
           داشبورد
@@ -396,7 +394,7 @@ const Dashboard = () => {
 
       {/* Stats grid */}
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
+        className="grid  grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
         style={{ gap: "var(--space-6)" }}
       >
         <StatCard
@@ -501,18 +499,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <Pagination
-                page={currentPage}
-                limit={transactionLimit}
-                total={recentTransactions?.data?.pagination?.total || 0}
-                onPageChange={setCurrentPage}
-                onRowsPerPageChange={(newLimit) => {
-                  setTransactionLimit(newLimit);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
           </div>
           <div className="overflow-x-auto">
             <Table>
@@ -577,6 +563,18 @@ const Dashboard = () => {
                 )}
               </TableBody>
             </Table>
+            <div className="w-full  justify-center flex items-center gap-4">
+              <Pagination
+                page={currentPage}
+                limit={transactionLimit}
+                total={recentTransactions?.data?.pagination?.total || 0}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={(newLimit) => {
+                  setTransactionLimit(newLimit);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -625,19 +623,6 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
-            <div className=" flex items-center pl-10  ">
-              <Pagination
-                page={auditPage}
-                limit={auditLimit}
-                total={auditLogs?.pagination?.total || 0}
-                totalPages={auditLogs?.pagination?.totalPages}
-                onPageChange={setAuditPage}
-                onRowsPerPageChange={(newLimit) => {
-                  setAuditLimit(newLimit);
-                  setAuditPage(1);
-                }}
-              />
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -704,6 +689,19 @@ const Dashboard = () => {
                 )}
               </TableBody>
             </Table>
+            <div className=" w-full  flex justify-center items-center pl-10  ">
+              <Pagination
+                page={auditPage}
+                limit={auditLimit}
+                total={auditLogs?.pagination?.total || 0}
+                totalPages={auditLogs?.pagination?.totalPages}
+                onPageChange={setAuditPage}
+                onRowsPerPageChange={(newLimit) => {
+                  setAuditLimit(newLimit);
+                  setAuditPage(1);
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

@@ -37,13 +37,15 @@ import GloableModal from "../components/GloableModal";
 import Confirmation from "../components/Confirmation";
 import { useSearchParams } from "react-router-dom";
 import Employee from "../components/Employee";
+import { TrashIcon } from "lucide-react";
 
 const Inventory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [openConfirm, setOpenConfirm] = useState(false);
   const { register, handleSubmit, formState, reset, control } = useForm();
   const { isLoading: isLoadingProducts } = useProduct();
-  const { mutate: deleteStockTransfer } = useStockTransferDelete();
+  const { mutate: deleteStockTransfer, isPending: isDeleting } =
+    useStockTransferDelete();
   const [id, setIds] = useState();
   const { data: inventoryStats, isLoading: isStatsLoading } =
     useInventoryStats();
@@ -99,8 +101,8 @@ const Inventory = () => {
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">مدیریت موجودی</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-xl font-bold text-gray-900">مدیریت موجودی</h1>
+          <p className="text-gray-600 mt-1">
             مدیریت کردن تمام دیتا های و نماینده گی های تان
           </p>
         </div>
@@ -119,7 +121,7 @@ const Inventory = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -293,30 +295,32 @@ const Inventory = () => {
                       </TableColumn>
                       <TableColumn>{transfer.quantity}</TableColumn>
 
-                      <TableColumn
-                        className={` ${
-                          transfer.toLocation === "warehouse"
-                            ? "text-purple-600"
-                            : "text-blue-600"
-                        } ${
-                          transfer.toLocation === "store"
-                            ? "text-green-600"
-                            : ""
-                        }`}
-                      >
-                        <p
-                          className={`p-1  ${
+                      <TableColumn>
+                        <div
+                          className={` ${
                             transfer.toLocation === "warehouse"
-                              ? "bg-purple-300/50"
-                              : " bg-blue-100/50"
-                          }  ${
+                              ? "text-purple-600"
+                              : "text-blue-600"
+                          } ${
                             transfer.toLocation === "store"
-                              ? "bg-green-100/50"
+                              ? "text-green-600"
                               : ""
-                          } rounded-full`}
+                          } w-fit`}
                         >
-                          {transfer.toLocation}
-                        </p>
+                          <p
+                            className={`p-1  ${
+                              transfer.toLocation === "warehouse"
+                                ? "bg-purple-300/50"
+                                : " bg-blue-100/50"
+                            }  ${
+                              transfer.toLocation === "store"
+                                ? "bg-green-100/50"
+                                : ""
+                            } rounded-full px-2`}
+                          >
+                            {transfer.toLocation}
+                          </p>
+                        </div>
                       </TableColumn>
                       <TableColumn>
                         {transfer?.transferDate
@@ -346,15 +350,44 @@ const Inventory = () => {
                   ))}
               </TableBody>
             </Table>
-            <GloableModal open={openConfirm} setOpen={setOpenConfirm}>
-              {openConfirm && (
-                <Confirmation
-                  type="transfer"
-                  handleClick={handleDelete}
-                  handleCancel={() => setOpenConfirm(false)}
-                  close={() => setOpenConfirm(false)}
-                />
-              )}
+            <GloableModal
+              open={openConfirm}
+              setOpen={setOpenConfirm}
+              isClose={true}
+            >
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-red-100 p-2 rounded-full mr-3">
+                      <TrashIcon className="h-6 w-6 text-red-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      تأیید حذف
+                    </h3>
+                  </div>
+                  <p className="text-gray-600 mb-6">
+                    آیا مطمئن هستید که می‌خواهید این خرید را حذف کنید؟ این عمل
+                    قابل بازگشت نیست.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setOpenConfirm(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                    >
+                      لغو
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleDelete();
+                      }}
+                      disabled={isDeleting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {isDeleting ? "در حال حذف..." : "حذف"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </GloableModal>
           </div>
         </div>

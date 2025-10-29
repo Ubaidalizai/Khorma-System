@@ -1,70 +1,31 @@
-import { GiCancel } from "react-icons/gi";
-import { BsPencilSquare } from "react-icons/bs";
-import { BiTrashAlt } from "react-icons/bi";
-import { BsInfoCircle } from "react-icons/bs";
-import { BsFillTrashFill } from "react-icons/bs";
-import React from "react";
-import Button from "./Button";
-
-function Confirmation({ type, handleClick, handleCancel, close, message }) {
-  const onConfirm = () => {
-    if (typeof handleClick === "function") handleClick();
-    if (typeof close === "function") close();
-  };
-
-  const onCancel = () => {
-    if (typeof handleCancel === "function") handleCancel();
-    if (typeof close === "function") close();
-  };
-
+function Confirmation({ handleClick, handleCancel }) {
   return (
-    <div className="flex flex-col bg-white w-100 h-82 rounded-md py-4 px-6 border border-slate-100">
-      <div className=" flex-3 relative ">
-        {type === "delete" ? (
-          <BsFillTrashFill
-            size={40}
-            className="  text-red-300 absolute left-2/4 -translate-x-2/4"
-          />
-        ) : (
-          <BsInfoCircle
-            size={40}
-            className=" text-slate-200 absolute left-2/4 -translate-x-2/4"
-          />
-        )}
-        {message ? (
-          <p className="text-2xl text-center absolute top-2/4 ">{message}</p>
-        ) : (
-          <p className=" text-xl text-center absolute top-2/4 ">
-            آیا شما مطمین هستید که این فایل را
-            {type === "delete" ? "حذف" : "ویرایش"} را کنید؟
-          </p>
-        )}
-      </div>
-      <div className=" flex-1 flex justify-around items-center gap-3 py-3">
-        <Button
-          onClick={onConfirm}
-          className={`${
-            type === "delete"
-              ? " bg-warning-orange hover:bg-warning-orange/90"
-              : " bg-success-green hover:bg-success-green/90"
-          }`}
-          icon={
-            type === "delete" ? (
-              <BiTrashAlt className="text-red-400" />
-            ) : (
-              <BsPencilSquare className=" text-green-400" />
-            )
-          }
-        >
-          {type === "delete" ? "بلی، حذف کنید" : "بلی ویرایش کنید"}
-        </Button>
-        <Button
-          onClick={onCancel}
-          className={` bg-red-500`}
-          icon={<GiCancel className=" text-green-500" />}
-        >
-          نه کنسل کنید
-        </Button>
+    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div className="p-6">
+        <div className="flex items-center mb-4">
+          <div className="bg-red-100 p-2 rounded-full mr-3">
+            <TrashIcon className="h-6 w-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">تأیید حذف</h3>
+        </div>
+        <p className="text-gray-600 mb-6">
+          آیا مطمئن هستید که می‌خواهید این خرید را حذف کنید؟ این عمل قابل بازگشت
+          نیست.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => handleCancel()}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            لغو
+          </button>
+          <button
+            onClick={handleClick}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+          >
+            حذف
+          </button>
+        </div>
       </div>
     </div>
   );

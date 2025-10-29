@@ -1,3 +1,5 @@
+import { AiFillEdit } from "react-icons/ai";
+import { AiFillDelete } from "react-icons/ai";
 import { AiOutlineUpCircle } from "react-icons/ai";
 import { AiOutlineSearch } from "react-icons/ai";
 import React, { useState, useEffect, useRef } from "react";
@@ -15,11 +17,13 @@ import TableHeader from "../components/TableHeader";
 import TableMenuModal from "../components/TableMenuModal";
 import Menus from "../components/Menu";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
-import { BiTransferAlt } from "react-icons/bi";
+import { BiPencil, BiTransferAlt } from "react-icons/bi";
 import Confirmation from "../components/Confirmation";
 import GloableModal from "../components/GloableModal";
 import Button from "../components/Button";
 import { useForm } from "react-hook-form";
+import { inputStyle } from "./ProductForm";
+import { CgEye } from "react-icons/cg";
 
 // Headers in Dari
 const tableHeader = [
@@ -37,7 +41,6 @@ const Employee = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferDestination, setTransferDestination] = useState("warehouse");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { register, handleSubmit, reset } = useForm();
@@ -89,11 +92,6 @@ const Employee = () => {
     setShowTransfer(true);
   };
 
-  const handleDelete = (item) => {
-    setSelectedItem(item);
-    setShowDeleteConfirm(true);
-  };
-
   const onSubmitTransfer = (data) => {
     if (
       !data.quantity ||
@@ -101,20 +99,21 @@ const Employee = () => {
       data.quantity > selectedItem.quantity_in_hand
     )
       return;
-    createStockTransfer({
-      product: selectedItem.product._id,
-      fromLocation: "employee",
-      toLocation: transferDestination,
-      employee: selectedItem.employee._id,
-      quantity: Number(data.quantity),
-    });
-  };
-
-  const confirmDelete = () => {
-    // Implement delete logic if available
-    console.log("Delete item:", selectedItem);
-    setShowDeleteConfirm(false);
-    setSelectedItem(null);
+    createStockTransfer(
+      {
+        product: selectedItem.product._id,
+        fromLocation: "employee",
+        toLocation: transferDestination,
+        employee: selectedItem.employee._id,
+        quantity: Number(data.quantity),
+      },
+      {
+        onSuccess: () => {
+          setShowTransfer(false);
+          reset();
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -226,41 +225,16 @@ const Employee = () => {
                 {new Date(item.createdAt).toLocaleDateString("fa-IR")}
               </TableColumn>
               <TableColumn>
-                <span className={`itemavs${item._id} relative`}>
-                  <TableMenuModal>
-                    <Menus>
-                      <Menus.Menu>
-                        <Menus.Toggle id={item._id} />
-                        <Menus.List
-                          parent={`itemavs${item._id}`}
-                          id={item._id}
-                          className="bg-white rounded-lg shadow-xl"
-                        >
-                          <Menus.Button
-                            icon={<HiSquare2Stack />}
-                            onClick={() => handleShowDetails(item)}
-                          >
-                            نمایش
-                          </Menus.Button>
-                          {item.quantity_in_hand > 0 && (
-                            <Menus.Button
-                              icon={<BiTransferAlt size={24} />}
-                              onClick={() => handleTransfer(item)}
-                            >
-                              انتقال موجودی
-                            </Menus.Button>
-                          )}
-                          <Menus.Button
-                            icon={<HiTrash />}
-                            onClick={() => handleDelete(item)}
-                          >
-                            حذف
-                          </Menus.Button>
-                        </Menus.List>
-                      </Menus.Menu>
-                    </Menus>
-                  </TableMenuModal>
-                </span>
+                <div className={`flex items-center gap-x-3`}>
+                  <CgEye
+                    className=" text-[18px] hover:bg-slate-200 text-yellow-400 rounded-full"
+                    onClick={() => handleShowDetails(item)}
+                  />
+                  <BiTransferAlt
+                    className=" text-[18px] hover:bg-slate-200 text-green-400 rounded-full"
+                    onClick={() => handleTransfer(item)}
+                  />
+                </div>
               </TableColumn>
             </TableRow>
           ))}
@@ -323,31 +297,33 @@ const Employee = () => {
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
         <form
           noValidate
-          className="bg-white rounded-lg shadow-sm w-[600px]"
+          className="bg-white rounded-lg shadow-sm w-[480px] h-[430px]"
           onSubmit={handleSubmit(onSubmitTransfer)}
         >
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">انتقال موجودی</h2>
+            <h2 className="text-xl font-bold text-gray-900">انتقال موجودی</h2>
           </div>
           <div className="p-6 space-y-6">
-            <div>
-              <span>کارمند: </span>
-              <span className="font-bold">
-                {selectedItem?.employee?.name || "N/A"}
-              </span>
-            </div>
-            <div>
-              <span>محصول: </span>
-              <span className="font-bold">
-                {selectedItem?.product?.name || "N/A"}
-              </span>
+            <div className=" flex  gap-x-6">
+              <div>
+                <span className="text-sm  font-bold">کارمند: </span>
+                <span className="font-bold text-primary-brown-light underline">
+                  {selectedItem?.employee?.name || "N/A"}
+                </span>
+              </div>
+              <div>
+                <span className="text-sm  font-bold">محصول: </span>
+                <span className="font-bold text-primary-brown-light underline">
+                  {selectedItem?.product?.name || "N/A"}
+                </span>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 مقصد انتقال
               </label>
               <select
-                className="w-full border rounded-md px-3 py-2"
+                className={inputStyle}
                 value={transferDestination}
                 onChange={(e) => setTransferDestination(e.target.value)}
               >
@@ -360,8 +336,9 @@ const Employee = () => {
                 تعداد (حداکثر {selectedItem?.quantity_in_hand})
               </label>
               <input
-                className="w-full border rounded-md px-3 py-2"
+                className={inputStyle}
                 type="number"
+                placeholder="تعداد مدنظر تانرا بنوسید"
                 min="1"
                 max={selectedItem?.quantity_in_hand}
                 {...register("quantity", {
@@ -382,7 +359,7 @@ const Employee = () => {
             </Button>
             <Button
               type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded-md"
+              className=" bg-primary-brown-light text-white px-4 py-2 rounded-md"
             >
               انتقال موجودی
             </Button>
@@ -391,15 +368,6 @@ const Employee = () => {
       </GloableModal>
 
       {/* Delete Confirmation */}
-      <GloableModal open={showDeleteConfirm} setOpen={setShowDeleteConfirm}>
-        <Confirmation
-          type="delete"
-          handleClick={confirmDelete}
-          handleCancel={() => setShowDeleteConfirm(false)}
-          close={() => setShowDeleteConfirm(false)}
-          message="آیا مطمئن هستید که این آیتم را حذف کنید؟"
-        />
-      </GloableModal>
     </section>
   );
 };

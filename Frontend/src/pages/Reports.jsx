@@ -126,35 +126,33 @@ const Reports = () => {
   };
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* Page header */}
-      <div className='flex justify-between items-center'>
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
-            Reports & Analytics
-          </h1>
-          <p className='text-gray-600 mt-2'>
+          <h1 className="text-xl font-bold text-gray-900">گزارشات وتحلیل ها</h1>
+          <p className="text-gray-600 mt-1">
             Generate and view business reports
           </p>
         </div>
-        <div className='flex space-x-3'>
-          <button className='bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center'>
-            <PrinterIcon className='h-5 w-5 ml-2' />
+        <div className="flex space-x-3">
+          <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
+            <PrinterIcon className="h-5 w-5 ml-2" />
             Print
           </button>
-          <button className='bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center'>
-            <DocumentArrowDownIcon className='h-5 w-5 ml-2' />
+          <button className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center">
+            <DocumentArrowDownIcon className="h-5 w-5 ml-2" />
             Export
           </button>
         </div>
       </div>
 
       {/* Report type selector */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Select Report Type
         </h3>
-        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4'>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {reportTypes.map((report) => {
             const Icon = report.icon;
             return (
@@ -167,8 +165,8 @@ const Reports = () => {
                     : "border-gray-200 hover:border-gray-300 text-gray-700"
                 }`}
               >
-                <Icon className='h-8 w-8 mx-auto mb-2' />
-                <p className='text-sm font-medium'>{report.name}</p>
+                <Icon className="h-8 w-8 mx-auto mb-2" />
+                <p className="text-sm font-medium">{report.name}</p>
               </button>
             );
           })}
@@ -176,11 +174,11 @@ const Reports = () => {
       </div>
 
       {/* Date range selector */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Select Date Range
         </h3>
-        <div className='flex space-x-4'>
+        <div className="flex space-x-4">
           <button
             onClick={() => setDateRange("daily")}
             className={`px-4 py-2 rounded-lg border ${
@@ -215,15 +213,15 @@ const Reports = () => {
       </div>
 
       {/* Report content */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
-        <div className='px-6 py-4 border-b border-gray-200'>
-          <h3 className='text-lg font-semibold text-gray-900'>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">
             {reportTypes.find((r) => r.id === selectedReport)?.name} -{" "}
             {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}
           </h3>
         </div>
 
-        <div className='p-6'>
+        <div className="p-6">
           {selectedReport === "sales" && (
             <div className='space-y-6'>
               {salesReportsLoading ? (
@@ -298,40 +296,40 @@ const Reports = () => {
           )}
 
           {selectedReport === "inventory" && (
-            <div className='overflow-x-auto'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Product
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Current Stock
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Minimum Stock
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {getCurrentData().map((item, index) => (
-                    <tr key={index} className='hover:bg-gray-50'>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {item.product}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.currentStock}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.minStock}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
                             item.status
@@ -340,9 +338,9 @@ const Reports = () => {
                           {item.status}
                         </span>
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
-                        <button className='text-blue-600 hover:text-blue-900'>
-                          <EyeIcon className='h-4 w-4' />
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button className="text-blue-600 hover:text-blue-900">
+                          <EyeIcon className="h-4 w-4" />
                         </button>
                       </td>
                     </tr>
@@ -353,13 +351,13 @@ const Reports = () => {
           )}
 
           {!["sales", "inventory"].includes(selectedReport) && (
-            <div className='text-center py-12'>
-              <ChartBarIcon className='h-12 w-12 text-gray-400 mx-auto mb-4' />
-              <h3 className='text-lg font-medium text-gray-900 mb-2'>
+            <div className="text-center py-12">
+              <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {reportTypes.find((r) => r.id === selectedReport)?.name} Coming
                 Soon
               </h3>
-              <p className='text-gray-600'>
+              <p className="text-gray-600">
                 This report type is under development and will be available
                 soon.
               </p>
@@ -385,10 +383,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-            <div className='flex items-center'>
-              <div className='p-3 rounded-full bg-blue-500'>
-                <ChartBarIcon className='h-6 w-6 text-white' />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-blue-500">
+                <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
               <div className='mr-4'>
                 <p className='text-sm font-medium text-gray-600'>Total Paid</p>
@@ -399,10 +397,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-            <div className='flex items-center'>
-              <div className='p-3 rounded-full bg-amber-500'>
-                <ChartBarIcon className='h-6 w-6 text-white' />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-amber-500">
+                <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
               <div className='mr-4'>
                 <p className='text-sm font-medium text-gray-600'>Total Due</p>
