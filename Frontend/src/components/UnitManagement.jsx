@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
-import { useUnits, useCreateUnit, useUpdateUnit, useDeleteUnit } from '../services/useApi';
+import React, { useState } from "react";
+import {
+  useUnits,
+  useCreateUnit,
+  useUpdateUnit,
+  useDeleteUnit,
+} from "../services/useApi";
 import {
   PlusIcon,
   PencilIcon,
@@ -7,17 +12,21 @@ import {
   MagnifyingGlassIcon,
   ScaleIcon,
   InformationCircleIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-toastify';
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "react-toastify";
+import GloableModal from "./GloableModal";
+import { inputStyle } from "./ProductForm";
 
 const UnitManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [currentId, setCurrentId] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     conversion_to_base: 1,
     is_base_unit: false,
   });
@@ -28,78 +37,68 @@ const UnitManagement = () => {
   const deleteUnitMutation = useDeleteUnit();
 
   // Filter units based on search term
-  const filteredUnits = units?.data?.filter(unit =>
-    unit.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    unit.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredUnits =
+    units?.data?.filter(
+      (unit) =>
+        unit.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        unit.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || 0 : value)
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "number"
+          ? parseFloat(value) || 0
+          : value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    try {
-      if (editingUnit) {
-        await updateUnitMutation.mutateAsync({
-          id: editingUnit._id,
-          unitData: formData
-        });
-        toast.success('واحد با موفقیت به‌روزرسانی شد');
-      } else {
-        await createUnitMutation.mutateAsync(formData);
-        toast.success('واحد با موفقیت اضافه شد');
-      }
-      
-      setIsModalOpen(false);
-      setEditingUnit(null);
-      setFormData({
-        name: '',
-        description: '',
-        conversion_to_base: 1,
-        is_base_unit: false,
+
+    if (editingUnit) {
+      updateUnitMutation.mutate({
+        id: editingUnit._id,
+        unitData: formData,
       });
-      refetch();
-    } catch (error) {
-      toast.error('خطا در ذخیره واحد');
-      console.error('Error saving unit:', error);
+    } else {
+      createUnitMutation.mutate(formData);
     }
+
+    setIsModalOpen(false);
+    setEditingUnit(null);
+    setFormData({
+      name: "",
+      description: "",
+      conversion_to_base: 1,
+      is_base_unit: false,
+    });
   };
 
   const handleEdit = (unit) => {
     setEditingUnit(unit);
     setFormData({
-      name: unit.name || '',
-      description: unit.description || '',
+      name: unit.name || "",
+      description: unit.description || "",
       conversion_to_base: unit.conversion_to_base || 1,
       is_base_unit: unit.is_base_unit || false,
     });
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (unit) => {
-    if (window.confirm('آیا از حذف این واحد اطمینان دارید؟')) {
-      try {
-        await deleteUnitMutation.mutateAsync(unit._id);
-        toast.success('واحد با موفقیت حذف شد');
-        refetch();
-      } catch (error) {
-        toast.error('خطا در حذف واحد');
-        console.error('Error deleting unit:', error);
-      }
-    }
+  const handleDelete = () => {
+    deleteUnitMutation.mutate(currentId);
   };
 
   const handleAddNew = () => {
     setEditingUnit(null);
     setFormData({
-      name: '',
-      description: '',
+      name: "",
+      description: "",
       conversion_to_base: 1,
       is_base_unit: false,
     });
@@ -109,8 +108,13 @@ const UnitManagement = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4" style={{ borderColor: 'var(--primary-brown)' }}></div>
-        <span className="mr-4 text-lg" style={{ color: 'var(--text-medium)' }}>در حال بارگذاری...</span>
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4"
+          style={{ borderColor: "var(--primary-brown)" }}
+        ></div>
+        <span className="mr-4 text-lg" style={{ color: "var(--text-medium)" }}>
+          در حال بارگذاری...
+        </span>
       </div>
     );
   }
@@ -119,12 +123,13 @@ const UnitManagement = () => {
     return (
       <div className="text-center py-12">
         <ExclamationTriangleIcon className="h-16 w-16 mx-auto text-red-500 mb-4" />
-        <h3 className="text-lg font-medium text-red-600 mb-2">خطا در بارگذاری داده‌ها</h3>
-        <p className="text-gray-600 mb-4">لطفاً صفحه را رفرش کنید یا دوباره تلاش کنید</p>
-        <button 
-          onClick={() => refetch()}
-          className="btn-primary"
-        >
+        <h3 className="text-lg font-medium text-red-600 mb-2">
+          خطا در بارگذاری داده‌ها
+        </h3>
+        <p className="text-gray-600 mb-4">
+          لطفاً صفحه را رفرش کنید یا دوباره تلاش کنید
+        </p>
+        <button onClick={() => refetch()} className="btn-primary">
           تلاش مجدد
         </button>
       </div>
@@ -136,7 +141,10 @@ const UnitManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--primary-brown)' }}>
+          <h2
+            className="text-2xl font-bold"
+            style={{ color: "var(--primary-brown)" }}
+          >
             مدیریت واحدها
           </h2>
           <p className="text-gray-600 mt-1">
@@ -162,13 +170,16 @@ const UnitManagement = () => {
               placeholder="جستجو در واحدها..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="form-input pr-10"
+              className={`${inputStyle} pr-10`}
             />
           </div>
           <div className="flex items-center space-x-4 space-x-reverse text-sm text-gray-600">
             <span>کل: {units?.data?.length || 0}</span>
             <span>نمایش: {filteredUnits.length}</span>
-            <span>واحد پایه: {units?.data?.filter(u => u.is_base_unit).length || 0}</span>
+            <span>
+              واحد پایه:{" "}
+              {units?.data?.filter((u) => u.is_base_unit).length || 0}
+            </span>
           </div>
         </div>
       </div>
@@ -199,7 +210,10 @@ const UnitManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredUnits.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                  <td
+                    colSpan="5"
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
                     <ScaleIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                     <p>هیچ واحدی یافت نشد</p>
                   </td>
@@ -219,7 +233,7 @@ const UnitManagement = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="max-w-xs truncate">
-                        {unit.description || '-'}
+                        {unit.description || "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -248,7 +262,10 @@ const UnitManagement = () => {
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(unit)}
+                          onClick={() => {
+                            setCurrentId(unit._id);
+                            setDeleteConfirm(true);
+                          }}
                           className="text-red-600 hover:text-red-900 p-1 rounded"
                           title="حذف"
                         >
@@ -265,25 +282,35 @@ const UnitManagement = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <GloableModal open={isModalOpen} setOpen={setIsModalOpen} isClose={true}>
+        <div className=" w-[480px] h-[480px] bg-white overflow-y-auto  rounded-md">
+          <div className=" mx-auto p-5  w-full rounded-md bg-white">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {editingUnit ? 'ویرایش واحد' : 'افزودن واحد جدید'}
+                  {editingUnit ? "ویرایش واحد" : "افزودن واحد جدید"}
                 </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <span className="sr-only">بستن</span>
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -295,7 +322,7 @@ const UnitManagement = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="form-input w-full"
+                    className={inputStyle}
                     placeholder="مثال: کیلوگرم، کارتن، بسته"
                   />
                 </div>
@@ -309,7 +336,7 @@ const UnitManagement = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={2}
-                    className="form-input w-full"
+                    className={inputStyle}
                     placeholder="توضیحات واحد (اختیاری)"
                   />
                 </div>
@@ -326,11 +353,12 @@ const UnitManagement = () => {
                     min="0.0001"
                     step="0.0001"
                     required
-                    className="form-input w-full"
+                    className={inputStyle}
                     placeholder="1"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    برای واحد پایه: 1، برای واحدهای فرعی: تعداد واحدهای فرعی در یک واحد پایه
+                    برای واحد پایه: 1، برای واحدهای فرعی: تعداد واحدهای فرعی در
+                    یک واحد پایه
                   </p>
                 </div>
 
@@ -353,13 +381,16 @@ const UnitManagement = () => {
                       <InformationCircleIcon className="h-5 w-5 text-blue-400 ml-2" />
                       <div className="text-sm text-blue-700">
                         <p className="font-medium">واحد پایه</p>
-                        <p>این واحد به عنوان واحد اصلی برای محاسبات استفاده خواهد شد.</p>
+                        <p>
+                          این واحد به عنوان واحد اصلی برای محاسبات استفاده خواهد
+                          شد.
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className="flex justify-end space-x-3 space-x-reverse pt-4">
+                <div className="flex justify-end gap-x-3  space-x-reverse pt-4">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -369,21 +400,63 @@ const UnitManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={createUnitMutation.isPending || updateUnitMutation.isPending}
+                    disabled={
+                      createUnitMutation.isPending ||
+                      updateUnitMutation.isPending
+                    }
                     className="btn-primary"
                   >
-                    {createUnitMutation.isPending || updateUnitMutation.isPending
-                      ? 'در حال ذخیره...'
+                    {createUnitMutation.isPending ||
+                    updateUnitMutation.isPending
+                      ? "در حال ذخیره..."
                       : editingUnit
-                      ? 'به‌روزرسانی'
-                      : 'افزودن'}
+                      ? "به‌روزرسانی"
+                      : "افزودن"}
                   </button>
                 </div>
               </form>
             </div>
           </div>
         </div>
-      )}
+      </GloableModal>
+      <GloableModal
+        open={deleteConfirm}
+        setOpen={setDeleteConfirm}
+        isClose={true}
+      >
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <TrashIcon className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">تأیید حذف</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              آیا مطمئن هستید که می‌خواهید این خرید را حذف کنید؟ این عمل قابل
+              بازگشت نیست.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                لغو
+              </button>
+              <button
+                onClick={() => {
+                  handleDelete();
+                  setDeleteConfirm(false);
+                }}
+                disabled={deleteUnitMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteUnitMutation.isPending ? "در حال حذف..." : "حذف"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </GloableModal>
     </div>
   );
 };

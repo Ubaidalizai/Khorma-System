@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
-import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee } from '../services/useApi';
+import React, { useState } from "react";
+import {
+  useEmployees,
+  useCreateEmployee,
+  useUpdateEmployee,
+  useDeleteEmployee,
+} from "../services/useApi";
 import {
   PlusIcon,
   PencilIcon,
@@ -15,22 +20,25 @@ import {
   BriefcaseIcon,
   CheckCircleIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline';
-import { toast } from 'react-toastify';
+} from "@heroicons/react/24/outline";
+import GloableModal from "./GloableModal";
+import { inputStyle } from "./ProductForm";
 
 const EmployeeManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [currentId, setCurrentId] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    role: 'salesman',
+    name: "",
+    role: "salesman",
     contact_info: {
-      phone: '',
-      email: '',
-      address: ''
+      phone: "",
+      email: "",
+      address: "",
     },
-    hire_date: '',
+    hire_date: "",
     is_active: true,
   });
 
@@ -41,136 +49,130 @@ const EmployeeManagement = () => {
 
   // Role options with Persian labels
   const roleOptions = [
-    { value: 'salesman', label: 'فروشنده' },
-    { value: 'riding_man', label: 'راننده' },
-    { value: 'cashier', label: 'صندوقدار' },
-    { value: 'manager', label: 'مدیر' },
-    { value: 'admin', label: 'مدیر سیستم' },
+    { value: "salesman", label: "فروشنده" },
+    { value: "riding_man", label: "راننده" },
+    { value: "cashier", label: "صندوقدار" },
+    { value: "manager", label: "مدیر" },
+    { value: "admin", label: "مدیر سیستم" },
   ];
 
   // Filter employees based on search term
-  const filteredEmployees = employees?.data?.filter(employee =>
-    employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.contact_info?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.contact_info?.phone?.includes(searchTerm) ||
-    employee.role?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredEmployees =
+    employees?.data?.filter(
+      (employee) =>
+        employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.contact_info?.email
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        employee.contact_info?.phone?.includes(searchTerm) ||
+        employee.role?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name.startsWith('contact_info.')) {
-      const field = name.split('.')[1];
-      setFormData(prev => ({
+    if (name.startsWith("contact_info.")) {
+      const field = name.split(".")[1];
+      setFormData((prev) => ({
         ...prev,
         contact_info: {
           ...prev.contact_info,
-          [field]: value
-        }
+          [field]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value
+        [name]: type === "checkbox" ? checked : value,
       }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    try {
-      if (editingEmployee) {
-        await updateEmployeeMutation.mutateAsync({
-          id: editingEmployee._id,
-          employeeData: formData
-        });
-        toast.success('کارمند با موفقیت به‌روزرسانی شد');
-      } else {
-        await createEmployeeMutation.mutateAsync(formData);
-        toast.success('کارمند با موفقیت اضافه شد');
-      }
-      
-      setIsModalOpen(false);
-      setEditingEmployee(null);
-      setFormData({
-        name: '',
-        role: 'salesman',
-        contact_info: {
-          phone: '',
-          email: '',
-          address: ''
-        },
-        hire_date: '',
-        is_active: true,
+
+    if (editingEmployee) {
+      updateEmployeeMutation.mutate({
+        id: editingEmployee._id,
+        employeeData: formData,
       });
-      refetch();
-    } catch (error) {
-      toast.error('خطا در ذخیره کارمند');
-      console.error('Error saving employee:', error);
+    } else {
+      createEmployeeMutation.mutate(formData);
     }
+
+    setIsModalOpen(false);
+    setEditingEmployee(null);
+    setFormData({
+      name: "",
+      role: "salesman",
+      contact_info: {
+        phone: "",
+        email: "",
+        address: "",
+      },
+      hire_date: "",
+      is_active: true,
+    });
   };
 
   const handleEdit = (employee) => {
     setEditingEmployee(employee);
     setFormData({
-      name: employee.name || '',
-      role: employee.role || 'salesman',
+      name: employee.name || "",
+      role: employee.role || "salesman",
       contact_info: {
-        phone: employee.contact_info?.phone || '',
-        email: employee.contact_info?.email || '',
-        address: employee.contact_info?.address || ''
+        phone: employee.contact_info?.phone || "",
+        email: employee.contact_info?.email || "",
+        address: employee.contact_info?.address || "",
       },
-      hire_date: employee.hire_date ? new Date(employee.hire_date).toISOString().split('T')[0] : '',
+      hire_date: employee.hire_date
+        ? new Date(employee.hire_date).toISOString().split("T")[0]
+        : "",
       is_active: employee.is_active !== undefined ? employee.is_active : true,
     });
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (employee) => {
-    if (window.confirm('آیا از حذف این کارمند اطمینان دارید؟')) {
-      try {
-        await deleteEmployeeMutation.mutateAsync(employee._id);
-        toast.success('کارمند با موفقیت حذف شد');
-        refetch();
-      } catch (error) {
-        toast.error('خطا در حذف کارمند');
-        console.error('Error deleting employee:', error);
-      }
-    }
+  const handleDelete = () => {
+    deleteEmployeeMutation.mutate(currentId);
   };
 
   const handleAddNew = () => {
     setEditingEmployee(null);
     setFormData({
-      name: '',
-      role: 'salesman',
+      name: "",
+      role: "salesman",
       contact_info: {
-        phone: '',
-        email: '',
-        address: ''
+        phone: "",
+        email: "",
+        address: "",
       },
-      hire_date: '',
+      hire_date: "",
       is_active: true,
     });
     setIsModalOpen(true);
   };
 
   const getRoleLabel = (role) => {
-    const roleOption = roleOptions.find(option => option.value === role);
+    const roleOption = roleOptions.find((option) => option.value === role);
     return roleOption ? roleOption.label : role;
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '-';
+    if (!dateString) return "-";
     const date = new Date(dateString);
-    return date.toLocaleDateString('fa-IR');
+    return date.toLocaleDateString("fa-IR");
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4" style={{ borderColor: 'var(--primary-brown)' }}></div>
-        <span className="mr-4 text-lg" style={{ color: 'var(--text-medium)' }}>در حال بارگذاری...</span>
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4"
+          style={{ borderColor: "var(--primary-brown)" }}
+        ></div>
+        <span className="mr-4 text-lg" style={{ color: "var(--text-medium)" }}>
+          در حال بارگذاری...
+        </span>
       </div>
     );
   }
@@ -179,12 +181,13 @@ const EmployeeManagement = () => {
     return (
       <div className="text-center py-12">
         <ExclamationTriangleIcon className="h-16 w-16 mx-auto text-red-500 mb-4" />
-        <h3 className="text-lg font-medium text-red-600 mb-2">خطا در بارگذاری داده‌ها</h3>
-        <p className="text-gray-600 mb-4">لطفاً صفحه را رفرش کنید یا دوباره تلاش کنید</p>
-        <button 
-          onClick={() => refetch()}
-          className="btn-primary"
-        >
+        <h3 className="text-lg font-medium text-red-600 mb-2">
+          خطا در بارگذاری داده‌ها
+        </h3>
+        <p className="text-gray-600 mb-4">
+          لطفاً صفحه را رفرش کنید یا دوباره تلاش کنید
+        </p>
+        <button onClick={() => refetch()} className="btn-primary">
           تلاش مجدد
         </button>
       </div>
@@ -196,12 +199,13 @@ const EmployeeManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--primary-brown)' }}>
+          <h2
+            className="text-2xl font-bold"
+            style={{ color: "var(--primary-brown)" }}
+          >
             مدیریت کارمندان
           </h2>
-          <p className="text-gray-600 mt-1">
-            افزودن، ویرایش و حذف کارمندان
-          </p>
+          <p className="text-gray-600 mt-1">افزودن، ویرایش و حذف کارمندان</p>
         </div>
         <button
           onClick={handleAddNew}
@@ -228,7 +232,9 @@ const EmployeeManagement = () => {
           <div className="flex items-center space-x-4 space-x-reverse text-sm text-gray-600">
             <span>کل: {employees?.data?.length || 0}</span>
             <span>نمایش: {filteredEmployees?.length}</span>
-            <span>فعال: {employees?.data?.filter(e => e.is_active).length || 0}</span>
+            <span>
+              فعال: {employees?.data?.filter((e) => e.is_active).length || 0}
+            </span>
           </div>
         </div>
       </div>
@@ -265,7 +271,10 @@ const EmployeeManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td
+                    colSpan="7"
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
                     <UserIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                     <p>هیچ کارمندی یافت نشد</p>
                   </td>
@@ -294,14 +303,14 @@ const EmployeeManagement = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <PhoneIcon className="h-4 w-4 text-gray-400 ml-1" />
-                        <span>{employee.contact_info?.phone || '-'}</span>
+                        <span>{employee.contact_info?.phone || "-"}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <EnvelopeIcon className="h-4 w-4 text-gray-400 ml-1" />
                         <span className="truncate max-w-xs">
-                          {employee.contact_info?.email || '-'}
+                          {employee.contact_info?.email || "-"}
                         </span>
                       </div>
                     </td>
@@ -334,7 +343,10 @@ const EmployeeManagement = () => {
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(employee)}
+                          onClick={() => {
+                            setCurrentId(employee._id);
+                            setDeleteConfirm(true);
+                          }}
                           className="text-red-600 hover:text-red-900 p-1 rounded"
                           title="حذف"
                         >
@@ -351,25 +363,35 @@ const EmployeeManagement = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <GloableModal open={isModalOpen} setOpen={setIsModalOpen} isClose={true}>
+        <div className=" w-[480px] h-[480px] rounded-md bg-white overflow-y-auto">
+          <div className=" mx-auto p-5 w-full rounded-md bg-white">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {editingEmployee ? 'ویرایش کارمند' : 'افزودن کارمند جدید'}
+                  {editingEmployee ? "ویرایش کارمند" : "افزودن کارمند جدید"}
                 </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <span className="sr-only">بستن</span>
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -381,7 +403,7 @@ const EmployeeManagement = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="form-input w-full"
+                    className={inputStyle}
                     placeholder="نام کارمند"
                   />
                 </div>
@@ -395,7 +417,7 @@ const EmployeeManagement = () => {
                     value={formData.role}
                     onChange={handleInputChange}
                     required
-                    className="form-input w-full"
+                    className={inputStyle}
                   >
                     {roleOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -414,7 +436,7 @@ const EmployeeManagement = () => {
                     name="contact_info.email"
                     value={formData.contact_info.email}
                     onChange={handleInputChange}
-                    className="form-input w-full"
+                    className={inputStyle}
                     placeholder="example@email.com"
                   />
                 </div>
@@ -428,7 +450,7 @@ const EmployeeManagement = () => {
                     name="contact_info.phone"
                     value={formData.contact_info.phone}
                     onChange={handleInputChange}
-                    className="form-input w-full"
+                    className={inputStyle}
                     placeholder="09123456789"
                   />
                 </div>
@@ -442,7 +464,7 @@ const EmployeeManagement = () => {
                     value={formData.contact_info.address}
                     onChange={handleInputChange}
                     rows={2}
-                    className="form-input w-full"
+                    className={inputStyle}
                     placeholder="آدرس کامل"
                   />
                 </div>
@@ -456,7 +478,7 @@ const EmployeeManagement = () => {
                     name="hire_date"
                     value={formData.hire_date}
                     onChange={handleInputChange}
-                    className="form-input w-full"
+                    className={inputStyle}
                   />
                 </div>
 
@@ -466,14 +488,13 @@ const EmployeeManagement = () => {
                     name="is_active"
                     checked={formData.is_active}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
                   <label className="mr-2 block text-sm text-gray-700">
                     کارمند فعال است
                   </label>
                 </div>
 
-                <div className="flex justify-end space-x-3 space-x-reverse pt-4">
+                <div className="flex justify-end  gap-x-3 space-x-reverse pt-4">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -483,21 +504,63 @@ const EmployeeManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={createEmployeeMutation.isPending || updateEmployeeMutation.isPending}
+                    disabled={
+                      createEmployeeMutation.isPending ||
+                      updateEmployeeMutation.isPending
+                    }
                     className="btn-primary"
                   >
-                    {createEmployeeMutation.isPending || updateEmployeeMutation.isPending
-                      ? 'در حال ذخیره...'
+                    {createEmployeeMutation.isPending ||
+                    updateEmployeeMutation.isPending
+                      ? "در حال ذخیره..."
                       : editingEmployee
-                      ? 'به‌روزرسانی'
-                      : 'افزودن'}
+                      ? "به‌روزرسانی"
+                      : "افزودن"}
                   </button>
                 </div>
               </form>
             </div>
           </div>
         </div>
-      )}
+      </GloableModal>
+      <GloableModal
+        open={deleteConfirm}
+        setOpen={setDeleteConfirm}
+        isClose={true}
+      >
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <TrashIcon className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">تأیید حذف</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              آیا مطمئن هستید که می‌خواهید این خرید را حذف کنید؟ این عمل قابل
+              بازگشت نیست.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                لغو
+              </button>
+              <button
+                onClick={() => {
+                  handleDelete();
+                  setDeleteConfirm(false);
+                }}
+                disabled={deleteEmployeeMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteEmployeeMutation.isPending ? "در حال حذف..." : "حذف"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </GloableModal>
     </div>
   );
 };

@@ -152,9 +152,10 @@ body {
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
+  border-radius: 6px;
   font-weight: 600;
   transition: all 0.2s ease;
+  cursor: pointer;
   box-shadow: 0 2px 4px var(--shadow);
 }
 
@@ -170,12 +171,15 @@ body {
 .btn-secondary {
   background: var(--surface);
   color: var(--primary-brown);
-  border: 2px solid var(--primary-brown);
+  border: 1.5px solid var(--primary-brown);
   padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
+  border-radius: 6px;
   font-weight: 600;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
+
+
 
 .btn-success {
   background: var(--success-green);
@@ -190,8 +194,7 @@ body {
   background: var(--surface);
   border-radius: 0.75rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px var(--shadow);
-  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px var(--shadow);
   transition: all 0.2s ease;
 }
 

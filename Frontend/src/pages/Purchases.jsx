@@ -23,6 +23,7 @@ import { formatCurrency } from "../utilies/helper";
 import PurchaseModal from "../components/PurchaseModal";
 import { XCircleIcon } from "lucide-react";
 import GloableModal from "../components/GloableModal";
+import { inputStyle } from "../components/ProductForm";
 
 const Purchases = () => {
   const [search, setSearch] = useState("");
@@ -295,7 +296,7 @@ const Purchases = () => {
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex  flex-row gap-4 items-center justify-between">
-          <div className="flex flex-2   gap-4">
+          <div className="flex w-[50%] gap-4">
             <input
               type="text"
               placeholder="جستجو بر اساس نام تهیه کننده..."
@@ -304,7 +305,7 @@ const Purchases = () => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className={inputStyle}
             />
             <select
               value={supplierFilter}
@@ -312,7 +313,7 @@ const Purchases = () => {
                 setSupplierFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className={inputStyle}
             >
               <option value="">همه تهیه کننده ها</option>
               {suppliers?.data?.map((supplier) => (

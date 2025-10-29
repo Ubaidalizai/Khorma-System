@@ -1,3 +1,4 @@
+import { AiFillEdit } from "react-icons/ai";
 import { AiFillDelete } from "react-icons/ai";
 import { AiOutlineUpCircle } from "react-icons/ai";
 import { AiOutlineSearch } from "react-icons/ai";
@@ -40,7 +41,6 @@ const Employee = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferDestination, setTransferDestination] = useState("warehouse");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { register, handleSubmit, reset } = useForm();
@@ -91,11 +91,6 @@ const Employee = () => {
     setShowTransfer(true);
   };
 
-  const handleDelete = (item) => {
-    setSelectedItem(item);
-    setShowDeleteConfirm(true);
-  };
-
   const onSubmitTransfer = (data) => {
     if (
       !data.quantity ||
@@ -103,20 +98,21 @@ const Employee = () => {
       data.quantity > selectedItem.quantity_in_hand
     )
       return;
-    createStockTransfer({
-      product: selectedItem.product._id,
-      fromLocation: "employee",
-      toLocation: transferDestination,
-      employee: selectedItem.employee._id,
-      quantity: Number(data.quantity),
-    });
-  };
-
-  const confirmDelete = () => {
-    // Implement delete logic if available
-    console.log("Delete item:", selectedItem);
-    setShowDeleteConfirm(false);
-    setSelectedItem(null);
+    createStockTransfer(
+      {
+        product: selectedItem.product._id,
+        fromLocation: "employee",
+        toLocation: transferDestination,
+        employee: selectedItem.employee._id,
+        quantity: Number(data.quantity),
+      },
+      {
+        onSuccess: () => {
+          setShowTransfer(false);
+          reset();
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -236,10 +232,6 @@ const Employee = () => {
                   <BiTransferAlt
                     className=" text-[18px] hover:bg-slate-200 text-green-400 rounded-full"
                     onClick={() => handleTransfer(item)}
-                  />
-                  <AiFillDelete
-                    className=" text-[18px] hover:bg-slate-200 text-red-500 rounded-full"
-                    onClick={() => handleDelete(item)}
                   />
                 </div>
               </TableColumn>
@@ -375,15 +367,6 @@ const Employee = () => {
       </GloableModal>
 
       {/* Delete Confirmation */}
-      <GloableModal open={showDeleteConfirm} setOpen={setShowDeleteConfirm}>
-        <Confirmation
-          type="delete"
-          handleClick={confirmDelete}
-          handleCancel={() => setShowDeleteConfirm(false)}
-          close={() => setShowDeleteConfirm(false)}
-          message="آیا مطمئن هستید که این آیتم را حذف کنید؟"
-        />
-      </GloableModal>
     </section>
   );
 };

@@ -165,7 +165,7 @@ const Sales = () => {
         </div>
         <button
           onClick={() => setShowAddSaleModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 transition-colors"
         >
           <PlusIcon className="h-5 w-5" />
           اضافه کردن فروش

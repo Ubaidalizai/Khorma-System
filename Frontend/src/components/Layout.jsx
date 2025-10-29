@@ -190,7 +190,7 @@ const Layout = () => {
               </div>
             )}
           </div>
-          <div className="flex  py-2  flex-2  flex-col justify-start  w-full ">
+          <div className="flex  py-2  flex-2  flex-col justify-start   w-full ">
             <DashboardSideButton
               icon={<HomeIcon className=" text-sm" />}
               title={tabs[0].name}

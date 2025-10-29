@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    minLevel: { type: Number, default: 0 },
     baseUnit: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Unit',

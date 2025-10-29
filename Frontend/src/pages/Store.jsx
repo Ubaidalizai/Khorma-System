@@ -1,31 +1,29 @@
-import { AiFillDelete } from "react-icons/ai";
+import { useState } from "react";
+import { AiFillEdit } from "react-icons/ai";
+import { BiTransferAlt } from "react-icons/bi";
 import { ImPriceTag } from "react-icons/im";
+import GloableModal from "../components/GloableModal";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
-import React, { useState } from "react";
 import TableBody from "../components/TableBody";
-import TableRow from "../components/TableRow";
 import TableColumn from "../components/TableColumn";
-import TableMenuModal from "../components/TableMenuModal";
-import Menus from "../components/Menu";
-import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
-import { BiPencil, BiTransferAlt } from "react-icons/bi";
-import Confirmation from "../components/Confirmation";
-import { getStockStatus } from "../utilies/stockStatus";
-import GloableModal from "../components/GloableModal";
 import TableHeader from "../components/TableHeader";
+import TableRow from "../components/TableRow";
+import { getStockStatus } from "../utilies/stockStatus";
 
+import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { CgEye } from "react-icons/cg";
+import { IoMdClose } from "react-icons/io";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import NumberInput from "../components/NumberInput";
+import { inputStyle } from "../components/ProductForm";
 import {
   useCreateStockTransfer,
-  useDeleteStore,
   useEmployees,
   useStoreStocks,
 } from "../services/useApi";
-import Button from "../components/Button";
-import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { inputStyle } from "../components/ProductForm";
-import { CgEye } from "react-icons/cg";
 // Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
   { title: "نمبر بچ" },
@@ -42,7 +40,7 @@ const storeHeader = [
 function Store() {
   const { data: stocks } = useStoreStocks();
   const { data: employees } = useEmployees();
-  const { register, handleSubmit, watch } = useForm();
+  const { register, handleSubmit, watch, control, reset } = useForm();
   const { mutate: createStockTransfer } = useCreateStockTransfer();
   const transferType = watch("transferType") || "store-warehouse";
   const quantity = watch("quantity");
@@ -50,13 +48,10 @@ function Store() {
   const [search, setSearch] = useState("");
 
   // Example fromLocation/toLocation logic
-
-  const { mutate: deleteStore } = useDeleteStore();
   const [selectedData, setSelectedData] = useState(null);
   const [show, setShow] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
-  const [showTransferConf, setShwoTransferConf] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   let fromLocation = selectedData?.location;
   let toLocation =
@@ -76,12 +71,7 @@ function Store() {
   ].includes(transferType);
 
   function onSubmit(data) {
-    console.log(data);
     if (!data.quantity || data.quantity <= 0) return;
-    setShwoTransferConf(true);
-  }
-
-  function confirmTransfer() {
     const stockTransfer = {
       product: selectedData.product?._id || selectedData.product,
       fromLocation: fromLocation,
@@ -91,11 +81,14 @@ function Store() {
       transferDate: new Date(),
       transferredBy: "currentUserId", // replace if you have user context
     };
-    createStockTransfer(stockTransfer);
-    // console.log(stockTransfer);
-    setShwoTransferConf(false);
+    createStockTransfer(stockTransfer, {
+      onSuccess: () => {
+        setShowTransfer(false);
+        reset();
+      },
+    });
   }
-
+  const handleEdit = () => {};
   return (
     <section>
       <Table
@@ -162,11 +155,11 @@ function Store() {
                       setShowTransfer(true);
                     }}
                   />
-                  <AiFillDelete
-                    className=" text-[18px] hover:bg-slate-200 text-red-500 rounded-full"
+                  <AiFillEdit
+                    className=" text-[18px] hover:bg-slate-200 text-sky-500 rounded-full"
                     onClick={() => {
                       setSelectedData(el);
-                      setShowDeleteConfirm(true);
+                      setShowEdit(true);
                     }}
                   />
                 </div>
@@ -264,18 +257,7 @@ function Store() {
           </div>
         )}
       </GloableModal>
-      <GloableModal open={showDeleteConfirm} setOpen={setShowDeleteConfirm}>
-        <Confirmation
-          type="delete"
-          handleClick={() => {
-            deleteStore(selectedData._id);
-            setShowDeleteConfirm(false);
-          }}
-          handleCancel={() => setShowDeleteConfirm(false)}
-          close={() => setShowDeleteConfirm(false)}
-          message="آیا مطمئن هستید که این آیتم را حذف کنید؟"
-        />
-      </GloableModal>
+
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
         <form
           noValidate
@@ -482,14 +464,83 @@ function Store() {
           </div>
         </form> */}
       </GloableModal>
-      <GloableModal open={showTransferConf} setOpen={setShowTransfer}>
-        <Confirmation
-          type="transfer"
-          handleClick={confirmTransfer}
-          handleCancel={() => setShwoTransferConf(false)}
-          close={() => setShwoTransferConf(false)}
-          message="آیا مطمئن هستید که این انتقال را انجام دهید؟"
-        />
+      <GloableModal open={showEdit} setOpen={setShowEdit} isClose={true}>
+        <div className="w-[500px] bg-white p-3 rounded-md ">
+          <div className=" border-b border-slate-300 pb-3 relative">
+            <IoMdClose
+              className=" absolute top-2/4 left-2 -translate-y-2/4 text-[24px]"
+              onClick={() => setShowEdit(false)}
+            />
+            <p className=" text-xl font-semibold">بروزرسانی گدام</p>
+          </div>
+          <form onSubmit={handleSubmit(handleEdit)} noValidate>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <Controller
+                    defaultValue={""}
+                    name="purchasePricePerBaseUnit"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        label="قیمت هر واحد"
+                        register={field}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <Controller
+                    defaultValue={0}
+                    name="quantity"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput label="تعداد" register={field} />
+                    )}
+                  />
+                </div>
+                <div>
+                  <Controller
+                    defaultValue={0}
+                    name="minLevel"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput label="کمترین موجودی" register={field} />
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <Controller
+                    defaultValue={""}
+                    name="expiryDate"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="date" label="تاریخ انقضا" register={field} />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t w-[80%] mx-auto border-gray-200 flex justify-end gap-4">
+              {/* <Button className=" bg-deepdate-400">لغو کردن</Button> */}
+              <Button className={" bg-primary-brown-light text-white"}>
+                تغییر دادن گدام
+              </Button>
+              <button
+                onClick={() => setShowEdit(false)}
+                className={
+                  " cursor-pointer group w-full   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200 bg-transparent border  border-slate-700 text-black"
+                }
+              >
+                لغو کردن{" "}
+              </button>
+            </div>
+          </form>
+        </div>
       </GloableModal>
     </section>
   );

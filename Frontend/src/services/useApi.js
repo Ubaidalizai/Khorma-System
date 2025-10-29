@@ -6,6 +6,7 @@ import {
   createCustomer,
   createEmployee,
   createInventoryItem,
+  createManualTransaction,
   createProductItem,
   createPurchase,
   createSale,
@@ -185,7 +186,12 @@ export const useUpdateProdcut = () => {
     },
   });
 };
-
+export const useCreateTransaction = () => {
+  return useMutation({
+    mutationKey: ["createTransaction"],
+    mutationFn: createManualTransaction,
+  });
+};
 // ✅ Delete item mutation
 export const useDeleteProdcut = () => {
   const queryClient = useQueryClient();
@@ -194,6 +200,10 @@ export const useDeleteProdcut = () => {
     mutationKey: ["productRemove"],
     onSuccess: () => {
       queryClient.invalidateQueries(["product"]);
+      toast.success("محصول موفقانه حذف گردید!");
+    },
+    onError: () => {
+      toast.error("در حذف کردن محصول مشکلی پیش آمده است");
     },
   });
 };
@@ -266,9 +276,15 @@ export const useCreateStore = () => {
 export const useUpdateStore = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ["deleteStore"],
+    mutationKey: ["updateStock"],
     mutationFn: () => updateStore,
-    onSuccess: () => queryClient.invalidateQueries(["allstores"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allstores"]);
+      toast.success("موجودی موفقانه بروز رسانی شد");
+    },
+    onError: () => {
+      toast.error("بروز رسانی در موجودی مشکل پیش آمده است");
+    },
   });
 };
 
@@ -405,7 +421,13 @@ export const useCreateSupplier = () => {
   return useMutation({
     mutationFn: createSupplier,
     mutationKey: ["newSupplier"],
-    onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allSupplier"]);
+      toast.success("تامین‌کننده با موفقیت  ساخته  شد");
+    },
+    onError: () => {
+      toast.error("خطا در حذف تامین‌کننده");
+    },
   });
 };
 
@@ -414,7 +436,14 @@ export const useUpdateSupplier = () => {
   return useMutation({
     mutationKey: ["updateSupplier"],
     mutationFn: ({ id, supplierData }) => updateSupplier(id, supplierData),
-    onSuccess: () => queryClient.invalidateQueries(["allSuppliers"]),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allSupplier"]);
+      toast.success("تامین‌کننده با موفقیت  بروز رسانی  شد");
+    },
+    onError: () => {
+      toast.error("خطا در حذف تامین‌کننده");
+    },
   });
 };
 
@@ -423,7 +452,13 @@ export const useDeleteSupplier = () => {
   return useMutation({
     mutationKey: ["deleteSupplier"],
     mutationFn: deleteSupplier,
-    onSuccess: () => queryClient.invalidateQueries(["allSupplier"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allSupplier"]);
+      toast.success("تامین‌کننده با موفقیت حذف شد");
+    },
+    onError: () => {
+      toast.error("خطا در حذف تامین‌کننده");
+    },
   });
 };
 
@@ -532,7 +567,13 @@ export const useCreateCustomer = () => {
   return useMutation({
     mutationFn: createCustomer,
     mutationKey: ["newCustomer"],
-    onSuccess: () => queryClient.invalidateQueries(["allCustomers"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allCustomers"]);
+      toast.success("موفقانه مشتری مورد نظر ایجاد  گردید!");
+    },
+    onError: () => {
+      toast.error("متاسفانه در ایجاد کردن مشتری مورد نظر مشکلی پیش آمده است ");
+    },
   });
 };
 
@@ -541,7 +582,15 @@ export const useUpdateCustomer = () => {
   return useMutation({
     mutationKey: ["updateCustomer"],
     mutationFn: ({ id, customerData }) => updateCustomer(id, customerData),
-    onSuccess: () => queryClient.invalidateQueries(["allCustomers"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allCustomers"]);
+      toast.success("موفقانه مشتری مورد نظر  بروز رسانی  گردید!");
+    },
+    onError: () => {
+      toast.error(
+        "متاسفانه در بروز رسانی  کردن مشتری مورد نظر مشکلی پیش آمده است "
+      );
+    },
   });
 };
 
@@ -550,7 +599,13 @@ export const useDeleteCustomer = () => {
   return useMutation({
     mutationKey: ["deleteCustomer"],
     mutationFn: deleteCustomer,
-    onSuccess: () => queryClient.invalidateQueries(["allCustomers"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allCustomers"]);
+      toast.success("موفقانه مشتری مورد نظر حذف گردید!");
+    },
+    onError: () => {
+      toast.error("متاسفانه در حذف کردن مشتری مورد نظر مشکلی پیش آمده است ");
+    },
   });
 };
 
@@ -643,7 +698,13 @@ export const useCreateAccount = () => {
   return useMutation({
     mutationFn: createAccount,
     mutationKey: ["newAccount"],
-    onSuccess: () => queryClient.invalidateQueries(["accounts"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["accounts"]);
+      toast.success("موفقانه حساب جدید ساخته شده");
+    },
+    onError: () => {
+      toast.error("متاسفانه در ساختن حساب جدید تان مشکلی پیش آمده است");
+    },
   });
 };
 
@@ -652,7 +713,13 @@ export const useUpdateAccount = () => {
   return useMutation({
     mutationKey: ["updateAccount"],
     mutationFn: ({ id, accountData }) => updateAccount(id, accountData),
-    onSuccess: () => queryClient.invalidateQueries(["accounts"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["accounts"]);
+      toast.success("موفقانه بروز رسانی شد");
+    },
+    onError: () => {
+      toast.error("در بروز رسانی مشکلی پیش آمده است");
+    },
   });
 };
 
@@ -661,7 +728,13 @@ export const useDeleteAccount = () => {
   return useMutation({
     mutationKey: ["deleteAccount"],
     mutationFn: deleteAccount,
-    onSuccess: () => queryClient.invalidateQueries(["accounts"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["accounts"]);
+      toast.success("موفقانه حذف گردید!");
+    },
+    onError: () => {
+      toast.error("متاسفانه مشکلی پیش آمده");
+    },
   });
 };
 
@@ -692,7 +765,14 @@ export const useCreateEmployee = () => {
   return useMutation({
     mutationFn: createEmployee,
     mutationKey: ["newEmployee"],
-    onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allEmployees"]);
+
+      toast.success("کارمند با موفقیت ساخته  شد");
+    },
+    onError: () => {
+      toast.error("خطا در ساختن کارمند");
+    },
   });
 };
 
@@ -701,7 +781,14 @@ export const useUpdateEmployee = () => {
   return useMutation({
     mutationKey: ["updateEmployee"],
     mutationFn: ({ id, employeeData }) => updateEmployee(id, employeeData),
-    onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allEmployees"]);
+
+      toast.success("کارمند با موفقیت بروز رسانی شد");
+    },
+    onError: () => {
+      toast.error("خطا در بروز رسانی کارمند");
+    },
   });
 };
 
@@ -710,7 +797,14 @@ export const useDeleteEmployee = () => {
   return useMutation({
     mutationKey: ["deleteEmployee"],
     mutationFn: deleteEmployee,
-    onSuccess: () => queryClient.invalidateQueries(["allEmployees"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allEmployees"]);
+
+      toast.success("کارمند با موفقیت حذف شد");
+    },
+    onError: () => {
+      toast.error("خطا در حذف کارمند");
+    },
   });
 };
 
@@ -735,7 +829,14 @@ export const useCreateUnit = () => {
   return useMutation({
     mutationFn: createUnit,
     mutationKey: ["newUnit"],
-    onSuccess: () => queryClient.invalidateQueries(["allUnits"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allUnits"]);
+
+      toast.success("واحد با موفقیت ساخته شد");
+    },
+    onError: () => {
+      toast.error("خطا در ساختن واحد");
+    },
   });
 };
 
@@ -744,7 +845,14 @@ export const useUpdateUnit = () => {
   return useMutation({
     mutationKey: ["updateUnit"],
     mutationFn: ({ id, unitData }) => updateUnit(id, unitData),
-    onSuccess: () => queryClient.invalidateQueries(["allUnits"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allUnits"]);
+
+      toast.success("واحد با موفقیت بروز رسانی شد");
+    },
+    onError: () => {
+      toast.error("خطا در بروز رسانی واحد");
+    },
   });
 };
 
@@ -753,7 +861,14 @@ export const useDeleteUnit = () => {
   return useMutation({
     mutationKey: ["deleteUnit"],
     mutationFn: deleteUnit,
-    onSuccess: () => queryClient.invalidateQueries(["allUnits"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allUnits"]);
+
+      toast.success("واحد با موفقیت حذف شد");
+    },
+    onError: () => {
+      toast.error("خطا در حذف واحد");
+    },
   });
 };
 

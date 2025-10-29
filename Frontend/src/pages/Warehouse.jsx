@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { BiLoaderAlt, BiPencil, BiTransferAlt } from "react-icons/bi";
 import { CgEye } from "react-icons/cg";
+import { IoMdClose } from "react-icons/io";
 import Button from "../components/Button";
-import Confirmation from "../components/Confirmation";
 import GloableModal from "../components/GloableModal";
+import Input from "../components/Input";
+import NumberInput from "../components/NumberInput";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import WarehouseForm from "../components/WarehouseForm";
 import {
   useCreateStockTransfer,
   useEmployees,
@@ -50,7 +51,6 @@ function Warehouse() {
   const transferType = watch("transferType") || "warehouse-store";
   const quantity = watch("quantity");
   const employee = watch("employee");
-  const [showTransferConf, setShwoTransferConf] = useState(false);
 
   const { data: employees } = useEmployees();
   // Example fromLocation/toLocation logic
@@ -78,9 +78,6 @@ function Warehouse() {
   ].includes(transferType);
   function onSubmit(data) {
     if (!data.quantity || data.quantity <= 0) return;
-    setShwoTransferConf(true);
-  }
-  function confirmTransfer() {
     const stockTransfer = {
       product: selectedPro.product?._id || selectedPro.product,
       fromLocation: fromLocation,
@@ -92,7 +89,6 @@ function Warehouse() {
     createStockTransfer(stockTransfer, {
       onSuccess: () => {
         setShowTransfer(false);
-        setShwoTransferConf(false);
       },
       onError: () => {
         // Error toast is handled in the hook
@@ -107,7 +103,6 @@ function Warehouse() {
     [selectedPro, reset]
   );
   const onSubmitEdit = (data) => {
-    console.log(data);
     updateInventory({ id: selectedPro.id, ...data });
     setShowEdit(false);
   };
@@ -332,12 +327,82 @@ function Warehouse() {
           </div>
         )}
       </GloableModal>
-      <GloableModal open={showEdit} setOpen={setShowEdit}>
-        <div className="w-[660px] bg-white ">
-          <WarehouseForm
-            handleSubmit={handleSubmit(onSubmitEdit)}
-            control={control}
-          />
+      <GloableModal open={showEdit} setOpen={setShowEdit} isClose={true}>
+        <div className="w-[500px] bg-white p-3 rounded-md ">
+          <div className=" border-b border-slate-300 pb-3 relative">
+            <IoMdClose
+              className=" absolute top-2/4 left-2 -translate-y-2/4 text-[24px]"
+              onClick={() => setShowEdit(false)}
+            />
+            <p className=" text-xl font-semibold">بروزرسانی گدام</p>
+          </div>
+          <form onSubmit={handleSubmit(onSubmitEdit)} noValidate>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <Controller
+                    defaultValue={""}
+                    name="purchasePricePerBaseUnit"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        label="قیمت هر واحد"
+                        register={field}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <Controller
+                    defaultValue={0}
+                    name="quantity"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput label="تعداد" register={field} />
+                    )}
+                  />
+                </div>
+                <div>
+                  <Controller
+                    defaultValue={0}
+                    name="minLevel"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput label="کمترین موجودی" register={field} />
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <Controller
+                    defaultValue={""}
+                    name="expiryDate"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="date" label="تاریخ انقضا" register={field} />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t w-[80%] mx-auto border-gray-200 flex justify-end gap-4">
+              {/* <Button className=" bg-deepdate-400">لغو کردن</Button> */}
+              <Button className={" bg-primary-brown-light text-white"}>
+                تغییر دادن گدام
+              </Button>
+              <button
+                onClick={() => setShowEdit(false)}
+                className={
+                  " cursor-pointer group w-full   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200 bg-transparent border  border-slate-700 text-black"
+                }
+              >
+                لغو کردن{" "}
+              </button>
+            </div>
+          </form>
         </div>
       </GloableModal>
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
@@ -440,15 +505,6 @@ function Warehouse() {
             </Button>
           </div>
         </form>
-      </GloableModal>
-      <GloableModal open={showTransferConf} setOpen={setShowTransfer}>
-        <Confirmation
-          type="transfer"
-          handleClick={confirmTransfer}
-          handleCancel={() => setShwoTransferConf(false)}
-          close={() => setShwoTransferConf(false)}
-          message="آیا مطمئن هستید که این انتقال را انجام دهید؟"
-        />
       </GloableModal>
     </section>
   );

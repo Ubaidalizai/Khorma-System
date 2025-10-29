@@ -37,13 +37,15 @@ import GloableModal from "../components/GloableModal";
 import Confirmation from "../components/Confirmation";
 import { useSearchParams } from "react-router-dom";
 import Employee from "../components/Employee";
+import { TrashIcon } from "lucide-react";
 
 const Inventory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [openConfirm, setOpenConfirm] = useState(false);
   const { register, handleSubmit, formState, reset, control } = useForm();
   const { isLoading: isLoadingProducts } = useProduct();
-  const { mutate: deleteStockTransfer } = useStockTransferDelete();
+  const { mutate: deleteStockTransfer, isPending: isDeleting } =
+    useStockTransferDelete();
   const [id, setIds] = useState();
   const { data: inventoryStats, isLoading: isStatsLoading } =
     useInventoryStats();
@@ -348,15 +350,44 @@ const Inventory = () => {
                   ))}
               </TableBody>
             </Table>
-            <GloableModal open={openConfirm} setOpen={setOpenConfirm}>
-              {openConfirm && (
-                <Confirmation
-                  type="delete"
-                  handleClick={handleDelete}
-                  handleCancel={() => setOpenConfirm(false)}
-                  close={() => setOpenConfirm(false)}
-                />
-              )}
+            <GloableModal
+              open={openConfirm}
+              setOpen={setOpenConfirm}
+              isClose={true}
+            >
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-red-100 p-2 rounded-full mr-3">
+                      <TrashIcon className="h-6 w-6 text-red-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      تأیید حذف
+                    </h3>
+                  </div>
+                  <p className="text-gray-600 mb-6">
+                    آیا مطمئن هستید که می‌خواهید این خرید را حذف کنید؟ این عمل
+                    قابل بازگشت نیست.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setOpenConfirm(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                    >
+                      لغو
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleDelete();
+                      }}
+                      disabled={isDeleting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {isDeleting ? "در حال حذف..." : "حذف"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </GloableModal>
           </div>
         </div>
