@@ -23,7 +23,7 @@ const SaleBill = forwardRef(({ sale, customer, customerAccount }, ref) => {
       {/* Bill Number and Date */}
       <div className={`flex justify-between mb-3 ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
         <div>
-          <span className="font-semibold">نمبر فاکتور:</span> {sale.billNumber}
+          <span className="font-semibold">نمبر بیل:</span> {sale.billNumber}
         </div>
         <div>
           <span className="font-semibold">تاریخ:</span> {formatDate(sale.saleDate)}

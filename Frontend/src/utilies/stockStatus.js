@@ -6,7 +6,7 @@ export const getStockStatus = (quantity, minLevel) => {
       label: 'تمام شده',
       color: 'bg-red-100 text-red-800 border border-red-200'
     };
-  } else if (quantity <= minLevel) {
+  } else if (minLevel > 0 && quantity <= minLevel) {
     return {
       status: 'low_stock',
       label: 'کمبود موجودی',

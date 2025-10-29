@@ -46,6 +46,7 @@ import {
   fetchPurchases,
   fetchSale,
   fetchSales,
+  fetchSalesReports,
   fetchStock,
   fetchStockTransfers,
   fetchStore,
@@ -351,11 +352,15 @@ export const useStoreStocks = (opts = {}) => {
 };
 
 export const useEmployeeStocks = (opts = {}) => {
-  const { search } = opts;
+  const { search, employeeId } = opts;
+  console.log('useEmployeeStocks hook called with:', { search, employeeId });
+  console.log('useEmployeeStocks enabled condition:', !!employeeId && employeeId !== null);
+  
   return useQuery({
-    queryKey: ["stocks", "employee", { search: search || "" }],
-    queryFn: () => fetchEmployeeStock({ search }),
+    queryKey: ["stocks", "employee", { search: search || "", employeeId: employeeId || "" }],
+    queryFn: () => fetchEmployeeStock({ search, employeeId }),
     keepPreviousData: true,
+    enabled: !!employeeId && employeeId !== null, // Only run query if employeeId exists and is not null
   });
 };
 
@@ -440,7 +445,8 @@ export const useSales = (params = {}) => {
 export const useSale = (id) =>
   useQuery({
     queryKey: ["sale", id],
-    queryFn: fetchSale,
+    queryFn: () => fetchSale(id),
+    enabled: !!id, // Only run query if id exists
   });
 
 export const useCreateSale = () => {
@@ -456,7 +462,7 @@ export const useUpdateSale = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["updateSale"],
-    mutationFn: () => updateSale,
+    mutationFn: ({ id, ...data }) => updateSale(id, data),
     onSuccess: () => queryClient.invalidateQueries(["allSales"]),
   });
 };
@@ -467,6 +473,16 @@ export const useDeleteSales = () => {
     mutationKey: ["deleteSale"],
     mutationFn: deleteSale,
     onSuccess: () => queryClient.invalidateQueries(["allSales"]),
+  });
+};
+
+// Sales Reports
+export const useSalesReports = (params = {}) => {
+  return useQuery({
+    queryKey: ["salesReports", params],
+    queryFn: () => fetchSalesReports(params),
+    enabled: !!(params.startDate && params.endDate),
+    keepPreviousData: true,
   });
 };
 

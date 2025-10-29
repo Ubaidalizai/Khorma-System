@@ -183,6 +183,7 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     account: account.name,
+    accountType: account.type,
     openingBalance: account.openingBalance,
     currentBalance: account.currentBalance,
     totalTransactions: transactions.length,

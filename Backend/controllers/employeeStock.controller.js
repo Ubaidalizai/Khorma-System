@@ -1,14 +1,28 @@
 const EmployeeStock = require('../models/employeeStock.model');
 const Employee = require('../models/employee.model');
 const Product = require('../models/product.model');
+const Stock = require('../models/stock.model');
+const mongoose = require('mongoose');
 const asyncHandler = require('../middlewares/asyncHandler');
 const AppError = require('../utils/AppError');
 
 // ✅ Get all employee stocks (with employee + product details)
 exports.getAllEmployeeStocks = asyncHandler(async (req, res) => {
-  const stocks = await EmployeeStock.find({ isDeleted: false })
+  const query = { isDeleted: false };
+  
+  // Filter by employee if employeeId is provided
+  if (req.query.employeeId) {
+    query.employee = req.query.employeeId;
+    console.log('EmployeeStock Controller - Filtering by employeeId:', req.query.employeeId);
+  }
+  
+  console.log('EmployeeStock Controller - Query:', query);
+  
+  const stocks = await EmployeeStock.find(query)
     .populate('employee', 'name')
     .populate('product', 'name');
+
+  console.log('EmployeeStock Controller - Found stocks:', stocks.length);
 
   res.status(200).json({
     success: true,
@@ -26,9 +40,7 @@ exports.getEmployeeStockByEmployee = asyncHandler(async (req, res) => {
     isDeleted: false,
   }).populate('product', 'name');
 
-  if (!stocks.length)
-    throw new AppError('No stock found for this employee', 404);
-
+  // Return empty array instead of throwing error when no stocks found
   res.status(200).json({
     success: true,
     employee: employeeId,

@@ -133,12 +133,12 @@ function Store() {
               <TableColumn>
                 <span
                   className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    getStockStatus(el?.quantity, el?.product?.minLevel || 0)
+                    getStockStatus(el?.quantity, el?.minLevel || 0)
                       .color
                   }`}
                 >
                   {
-                    getStockStatus(el?.quantity, el?.product?.minLevel || 0)
+                    getStockStatus(el?.quantity, el?.minLevel || 0)
                       .label
                   }
                 </span>

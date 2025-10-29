@@ -7,7 +7,7 @@ import TableColumn from "./TableColumn";
 
 const historyHeader = [
   { title: "تاریخ" },
-  { title: "نمبر فاکتور" },
+  { title: "نمبر بیل" },
   { title: "تهیه کننده" },
   { title: "مبلغ" },
   { title: "میتود" },

@@ -10,7 +10,8 @@ import {
   XMarkIcon,
   PrinterIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import Button from "../components/Button";
 import { formatCurrency } from "../utilies/helper";
 import Modal from "./../components/Modal";
@@ -22,7 +23,8 @@ import {
   useEmployees, 
   useDeleteSales,
   useCreateSale,
-  useAccounts
+  useAccounts,
+  useUpdateSale
 } from "../services/useApi";
 import SaleForm from "../components/SaleForm";
 import { XCircleIcon } from "lucide-react";
@@ -30,6 +32,11 @@ import { recordSalePayment, fetchAccounts } from "../services/apiUtiles";
 import SaleBillPrint from "../components/SaleBillPrint";
 
 const Sales = () => {
+  // URL parameters for payment flow
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openId = searchParams.get('openId');
+  const action = searchParams.get('action');
+
   // State management
   const [search, setSearch] = useState("");
   const [customerFilter, setCustomerFilter] = useState("");
@@ -85,9 +92,10 @@ const Sales = () => {
   const { data: accountsData } = useAccounts({ type: "cashier" });
   const accounts = accountsData?.accounts || [];
   const createSaleMutation = useCreateSale();
+  const updateSaleMutation = useUpdateSale();
   
   // Data processing
-  const sales = salesResp?.sales || [];
+  const sales = useMemo(() => salesResp?.sales || [], [salesResp?.sales]);
   const total = salesResp?.total || 0;
   const totalPages = salesResp?.pages || Math.max(1, Math.ceil(total / limit));
 
@@ -99,6 +107,30 @@ const Sales = () => {
     return employees?.data?.find(emp => emp._id === employeeId);
   };
 
+  // Handle URL parameters for modal flow
+  useEffect(() => {
+    if (openId && action === 'view') {
+      // Find the sale with the given ID
+      const sale = sales.find(s => s._id === openId);
+      if (sale) {
+        setSelectedSaleId(openId);
+        setShowDetailsModal(true);
+      }
+    } else if (openId && action === 'pay') {
+      // Find the sale with the given ID
+      const sale = sales.find(s => s._id === openId);
+      if (sale && sale.dueAmount > 0) {
+        setSelectedSaleId(openId);
+        setShowPaymentModal(true);
+      }
+    }
+  }, [openId, action, sales]);
+
+  // Clear URL parameters when modals close
+  const clearUrlParams = () => {
+    setSearchParams({});
+  };
+
   // Event handlers
   const handleViewDetails = (saleId) => {
     setSelectedSaleId(saleId);
@@ -106,8 +138,9 @@ const Sales = () => {
   };
 
   const handleEditSale = (sale) => {
-    // TODO: Implement edit functionality
     console.log('Edit sale:', sale);
+    setSelectedSaleId(sale._id);
+    setShowAddSaleModal(true);
   };
 
   const handleDeleteSale = (saleId) => {
@@ -128,6 +161,25 @@ const Sales = () => {
   };
 
   const handleCreateSale = (saleData) => {
+    // Handle edit mode
+    if (selectedSaleId) {
+      updateSaleMutation.mutate(
+        { id: selectedSaleId, ...saleData },
+        {
+          onSuccess: () => {
+            setShowAddSaleModal(false);
+            setSelectedSaleId(null);
+            alert("فروش با موفقیت ویرایش شد");
+          },
+          onError: (error) => {
+            alert(`خطا در ویرایش فروش: ${error.message}`);
+          }
+        }
+      );
+      return;
+    }
+
+    // Handle create mode
     createSaleMutation.mutate(saleData, {
       onSuccess: async (createdSale) => {
         // Reset form and close modal
@@ -236,6 +288,7 @@ const Sales = () => {
       setPaymentAmount("");
       setSelectedAccount("");
       setPaymentDescription("");
+      clearUrlParams();
       window.location.reload();
     } catch (error) {
       alert("خطا در ثبت پرداخت: " + error.message);
@@ -457,6 +510,18 @@ const Sales = () => {
                         >
                           <PrinterIcon className="h-4 w-4" />
                         </button>
+                        {sale.dueAmount > 0 && (
+                          <button
+                            onClick={() => {
+                              setSelectedSaleId(sale._id);
+                              setShowPaymentModal(true);
+                            }}
+                            className="text-green-600 hover:text-green-900 flex items-center gap-1"
+                            title="ثبت پرداخت"
+                          >
+                            <BanknotesIcon className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEditSale(sale)}
                           className="text-green-600 hover:text-green-900 flex items-center gap-1"
@@ -506,7 +571,7 @@ const Sales = () => {
         )}
       </div>
 
-      {/* Add Sale Modal */}
+      {/* Add/Edit Sale Modal */}
       {showAddSaleModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -515,8 +580,13 @@ const Sales = () => {
               handleSubmit={handleSubmit}
               watch={watch}
               setValue={setValue}
-              onClose={() => setShowAddSaleModal(false)}
+              onClose={() => {
+                setShowAddSaleModal(false);
+                setSelectedSaleId(null);
+              }}
               onSubmit={handleCreateSale}
+              editMode={!!selectedSaleId}
+              saleToEdit={selectedSale}
             />
           </div>
         </div>
@@ -529,7 +599,10 @@ const Sales = () => {
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">جزئیات فروش</h2>
               <button
-                onClick={() => setShowDetailsModal(false)}
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  clearUrlParams();
+                }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <XCircleIcon className="h-6 w-6" />
@@ -576,7 +649,7 @@ const Sales = () => {
                   <h3 className="text-sm font-medium text-gray-700 mb-3">اطلاعات فروش</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">نمبر فاکتور</h4>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">نمبر بیل</h4>
                       <p className="text-sm font-medium text-gray-900">
                         {selectedSale.billNumber || 'نامشخص'}
                       </p>
@@ -687,7 +760,10 @@ const Sales = () => {
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">ثبت پرداخت</h2>
               <button
-                onClick={() => setShowPaymentModal(false)}
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  clearUrlParams();
+                }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <XMarkIcon className="h-6 w-6" />
@@ -740,7 +816,10 @@ const Sales = () => {
 
               <div className="flex justify-end gap-2 pt-4">
                 <button
-                  onClick={() => setShowPaymentModal(false)}
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    clearUrlParams();
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   انصراف

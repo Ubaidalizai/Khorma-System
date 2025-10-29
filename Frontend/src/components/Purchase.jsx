@@ -28,7 +28,7 @@ import SupplierForm from "./SupplierForm";
 import PurchaseForm from "./PurchaseForm";
 import { formatCurrency } from "../utilies/helper";
 const tableHeader = [
-  { title: "نمبر فاکتور" },
+  { title: "نمبر بیل" },
   { title: "تاریخ" },
   { title: "تهیه کننده" },
   { title: "تعداد جنس" },
@@ -269,7 +269,7 @@ function Purchase({ getPaymentStatusColor }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    نمبر فاکتور
+                    نمبر بیل
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
                     {selectedPurchase._id}

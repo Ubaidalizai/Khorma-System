@@ -101,14 +101,18 @@ exports.createSale = asyncHandler(async (req, res, next) => {
 
       // 🟩 Employee sale
       if (employee) {
+        // If user specified batchNumber, use it; otherwise use DEFAULT
+        const targetBatch = item.batchNumber || 'DEFAULT';
+        
         const empStock = await EmployeeStock.findOne({
           employee,
           product: product._id,
+          batchNumber: targetBatch,
         }).session(session);
 
         if (!empStock || empStock.quantity_in_hand < baseQty) {
           throw new AppError(
-            `Employee has insufficient stock for ${product.name}`,
+            `Employee has insufficient stock for ${product.name} in batch ${targetBatch}`,
             400
           );
         }
@@ -116,11 +120,14 @@ exports.createSale = asyncHandler(async (req, res, next) => {
         empStock.quantity_in_hand -= baseQty;
         await empStock.save({ session });
 
-        totalCost = product.latestPurchasePrice * baseQty;
+        // Use the employee stock's purchase price if available, otherwise fallback to product's latest purchase price
+        const costPerUnit = empStock.purchasePricePerBaseUnit || product.latestPurchasePrice || 0;
+        totalCost = costPerUnit * baseQty;
+        
         batchesUsed.push({
-          batchNumber: 'EMPLOYEE_STOCK',
+          batchNumber: targetBatch,
           quantityUsed: baseQty,
-          costPerUnit: product.latestPurchasePrice,
+          costPerUnit: costPerUnit,
         });
       }
 
@@ -281,6 +288,7 @@ exports.createSale = asyncHandler(async (req, res, next) => {
     await saleDoc.save({ session });
 
     // 3️⃣ ACCOUNT TRANSACTIONS
+    // Prepare references for accounts to reuse in payment section
     // Customer debit (if customer provided) — customer owes totalAmount
     let customerAccount = null;
     if (customer) {
@@ -299,7 +307,7 @@ exports.createSale = asyncHandler(async (req, res, next) => {
             amount: totalAmount,
             referenceType: 'sale',
             referenceId: saleDoc._id,
-            description: 'Customer sale debit',
+            description: `فروش به مشتری ${customerAccount.name} - بل نمبر: ${saleDoc.billNumber || 'N/A'}`,
             created_by: req.user?._id,
           },
         ],
@@ -308,6 +316,35 @@ exports.createSale = asyncHandler(async (req, res, next) => {
 
       customerAccount.currentBalance += totalAmount;
       await customerAccount.save({ session });
+    }
+
+    // Employee debit (if employee provided) — employee owes totalAmount
+    let employeeAccountDoc = null;
+    if (employee) {
+      employeeAccountDoc = await Account.findOne({
+        refId: employee,
+        type: 'employee',
+      }).session(session);
+      if (!employeeAccountDoc)
+        throw new AppError('Employee account not found', 404);
+
+      await AccountTransaction.create(
+        [
+          {
+            account: employeeAccountDoc._id,
+            transactionType: 'Sale',
+            amount: totalAmount,
+            referenceType: 'sale',
+            referenceId: saleDoc._id,
+            description: `فروش به کارمند ${employeeAccountDoc.name} - بل نمبر: ${saleDoc.billNumber || 'N/A'}`,
+            created_by: req.user?._id,
+          },
+        ],
+        { session }
+      );
+
+      employeeAccountDoc.currentBalance += totalAmount;
+      await employeeAccountDoc.save({ session });
     }
 
     // Payment account credit (Dakhal / Tajri / Saraf) - Customer pays you
@@ -321,7 +358,7 @@ exports.createSale = asyncHandler(async (req, res, next) => {
             amount: paidAmount,
             referenceType: 'sale',
             referenceId: saleDoc._id,
-            description: `Sale payment placed in ${account.name}`,
+            description: `پرداخت فروش در ${account.name} - بل نمبر: ${saleDoc.billNumber || 'N/A'}`,
             created_by: req.user?._id,
           },
         ],
@@ -332,7 +369,7 @@ exports.createSale = asyncHandler(async (req, res, next) => {
       await account.save({ session });
 
       // Payment reduces customer balance (their debt decreases)
-      if (customer) {
+      if (customer && customerAccount) {
         await AccountTransaction.create(
           [
             {
@@ -341,7 +378,7 @@ exports.createSale = asyncHandler(async (req, res, next) => {
               amount: -paidAmount,
               referenceType: 'sale',
               referenceId: saleDoc._id,
-              description: `Payment made for sale`,
+              description: `پرداخت برای فروش - بل نمبر: ${saleDoc.billNumber || 'N/A'}`,
               created_by: req.user?._id,
             },
           ],
@@ -350,6 +387,27 @@ exports.createSale = asyncHandler(async (req, res, next) => {
 
         customerAccount.currentBalance -= paidAmount;
         await customerAccount.save({ session });
+      }
+
+      // Payment reduces employee balance (their debt decreases)
+      if (employee && employeeAccountDoc) {
+        await AccountTransaction.create(
+          [
+            {
+              account: employeeAccountDoc._id,
+              transactionType: 'Payment',
+              amount: -paidAmount,
+              referenceType: 'sale',
+              referenceId: saleDoc._id,
+              description: `پرداخت برای فروش (کارمند) - بل نمبر: ${saleDoc.billNumber || 'N/A'}`,
+              created_by: req.user?._id,
+            },
+          ],
+          { session }
+        );
+
+        employeeAccountDoc.currentBalance -= paidAmount;
+        await employeeAccountDoc.save({ session });
       }
     }
 
@@ -475,7 +533,12 @@ exports.getSale = asyncHandler(async (req, res) => {
   const sale = await Sale.findOne({
     _id: req.params.id,
     isDeleted: false,
-  }).populate('soldBy', 'name email');
+  })
+    .populate('customer', 'name')
+    .populate('employee', 'name')
+    .populate('soldBy', 'name email')
+    .populate('placedIn', 'name type');
+  
   if (!sale) throw new AppError('Sale not found', 404);
 
   const items = await SaleItem.find({
@@ -484,9 +547,14 @@ exports.getSale = asyncHandler(async (req, res) => {
   })
     .populate('product', 'name brand base_unit')
     .populate('unit', 'name conversion_to_base');
+  
+  // Attach items to sale object for convenience
+  const saleObj = sale.toObject();
+  saleObj.items = items;
+  
   res.status(200).json({
     status: 'success',
-    data: { sale, items },
+    data: saleObj,
   });
 });
 
@@ -787,21 +855,43 @@ exports.restoreSale = asyncHandler(async (req, res, next) => {
     for (const item of saleItems) {
       const unit = await Unit.findById(item.unit).session(session);
       const baseQty = item.quantity * unit.conversion_to_base;
-      const stockLoc = sale.employee ? 'employee' : 'store';
+      
+      if (sale.employee) {
+        // For employee sales, deduct from employee stock (with batch tracking)
+        const targetBatch = item.batchNumber || 'DEFAULT';
+        const empStock = await EmployeeStock.findOne({
+          employee: sale.employee,
+          product: item.product,
+          batchNumber: targetBatch,
+        }).session(session);
+        
+        if (!empStock || empStock.quantity_in_hand < baseQty) {
+          throw new AppError(
+            `Insufficient employee stock to restore sale for product ${item.product} in batch ${targetBatch}`,
+            400
+          );
+        }
 
-      const stock = await Stock.findOne({
-        product: item.product,
-        location: stockLoc,
-      }).session(session);
-      if (!stock || stock.quantity < baseQty) {
-        throw new AppError(
-          `Insufficient stock to restore sale for ${item.product}`,
-          400
-        );
+        empStock.quantity_in_hand -= baseQty;
+        await empStock.save({ session });
+      } else {
+        // For store sales, deduct from store stock
+        const stock = await Stock.findOne({
+          product: item.product,
+          location: 'store',
+          batchNumber: item.batchNumber || 'DEFAULT',
+        }).session(session);
+        
+        if (!stock || stock.quantity < baseQty) {
+          throw new AppError(
+            `Insufficient stock to restore sale for ${item.product}`,
+            400
+          );
+        }
+
+        stock.quantity -= baseQty;
+        await stock.save({ session });
       }
-
-      stock.quantity -= baseQty;
-      await stock.save({ session });
     }
 
     // 2️⃣ Recreate account transactions
@@ -949,9 +1039,22 @@ exports.returnSaleItem = asyncHandler(async (req, res, next) => {
     // ♻️ Restore stock depending on sale type
     if (sale.employee) {
       // Riding man sale → return to his employee stock
+      // Get the product to fetch latest purchase price
+      const product = await Product.findById(productId).session(session);
+      if (!product) throw new AppError('Product not found', 404);
+      
+      // Determine target batch (use item's batchNumber or DEFAULT)
+      const targetBatch = item.batchNumber || 'DEFAULT';
+      
       await EmployeeStock.findOneAndUpdate(
-        { employee: sale.employee, product: productId },
-        { $inc: { quantity_in_hand: baseQty } },
+        { employee: sale.employee, product: productId, batchNumber: targetBatch },
+        { 
+          $inc: { quantity_in_hand: baseQty },
+          $setOnInsert: {
+            purchasePricePerBaseUnit: item.costPricePerUnit || product.latestPurchasePrice || 0,
+            batchNumber: targetBatch,
+          }
+        },
         { upsert: true, session }
       );
     } else {
@@ -1598,7 +1701,7 @@ exports.recordSalePayment = asyncHandler(async (req, res, next) => {
           referenceType: 'sale',
           referenceId: sale._id,
           created_by: req.user._id,
-          description: description || `Additional payment for sale`,
+          description: description || `پرداخت اضافی برای فروش - بل نمبر: ${sale.billNumber || 'N/A'}`,
         },
       ],
       { session }
@@ -1618,7 +1721,7 @@ exports.recordSalePayment = asyncHandler(async (req, res, next) => {
             referenceType: 'sale',
             referenceId: sale._id,
             created_by: req.user._id,
-            description: description || `Payment made for sale`,
+            description: description || `پرداخت اضافی برای فروش - بل نمبر: ${sale.billNumber || 'N/A'}`,
           },
         ],
         { session }
@@ -1672,4 +1775,164 @@ exports.recordSalePayment = asyncHandler(async (req, res, next) => {
     session.endSession();
     throw new AppError(err.message || 'Failed to record payment', 500);
   }
+});
+
+/**
+ * @desc    Get sales summary by date range (daily/weekly/monthly)
+ * @route   GET /api/v1/sales/reports
+ */
+exports.getSalesReports = asyncHandler(async (req, res, next) => {
+  const { startDate, endDate, groupBy = 'day', includeProfit = 'false' } = req.query;
+
+  if (!startDate || !endDate) {
+    throw new AppError('Start date and end date are required', 400);
+  }
+
+  const matchStage = {
+    isDeleted: false,
+    saleDate: {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    },
+  };
+
+  let groupStage;
+  let dateFormat;
+  
+  switch (groupBy) {
+    case 'day':
+      groupStage = {
+        _id: {
+          year: { $year: '$saleDate' },
+          month: { $month: '$saleDate' },
+          day: { $dayOfMonth: '$saleDate' },
+        },
+      };
+      dateFormat = '%Y-%m-%d';
+      break;
+    case 'week':
+      groupStage = {
+        _id: {
+          year: { $year: '$saleDate' },
+          week: { $week: '$saleDate' },
+        },
+      };
+      dateFormat = '%Y-W%U';
+      break;
+    case 'month':
+      groupStage = {
+        _id: {
+          year: { $year: '$saleDate' },
+          month: { $month: '$saleDate' },
+        },
+      };
+      dateFormat = '%Y-%m';
+      break;
+    default:
+      throw new AppError(
+        'Invalid groupBy parameter. Must be day, week, or month',
+        400
+      );
+  }
+
+  // Get sales summary (lightweight)
+  const salesSummary = await Sale.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        ...groupStage,
+        totalSales: { $sum: '$totalAmount' },
+        totalPaid: { $sum: '$paidAmount' },
+        totalDue: { $sum: '$dueAmount' },
+        salesCount: { $sum: 1 },
+      },
+    },
+    { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 } },
+  ]);
+  let combinedSummary = salesSummary;
+
+  // Optionally include profit (heavier join) only when requested
+  if (includeProfit === 'true') {
+    const profitSummary = await SaleItem.aggregate([
+      {
+        $lookup: {
+          from: 'sales',
+          localField: 'sale',
+          foreignField: '_id',
+          as: 'sale',
+        },
+      },
+      { $unwind: '$sale' },
+      { $match: matchStage },
+      {
+        $group: {
+          ...groupStage,
+          totalProfit: { $sum: '$profit' },
+          totalCost: { $sum: '$cost' },
+          totalRevenue: { $sum: '$revenue' },
+        },
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 } },
+    ]);
+
+    combinedSummary = salesSummary.map(saleItem => {
+      const profitItem = profitSummary.find(
+        p => JSON.stringify(p._id) === JSON.stringify(saleItem._id)
+      );
+      return {
+        ...saleItem,
+        totalProfit: profitItem?.totalProfit || 0,
+        totalCost: profitItem?.totalCost || 0,
+        totalRevenue: profitItem?.totalRevenue || 0,
+      };
+    });
+  }
+
+  // Format dates for frontend
+  const formattedSummary = combinedSummary.map(item => {
+    let dateLabel;
+    if (groupBy === 'day') {
+      dateLabel = `${item._id.year}-${String(item._id.month).padStart(2, '0')}-${String(item._id.day).padStart(2, '0')}`;
+    } else if (groupBy === 'week') {
+      dateLabel = `Week ${item._id.week}, ${item._id.year}`;
+    } else if (groupBy === 'month') {
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      dateLabel = `${monthNames[item._id.month - 1]} ${item._id.year}`;
+    }
+    
+    const base = {
+      date: dateLabel,
+      sales: item.totalSales,
+      paid: item.totalPaid,
+      due: item.totalDue,
+      count: item.salesCount,
+    };
+    if (includeProfit === 'true') {
+      return {
+        ...base,
+        purchases: item.totalCost || 0,
+        profit: item.totalProfit || 0,
+      };
+    }
+    return base;
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      period: { startDate, endDate },
+      groupBy,
+      summary: formattedSummary,
+      totals: {
+        totalSales: formattedSummary.reduce((sum, item) => sum + item.sales, 0),
+        totalProfit: includeProfit === 'true' ? formattedSummary.reduce((sum, item) => sum + (item.profit || 0), 0) : undefined,
+        totalPaid: formattedSummary.reduce((sum, item) => sum + item.paid, 0),
+        totalDue: formattedSummary.reduce((sum, item) => sum + item.due, 0),
+        totalCount: formattedSummary.reduce((sum, item) => sum + item.count, 0),
+      },
+    },
+  });
 });

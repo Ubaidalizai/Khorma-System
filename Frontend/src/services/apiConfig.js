@@ -159,6 +159,7 @@ export const API_ENDPOINTS = {
     CREATE: "/sales",
     UPDATE: (id) => `/sales/${id}`,
     DELETE: (id) => `/sales/${id}`,
+    REPORTS: "/sales/reports",
   },
   // Employee stock
 
@@ -231,6 +232,14 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/employees/${id}`,
   },
 
+  // Employee Stock
+  EMPLOYEE_STOCK: {
+    LIST: "/employee-stocks",
+    BY_EMPLOYEE: (employeeId) => `/employee-stocks/employee/${employeeId}`,
+    DETAIL: (id) => `/employee-stocks/${id}`,
+    RETURN: "/employee-stocks/return",
+  },
+
   // Audit Logs
   AUDIT_LOGS: {
     LIST: "/audit-logs",
@@ -263,11 +272,6 @@ export const API_ENDPOINTS = {
     BY_SOURCE: (source) => `/income/source/${source}`,
     STATS: "/income/stats",
     SUMMARY: "/income/summary",
-  },
-
-  // Account Transactions
-  ACCOUNT_TRANSACTIONS: {
-    LIST: "/account-transactions",
   },
 
   // Dashboard Statistics

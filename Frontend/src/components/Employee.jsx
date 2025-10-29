@@ -43,7 +43,10 @@ const Employee = () => {
   const { register, handleSubmit, reset } = useForm();
 
   const { data: employees } = useEmployees();
-  const { data: stocks, isLoading, error } = useEmployeeStocks({ search });
+  const { data: stocks, isLoading, error } = useEmployeeStocks({ 
+    search, 
+    employeeId: selectedEmployee 
+  });
   const { mutate: createStockTransfer } = useCreateStockTransfer();
 
   useEffect(() => {
@@ -70,9 +73,7 @@ const Employee = () => {
       emp.name.toLowerCase().includes(employeeSearch.toLowerCase())
     ) || [];
 
-  const filteredStocks = selectedEmployee
-    ? stocks?.data?.filter((item) => item.employee._id === selectedEmployee)
-    : [];
+  const filteredStocks = stocks?.data || [];
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
