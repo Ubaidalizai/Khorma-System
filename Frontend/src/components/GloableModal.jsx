@@ -4,7 +4,7 @@ import { useClickOutSide } from "../hooks/useClickOutSide";
 import { AnimatePresence, motion } from "framer-motion";
 import { AiOutlineClose } from "react-icons/ai";
 
-function GloableModal({ open, setOpen, children }) {
+function GloableModal({ open, setOpen, children, isClose }) {
   const ref = useClickOutSide(() => setOpen(false));
   return createPortal(
     <AnimatePresence>
@@ -18,13 +18,15 @@ function GloableModal({ open, setOpen, children }) {
           }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.23 }}
-          className="bg-text-400/20 dark:bg-white/20 backdrop-blur h-screen  mx-auto   fixed inset-0 z-50 flex justify-center items-center  cursor-pointer"
+          className="bg-text-400/20  backdrop-blur-[1px]  bg-black/15   h-screen  mx-auto   fixed inset-0 z-50 flex justify-center items-center  cursor-pointer"
         >
           <div className="relative p-3" ref={ref}>
-            <AiOutlineClose
-              className=" absolute top-5 right-4 p4"
-              onClick={() => setOpen(false)}
-            />
+            {!isClose && (
+              <AiOutlineClose
+                className=" absolute top-5 right-4 p4"
+                onClick={() => setOpen(false)}
+              />
+            )}
 
             {React.isValidElement(children)
               ? React.cloneElement(children, {

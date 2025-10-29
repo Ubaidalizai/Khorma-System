@@ -35,6 +35,8 @@ const stockSchema = new mongoose.Schema(
       required: true,
       min: [0, 'Quantity cannot be negative'],
     },
+
+    minLevel: { type: Number, default: 0 },
     isDeleted: {
       type: Boolean,
       default: false,

@@ -1,5 +1,15 @@
+import { AiFillEdit } from "react-icons/ai";
+import { AiFillDelete } from "react-icons/ai";
+import { AiFillEye } from "react-icons/ai";
 // import { motion } from "framer-motion";
-import { CalendarDays, ClipboardList, Info, Package, User } from "lucide-react";
+import {
+  CalendarDays,
+  ClipboardList,
+  Info,
+  Package,
+  TrashIcon,
+  User,
+} from "lucide-react";
 import { useState } from "react";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import Button from "../components/Button";
@@ -26,7 +36,7 @@ const headers = [
 import { useProduct } from "../services/useApi";
 
 function Product() {
-  const { mutate: deleteProduct, isLoading: isDeleting } = useDeleteProdcut();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProdcut();
   const [search, setSearch] = useState("");
   const { data: productList, isLoading } = useProduct({ search });
 
@@ -46,23 +56,9 @@ function Product() {
   // Confirm delete product
   const confirmDeleteProduct = () => {
     if (productToDelete) {
-      deleteProduct(productToDelete._id, {
-        onSuccess: () => {
-          console.log("محصول با موفقیت حذف شد");
-          setShowDeleteConfirm(false);
-          setProductToDelete(null);
-        },
-        onError: (error) => {
-          console.error("خطا در حذف محصول:", error);
-        },
-      });
+      deleteProduct(productToDelete._id, {});
+      setShowDeleteConfirm(false);
     }
-  };
-
-  // Cancel delete
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-    setProductToDelete(null);
   };
 
   // Handle edit product
@@ -130,56 +126,20 @@ function Product() {
                   </span>
                 </TableColumn>
                 <TableColumn>
-                  <span
-                    className={`${
-                      "itemavs" +
-                      el?._id +
-                      new Date(el?.createdAt).getMilliseconds()
-                    } table-cell   w-auto relative  align-middle md:*:text-lg text-[12px] md:font-medium font-light  capitalize`}
-                  >
-                    <div
-                      className={`  w-full h-full flex justify-center items-center`}
-                    >
-                      <TableMenuModal>
-                        <Menus>
-                          <Menus.Menu>
-                            <Menus.Toggle id={el?._id} />
-                            <Menus.List
-                              parent={
-                                "itemavs" +
-                                el?._id +
-                                new Date(el?.createdAt).getMilliseconds()
-                              }
-                              id={el?._id}
-                              className="bg-white rounded-lg shadow-xl"
-                            >
-                              <Menus.Button
-                                icon={<HiSquare2Stack />}
-                                onClick={() => handleViewProduct(el)}
-                              >
-                                نمایش
-                              </Menus.Button>
-
-                              <Menus.Button
-                                icon={<HiPencil />}
-                                onClick={() => handleEditProduct(el)}
-                              >
-                                ویرایش
-                              </Menus.Button>
-
-                              <Menus.Button
-                                icon={<HiTrash />}
-                                onClick={() => handleDeleteProduct(el)}
-                                disabled={isDeleting}
-                              >
-                                {isDeleting ? "در حال حذف..." : "حذف"}
-                              </Menus.Button>
-                            </Menus.List>
-                          </Menus.Menu>
-                        </Menus>
-                      </TableMenuModal>
-                    </div>
-                  </span>
+                  <div className=" flex items-center gap-x-2">
+                    <AiFillEye
+                      className=" text-[18px] text-yellow-500"
+                      onClick={() => handleViewProduct(el)}
+                    />
+                    <AiFillDelete
+                      className=" text-[18px] text-red-500"
+                      onClick={() => handleDeleteProduct(el)}
+                    />
+                    <AiFillEdit
+                      className=" text-[18px] text-green-500"
+                      onClick={() => handleEditProduct(el)}
+                    />
+                  </div>
                 </TableColumn>
               </TableRow>
             ))
@@ -207,123 +167,7 @@ function Product() {
                 Product Details
               </h2>
             </div>
-            {/* <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Product Name
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro?.name}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    SKU
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro?.sku}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Category
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro?.category}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Unit Price
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    ${selectedPro?.unitPrice}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Warehouse Stock
-                  </h3>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {selectedPro?.warehouseStock} units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Store Stock
-                  </h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    {selectedPro?.storeStock} units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Total Stock
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {selectedPro?.warehouseStock + selectedPro?.storeStock}{" "}
-                    units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Status
-                  </h3>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      selectedPro?.status
-                    )}`}
-                  >
-                    {selectedPro?.status}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Minimum Stock Level
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro?.minStockLevel} units
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Expiry Date
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedPro?.expiryDate || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Total Value
-                  </h3>
-                  <p className="text-lg font-semibold text-amber-600">
-                    $
-                    {(
-                      (selectedPro?.warehouseStock + selectedPro?.storeStock) *
-                      selectedPro?.unitPrice
-                    ).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Last Updated
-                  </h3>
-                  <p className="text-sm text-gray-700">
-                    {new Date(selectedPro?.lastUpdated).toLocaleString()}
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Description
-                  </h3>
-                  <p className="text-gray-900">
-                    {selectedPro?.description || "No description available"}
-                  </p>
-                </div>
-              </div>
-            </div> */}
+
             <div className="p-6 border-t border-gray-200 flex justify-end">
               <Button onClick={() => setShow(false)}>بسته کردن</Button>
             </div>
@@ -450,14 +294,42 @@ function Product() {
       </GloableModal>
 
       {/* Delete Confirmation Modal */}
-      <GloableModal open={showDeleteConfirm} setOpen={setShowDeleteConfirm}>
-        <Confirmation
-          type="delete"
-          message={`آیا مطمئن هستید که می‌خواهید محصول "${productToDelete?.name}" را حذف کنید؟`}
-          handleClick={confirmDeleteProduct}
-          handleCancel={cancelDelete}
-          close={cancelDelete}
-        />
+      <GloableModal
+        open={showDeleteConfirm}
+        setOpen={setShowDeleteConfirm}
+        isClose={true}
+      >
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <TrashIcon className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">تأیید حذف</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              آیا مطمئن هستید که می‌خواهید این خرید را حذف کنید؟ این عمل قابل
+              بازگشت نیست.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                لغو
+              </button>
+              <button
+                onClick={() => {
+                  confirmDeleteProduct();
+                }}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? "در حال حذف..." : "حذف"}
+              </button>
+            </div>
+          </div>
+        </div>
       </GloableModal>
     </section>
   );

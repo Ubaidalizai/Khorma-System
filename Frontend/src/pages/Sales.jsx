@@ -16,10 +16,10 @@ import { formatCurrency } from "../utilies/helper";
 import Modal from "./../components/Modal";
 import { useForm } from "react-hook-form";
 import {
-  useSales, 
+  useSales,
   useSale,
-  useCustomers, 
-  useEmployees, 
+  useCustomers,
+  useEmployees,
   useDeleteSales,
   useCreateSale,
   useAccounts
@@ -35,6 +35,7 @@ const Sales = () => {
   const [customerFilter, setCustomerFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [limit] = useState(10);
   const [selectedSaleId, setSelectedSaleId] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -51,12 +52,7 @@ const Sales = () => {
   const [customerAccountToPrint, setCustomerAccountToPrint] = useState(null);
 
   // Form setup
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-  } = useForm({
+  const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
       saleDate: new Date().toISOString().slice(0, 10),
       customer: "",
@@ -71,32 +67,33 @@ const Sales = () => {
   });
 
   // API hooks
-  const { data: salesResp, isLoading } = useSales({ 
-    search, 
-    customer: customerFilter, 
-    status: statusFilter, 
-    page, 
-    limit 
+  const { data: salesResp, isLoading } = useSales({
+    search,
+    customer: customerFilter,
+    status: statusFilter,
+    page,
+    limit,
   });
   const { data: customers } = useCustomers();
   const { data: employees } = useEmployees();
-  const { data: selectedSale, isLoading: isLoadingDetails } = useSale(selectedSaleId);
+  const { data: selectedSale, isLoading: isLoadingDetails } =
+    useSale(selectedSaleId);
   const deleteSaleMutation = useDeleteSales();
   const { data: accountsData } = useAccounts({ type: "cashier" });
   const accounts = accountsData?.accounts || [];
   const createSaleMutation = useCreateSale();
-  
+
   // Data processing
   const sales = salesResp?.sales || [];
   const total = salesResp?.total || 0;
   const totalPages = salesResp?.pages || Math.max(1, Math.ceil(total / limit));
 
   const findCustomer = (customerId) => {
-    return customers?.data?.find(cust => cust._id === customerId);
+    return customers?.data?.find((cust) => cust._id === customerId);
   };
 
   const findEmployee = (employeeId) => {
-    return employees?.data?.find(emp => emp._id === employeeId);
+    return employees?.data?.find((emp) => emp._id === employeeId);
   };
 
   // Event handlers
@@ -107,7 +104,7 @@ const Sales = () => {
 
   const handleEditSale = (sale) => {
     // TODO: Implement edit functionality
-    console.log('Edit sale:', sale);
+    console.log("Edit sale:", sale);
   };
 
   const handleDeleteSale = (saleId) => {
@@ -122,7 +119,7 @@ const Sales = () => {
         },
         onError: (error) => {
           alert(`خطا در حذف فروش: ${error.message}`);
-        }
+        },
       });
     }
   };
@@ -170,7 +167,7 @@ const Sales = () => {
       },
       onError: (error) => {
         alert(`خطا در ایجاد فروش: ${error.message}`);
-      }
+      },
     });
   };
 
@@ -247,11 +244,16 @@ const Sales = () => {
   // Calculate statistics
   const stats = {
     totalSales: total || sales?.length || 0,
-    totalRevenue: sales?.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0) || 0,
-    totalPaid: sales?.reduce((sum, s) => sum + (parseFloat(s.paidAmount) || 0), 0) || 0,
-    totalOwed: sales?.reduce((sum, s) => sum + (parseFloat(s.dueAmount) || 0), 0) || 0,
-    pendingPayments: sales?.filter((s) => parseFloat(s.dueAmount) > 0).length || 0,
-    completedPayments: sales?.filter((s) => parseFloat(s.dueAmount) === 0).length || 0,
+    totalRevenue:
+      sales?.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0) || 0,
+    totalPaid:
+      sales?.reduce((sum, s) => sum + (parseFloat(s.paidAmount) || 0), 0) || 0,
+    totalOwed:
+      sales?.reduce((sum, s) => sum + (parseFloat(s.dueAmount) || 0), 0) || 0,
+    pendingPayments:
+      sales?.filter((s) => parseFloat(s.dueAmount) > 0).length || 0,
+    completedPayments:
+      sales?.filter((s) => parseFloat(s.dueAmount) === 0).length || 0,
   };
 
   const getPaymentStatusColor = (status) => {
@@ -268,7 +270,7 @@ const Sales = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fa-IR');
+    return new Date(dateString).toLocaleDateString("fa-IR");
   };
 
   return (
@@ -276,12 +278,12 @@ const Sales = () => {
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">مدیریت فروش</h1>
-          <p className="text-gray-600 mt-2">مشاهده و مدیریت فروشها</p>
+          <h1 className="text-xl font-bold text-gray-900">مدیریت فروش</h1>
+          <p className="text-gray-600 mt-1">مشاهده و مدیریت فروشها</p>
         </div>
-        <button 
+        <button
           onClick={() => setShowAddSaleModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 transition-colors"
         >
           <PlusIcon className="h-5 w-5" />
           اضافه کردن فروش
@@ -289,7 +291,7 @@ const Sales = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -348,20 +350,28 @@ const Sales = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="flex flex-wrap gap-4">
+      <div className="bg-white w-full  rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className=" flex gap-x-3">
+          <div>
             <input
               type="text"
               placeholder="جستجو بر اساس نام مشتری..."
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className={inputStyle}
             />
+          </div>
+          <div>
             <select
               value={customerFilter}
-              onChange={(e) => { setCustomerFilter(e.target.value); setPage(1); }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              onChange={(e) => {
+                setCustomerFilter(e.target.value);
+                setPage(1);
+              }}
+              className={inputStyle}
             >
               <option value="">همه مشتری ها</option>
               {customers?.data?.map((customer) => (
@@ -370,10 +380,15 @@ const Sales = () => {
                 </option>
               ))}
             </select>
+          </div>
+          <div>
             <select
               value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className={inputStyle}
             >
               <option value="">همه حالات</option>
               <option value="paid">پرداخت شده</option>
@@ -390,26 +405,48 @@ const Sales = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاریخ</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">مشتری</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">کارمند</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">قیمت مجموعی</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">پرداخت شده</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">باقی مانده</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">حالت</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">عملیات</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  تاریخ
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  مشتری
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  کارمند
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  قیمت مجموعی
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  پرداخت شده
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  باقی مانده
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  حالت
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  عملیات
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={8}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
                     در حال بارگذاری...
                   </td>
                 </tr>
               ) : sales.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={8}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
                     فروشی یافت نشد
                   </td>
                 </tr>
@@ -420,10 +457,14 @@ const Sales = () => {
                       {formatDate(sale.saleDate)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {sale.customer?.name || findCustomer(sale.customer)?.name || 'نامشخص'}
+                      {sale.customer?.name ||
+                        findCustomer(sale.customer)?.name ||
+                        "نامشخص"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {sale.employee?.name || findEmployee(sale.employee)?.name || 'نامشخص'}
+                      {sale.employee?.name ||
+                        findEmployee(sale.employee)?.name ||
+                        "نامشخص"}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-purple-600">
                       {formatCurrency(sale.totalAmount?.toFixed(2))}
@@ -435,10 +476,14 @@ const Sales = () => {
                       {formatCurrency(sale.dueAmount?.toFixed(2))}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
-                        sale.dueAmount > 0 ? "partial" : "paid"
-                      )}`}>
-                        {sale.dueAmount > 0 ? "نسبی پرداخت شده" : "تمام پرداخت شده"}
+                      <span
+                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                          sale.dueAmount > 0 ? "partial" : "paid"
+                        )}`}
+                      >
+                        {sale.dueAmount > 0
+                          ? "نسبی پرداخت شده"
+                          : "تمام پرداخت شده"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm">
@@ -479,7 +524,7 @@ const Sales = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200">
@@ -487,16 +532,16 @@ const Sales = () => {
               صفحه {page} از {totalPages} (مجموع {total} فروش)
             </div>
             <div className="flex gap-2">
-              <button 
-                disabled={page <= 1} 
-                onClick={() => setPage((p) => Math.max(1, p - 1))} 
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 قبلی
               </button>
-              <button 
-                disabled={page >= totalPages} 
-                onClick={() => setPage((p) => p + 1)} 
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
                 className="px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 بعدی
@@ -507,25 +552,30 @@ const Sales = () => {
       </div>
 
       {/* Add Sale Modal */}
-      {showAddSaleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <SaleForm
-              register={register}
-              handleSubmit={handleSubmit}
-              watch={watch}
-              setValue={setValue}
-              onClose={() => setShowAddSaleModal(false)}
-              onSubmit={handleCreateSale}
-            />
-          </div>
+      <GloableModal
+        open={showAddSaleModal}
+        setOpen={setShowAddSaleModal}
+        isClose={true}
+      >
+        <div className="bg-white  w-[90%] max-h-[90vh] rounded-md mx-auto overflow-y-auto">
+          <SaleForm
+            register={register}
+            handleSubmit={handleSubmit}
+            watch={watch}
+            setValue={setValue}
+            onClose={() => setShowAddSaleModal(false)}
+            onSubmit={handleCreateSale}
+          />
         </div>
-      )}
-
+      </GloableModal>
       {/* Sale Details Modal */}
-      {showDetailsModal && selectedSale && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <GloableModal
+        open={showDetailsModal}
+        setOpen={setShowDetailsModal}
+        isClose={true}
+      >
+        {selectedSale && (
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] mx-auto overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">جزئیات فروش</h2>
               <button
@@ -535,7 +585,7 @@ const Sales = () => {
                 <XCircleIcon className="h-6 w-6" />
               </button>
             </div>
-            
+
             {isLoadingDetails ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
@@ -573,32 +623,48 @@ const Sales = () => {
 
                 {/* Sale Information */}
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">اطلاعات فروش</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    اطلاعات فروش
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">نمبر فاکتور</h4>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">
+                        نمبر فاکتور
+                      </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedSale.billNumber || 'نامشخص'}
+                        {selectedSale.billNumber || "نامشخص"}
                       </p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">تاریخ فروش</h4>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">
+                        تاریخ فروش
+                      </h4>
                       <p className="text-sm font-medium text-gray-900">
                         {formatDate(selectedSale.saleDate)}
                       </p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">مشتری</h4>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">
+                        مشتری
+                      </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedSale.customer?.name || findCustomer(selectedSale.customer)?.name || 'نامشخص'}
+                        {selectedSale.customer?.name ||
+                          findCustomer(selectedSale.customer)?.name ||
+                          "نامشخص"}
                       </p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">حالت پرداخت</h4>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
-                        selectedSale.dueAmount > 0 ? "partial" : "paid"
-                      )}`}>
-                        {selectedSale.dueAmount > 0 ? "نسبی پرداخت شده" : "تمام پرداخت شده"}
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">
+                        حالت پرداخت
+                      </h4>
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                          selectedSale.dueAmount > 0 ? "partial" : "paid"
+                        )}`}
+                      >
+                        {selectedSale.dueAmount > 0
+                          ? "نسبی پرداخت شده"
+                          : "تمام پرداخت شده"}
                       </span>
                     </div>
                   </div>
@@ -607,23 +673,38 @@ const Sales = () => {
                 {/* Sale Items */}
                 <div className="bg-white border border-gray-200 rounded-lg">
                   <div className="px-3 py-2 border-b border-gray-200">
-                    <h3 className="text-sm font-medium text-gray-700">اجناس فروخته شده</h3>
+                    <h3 className="text-sm font-medium text-gray-700">
+                      اجناس فروخته شده
+                    </h3>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">محصول</th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">واحد</th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">تعداد</th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">قیمت یک دانه</th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">قیمت مجموعی</th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            محصول
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            واحد
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            تعداد
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            قیمت یک دانه
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            قیمت مجموعی
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {selectedSale.items?.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="px-3 py-6 text-center text-gray-500 text-sm">
+                            <td
+                              colSpan={5}
+                              className="px-3 py-6 text-center text-gray-500 text-sm"
+                            >
                               جنس یافت نشد
                             </td>
                           </tr>
@@ -631,10 +712,10 @@ const Sales = () => {
                           selectedSale.items?.map((item, index) => (
                             <tr key={index} className="hover:bg-gray-50">
                               <td className="px-3 py-2 text-sm text-gray-900">
-                                {item.product?.name || 'نامشخص'}
+                                {item.product?.name || "نامشخص"}
                               </td>
                               <td className="px-3 py-2 text-sm text-gray-900">
-                                {item.unit?.name || '-'}
+                                {item.unit?.name || "-"}
                               </td>
                               <td className="px-3 py-2 text-sm text-gray-900">
                                 {item.quantity || 0}
@@ -651,7 +732,7 @@ const Sales = () => {
                       </tbody>
                     </table>
                   </div>
-                  
+
                   {/* Total Summary */}
                   <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
                     <div className="flex justify-between items-center">
@@ -668,7 +749,8 @@ const Sales = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold text-gray-900">
-                          مجموع کل: {formatCurrency(selectedSale.totalAmount?.toFixed(2))}
+                          مجموع کل:{" "}
+                          {formatCurrency(selectedSale.totalAmount?.toFixed(2))}
                         </div>
                       </div>
                     </div>
@@ -677,8 +759,8 @@ const Sales = () => {
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </GloableModal>
 
       {/* Payment Modal */}
       {showPaymentModal && selectedSale && (
@@ -759,34 +841,40 @@ const Sales = () => {
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-red-100 p-2 rounded-full mr-3">
-                  <TrashIcon className="h-6 w-6 text-red-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">تأیید حذف</h3>
+      <GloableModal
+        open={showDeleteConfirm}
+        setOpen={setShowDeleteConfirm}
+        isClose={true}
+      >
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <TrashIcon className="h-6 w-6 text-red-600" />
               </div>
-              <p className="text-gray-600 mb-6">
-                آیا مطمئن هستید که می‌خواهید این فروش را حذف کنید؟ این عمل قابل بازگشت نیست.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setDeleteConfirmId(null)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                >
-                  لغو
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={deleteSaleMutation.isPending}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
-                >
-                  {deleteSaleMutation.isPending ? 'در حال حذف...' : 'حذف'}
-                </button>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900">تأیید حذف</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              آیا مطمئن هستید که می‌خواهید این فروش را حذف کنید؟ این عمل قابل
+              بازگشت نیست.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                لغو
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  confirmDelete();
+                }}
+                disabled={deleteSaleMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteSaleMutation.isPending ? "در حال حذف..." : "حذف"}
+              </button>
             </div>
           </div>
         </div>
