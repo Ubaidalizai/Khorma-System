@@ -26,6 +26,7 @@ import TableHeader from "./../components/TableHeader";
 import { formatCurrency } from "./../utilies/helper";
 import Select from "../components/Select";
 import Pagination from "../components/Pagination";
+import GloableModal from "../components/GloableModal";
 
 const Dashboard = () => {
   const headers = [
@@ -36,6 +37,58 @@ const Dashboard = () => {
     { title: "مبلغ" },
     { title: "عملیات" },
   ];
+
+  // Helper function to translate field names to Dari
+  const translateFieldName = (fieldName) => {
+    const fieldTranslations = {
+      name: "نام",
+      quantity: "مقدار",
+      price: "قیمت",
+      totalAmount: "مجموع مبلغ",
+      dueAmount: "مبلغ بدهی",
+      paidAmount: "مبلغ پرداخت شده",
+      date: "تاریخ",
+      description: "توضیحات",
+      status: "وضعیت",
+      type: "نوع",
+      category: "دسته‌بندی",
+      brand: "برند",
+      supplier: "تامین‌کننده",
+      customer: "مشتری",
+      employee: "کارمند",
+      product: "محصول",
+      purchase: "خرید",
+      sale: "فروش",
+      account: "حساب",
+      transactionType: "نوع تراکنش",
+      amount: "مبلغ",
+      reason: "دلیل",
+      changedBy: "تغییر دهنده",
+      changedAt: "تاریخ تغییر",
+      tableName: "نام جدول",
+      operation: "عملیات",
+      created_by: "ایجاد کننده",
+      updated_by: "به‌روزرسانی کننده",
+      // Add more translations as needed
+    };
+    return fieldTranslations[fieldName] || fieldName;
+  };
+
+  // Helper function to filter out ID fields
+  const filterDataFields = (data) => {
+    if (!data || typeof data !== "object") return data;
+    const filtered = {};
+    Object.entries(data).forEach(([key, value]) => {
+      if (
+        !key.toLowerCase().endsWith("id") &&
+        !key.toLowerCase().endsWith("_id") &&
+        key.toLowerCase() !== "id"
+      ) {
+        filtered[key] = value;
+      }
+    });
+    return filtered;
+  };
 
   // Helper function to render values nicely
   const renderValue = (value, depth = 0) => {
@@ -63,7 +116,9 @@ const Dashboard = () => {
             <div className="text-xs text-gray-600 mb-1">شیء:</div>
             {Object.entries(value).map(([key, val]) => (
               <div key={key} className="border-l-2 border-gray-200 pl-2 mb-1">
-                <span className="font-medium text-xs">{key}:</span>
+                <span className="font-medium text-xs">
+                  {translateFieldName(key)}:
+                </span>
                 {renderValue(val, depth + 1)}
               </div>
             ))}
@@ -310,7 +365,7 @@ const Dashboard = () => {
   const StatCard = ({ title, value, icon, color = "#6366F1", change }) => {
     const isPositive = change > 0;
     return (
-      <div className="bg-white hover:translate-y-1.5 transition-all duration-200 cursor-pointer rounded-lg shadow-sm border border-gray-200 p-4 min-h-[120px] flex flex-col justify-between">
+      <div className="bg-white hover:translate-y-1.5 transition-all duration-200 cursor-pointer rounded-lg  border border-gray-200/80 p-4 min-h-[120px] flex flex-col justify-between">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-600 truncate">{title}</p>
@@ -442,7 +497,7 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg  border border-gray-100">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
             <button
@@ -706,108 +761,112 @@ const Dashboard = () => {
         </div>
       )}
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">تأیید برگشت تراکنش</h3>
-            <p className="mb-4">لطفاً دلیل برگشت این تراکنش را وارد کنید:</p>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded mb-4"
-              rows="3"
-              placeholder="دلیل برگشت..."
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                لغو
-              </button>
-              <button
-                onClick={handleConfirmReverse}
-                disabled={!reason.trim() || reverseLoading}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
-              >
-                {reverseLoading ? "در حال پردازش..." : "تأیید برگشت"}
-              </button>
-            </div>
+      <GloableModal open={showModal} setOpen={setShowModal} isClose={true}>
+        <div className="bg-white p-6 rounded-lg shadow-lg  lg:w-[500px] w-[350px] mx-4">
+          <h3 className="text-lg font-semibold mb-4">تأیید برگشت تراکنش</h3>
+          <p className="mb-4">لطفاً دلیل برگشت این تراکنش را وارد کنید:</p>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded mb-4"
+            rows="3"
+            placeholder="دلیل برگشت..."
+          />
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+            >
+              لغو
+            </button>
+            <button
+              onClick={handleConfirmReverse}
+              disabled={!reason.trim() || reverseLoading}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+            >
+              {reverseLoading ? "در حال پردازش..." : "تأیید برگشت"}
+            </button>
           </div>
         </div>
-      )}
+      </GloableModal>
 
-      {showDetailsModal && selectedLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">جزئیات لاگ حسابرسی</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+      <GloableModal
+        open={showDetailsModal}
+        setOpen={setShowDetailsModal}
+        isClose={true}
+      >
+        {selectedLog && (
+          <div className=" w-[550px] px-5 mx-auto rounded-lg lg:w-[800px] bg-white overflow-y-auto ">
+            <div className=" bg-transparent    w-full  max-h-[80vh] overflow-y-auto">
+              <h3 className="text-lg font-semibold mb-4">جزئیات لاگ حسابرسی</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      جدول
+                    </label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedLog.tableName || "نامشخص"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      نوع عملیات
+                    </label>
+                    <p
+                      className={`mt-1 text-sm font-semibold ${getOperationColor(
+                        selectedLog.operation
+                      )}`}
+                    >
+                      {getOperationPersian(selectedLog.operation)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      تغییر دهنده
+                    </label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedLog.changedBy || "نامشخص"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      تاریخ تغییر
+                    </label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {formatTimeAgo(selectedLog.changedAt)}
+                    </p>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    جدول
+                    دلیل
                   </label>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedLog.tableName || "نامشخص"}
+                    {selectedLog.reason || "بدون دلیل"}
                   </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    نوع عملیات
-                  </label>
-                  <p
-                    className={`mt-1 text-sm font-semibold ${getOperationColor(
-                      selectedLog.operation
-                    )}`}
-                  >
-                    {getOperationPersian(selectedLog.operation)}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    تغییر دهنده
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {selectedLog.changedBy || "نامشخص"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    تاریخ تغییر
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {formatTimeAgo(selectedLog.changedAt)}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  دلیل
-                </label>
-                <p className="mt-1 text-sm text-gray-900">
-                  {selectedLog.reason || "بدون دلیل"}
-                </p>
-              </div>
-              {selectedLog.operation === "INSERT" && selectedLog.newData && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    داده‌های جدید اضافه شده
-                  </label>
-                  <div className="bg-green-50 p-4 rounded border overflow-x-auto">
-                    <table className="min-w-full table-auto">
-                      <thead>
-                        <tr className="bg-green-100">
-                          <th className="px-4 py-2 text-left text-green-800 font-semibold">
-                            فیلد
-                          </th>
-                          <th className="px-4 py-2 text-left text-green-800 font-semibold">
-                            مقدار
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(selectedLog.newData).map(
-                          ([key, value], index) => (
+                {selectedLog.operation === "INSERT" && selectedLog.newData && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      داده‌های جدید اضافه شده
+                    </label>
+                    <div className="bg-green-50 p-4 rounded border border-slate-200 overflow-x-auto">
+                      <table className="min-w-full table-auto">
+                        <thead>
+                          <tr className="bg-green-100">
+                            <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                              فیلد
+                            </th>
+                            <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                              مقدار
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(
+                            filterDataFields(selectedLog.newData)
+                          ).map(([key, value], index) => (
                             <tr
                               key={key}
                               className={
@@ -815,45 +874,45 @@ const Dashboard = () => {
                               }
                             >
                               <td className="px-4 py-2 font-medium text-green-800 border-b border-green-200">
-                                {key}
+                                {translateFieldName(key)}
                               </td>
                               <td className="px-4 py-2 text-green-700 border-b border-green-200">
                                 {renderValue(value)}
                               </td>
                             </tr>
-                          )
-                        )}
-                      </tbody>
-                    </table>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              )}
-              {selectedLog.operation === "UPDATE" &&
-                (selectedLog.oldData || selectedLog.newData) && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      مقایسه داده‌ها: قبل و بعد از تغییر
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {selectedLog.oldData && (
-                        <div className="bg-red-50 p-4 rounded border overflow-x-auto">
-                          <h4 className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-2">
-                            <span>🔴</span> داده‌های قدیمی (قبل از تغییر)
-                          </h4>
-                          <table className="min-w-full table-auto">
-                            <thead>
-                              <tr className="bg-red-100">
-                                <th className="px-4 py-2 text-left text-red-800 font-semibold">
-                                  فیلد
-                                </th>
-                                <th className="px-4 py-2 text-left text-red-800 font-semibold">
-                                  مقدار قدیمی
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.entries(selectedLog.oldData).map(
-                                ([key, value], index) => (
+                )}
+                {selectedLog.operation === "UPDATE" &&
+                  (selectedLog.oldData || selectedLog.newData) && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        مقایسه داده‌ها: قبل و بعد از تغییر
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedLog.oldData && (
+                          <div className="bg-red-50 p-4 rounded border rounded-slate-500 overflow-x-auto">
+                            <h4 className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-2">
+                              <span>🔴</span> داده‌های قدیمی (قبل از تغییر)
+                            </h4>
+                            <table className="min-w-full table-auto">
+                              <thead>
+                                <tr className="bg-red-100">
+                                  <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                                    فیلد
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                                    مقدار قدیمی
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(
+                                  filterDataFields(selectedLog.oldData)
+                                ).map(([key, value], index) => (
                                   <tr
                                     key={key}
                                     className={
@@ -861,37 +920,37 @@ const Dashboard = () => {
                                     }
                                   >
                                     <td className="px-4 py-2 font-medium text-red-800 border-b border-red-200">
-                                      {key}
+                                      {translateFieldName(key)}
                                     </td>
                                     <td className="px-4 py-2 text-red-700 border-b border-red-200">
                                       {renderValue(value)}
                                     </td>
                                   </tr>
-                                )
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                      {selectedLog.newData && (
-                        <div className="bg-green-50 p-4 rounded border overflow-x-auto">
-                          <h4 className="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
-                            <span>🟢</span> داده‌های جدید (بعد از تغییر)
-                          </h4>
-                          <table className="min-w-full table-auto">
-                            <thead>
-                              <tr className="bg-green-100">
-                                <th className="px-4 py-2 text-left text-green-800 font-semibold">
-                                  فیلد
-                                </th>
-                                <th className="px-4 py-2 text-left text-green-800 font-semibold">
-                                  مقدار جدید
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.entries(selectedLog.newData).map(
-                                ([key, value], index) => (
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {selectedLog.newData && (
+                          <div className="bg-green-50 p-4 rounded border overflow-x-auto">
+                            <h4 className="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
+                              <span>🟢</span> داده‌های جدید (بعد از تغییر)
+                            </h4>
+                            <table className="min-w-full table-auto">
+                              <thead>
+                                <tr className="bg-green-100">
+                                  <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                                    فیلد
+                                  </th>
+                                  <th className="px-4 py-2 text-left text-green-800 font-semibold">
+                                    مقدار جدید
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(
+                                  filterDataFields(selectedLog.newData)
+                                ).map(([key, value], index) => (
                                   <tr
                                     key={key}
                                     className={
@@ -901,76 +960,76 @@ const Dashboard = () => {
                                     }
                                   >
                                     <td className="px-4 py-2 font-medium text-green-800 border-b border-green-200">
-                                      {key}
+                                      {translateFieldName(key)}
                                     </td>
                                     <td className="px-4 py-2 text-green-700 border-b border-green-200">
                                       {renderValue(value)}
                                     </td>
                                   </tr>
-                                )
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                {selectedLog.operation === "DELETE" && selectedLog.oldData && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      داده‌های حذف شده
+                    </label>
+                    <div className="bg-red-50 p-4 rounded border border-slate-300 overflow-x-auto">
+                      <table className="min-w-full table-auto">
+                        <thead>
+                          <tr className="bg-red-100">
+                            <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                              فیلد
+                            </th>
+                            <th className="px-4 py-2 text-left text-red-800 font-semibold">
+                              مقدار حذف شده
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(selectedLog.oldData).map(
+                            ([key, value], index) => (
+                              <tr
+                                key={key}
+                                className={
+                                  index % 2 === 0 ? "bg-red-50" : "bg-white"
+                                }
+                              >
+                                <td className="px-4 py-2 font-medium text-red-800 border-b border-red-200">
+                                  {key}
+                                </td>
+                                <td className="px-4 py-2 text-red-700 border-b border-red-200">
+                                  {renderValue(value)}
+                                </td>
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 )}
-              {selectedLog.operation === "DELETE" && selectedLog.oldData && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    داده‌های حذف شده
-                  </label>
-                  <div className="bg-red-50 p-4 rounded border overflow-x-auto">
-                    <table className="min-w-full table-auto">
-                      <thead>
-                        <tr className="bg-red-100">
-                          <th className="px-4 py-2 text-left text-red-800 font-semibold">
-                            فیلد
-                          </th>
-                          <th className="px-4 py-2 text-left text-red-800 font-semibold">
-                            مقدار حذف شده
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(selectedLog.oldData).map(
-                          ([key, value], index) => (
-                            <tr
-                              key={key}
-                              className={
-                                index % 2 === 0 ? "bg-red-50" : "bg-white"
-                              }
-                            >
-                              <td className="px-4 py-2 font-medium text-red-800 border-b border-red-200">
-                                {key}
-                              </td>
-                              <td className="px-4 py-2 text-red-700 border-b border-red-200">
-                                {renderValue(value)}
-                              </td>
-                            </tr>
-                          )
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setSelectedLog(null);
-                }}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                بستن
-              </button>
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedLog(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  بستن
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </GloableModal>
     </div>
   );
 };

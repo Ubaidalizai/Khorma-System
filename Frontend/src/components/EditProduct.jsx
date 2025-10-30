@@ -10,7 +10,6 @@ import Button from "./Button";
 import ProductForm from "./ProductForm";
 
 function EditProduct({ productId, onClose }) {
-  
   const { data, isLoading, isError } = useProdcutItem(productId);
   const { mutate: updateProduct } = useUpdateProdcut();
   const { handleSubmit, reset, register, control, formState } = useForm({
@@ -38,8 +37,15 @@ function EditProduct({ productId, onClose }) {
 
   const onSubmit = (formData) => {
     console.log(formData);
-    updateProduct({ id: productId, updatedItem: formData });
-    reset();
+    updateProduct(
+      { id: productId, updatedItem: formData },
+      {
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      }
+    );
   };
 
   if (isLoading) return <Spinner />;

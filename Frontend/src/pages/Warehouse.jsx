@@ -1,12 +1,11 @@
+import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { BiLoaderAlt, BiPencil, BiTransferAlt } from "react-icons/bi";
 import { CgEye } from "react-icons/cg";
 import { IoMdClose } from "react-icons/io";
 import Button from "../components/Button";
 import GloableModal from "../components/GloableModal";
-import Input from "../components/Input";
-import NumberInput from "../components/NumberInput";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
@@ -16,11 +15,12 @@ import TableRow from "../components/TableRow";
 import {
   useCreateStockTransfer,
   useEmployees,
-  useUpdateStore,
+  useUpdateInventory,
   useWarehouseStocks,
 } from "../services/useApi";
-import { getStatusColor, getStockStatus } from "../utilies/stockStatus";
+import { getStockStatus } from "../utilies/stockStatus";
 import { inputStyle } from "./../components/ProductForm";
+import { formatCurrency } from "../utilies/helper";
 
 // Headers aligned with Backend stock.model.js
 const tableHeader = [
@@ -31,12 +31,18 @@ const tableHeader = [
   { title: "تاریخ انقضا" },
   { title: "قیمت خرید/واحد" },
   { title: "تعداد" },
+  { title: "حداقل موجودی" },
   { title: "حالت" },
   { title: "عملیات" },
 ];
 function Warehouse() {
-  const { control, handleSubmit, reset } = useForm();
-  const { mutate: updateInventory } = useUpdateStore();
+  const {
+    register: editRegister,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const { mutate: updateInventory } = useUpdateInventory();
   const [showTransfer, setShowTransfer] = useState(false);
   const transferForm = useForm();
   const { register, watch } = transferForm;
@@ -98,12 +104,17 @@ function Warehouse() {
 
   useEffect(
     function () {
-      reset({ ...selectedPro });
+      reset({
+        purchasePricePerBaseUnit: selectedPro?.purchasePricePerBaseUnit,
+        minLevel: selectedPro?.minLevel,
+        expiry_date: selectedPro?.expiry_date,
+      });
     },
     [selectedPro, reset]
   );
   const onSubmitEdit = (data) => {
-    updateInventory({ id: selectedPro.id, ...data });
+    console.log(data);
+    updateInventory({ id: selectedPro._id, stockData: data });
     setShowEdit(false);
   };
   if (isLoading)
@@ -145,17 +156,14 @@ function Warehouse() {
               <TableColumn className="font-semibold">
                 {row?.quantity}
               </TableColumn>
+              <TableColumn>{row.minLevel || "_"}</TableColumn>
               <TableColumn>
                 <span
                   className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    getStockStatus(row?.quantity, row?.minLevel || 0)
-                      .color
+                    getStockStatus(row?.quantity, row?.minLevel || 0).color
                   }`}
                 >
-                  {
-                    getStockStatus(row?.quantity, row?.minLevel || 0)
-                      .label
-                  }
+                  {getStockStatus(row?.quantity, row?.minLevel || 0).label}
                 </span>
               </TableColumn>
               <TableColumn>
@@ -174,8 +182,8 @@ function Warehouse() {
                       setShowTransfer(true);
                     }}
                   />
-                  <BiPencil
-                    className=" text-[18px] hover:bg-slate-200 text-green-500 rounded-full"
+                  <FaRegEdit
+                    className=" text-[18px] hover:bg-slate-200 text-green-500"
                     onClick={() => {
                       setSelectedPro(row);
                       setShowEdit(true);
@@ -224,7 +232,7 @@ function Warehouse() {
                     قیمت خرید/واحد
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    ${selectedPro?.purchasePricePerBaseUnit}
+                    {formatCurrency(selectedPro?.purchasePricePerBaseUnit)}
                   </p>
                 </div>
                 <div>
@@ -235,40 +243,9 @@ function Warehouse() {
                     {selectedPro?.location === "warehouse"
                       ? selectedPro?.quantity
                       : 0}{" "}
-                    عدد
                   </p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    موجودی در فروشگاه
-                  </h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    {selectedPro?.location === "store"
-                      ? selectedPro?.quantity
-                      : 0}{" "}
-                    عدد
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    مجموع موجودی
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {selectedPro?.quantity} عدد
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    وضعیت
-                  </h3>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      selectedPro?.expiryDate ? "موجود" : "—"
-                    )}`}
-                  >
-                    {selectedPro?.expiryDate ? "موجود" : "—"}
-                  </span>
-                </div>
+
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">
                     حداقل سطح موجودی
@@ -289,39 +266,9 @@ function Warehouse() {
                       : "در دسترس نیست"}
                   </p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    ارزش کل
-                  </h3>
-                  <p className="text-lg font-semibold text-amber-600">
-                    $
-                    {(
-                      selectedPro?.quantity *
-                      selectedPro?.purchasePricePerBaseUnit
-                    ).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    آخرین به‌روزرسانی
-                  </h3>
-                  <p className="text-sm text-gray-700">
-                    {new Date(
-                      selectedPro.updatedAt || selectedPro.createdAt
-                    ).toLocaleString("fa-IR")}
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    توضیحات
-                  </h3>
-                  <p className="text-gray-900">
-                    {selectedPro.description || "هیچ توضیحی در دسترس نیست"}
-                  </p>
-                </div>
               </div>
             </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end">
+            <div className="p-6 border-t border-gray-200 flex justify-end w-[120px]">
               <Button onClick={() => setShow(false)}>بستن</Button>
             </div>
           </div>
@@ -340,60 +287,77 @@ function Warehouse() {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
-                  <Controller
-                    defaultValue={""}
-                    name="purchasePricePerBaseUnit"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        type="number"
-                        label="قیمت هر واحد"
-                        register={field}
-                      />
-                    )}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    قیمت هر واحد
+                  </label>
+                  <input
+                    type="number"
+                    className={inputStyle}
+                    {...editRegister("purchasePricePerBaseUnit")}
                   />
                 </div>
 
                 <div>
-                  <Controller
-                    defaultValue={0}
-                    name="quantity"
-                    control={control}
-                    render={({ field }) => (
-                      <NumberInput label="تعداد" register={field} />
-                    )}
-                  />
-                </div>
-                <div>
-                  <Controller
-                    defaultValue={0}
-                    name="minLevel"
-                    control={control}
-                    render={({ field }) => (
-                      <NumberInput label="کمترین موجودی" register={field} />
-                    )}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    کمترین موجودی
+                  </label>
+                  <input
+                    type="number"
+                    className={inputStyle}
+                    {...editRegister("minLevel")}
                   />
                 </div>
 
                 <div>
-                  <Controller
-                    defaultValue={""}
-                    name="expiryDate"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="date" label="تاریخ انقضا" register={field} />
-                    )}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    تاریخ انقضا
+                  </label>
+                  <input
+                    type="date"
+                    className={inputStyle}
+                    {...editRegister("expiry_date", {
+                      required: "تاریخ انقضا الزامی است",
+                      validate: (value) => {
+                        if (!value) return "تاریخ انقضا الزامی است";
+
+                        const today = new Date();
+                        const selected = new Date(value);
+
+                        // Normalize both to midnight for clean date comparison
+                        today.setHours(0, 0, 0, 0);
+                        selected.setHours(0, 0, 0, 0);
+
+                        // Calculate the difference in days
+                        const diffInDays = Math.ceil(
+                          (selected - today) / (1000 * 60 * 60 * 24)
+                        );
+
+                        return (
+                          diffInDays >= 10 ||
+                          "تاریخ انقضا باید حداقل ۱۰ روز بعد از امروز باشد"
+                        );
+                      },
+                    })}
                   />
+                  {errors.expiry_date && (
+                    <p className=" text-[9px] text-red-500">
+                      {errors.expiry_date.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t w-[80%] mx-auto border-gray-200 flex justify-end gap-4">
+            <div className="p-6 border-t w-full mx-auto border-gray-200 flex justify-end gap-4">
               {/* <Button className=" bg-deepdate-400">لغو کردن</Button> */}
-              <Button className={" bg-primary-brown-light text-white"}>
+              <Button
+                type="submit"
+                className={" bg-primary-brown-light text-white"}
+              >
                 تغییر دادن گدام
               </Button>
               <button
+                type="button"
                 onClick={() => setShowEdit(false)}
                 className={
                   " cursor-pointer group w-full   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200 bg-transparent border  border-slate-700 text-black"

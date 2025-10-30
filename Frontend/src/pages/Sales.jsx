@@ -24,7 +24,7 @@ import {
   useDeleteSales,
   useCreateSale,
   useAccounts,
-  useUpdateSale
+  useUpdateSale,
 } from "../services/useApi";
 import SaleForm from "../components/SaleForm";
 import { XCircleIcon } from "lucide-react";
@@ -32,12 +32,13 @@ import { recordSalePayment, fetchAccounts } from "../services/apiUtiles";
 import SaleBillPrint from "../components/SaleBillPrint";
 import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
+import { toast } from "react-toastify";
 
 const Sales = () => {
   // URL parameters for payment flow
   const [searchParams, setSearchParams] = useSearchParams();
-  const openId = searchParams.get('openId');
-  const action = searchParams.get('action');
+  const openId = searchParams.get("openId");
+  const action = searchParams.get("action");
 
   // State management
   const [search, setSearch] = useState("");
@@ -92,7 +93,7 @@ const Sales = () => {
   const accounts = accountsData?.accounts || [];
   const createSaleMutation = useCreateSale();
   const updateSaleMutation = useUpdateSale();
-  
+
   // Data processing
   const sales = useMemo(() => salesResp?.sales || [], [salesResp?.sales]);
   const total = salesResp?.total || 0;
@@ -108,16 +109,16 @@ const Sales = () => {
 
   // Handle URL parameters for modal flow
   useEffect(() => {
-    if (openId && action === 'view') {
+    if (openId && action === "view") {
       // Find the sale with the given ID
-      const sale = sales.find(s => s._id === openId);
+      const sale = sales.find((s) => s._id === openId);
       if (sale) {
         setSelectedSaleId(openId);
         setShowDetailsModal(true);
       }
-    } else if (openId && action === 'pay') {
+    } else if (openId && action === "pay") {
       // Find the sale with the given ID
-      const sale = sales.find(s => s._id === openId);
+      const sale = sales.find((s) => s._id === openId);
       if (sale && sale.dueAmount > 0) {
         setSelectedSaleId(openId);
         setShowPaymentModal(true);
@@ -137,7 +138,7 @@ const Sales = () => {
   };
 
   const handleEditSale = (sale) => {
-    console.log('Edit sale:', sale);
+    console.log("Edit sale:", sale);
     setSelectedSaleId(sale._id);
     setShowAddSaleModal(true);
   };
@@ -168,11 +169,11 @@ const Sales = () => {
           onSuccess: () => {
             setShowAddSaleModal(false);
             setSelectedSaleId(null);
-            alert("فروش با موفقیت ویرایش شد");
+            toast.success("خرید موفقانه اجرا شد");
           },
           onError: (error) => {
-            alert(`خطا در ویرایش فروش: ${error.message}`);
-          }
+            toast.error(`خطا در ویرایش فروش: ${error.message}`);
+          },
         }
       );
       return;
@@ -183,29 +184,29 @@ const Sales = () => {
       onSuccess: async (createdSale) => {
         // Reset form and close modal
         setShowAddSaleModal(false);
-        
+
         // Find customer info
         const sale = createdSale.sale || createdSale;
         const customerId = sale.customer?._id || sale.customer;
-        const customer = customers?.data?.find(c => c._id === customerId);
-        
+        const customer = customers?.data?.find((c) => c._id === customerId);
+
         // Find customer account if exists
         if (customerId) {
           try {
-            const accountsData = await fetchAccounts({ 
-              type: 'customer',
+            const accountsData = await fetchAccounts({
+              type: "customer",
               // Note: refId filter should be added to API if needed
             });
             const customerAccount = accountsData?.accounts?.find(
-              acc => acc.refId === customerId
+              (acc) => acc.refId === customerId
             );
-            
+
             setSaleToPrint(sale);
             setCustomerToPrint(customer);
             setCustomerAccountToPrint(customerAccount || null);
             setShowPrintModal(true);
           } catch (error) {
-            console.error('Error fetching customer account:', error);
+            console.error("Error fetching customer account:", error);
             setSaleToPrint(sale);
             setCustomerToPrint(customer);
             setCustomerAccountToPrint(null);
@@ -220,35 +221,35 @@ const Sales = () => {
         }
       },
       onError: (error) => {
-        alert(`خطا در ایجاد فروش: ${error.message}`);
+        toast.error(`خطا در ایجاد فروش: ${error.message}`);
       },
     });
   };
 
   const handlePrintSale = async (sale) => {
-    console.log('Printing sale:', sale);
-    
+    console.log("Printing sale:", sale);
+
     // Get customer ID (either from nested object or direct value)
     const customerId = sale.customer?._id || sale.customer;
-    const customer = customers?.data?.find(c => c._id === customerId);
-    console.log('Found customer:', customer);
-    
+    const customer = customers?.data?.find((c) => c._id === customerId);
+    console.log("Found customer:", customer);
+
     // Fetch customer account if exists
     if (customerId) {
       try {
-        const accountsData = await fetchAccounts({ type: 'customer' });
-        console.log('Fetched accounts data:', accountsData);
+        const accountsData = await fetchAccounts({ type: "customer" });
+        console.log("Fetched accounts data:", accountsData);
         const customerAccount = accountsData?.accounts?.find(
-          acc => acc.refId === customerId
+          (acc) => acc.refId === customerId
         );
-        console.log('Found customer account:', customerAccount);
-        
+        console.log("Found customer account:", customerAccount);
+
         setSaleToPrint(sale);
         setCustomerToPrint(customer);
         setCustomerAccountToPrint(customerAccount || null);
         setShowPrintModal(true);
       } catch (error) {
-        console.error('Error fetching customer account:', error);
+        console.error("Error fetching customer account:", error);
         setSaleToPrint(sale);
         setCustomerToPrint(customer);
         setCustomerAccountToPrint(null);
@@ -264,13 +265,13 @@ const Sales = () => {
 
   const handleRecordPayment = async () => {
     if (!paymentAmount || !selectedAccount) {
-      alert("لطفاً مبلغ و حساب پرداخت را وارد کنید");
+      toast.error("لطفاً مبلغ و حساب پرداخت را وارد کنید");
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     if (amount <= 0 || amount > selectedSale.dueAmount) {
-      alert(`مبلغ وارد شده باید بین 0 و ${selectedSale.dueAmount} باشد`);
+      toast.error(`مبلغ وارد شده باید بین 0 و ${selectedSale.dueAmount} باشد`);
       return;
     }
 
@@ -281,8 +282,8 @@ const Sales = () => {
         paymentAccount: selectedAccount,
         description: paymentDescription || `Payment for sale`,
       });
-      
-      alert("پرداخت با موفقیت ثبت شد!");
+
+      toast.success("پرداخت با موفقیت ثبت شد!");
       setShowPaymentModal(false);
       setPaymentAmount("");
       setSelectedAccount("");
@@ -290,7 +291,7 @@ const Sales = () => {
       clearUrlParams();
       window.location.reload();
     } catch (error) {
-      alert("خطا در ثبت پرداخت: " + error.message);
+      toast.error("خطا در ثبت پرداخت: " + error.message);
     } finally {
       setIsSubmittingPayment(false);
     }
@@ -698,7 +699,9 @@ const Sales = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div>
-                      <h4 className="text-xs font-medium text-gray-500 mb-1">نمبر بیل</h4>
+                      <h4 className="text-xs font-medium text-gray-500 mb-1">
+                        نمبر بیل
+                      </h4>
                       <p className="text-sm font-medium text-gray-900">
                         {selectedSale.billNumber || "نامشخص"}
                       </p>
@@ -848,11 +851,15 @@ const Sales = () => {
             </div>
             <div className="p-6 space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm text-blue-900">مبلغ باقی‌مانده: {formatCurrency(selectedSale.dueAmount)} AFN</p>
+                <p className="text-sm text-blue-900">
+                  مبلغ باقی‌مانده: {formatCurrency(selectedSale.dueAmount)} AFN
+                </p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">مبلغ پرداخت *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  مبلغ پرداخت *
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -865,7 +872,9 @@ const Sales = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">حساب دریافت *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  حساب دریافت *
+                </label>
                 <select
                   value={selectedAccount}
                   onChange={(e) => setSelectedAccount(e.target.value)}
@@ -881,7 +890,9 @@ const Sales = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">توضیحات</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  توضیحات
+                </label>
                 <textarea
                   value={paymentDescription}
                   onChange={(e) => setPaymentDescription(e.target.value)}
