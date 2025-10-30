@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { AiFillEdit } from "react-icons/ai";
+import { MdOutlineDescription } from "react-icons/md";
+import { useEffect, useState } from "react";
 import { BiTransferAlt } from "react-icons/bi";
+import { FaRegEdit } from "react-icons/fa";
 import { ImPriceTag } from "react-icons/im";
 import GloableModal from "../components/GloableModal";
 import SearchInput from "../components/SearchInput";
@@ -12,17 +13,17 @@ import TableRow from "../components/TableRow";
 import { getStockStatus } from "../utilies/stockStatus";
 
 import { CalendarDays, ClipboardList, Info, Package } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { CgEye } from "react-icons/cg";
 import { IoMdClose } from "react-icons/io";
 import Button from "../components/Button";
-import Input from "../components/Input";
-import NumberInput from "../components/NumberInput";
 import { inputStyle } from "../components/ProductForm";
+
 import {
   useCreateStockTransfer,
   useEmployees,
   useStoreStocks,
+  useUpdateInventory,
 } from "../services/useApi";
 // Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
@@ -33,6 +34,7 @@ const storeHeader = [
   { title: "قیمت خرید/واحد" },
   { title: "واحد" },
   { title: "تعداد" },
+  { title: "حداقل موجودی" },
   { title: "حالت" },
   { title: "عملیات" },
 ];
@@ -40,7 +42,14 @@ const storeHeader = [
 function Store() {
   const { data: stocks } = useStoreStocks({ includeZeroQuantity: true });
   const { data: employees } = useEmployees();
-  const { register, handleSubmit, watch, control, reset } = useForm();
+  const { mutate: createUpdateStock } = useUpdateInventory();
+  const { register, handleSubmit, watch, reset } = useForm();
+  const {
+    register: editRegister,
+    handleSubmit: editHandleSubmit,
+    reset: editReset,
+    formState: { errors },
+  } = useForm();
   const { mutate: createStockTransfer } = useCreateStockTransfer();
   const transferType = watch("transferType") || "store-warehouse";
   const quantity = watch("quantity");
@@ -52,7 +61,18 @@ function Store() {
   const [show, setShow] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-
+  useEffect(
+    function () {
+      editReset({
+        purchasePricePerBaseUnit: selectedData?.purchasePricePerBaseUnit,
+        minLevel: selectedData?.minLevel,
+        expiry_date: selectedData?.expiryDate
+          ? new Date(selectedData.expiryDate).toISOString().split("T")[0]
+          : "",
+      });
+    },
+    [selectedData, editReset]
+  );
   let fromLocation = selectedData?.location;
   let toLocation =
     transferType === "store-warehouse"
@@ -88,7 +108,10 @@ function Store() {
       },
     });
   }
-  const handleEdit = () => {};
+  const handleEdit = (data) => {
+    createUpdateStock({ id: selectedData._id, stockData: data });
+    setShowEdit(false);
+  };
   return (
     <section>
       <Table
@@ -126,17 +149,14 @@ function Store() {
               <TableColumn className="font-semibold">
                 {el?.quantity}
               </TableColumn>
+              <TableColumn>{el?.minLevel}</TableColumn>
               <TableColumn>
                 <span
                   className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    getStockStatus(el?.quantity, el?.minLevel || 0)
-                      .color
+                    getStockStatus(el?.quantity, el?.minLevel || 0).color
                   }`}
                 >
-                  {
-                    getStockStatus(el?.quantity, el?.minLevel || 0)
-                      .label
-                  }
+                  {getStockStatus(el?.quantity, el?.minLevel || 0).label}
                 </span>
               </TableColumn>
               <TableColumn>
@@ -149,14 +169,14 @@ function Store() {
                     }}
                   />
                   <BiTransferAlt
-                    className=" text-[18px] hover:bg-slate-200 text-green-400 rounded-full"
+                    className=" text-[18px] hover:bg-slate-200 text-red-400 rounded-full"
                     onClick={() => {
                       setSelectedData(el);
                       setShowTransfer(true);
                     }}
                   />
-                  <AiFillEdit
-                    className=" text-[18px] hover:bg-slate-200 text-sky-500 rounded-full"
+                  <FaRegEdit
+                    className=" text-[18px] hover:bg-slate-200 text-green-500"
                     onClick={() => {
                       setSelectedData(el);
                       setShowEdit(true);
@@ -168,6 +188,7 @@ function Store() {
           ))}
         </TableBody>
       </Table>
+      {/* show details */}
       <GloableModal open={show} setOpen={setShow}>
         {selectedData && (
           <div
@@ -238,26 +259,40 @@ function Store() {
 
               {/* Divider */}
               <div className="border-t border-gray-200"></div>
-
-              <div className="flex flex-col  items-start gap-x-2">
-                <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center justify-end gap-1">
-                  <Info className="text-2xl text-palm-500" />
-                  <span className="ext-[16px] text-palm-500">نمبر ردیابی</span>
-                </h3>
-                <p className="text-gray-800 leading-relaxed text-right">
-                  {selectedData?.batchNumber || "DEFAULT"}
-                </p>
+              <div className=" grid grid-cols-2">
+                <div className="flex flex-col  items-start gap-x-2">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center justify-end gap-1">
+                    <Info className="text-2xl text-palm-500" />
+                    <span className="ext-[16px] text-palm-500">
+                      نمبر ردیابی
+                    </span>
+                  </h3>
+                  <p className="text-gray-800 leading-relaxed text-right">
+                    {selectedData?.batchNumber || "DEFAULT"}
+                  </p>
+                </div>
+                <div className="flex flex-col  items-start gap-x-2">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center justify-end gap-1">
+                    <MdOutlineDescription className="text-2xl text-yellow-500" />
+                    <span className="ext-[16px] text-palm-500">توضیحات</span>
+                  </h3>
+                  <p className="text-gray-800 leading-relaxed text-right">
+                    {selectedData.description || "No description provided"}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 border-t border-gray-200 p-4 flex justify-end">
-              <Button onClick={() => setShow(false)}>بسته کردن</Button>
+            <div className="bg-gray-50 border-t border-gray-200 p-4   flex justify-end">
+              <div className=" w-[120px]">
+                <Button onClick={() => setShow(false)}>بسته کردن</Button>
+              </div>
             </div>
           </div>
         )}
       </GloableModal>
-
+      {/* show transfer */}
       <GloableModal open={showTransfer} setOpen={setShowTransfer}>
         <form
           noValidate
@@ -464,6 +499,8 @@ function Store() {
           </div>
         </form> */}
       </GloableModal>
+
+      {/* show edit */}
       <GloableModal open={showEdit} setOpen={setShowEdit} isClose={true}>
         <div className="w-[500px] bg-white p-3 rounded-md ">
           <div className=" border-b border-slate-300 pb-3 relative">
@@ -473,64 +510,81 @@ function Store() {
             />
             <p className=" text-xl font-semibold">بروزرسانی گدام</p>
           </div>
-          <form onSubmit={handleSubmit(handleEdit)} noValidate>
+          <form onSubmit={editHandleSubmit(handleEdit)} noValidate>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
-                  <Controller
-                    defaultValue={""}
-                    name="purchasePricePerBaseUnit"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        type="number"
-                        label="قیمت هر واحد"
-                        register={field}
-                      />
-                    )}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    قیمت هر واحد
+                  </label>
+                  <input
+                    type="number"
+                    className={inputStyle}
+                    {...editRegister("purchasePricePerBaseUnit")}
                   />
                 </div>
 
                 <div>
-                  <Controller
-                    defaultValue={0}
-                    name="quantity"
-                    control={control}
-                    render={({ field }) => (
-                      <NumberInput label="تعداد" register={field} />
-                    )}
-                  />
-                </div>
-                <div>
-                  <Controller
-                    defaultValue={0}
-                    name="minLevel"
-                    control={control}
-                    render={({ field }) => (
-                      <NumberInput label="کمترین موجودی" register={field} />
-                    )}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    کمترین موجودی
+                  </label>
+                  <input
+                    type="number"
+                    className={inputStyle}
+                    {...editRegister("minLevel")}
                   />
                 </div>
 
                 <div>
-                  <Controller
-                    defaultValue={""}
-                    name="expiryDate"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="date" label="تاریخ انقضا" register={field} />
-                    )}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    تاریخ انقضا
+                  </label>
+                  <input
+                    type="date"
+                    className={inputStyle}
+                    {...editRegister("expiry_date", {
+                      required: "تاریخ انقضا الزامی است",
+                      validate: (value) => {
+                        if (!value) return "تاریخ انقضا الزامی است";
+
+                        const today = new Date();
+                        const selected = new Date(value);
+
+                        // Normalize both to midnight for clean date comparison
+                        today.setHours(0, 0, 0, 0);
+                        selected.setHours(0, 0, 0, 0);
+
+                        // Calculate the difference in days
+                        const diffInDays = Math.ceil(
+                          (selected - today) / (1000 * 60 * 60 * 24)
+                        );
+
+                        return (
+                          diffInDays >= 10 ||
+                          "تاریخ انقضا باید حداقل ۱۰ روز بعد از امروز باشد"
+                        );
+                      },
+                    })}
                   />
+                  {errors.expiry_date && (
+                    <p className=" text-[9px] text-red-500">
+                      {errors?.expiry_date.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t w-[80%] mx-auto border-gray-200 flex justify-end gap-4">
+            <div className="p-6 border-t w-full mx-auto border-gray-200 flex justify-end gap-4">
               {/* <Button className=" bg-deepdate-400">لغو کردن</Button> */}
-              <Button className={" bg-primary-brown-light text-white"}>
-                تغییر دادن گدام
+              <Button
+                type="submit"
+                className={" bg-primary-brown-light text-white"}
+              >
+                عملی کردن تغییرات{" "}
               </Button>
               <button
+                type="button"
                 onClick={() => setShowEdit(false)}
                 className={
                   " cursor-pointer group w-full   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200 bg-transparent border  border-slate-700 text-black"

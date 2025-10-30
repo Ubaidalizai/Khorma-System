@@ -7,7 +7,7 @@ function TableHeader({ headerData }) {
         {headerData.map((header, index) => (
           <th
             key={index}
-            className={` box-border text-right  align-middle  lg:text-[14px] md:text-xs text-[10px]  lg:font-medium font-light   uppercase md:tracking-wider`}
+            className={` box-border text-center  align-middle  lg:text-[14px] md:text-xs text-[10px]  lg:font-medium font-light   uppercase md:tracking-wider`}
           >
             {header.title}
           </th>

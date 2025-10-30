@@ -1,3 +1,4 @@
+import { FiEdit } from "react-icons/fi";
 import { AiFillEdit } from "react-icons/ai";
 import { AiFillDelete } from "react-icons/ai";
 import { AiOutlineUpCircle } from "react-icons/ai";
@@ -7,6 +8,7 @@ import {
   useEmployeeStocks,
   useEmployees,
   useCreateStockTransfer,
+  useUpdateInventory,
 } from "../services/useApi";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
@@ -24,6 +26,7 @@ import Button from "../components/Button";
 import { useForm } from "react-hook-form";
 import { inputStyle } from "./ProductForm";
 import { CgEye } from "react-icons/cg";
+import { IoMdClose } from "react-icons/io";
 
 // Headers in Dari
 const tableHeader = [
@@ -43,12 +46,23 @@ const Employee = () => {
   const [transferDestination, setTransferDestination] = useState("warehouse");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const { mutate: updateInventory } = useUpdateInventory();
   const { register, handleSubmit, reset } = useForm();
-
+  const {
+    register: editRegister,
+    handleSubmit: editHandleSubmit,
+    reset: editReset,
+    formState: { errors },
+  } = useForm();
+  const [openEdit, setOpenEdit] = useState(false);
   const { data: employees } = useEmployees();
-  const { data: stocks, isLoading, error } = useEmployeeStocks({ 
-    search, 
-    employeeId: selectedEmployee 
+  const {
+    data: stocks,
+    isLoading,
+    error,
+  } = useEmployeeStocks({
+    search,
+    employeeId: selectedEmployee,
   });
   const { mutate: createStockTransfer } = useCreateStockTransfer();
 
@@ -91,7 +105,18 @@ const Employee = () => {
     setSelectedItem(item);
     setShowTransfer(true);
   };
-
+  useEffect(
+    function () {
+      editReset({
+        purchasePricePerBaseUnit: selectedItem?.purchasePricePerBaseUnit,
+        minLevel: selectedItem?.minLevel,
+        expiry_date: selectedItem?.expiryDate
+          ? new Date(selectedItem.expiryDate).toISOString().split("T")[0]
+          : "",
+      });
+    },
+    [editReset, selectedItem]
+  );
   const onSubmitTransfer = (data) => {
     if (
       !data.quantity ||
@@ -115,7 +140,16 @@ const Employee = () => {
       }
     );
   };
-
+  const handleEdit = (data) => {
+    updateInventory(
+      { id: selectedItem._id, stockData: data },
+      {
+        onSuccess: () => {
+          setOpenEdit(false);
+        },
+      }
+    );
+  };
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -231,8 +265,15 @@ const Employee = () => {
                     onClick={() => handleShowDetails(item)}
                   />
                   <BiTransferAlt
-                    className=" text-[18px] hover:bg-slate-200 text-green-400 rounded-full"
+                    className=" text-[18px] hover:bg-slate-200 text-red-400 rounded-full"
                     onClick={() => handleTransfer(item)}
+                  />
+                  <FiEdit
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setOpenEdit(true);
+                    }}
+                    className="text-[18px] hover:bg-slate-200 text-green-400 "
                   />
                 </div>
               </TableColumn>
@@ -240,11 +281,106 @@ const Employee = () => {
           ))}
         </TableBody>
       </Table>
+      {/* Edit */}
+      <GloableModal open={openEdit} setOpen={setOpenEdit} isClose={true}>
+        <div className="w-[500px] bg-white p-3 rounded-md ">
+          <div className=" border-b border-slate-300 pb-3 relative">
+            <IoMdClose
+              className=" absolute top-2/4 left-2 -translate-y-2/4 text-[24px]"
+              onClick={() => setOpenEdit(false)}
+            />
+            <p className=" text-xl font-semibold">بروزرسانی گدام</p>
+          </div>
+          <form onSubmit={editHandleSubmit(handleEdit)} noValidate>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    قیمت هر واحد
+                  </label>
+                  <input
+                    type="number"
+                    className={inputStyle}
+                    {...editRegister("purchasePricePerBaseUnit")}
+                  />
+                </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    کمترین موجودی
+                  </label>
+                  <input
+                    type="number"
+                    className={inputStyle}
+                    {...editRegister("minLevel")}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    تاریخ انقضا
+                  </label>
+                  <input
+                    type="date"
+                    className={inputStyle}
+                    {...editRegister("expiry_date", {
+                      required: "تاریخ انقضا الزامی است",
+                      validate: (value) => {
+                        if (!value) return "تاریخ انقضا الزامی است";
+
+                        const today = new Date();
+                        const selected = new Date(value);
+
+                        // Normalize both to midnight for clean date comparison
+                        today.setHours(0, 0, 0, 0);
+                        selected.setHours(0, 0, 0, 0);
+
+                        // Calculate the difference in days
+                        const diffInDays = Math.ceil(
+                          (selected - today) / (1000 * 60 * 60 * 24)
+                        );
+
+                        return (
+                          diffInDays >= 10 ||
+                          "تاریخ انقضا باید حداقل ۱۰ روز بعد از امروز باشد"
+                        );
+                      },
+                    })}
+                  />
+                  {errors.expiry_date && (
+                    <p className=" text-[9px] text-red-500">
+                      {errors.expiry_date.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t w-full mx-auto border-gray-200 flex justify-end gap-4">
+              {/* <Button className=" bg-deepdate-400">لغو کردن</Button> */}
+              <Button
+                type="submit"
+                className={" bg-primary-brown-light text-white"}
+              >
+                تغییر دادن گدام
+              </Button>
+              <button
+                type="button"
+                onClick={() => setOpenEdit(false)}
+                className={
+                  " cursor-pointer group w-full   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200 bg-transparent border  border-slate-700 text-black"
+                }
+              >
+                لغو کردن{" "}
+              </button>
+            </div>
+          </form>
+        </div>
+      </GloableModal>
       {/* Details Modal */}
       <GloableModal open={showDetails} setOpen={setShowDetails}>
         {selectedItem && (
-          <div className="bg-white rounded-sm max-w-2xl w-[700px] max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-sm max-w-2xl w-[600px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">
                 جزئیات موجودی کارمند
@@ -287,7 +423,9 @@ const Employee = () => {
               </div>
             </div>
             <div className="p-6 border-t border-gray-200 flex justify-end">
-              <Button onClick={() => setShowDetails(false)}>بستن</Button>
+              <div className=" w-[120px]">
+                <Button onClick={() => setShowDetails(false)}>بستن</Button>
+              </div>
             </div>
           </div>
         )}

@@ -101,7 +101,7 @@ function ProductForm({ register, handleSubmit, formState, control, onClose }) {
           <Button
             type="button"
             className="px-6 py-2 bg-transparent   border border-slate-500 text-black rounded-md"
-            onClick={onClose}
+            onClick={() => onClose()}
           >
             انصراف
           </Button>
