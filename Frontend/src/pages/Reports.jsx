@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ChartBarIcon,
   DocumentArrowDownIcon,
@@ -26,19 +26,19 @@ const Reports = () => {
   const [dateRange, setDateRange] = useState("month");
 
   const reportTypes = [
-    { id: "sales", name: "Sales Reports", icon: ChartBarIcon },
-    { id: "inventory", name: "Inventory Reports", icon: ChartBarIcon },
-    { id: "purchases", name: "Purchase Reports", icon: ChartBarIcon },
-    { id: "accounts", name: "Account Reports", icon: ChartBarIcon },
-    { id: "expenses", name: "Expense Reports", icon: ChartBarIcon },
-    { id: "profit", name: "Profit & Loss", icon: ChartBarIcon },
+    { id: "sales", name: "گزارشات فروش", icon: ChartBarIcon },
+    { id: "inventory", name: "گزارشات موجودی", icon: ChartBarIcon },
+    { id: "purchases", name: "گزارشات خرید", icon: ChartBarIcon },
+    { id: "accounts", name: "گزارشات حساب", icon: ChartBarIcon },
+    { id: "expenses", name: "گزارشات هزینه", icon: ChartBarIcon },
+    { id: "profit", name: "سود و زیان", icon: ChartBarIcon },
   ];
 
   // Calculate date range based on selected period
   const getDateRange = (range) => {
     const now = new Date();
     const startDate = new Date();
-    
+
     switch (range) {
       case "daily":
         startDate.setDate(now.getDate() - 7); // Last 7 days
@@ -52,28 +52,29 @@ const Reports = () => {
       default:
         startDate.setMonth(now.getMonth() - 6);
     }
-    
+
     return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: now.toISOString().split('T')[0],
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: now.toISOString().split("T")[0],
     };
   };
 
   const dateParams = getDateRange(dateRange);
-  
+
   // Map UI range to backend groupBy values
   const groupByMap = {
-    daily: 'day',
-    weekly: 'week',
-    monthly: 'month',
+    daily: "day",
+    weekly: "week",
+    monthly: "month",
   };
 
   // Fetch sales reports data
-  const { data: salesReportsData, isLoading: salesReportsLoading } = useSalesReports({
-    startDate: dateParams.startDate,
-    endDate: dateParams.endDate,
-    groupBy: groupByMap[dateRange] || 'day',
-  });
+  const { data: salesReportsData, isLoading: salesReportsLoading } =
+    useSalesReports({
+      startDate: dateParams.startDate,
+      endDate: dateParams.endDate,
+      groupBy: groupByMap[dateRange] || "day",
+    });
 
   const inventoryData = [
     { product: "Fresh Dates", currentStock: 150, minStock: 50, status: "Good" },
@@ -97,7 +98,7 @@ const Reports = () => {
   // Chart data for sales reports
   const chartData = useMemo(() => {
     const data = getCurrentData();
-    return data.map(item => ({
+    return data.map((item) => ({
       ...item,
       sales: item.sales || 0,
       paid: item.paid || 0,
@@ -107,9 +108,9 @@ const Reports = () => {
 
   // System colors for charts
   const chartColors = {
-    sales: '#10B981', // green-500
-    paid: '#3B82F6', // blue-500
-    due: '#EF4444', // red-500
+    sales: "#10B981", // green-500
+    paid: "#3B82F6", // blue-500
+    due: "#EF4444", // red-500
   };
 
   const getStatusColor = (status) => {
@@ -132,17 +133,17 @@ const Reports = () => {
         <div>
           <h1 className="text-xl font-bold text-gray-900">گزارشات وتحلیل ها</h1>
           <p className="text-gray-600 mt-1">
-            Generate and view business reports
+            گزارشات تجاری را تولید و مشاهده کنید
           </p>
         </div>
         <div className="flex space-x-3">
           <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
             <PrinterIcon className="h-5 w-5 ml-2" />
-            Print
+            چاپ
           </button>
           <button className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center">
             <DocumentArrowDownIcon className="h-5 w-5 ml-2" />
-            Export
+            صادر کردن
           </button>
         </div>
       </div>
@@ -150,7 +151,7 @@ const Reports = () => {
       {/* Report type selector */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Select Report Type
+          نوع گزارش را انتخاب کنید
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {reportTypes.map((report) => {
@@ -176,7 +177,7 @@ const Reports = () => {
       {/* Date range selector */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Select Date Range
+          محدوده تاریخ را انتخاب کنید
         </h3>
         <div className="flex space-x-4">
           <button
@@ -187,7 +188,7 @@ const Reports = () => {
                 : "border-gray-300 text-gray-700 hover:bg-gray-50"
             }`}
           >
-            Daily
+            روزانه
           </button>
           <button
             onClick={() => setDateRange("weekly")}
@@ -197,7 +198,7 @@ const Reports = () => {
                 : "border-gray-300 text-gray-700 hover:bg-gray-50"
             }`}
           >
-            Weekly
+            هفتگی
           </button>
           <button
             onClick={() => setDateRange("monthly")}
@@ -207,7 +208,7 @@ const Reports = () => {
                 : "border-gray-300 text-gray-700 hover:bg-gray-50"
             }`}
           >
-            Monthly
+            ماهانه
           </button>
         </div>
       </div>
@@ -223,33 +224,43 @@ const Reports = () => {
 
         <div className="p-6">
           {selectedReport === "sales" && (
-            <div className='space-y-6'>
+            <div className="space-y-6">
               {salesReportsLoading ? (
-                <div className='text-center text-gray-500'>Loading sales data...</div>
+                <div className="text-center text-gray-500">
+                  در حال بارگذاری داده های فروش...
+                </div>
               ) : chartData.length === 0 ? (
-                <div className='text-center text-gray-500'>No sales data found for the selected period.</div>
+                <div className="text-center text-gray-500">
+                  هیچ داده فروشی برای دوره انتخاب شده یافت نشد.
+                </div>
               ) : (
-                <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Sales Trend Chart */}
-                  <div className='bg-gray-50 p-4 rounded-lg'>
-                    <h4 className='text-lg font-semibold text-gray-900 mb-4'>Sales Trend</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                      روند فروش
+                    </h4>
                     <ResponsiveContainer width="100%" height={300}>
                       <AreaChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
+                        <XAxis
+                          dataKey="date"
                           tick={{ fontSize: 12 }}
                           angle={-45}
                           textAnchor="end"
                           height={80}
                         />
                         <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value, name) => [
-                            `$${value.toLocaleString()}`, 
-                            name === 'sales' ? 'Sales' : name
+                            `$${value.toLocaleString()}`,
+                            name === "sales"
+                              ? "فروش"
+                              : name === "paid"
+                              ? "پرداخت شده"
+                              : "بدهی",
                           ]}
-                          labelStyle={{ color: '#374151' }}
+                          labelStyle={{ color: "#374151" }}
                         />
                         <Legend />
                         <Area
@@ -264,25 +275,27 @@ const Reports = () => {
                   </div>
 
                   {/* Paid vs Due Chart */}
-                  <div className='bg-gray-50 p-4 rounded-lg'>
-                    <h4 className='text-lg font-semibold text-gray-900 mb-4'>Paid vs Due</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                      پرداخت شده در مقابل بدهی
+                    </h4>
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
+                        <XAxis
+                          dataKey="date"
                           tick={{ fontSize: 12 }}
                           angle={-45}
                           textAnchor="end"
                           height={80}
                         />
                         <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value, name) => [
-                            `$${value.toLocaleString()}`, 
-                            name === 'paid' ? 'Paid' : 'Due'
+                            `$${value.toLocaleString()}`,
+                            name === "paid" ? "پرداخت شده" : "بدهی",
                           ]}
-                          labelStyle={{ color: '#374151' }}
+                          labelStyle={{ color: "#374151" }}
                         />
                         <Legend />
                         <Bar dataKey="paid" fill={chartColors.paid} />
@@ -301,19 +314,19 @@ const Reports = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
+                      محصول
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Current Stock
+                      موجودی فعلی
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Minimum Stock
+                      حداقل موجودی
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      وضعیت
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      اقدامات
                     </th>
                   </tr>
                 </thead>
@@ -335,7 +348,13 @@ const Reports = () => {
                             item.status
                           )}`}
                         >
-                          {item.status}
+                          {item.status === "Good"
+                            ? "خوب"
+                            : item.status === "Low"
+                            ? "کم"
+                            : item.status === "Critical"
+                            ? "بحرانی"
+                            : item.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -354,12 +373,10 @@ const Reports = () => {
             <div className="text-center py-12">
               <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {reportTypes.find((r) => r.id === selectedReport)?.name} Coming
-                Soon
+                {reportTypes.find((r) => r.id === selectedReport)?.name} به زودی
               </h3>
               <p className="text-gray-600">
-                This report type is under development and will be available
-                soon.
+                این نوع گزارش در حال توسعه است و به زودی در دسترس خواهد بود.
               </p>
             </div>
           )}
@@ -368,15 +385,15 @@ const Reports = () => {
 
       {/* Summary cards */}
       {selectedReport === "sales" && salesReportsData?.data?.totals && (
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-            <div className='flex items-center'>
-              <div className='p-3 rounded-full bg-green-500'>
-                <ChartBarIcon className='h-6 w-6 text-white' />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-green-500">
+                <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
-              <div className='mr-4'>
-                <p className='text-sm font-medium text-gray-600'>Total Sales</p>
-                <p className='text-2xl font-bold text-gray-900'>
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">مجموع فروش</p>
+                <p className="text-2xl font-bold text-gray-900">
                   ${salesReportsData.data.totals.totalSales.toLocaleString()}
                 </p>
               </div>
@@ -388,9 +405,11 @@ const Reports = () => {
               <div className="p-3 rounded-full bg-blue-500">
                 <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
-              <div className='mr-4'>
-                <p className='text-sm font-medium text-gray-600'>Total Paid</p>
-                <p className='text-2xl font-bold text-gray-900'>
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">
+                  مجموع پرداخت شده
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
                   ${salesReportsData.data.totals.totalPaid.toLocaleString()}
                 </p>
               </div>
@@ -402,9 +421,9 @@ const Reports = () => {
               <div className="p-3 rounded-full bg-amber-500">
                 <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
-              <div className='mr-4'>
-                <p className='text-sm font-medium text-gray-600'>Total Due</p>
-                <p className='text-2xl font-bold text-gray-900'>
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">مجموع بدهی</p>
+                <p className="text-2xl font-bold text-gray-900">
                   ${salesReportsData.data.totals.totalDue.toLocaleString()}
                 </p>
               </div>

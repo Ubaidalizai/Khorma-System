@@ -83,7 +83,11 @@ const updateStockValidationSchema = Joi.object({
     'number.base': `"conversion_to_default" should be a type of 'number'`,
     'number.min': `"conversion_to_default" must be at least 1`,
   }),
-  sale_price: Joi.number().min(0).optional().messages({
+  purchasePricePerBaseUnit: Joi.number().min(0).optional().messages({
+    'number.base': `"sale_price" should be a type of 'number'`,
+    'number.min': `"sale_price" cannot be negative`,
+  }),
+  minLevel: Joi.number().min(0).optional().messages({
     'number.base': `"sale_price" should be a type of 'number'`,
     'number.min': `"sale_price" cannot be negative`,
   }),

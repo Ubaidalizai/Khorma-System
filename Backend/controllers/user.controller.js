@@ -1,5 +1,5 @@
-const User = require("../models/user.model");
-const asyncHandler = require("../middlewares/asyncHandler.js");
+const User = require('../models/user.model');
+const asyncHandler = require('../middlewares/asyncHandler.js');
 
 const {
   generateAccessToken,
@@ -7,17 +7,17 @@ const {
   setAuthCookies,
   clearAuthCookies,
   verifyRefreshToken,
-} = require("../utils/tokens");
-const Email = require("../utils/email.js");
-const { deleteOldImage } = require("../middlewares/uploadFile.js");
+} = require('../utils/tokens');
+const Email = require('../utils/email.js');
+const { deleteOldImage } = require('../middlewares/uploadFile.js');
 
-const crypto = require("crypto");
+const crypto = require('crypto');
 const {
   userValidationSchema,
   loginValidationSchema,
   updateUserValidationSchema,
   updateProfileValidationSchema,
-} = require("../validations");
+} = require('../validations');
 
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
@@ -39,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (userExists) {
     return res.status(409).send({
       success: false,
-      message: "A user with this email address already exists",
+      message: 'A user with this email address already exists',
     });
   }
 
@@ -50,7 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
     phone,
     password,
     role,
-    image: req.file ? req.file.filename : "default-user.jpg", // Default image if no file is uploaded
+    image: req.file ? req.file.filename : 'default-user.jpg', // Default image if no file is uploaded
   });
 
   try {
@@ -59,7 +59,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "New User Added Successfully",
+      message: 'New User Added Successfully',
       user: {
         _id: newUser._id,
         name: newUser.name,
@@ -71,10 +71,10 @@ const registerUser = asyncHandler(async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error saving user:", error);
+    console.error('Error saving user:', error);
     res.status(500).send({
       success: false,
-      message: "Error saving user, please try again later",
+      message: 'Error saving user, please try again later',
     });
   }
 });
@@ -85,8 +85,8 @@ const updateUserPhoto = asyncHandler(async (req, res) => {
 
   // Delete old image if it exists and is not the default
   const currentUser = await User.findById(id);
-  if (currentUser.image && currentUser.image !== "default-user.jpg") {
-    deleteOldImage(currentUser.image, "users");
+  if (currentUser.image && currentUser.image !== 'default-user.jpg') {
+    deleteOldImage(currentUser.image, 'users');
   }
 
   const user = await User.findByIdAndUpdate(
@@ -97,26 +97,26 @@ const updateUserPhoto = asyncHandler(async (req, res) => {
     {
       new: true,
       runValidators: true,
-    },
-  ).select("-password");
+    }
+  ).select('-password');
 
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "User not found",
+      message: 'User not found',
     });
   }
 
   res.status(200).json({
     success: true,
-    message: "User photo updated successfully",
+    message: 'User photo updated successfully',
     data: user,
   });
 });
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email }).select('+password');
 
   if (user && (await user.isPasswordValid(password, user.password))) {
     // Generate access and refresh tokens
@@ -140,7 +140,7 @@ const loginUser = asyncHandler(async (req, res) => {
   } else {
     res.status(401).json({
       success: false,
-      message: "Email or password is incorrect!",
+      message: 'Email or password is incorrect!',
     });
   }
 });
@@ -149,7 +149,7 @@ const logout = (req, res) => {
   clearAuthCookies(res);
   res.status(200).json({
     success: true,
-    message: "Logged out successfully",
+    message: 'Logged out successfully',
   });
 };
 
@@ -159,7 +159,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   if (!token) {
     return res
       .status(401)
-      .json({ success: false, message: "Missing refresh token" });
+      .json({ success: false, message: 'Missing refresh token' });
   }
 
   try {
@@ -168,13 +168,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if (!currentUser) {
       return res
         .status(401)
-        .json({ success: false, message: "User no longer exists" });
+        .json({ success: false, message: 'User no longer exists' });
     }
 
     if (currentUser.changedPasswordAfter(decoded.iat)) {
       return res
         .status(401)
-        .json({ success: false, message: "User recently changed password" });
+        .json({ success: false, message: 'User recently changed password' });
     }
 
     const newAccessToken = generateAccessToken(currentUser._id);
@@ -184,18 +184,18 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   } catch (err) {
     return res
       .status(401)
-      .json({ success: false, message: "Invalid or expired refresh token" });
+      .json({ success: false, message: 'Invalid or expired refresh token' });
   }
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
   // req.user is set by the authentication middleware
-  const user = await User.findById(req.user._id).select("-password");
+  const user = await User.findById(req.user._id).select('-password');
 
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "User not found",
+      message: 'User not found',
     });
   }
 
@@ -236,7 +236,7 @@ const updateUserById = asyncHandler(async (req, res) => {
       if (emailExists) {
         return res.status(409).send({
           success: false,
-          message: "A user with this email address already exists",
+          message: 'A user with this email address already exists',
         });
       }
     }
@@ -268,7 +268,7 @@ const updateUserById = asyncHandler(async (req, res) => {
   } else {
     return res.status(404).json({
       success: false,
-      message: "User not found!",
+      message: 'User not found!',
     });
   }
 });
@@ -298,7 +298,7 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
       if (emailExists) {
         return res.status(409).send({
           success: false,
-          message: "A user with this email address already exists",
+          message: 'A user with this email address already exists',
         });
       }
     }
@@ -321,7 +321,7 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
   } else {
     return res.status(404).json({
       success: false,
-      message: "User not found",
+      message: 'User not found',
     });
   }
 });
@@ -332,7 +332,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
   let filter = {};
   if (search) {
     filter = {
-      name: { $regex: search, $options: "i" },
+      name: { $regex: search, $options: 'i' },
     };
   }
   const users = await User.find(filter);
@@ -346,14 +346,14 @@ const getAllUsers = asyncHandler(async (req, res) => {
 const findUserByID = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
-  const user = await User.findById({ _id: id }).select("-password");
+  const user = await User.findById({ _id: id }).select('-password');
 
   if (user) {
     res.status(200).json(user);
   } else {
     return res.status(404).json({
       success: false,
-      message: "User not found",
+      message: 'User not found',
     });
   }
 });
@@ -366,20 +366,20 @@ const deleteUserByID = asyncHandler(async (req, res, next) => {
     if (user.isAdmin) {
       return res.status(400).json({
         success: false,
-        message: "Cannot delete user as admin!",
+        message: 'Cannot delete user as admin!',
       });
     }
 
-    if (user.image && user.image !== "default-user.jpg") {
-      deleteOldImage(user.image, "users");
+    if (user.image && user.image !== 'default-user.jpg') {
+      deleteOldImage(user.image, 'users');
     }
 
     await User.deleteOne({ _id: user._id });
-    res.status(204).json({ message: "User removed successfully" });
+    res.status(204).json({ message: 'User removed successfully' });
   } else {
     return res.status(404).json({
       success: false,
-      message: "User not found!",
+      message: 'User not found!',
     });
   }
 });
@@ -392,7 +392,7 @@ const updatePassword = asyncHandler(async (req, res, next) => {
   if (!currentPassword || !newPassword) {
     return res.status(400).send({
       success: false,
-      message: "Current and new password are required",
+      message: 'Current and new password are required',
     });
   }
 
@@ -402,7 +402,7 @@ const updatePassword = asyncHandler(async (req, res, next) => {
   if (!user) {
     return res.status(404).send({
       success: false,
-      message: "User not found",
+      message: 'User not found',
     });
   }
 
@@ -411,7 +411,7 @@ const updatePassword = asyncHandler(async (req, res, next) => {
   if (!isMatch) {
     return res.status(401).send({
       success: false,
-      message: "Your current password is incorrect",
+      message: 'Your current password is incorrect',
     });
   }
 
@@ -421,8 +421,8 @@ const updatePassword = asyncHandler(async (req, res, next) => {
 
   // 4) Respond with success message
   res.status(200).json({
-    status: "success",
-    message: "Your password was updated successfully",
+    status: 'success',
+    message: 'Your password was updated successfully',
   });
 });
 
@@ -433,7 +433,7 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
   if (!user) {
     return res.status(404).send({
       success: false,
-      message: "There is no user with this email address.",
+      message: 'There is no user with this email address.',
     });
   }
 
@@ -450,8 +450,8 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
     await new Email(user, resetURL).sendPasswordReset();
 
     res.status(200).json({
-      status: "success",
-      message: "Token sent to email go to email and click of sending link!",
+      status: 'success',
+      message: 'Token sent to email go to email and click of sending link!',
     });
   } catch (err) {
     user.passwordResetToken = undefined;
@@ -461,7 +461,7 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
     console.error(err);
     return res.status(500).send({
       success: false,
-      message: "There was an error sending the email. Try again later!",
+      message: 'There was an error sending the email. Try again later!',
     });
   }
 });
@@ -469,9 +469,9 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
 const resetPassword = asyncHandler(async (req, res, next) => {
   // 1) Get user based on the token
   const hashedToken = crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(req.params.token)
-    .digest("hex");
+    .digest('hex');
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,
@@ -482,7 +482,7 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   if (!user) {
     return res.status(400).send({
       success: false,
-      message: "Token is invalid or has expired!",
+      message: 'Token is invalid or has expired!',
     });
   }
   user.password = req.body.password;
@@ -495,8 +495,8 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   const refreshToken = generateRefreshToken(user._id);
   setAuthCookies(res, accessToken, refreshToken);
   res.status(200).json({
-    status: "success",
-    message: "Your password was reset successfully",
+    status: 'success',
+    message: 'Your password was reset successfully',
     accessToken,
   });
 });

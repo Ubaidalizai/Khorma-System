@@ -110,6 +110,8 @@ export const API_ENDPOINTS = {
     LOGOUT: "/users/logout",
     REFRESH: "/users/refresh",
     PROFILE: "/users/profile",
+    UPDATEPASSWORD: "/users/updatePassword",
+    FORGOTPASSWORD: "/users/forgotPassword",
   },
 
   // Products

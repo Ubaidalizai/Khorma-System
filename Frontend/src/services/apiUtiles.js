@@ -52,7 +52,18 @@ export const refreshUserToken = async () => {
 export const getUserProfile = async () => {
   return await apiRequest(API_ENDPOINTS.AUTH.PROFILE);
 };
-
+export const updatePassword = async (data) => {
+  return await apiRequest(API_ENDPOINTS.AUTH.UPDATEPASSWORD, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+};
+export const forgotPassword = async ({ email }) => {
+  return await apiRequest(API_ENDPOINTS.AUTH.FORGOTPASSWORD, {
+    method: "POST",
+    body: JSON.stringify(email),
+  });
+};
 // Products
 export const fetchProducts = async () => {
   try {
@@ -325,10 +336,13 @@ export const fetchAccountLedger = async (accountId, params = {}) => {
 
 export const createManualTransaction = async (transactionData) => {
   try {
-    const response = await apiRequest(API_ENDPOINTS.ACCOUNT_TRANSACTIONS.CREATE, {
-      method: "POST",
-      body: JSON.stringify(transactionData),
-    });
+    const response = await apiRequest(
+      API_ENDPOINTS.ACCOUNT_TRANSACTIONS.CREATE,
+      {
+        method: "POST",
+        body: JSON.stringify(transactionData),
+      }
+    );
     return response;
   } catch (error) {
     console.error("createManualTransaction error:", error);
@@ -480,20 +494,23 @@ export const fetchSalesReports = async (params = {}) => {
   if (params.startDate) query.set("startDate", params.startDate);
   if (params.endDate) query.set("endDate", params.endDate);
   if (params.groupBy) query.set("groupBy", params.groupBy);
-  
+
   const url = query.toString()
     ? `${API_ENDPOINTS.SALES.REPORTS}?${query.toString()}`
     : API_ENDPOINTS.SALES.REPORTS;
-  
+
   return await apiRequest(url);
 };
 
 // Record payment against a purchase
 export const recordPurchasePayment = async (purchaseId, paymentData) => {
-  return await apiRequest(`${API_ENDPOINTS.PURCHASES.LIST}/${purchaseId}/payment`, {
-    method: "POST",
-    body: JSON.stringify(paymentData),
-  });
+  return await apiRequest(
+    `${API_ENDPOINTS.PURCHASES.LIST}/${purchaseId}/payment`,
+    {
+      method: "POST",
+      body: JSON.stringify(paymentData),
+    }
+  );
 };
 
 // Stock
@@ -528,12 +545,8 @@ export const fetchEmployeeStock = async (params = {}) => {
   const url = query.toString()
     ? `${API_ENDPOINTS.EMPLOYEE_STOCK.LIST}?${query.toString()}`
     : API_ENDPOINTS.EMPLOYEE_STOCK.LIST;
-  
-  console.log('fetchEmployeeStock - URL:', url);
-  console.log('fetchEmployeeStock - params:', params);
-  
+
   const result = await apiRequest(url);
-  console.log('fetchEmployeeStock - result:', result);
   return result;
 };
 
@@ -565,7 +578,7 @@ export const createStockItem = async (stockData) => {
   });
 };
 
-export const updateStockItem = async (id, stockData) => {
+export const updateStockItem = async ({ id, stockData }) => {
   return await apiRequest(API_ENDPOINTS.STOCK.UPDATE(id), {
     method: "PATCH",
     body: JSON.stringify(stockData),
@@ -593,12 +606,17 @@ export const fetchBatchesByProduct = async (productId, location = "store") => {
 };
 
 // Fetch products from stock where location=store
-export const fetchProductsFromStock = async (location = "store", includeZeroQuantity = false) => {
+export const fetchProductsFromStock = async (
+  location = "store",
+  includeZeroQuantity = false
+) => {
   try {
-    const url = `${API_ENDPOINTS.STOCK.LIST}?location=${location}${includeZeroQuantity ? '&includeZeroQuantity=true' : ''}`;
-    console.log('fetchProductsFromStock - URL:', url);
+    const url = `${API_ENDPOINTS.STOCK.LIST}?location=${location}${
+      includeZeroQuantity ? "&includeZeroQuantity=true" : ""
+    }`;
+    console.log("fetchProductsFromStock - URL:", url);
     const response = await apiRequest(url);
-    console.log('fetchProductsFromStock - response:', response);
+    console.log("fetchProductsFromStock - response:", response);
     return response.data || response || [];
   } catch (error) {
     console.error("Error fetching products from stock:", error);

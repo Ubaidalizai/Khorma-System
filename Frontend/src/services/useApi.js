@@ -37,7 +37,6 @@ import {
   fetchEmployees,
   fetchEmployeeStock,
   fetchInventory,
-  fetchInventoryById,
   fetchInventoryStats,
   fetchInventoryStock,
   fetchProducts,
@@ -49,6 +48,7 @@ import {
   fetchSales,
   fetchSalesReports,
   fetchStock,
+  fetchStockItem,
   fetchStockTransfers,
   fetchStore,
   fetchStores,
@@ -58,20 +58,23 @@ import {
   fetchSystemAccounts,
   fetchUnit,
   fetchUnits,
+  forgotPassword,
   getSuppliers,
   getUserProfile,
   loginUser,
   logoutUser,
+  recordPurchasePayment,
   refreshUserToken,
   reverseAccountTransaction,
   updateAccount,
   updateCompany,
   updateCustomer,
   updateEmployee,
-  updateInventoryItem,
+  updatePassword,
   updateProductItem,
   updatePurchase,
   updateSale,
+  updateStockItem,
   updateStore,
   updateSupplier,
   updateUnit,
@@ -108,6 +111,30 @@ export const useUserProfile = () => {
     queryKey: ["userProfile"],
     queryFn: getUserProfile,
     enabled: false, // Only fetch when explicitly called
+  });
+};
+export const useUpdatePassword = () => {
+  return useMutation({
+    mutationKey: ["updatePassword"],
+    mutationFn: updatePassword,
+    onSuccess: () => {
+      toast.success("پسورد شما تغییر داده شد");
+    },
+    onError: () => {
+      toast.error("مشکلی پیش آمده است دو باره کوشش کنید");
+    },
+  });
+};
+
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: forgotPassword,
+    onSuccess: () => {
+      toast.success("لطفا ایمیل تانرا چک کنید!");
+    },
+    onError: () => {
+      toast.error("ایمیل مورد نظر اشتباه میباشد");
+    },
   });
 };
 
@@ -148,30 +175,10 @@ export const useCreateProdcut = () => {
     mutationKey: ["newProduct"],
     onSuccess: () => {
       queryClient.invalidateQueries(["product"]);
-      toast.success("محصول  موفقانه اضافه شد", {
-        position: "top-right",
-        autoClose: 4000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Bounce,
-      });
+      toast.success("محصول  موفقانه اضافه شد");
     },
     onError: () => {
-      toast.error("مشکل در ساختن محصول", {
-        position: "top-right",
-        autoClose: 4000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Bounce,
-      });
+      toast.error("مشکل در ساختن محصول");
     },
   });
 };
@@ -184,6 +191,10 @@ export const useUpdateProdcut = () => {
     mutationKey: ["productupdate"],
     onSuccess: () => {
       queryClient.invalidateQueries(["product"]);
+      toast.success("محصول با موفقیت بروزرسانی شد");
+    },
+    onError: () => {
+      toast.error("خطا در بروزرسانی محصول");
     },
   });
 };
@@ -221,7 +232,7 @@ export const useInventory = () => {
 export const useInventoryItem = (id) => {
   return useQuery({
     queryKey: ["inventory", id],
-    queryFn: () => fetchInventoryById(id),
+    queryFn: () => fetchStockItem(id),
     enabled: !!id,
   });
 };
@@ -239,8 +250,15 @@ export const useCreateInventory = () => {
 export const useUpdateInventory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateInventoryItem,
-    onSuccess: () => queryClient.invalidateQueries(["inventory"]),
+    mutationFn: updateStockItem,
+    mutationKey: ["updateInventory"],
+    onSuccess: () => {
+      queryClient.invalidateQueries(["inventory"]);
+      toast.success("موفقانه بروز رسانی شد");
+    },
+    onError: () => {
+      toast.error("در بروز رسانی مشکلی پیش آمده است");
+    },
   });
 };
 
@@ -352,7 +370,11 @@ export const useStocks = () => {
 export const useWarehouseStocks = (opts = {}) => {
   const { search, includeZeroQuantity } = opts;
   return useQuery({
-    queryKey: ["stocks", "warehouse", { search: search || "", includeZeroQuantity }],
+    queryKey: [
+      "stocks",
+      "warehouse",
+      { search: search || "", includeZeroQuantity },
+    ],
     queryFn: () => fetchInventoryStock({ search, includeZeroQuantity }),
     keepPreviousData: true,
   });
@@ -361,7 +383,11 @@ export const useWarehouseStocks = (opts = {}) => {
 export const useStoreStocks = (opts = {}) => {
   const { search, includeZeroQuantity } = opts;
   return useQuery({
-    queryKey: ["stocks", "store", { search: search || "", includeZeroQuantity }],
+    queryKey: [
+      "stocks",
+      "store",
+      { search: search || "", includeZeroQuantity },
+    ],
     queryFn: () => fetchStoreStock({ search, includeZeroQuantity }),
     keepPreviousData: true,
   });
@@ -369,11 +395,12 @@ export const useStoreStocks = (opts = {}) => {
 
 export const useEmployeeStocks = (opts = {}) => {
   const { search, employeeId } = opts;
-  console.log('useEmployeeStocks hook called with:', { search, employeeId });
-  console.log('useEmployeeStocks enabled condition:', !!employeeId && employeeId !== null);
-  
   return useQuery({
-    queryKey: ["stocks", "employee", { search: search || "", employeeId: employeeId || "" }],
+    queryKey: [
+      "stocks",
+      "employee",
+      { search: search || "", employeeId: employeeId || "" },
+    ],
     queryFn: () => fetchEmployeeStock({ search, employeeId }),
     keepPreviousData: true,
     enabled: !!employeeId && employeeId !== null, // Only run query if employeeId exists and is not null
@@ -701,7 +728,10 @@ export const useSupplierAccounts = () => {
   });
 };
 
-export const useProductsFromStock = (location = "store", includeZeroQuantity = false) => {
+export const useProductsFromStock = (
+  location = "store",
+  includeZeroQuantity = false
+) => {
   return useQuery({
     queryKey: ["productsFromStock", location, includeZeroQuantity],
     queryFn: () => fetchProductsFromStock(location, includeZeroQuantity),
@@ -1031,6 +1061,19 @@ export const useReverseTransaction = () => {
         theme: "colored",
         transition: Bounce,
       });
+    },
+  });
+};
+
+// Payment
+
+export const usePaymentProcess = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: recordPurchasePayment,
+    mutationKey: ["payment"],
+    onSuccess: () => {
+      queryClient.invalidateQueries(["allPurchases"]);
     },
   });
 };

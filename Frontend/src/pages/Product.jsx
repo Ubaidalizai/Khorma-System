@@ -1,3 +1,7 @@
+import { FaRegEdit } from "react-icons/fa";
+import { BsTrash3 } from "react-icons/bs";
+import { FaTrashAlt } from "react-icons/fa";
+import { BsEye } from "react-icons/bs";
 import { AiFillEdit } from "react-icons/ai";
 import { AiFillDelete } from "react-icons/ai";
 import { AiFillEye } from "react-icons/ai";
@@ -126,16 +130,16 @@ function Product() {
                   </span>
                 </TableColumn>
                 <TableColumn>
-                  <div className=" flex items-center gap-x-2">
-                    <AiFillEye
+                  <div className=" flex items-center justify-center  gap-x-2">
+                    <BsEye
                       className=" text-[18px] text-yellow-500"
                       onClick={() => handleViewProduct(el)}
                     />
-                    <AiFillDelete
+                    <BsTrash3
                       className=" text-[18px] text-red-500"
                       onClick={() => handleDeleteProduct(el)}
                     />
-                    <AiFillEdit
+                    <FaRegEdit
                       className=" text-[18px] text-green-500"
                       onClick={() => handleEditProduct(el)}
                     />

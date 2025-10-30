@@ -16,10 +16,10 @@ import TableRow from "./TableRow";
 const productHeader = [
   { title: "محصول" },
   { title: "واحد" },
-  { title: "Batch" },
+  { title: "نمبر بچ" },
   { title: "تعداد" },
-  { title: "قیمت یک" },
-  { title: "مجموع" },
+  { title: "قیمت واحد" },
+  { title: "قیمت مجموعی" },
   { title: "عملیات" },
 ];
 export default function SalesForm({
@@ -41,9 +41,19 @@ export default function SalesForm({
   const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
   const { data: employees, isLoading: isLoadingEmployees } = useEmployees();
   const handleAddItem = () => {
+    const quantity = Number(currentItem.quantity) || 0;
+    const unitPrice = Number(currentItem.unitPrice) || 0;
+    const totalPrice = quantity * unitPrice;
     setItems([
       ...items,
-      { ...currentItem, total: currentItem.unitPrice * currentItem.quantity },
+      {
+        product: currentItem.product,
+        unit: currentItem.unit,
+        batchNumber: currentItem.batchNumber || "",
+        quantity,
+        unitPrice,
+        totalPrice,
+      },
     ]);
     setCurrentItem({
       product: "",

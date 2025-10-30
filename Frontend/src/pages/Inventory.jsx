@@ -40,6 +40,7 @@ import Employee from "../components/Employee";
 import { TrashIcon } from "lucide-react";
 
 const Inventory = () => {
+  const [openCreateProduct, setOpenCreateProduct] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openConfirm, setOpenConfirm] = useState(false);
   const { register, handleSubmit, formState, reset, control } = useForm();
@@ -54,21 +55,18 @@ const Inventory = () => {
     deleteStockTransfer(id);
     setOpenConfirm(false);
   };
-  function AddProductForm({ close }) {
-    const onSubmit = async (data) => {
-      createProduct({ ...data });
-      reset();
-    };
-    return (
-      <ProductForm
-        register={register}
-        handleSubmit={handleSubmit(onSubmit)}
-        formState={formState}
-        control={control}
-        onClose={close}
-      />
+  const onSubmit = async (data) => {
+    createProduct(
+      { ...data },
+      {
+        onSuccess: () => {
+          setOpenCreateProduct(false);
+        },
+      }
     );
-  }
+    reset();
+  };
+
   const [activeTab, setActiveTab] = useState("all");
 
   // Stock transfer history
@@ -106,23 +104,28 @@ const Inventory = () => {
             مدیریت کردن تمام دیتا های و نماینده گی های تان
           </p>
         </div>
-        <div className=" w-[200px] ">
-          <Modal>
-            <Modal.Toggle>
-              <Button icon={<PlusIcon className="h-5 w-5" />}>
-                اضافه کردن جنس
-              </Button>
-            </Modal.Toggle>
-            <Modal.Window>
-              <AddProductForm />
-            </Modal.Window>
-          </Modal>
+        <div className=" w-[200px] pt-2 ">
+          <Button
+            onClick={() => setOpenCreateProduct(true)}
+            icon={<PlusIcon className="h-5 w-5" />}
+          >
+            اضافه کردن جنس
+          </Button>
+          <GloableModal open={openCreateProduct} setOpen={setOpenCreateProduct}>
+            <ProductForm
+              register={register}
+              handleSubmit={handleSubmit(onSubmit)}
+              formState={formState}
+              control={control}
+              onClose={() => setOpenCreateProduct(false)}
+            />
+          </GloableModal>
         </div>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">تمام اجناس</p>
@@ -136,7 +139,7 @@ const Inventory = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">موجودی گدام</p>
@@ -153,7 +156,7 @@ const Inventory = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">موجودی فروشگاه</p>
@@ -170,7 +173,7 @@ const Inventory = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">کمبود موجودی</p>

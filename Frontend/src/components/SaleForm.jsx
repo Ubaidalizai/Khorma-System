@@ -1,5 +1,5 @@
 import { CgClose } from "react-icons/cg";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useProductsFromStock,
   useAccounts,
@@ -125,8 +125,10 @@ function SaleForm({
   });
 
   // API hooks
-  const { data: stockData, isLoading: productsLoading } =
-    useProductsFromStock("store", false); // false = exclude products with zero quantity
+  const { data: stockData, isLoading: productsLoading } = useProductsFromStock(
+    "store",
+    false
+  ); // false = exclude products with zero quantity
   // People accounts (customers/employees) instead of raw people
   const { data: customerAccResp, isLoading: customersLoading } = useAccounts({
     type: "customer",
@@ -151,24 +153,25 @@ function SaleForm({
   const employeeAccounts =
     employeeAccResp?.accounts || employeeAccResp?.data || employeeAccResp || [];
 
-  console.log('SaleForm - Form state debug:');
-  console.log('- saleType:', saleType);
-  console.log('- selectedEmployee from watch:', selectedEmployee);
-  console.log('- employeeAccounts length:', employeeAccounts.length);
+  console.log("SaleForm - Form state debug:");
+  console.log("- saleType:", saleType);
+  console.log("- selectedEmployee from watch:", selectedEmployee);
+  console.log("- employeeAccounts length:", employeeAccounts.length);
 
   // Get unique products from stock data or employee stock data
   const products = React.useMemo(() => {
     // Use employee stock if employee is selected
-    const dataSource = selectedEmployee && employeeStockData 
-      ? employeeStockData.data || employeeStockData 
-      : stockData;
-    
-    console.log('SaleForm Debug:');
-    console.log('- selectedEmployee:', selectedEmployee);
-    console.log('- employeeStockData:', employeeStockData);
-    console.log('- stockData:', stockData);
-    console.log('- dataSource:', dataSource);
-    
+    const dataSource =
+      selectedEmployee && employeeStockData
+        ? employeeStockData.data || employeeStockData
+        : stockData;
+
+    console.log("SaleForm Debug:");
+    console.log("- selectedEmployee:", selectedEmployee);
+    console.log("- employeeStockData:", employeeStockData);
+    console.log("- stockData:", stockData);
+    console.log("- dataSource:", dataSource);
+
     if (!dataSource || !Array.isArray(dataSource)) return [];
 
     // Group by product ID to get unique products
@@ -183,7 +186,7 @@ function SaleForm({
     });
 
     const result = Array.from(productMap.values());
-    console.log('- products result:', result);
+    console.log("- products result:", result);
     return result;
   }, [stockData, employeeStockData, selectedEmployee]);
 
@@ -672,7 +675,11 @@ function SaleForm({
           className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
           disabled={loading}
         >
-          {loading ? "در حال بارگذاری..." : editMode ? "ویرایش فروش" : "اضافه کردن فروش"}
+          {loading
+            ? "در حال بارگذاری..."
+            : editMode
+            ? "ویرایش فروش"
+            : "اضافه کردن فروش"}
         </button>
       </div>
     </form>

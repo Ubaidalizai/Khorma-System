@@ -60,11 +60,17 @@ exports.createStock = asyncHandler(async (req, res) => {
 // @desc    Get all stocks (with pagination, location & search by product name)
 // @route   GET /api/v1/stocks
 exports.getAllStocks = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, location, search, includeZeroQuantity = false } = req.query;
+  const {
+    page = 1,
+    limit = 10,
+    location,
+    search,
+    includeZeroQuantity = false,
+  } = req.query;
 
   const query = { isDeleted: false };
   if (location) query.location = location;
-  
+
   // Filter by quantity - by default exclude zero quantity, unless includeZeroQuantity is true
   if (includeZeroQuantity !== 'true') {
     query.quantity = { $gt: 0 };
@@ -101,7 +107,6 @@ exports.getAllStocks = asyncHandler(async (req, res) => {
     data: stocks,
   });
 });
-
 
 // @desc    Get single stock by ID
 // @route   GET /api/v1/stocks/:id
@@ -159,10 +164,10 @@ exports.deleteStock = asyncHandler(async (req, res) => {
 // Get all batches for a product at a specific location
 exports.getBatchesByProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
-  const { location } = req.query; // inventory / pharmacy
+  const { location } = req.query; // warehouse / store
 
   if (!location) {
-    throw new AppError('Location is required (inventory or pharmacy)', 400);
+    throw new AppError('Location is required (warehouse or store)', 400);
   }
 
   const batches = await Stock.find({
@@ -170,8 +175,8 @@ exports.getBatchesByProduct = asyncHandler(async (req, res) => {
     location,
     quantity: { $gt: 0 }, // only show batches with stock left
   })
-    .select('batchNumber expiry_date quantity sale_price')
-    .sort({ expiry_date: 1 }); // FEFO: first expiring first
+    .select('batchNumber expiryDate quantity sale_price')
+    .sort({ expiryDate: 1 }); // FEFO: first expiring first
 
   if (!batches || batches.length === 0) {
     return res.status(404).json({
@@ -200,10 +205,12 @@ exports.getInventoryStats = asyncHandler(async (req, res) => {
       $group: {
         _id: null,
         totalQuantity: { $sum: '$quantity' },
-        totalValue: { $sum: { $multiply: ['$quantity', '$purchasePricePerBaseUnit'] } },
-        uniqueProducts: { $addToSet: '$product' }
-      }
-    }
+        totalValue: {
+          $sum: { $multiply: ['$quantity', '$purchasePricePerBaseUnit'] },
+        },
+        uniqueProducts: { $addToSet: '$product' },
+      },
+    },
   ]);
 
   // Get store stock stats
@@ -213,10 +220,12 @@ exports.getInventoryStats = asyncHandler(async (req, res) => {
       $group: {
         _id: null,
         totalQuantity: { $sum: '$quantity' },
-        totalValue: { $sum: { $multiply: ['$quantity', '$purchasePricePerBaseUnit'] } },
-        uniqueProducts: { $addToSet: '$product' }
-      }
-    }
+        totalValue: {
+          $sum: { $multiply: ['$quantity', '$purchasePricePerBaseUnit'] },
+        },
+        uniqueProducts: { $addToSet: '$product' },
+      },
+    },
   ]);
 
   // Get low stock items (products below minimum level)
@@ -230,40 +239,50 @@ exports.getInventoryStats = asyncHandler(async (req, res) => {
           {
             $match: {
               $expr: { $eq: ['$product', '$$productId'] },
-              isDeleted: false
-            }
+              isDeleted: false,
+            },
           },
           {
             $group: {
               _id: null,
-              totalQuantity: { $sum: '$quantity' }
-            }
-          }
+              totalQuantity: { $sum: '$quantity' },
+            },
+          },
         ],
-        as: 'stockInfo'
-      }
+        as: 'stockInfo',
+      },
     },
     {
       $addFields: {
-        currentStock: { $ifNull: [{ $arrayElemAt: ['$stockInfo.totalQuantity', 0] }, 0] }
-      }
+        currentStock: {
+          $ifNull: [{ $arrayElemAt: ['$stockInfo.totalQuantity', 0] }, 0],
+        },
+      },
     },
     {
       $match: {
-        $expr: { $lt: ['$currentStock', '$minLevel'] }
-      }
+        $expr: { $lt: ['$currentStock', '$minLevel'] },
+      },
     },
     {
       $project: {
         name: 1,
         minLevel: 1,
-        currentStock: 1
-      }
-    }
+        currentStock: 1,
+      },
+    },
   ]);
 
-  const warehouseData = warehouseStats[0] || { totalQuantity: 0, totalValue: 0, uniqueProducts: [] };
-  const storeData = storeStats[0] || { totalQuantity: 0, totalValue: 0, uniqueProducts: [] };
+  const warehouseData = warehouseStats[0] || {
+    totalQuantity: 0,
+    totalValue: 0,
+    uniqueProducts: [],
+  };
+  const storeData = storeStats[0] || {
+    totalQuantity: 0,
+    totalValue: 0,
+    uniqueProducts: [],
+  };
 
   res.status(200).json({
     success: true,
@@ -272,15 +291,15 @@ exports.getInventoryStats = asyncHandler(async (req, res) => {
       warehouse: {
         totalQuantity: warehouseData.totalQuantity,
         totalValue: warehouseData.totalValue,
-        uniqueProducts: warehouseData.uniqueProducts.length
+        uniqueProducts: warehouseData.uniqueProducts.length,
       },
       store: {
         totalQuantity: storeData.totalQuantity,
         totalValue: storeData.totalValue,
-        uniqueProducts: storeData.uniqueProducts.length
+        uniqueProducts: storeData.uniqueProducts.length,
       },
       lowStockItems: lowStockItems.length,
-      lowStockDetails: lowStockItems
-    }
+      lowStockDetails: lowStockItems,
+    },
   });
 });
