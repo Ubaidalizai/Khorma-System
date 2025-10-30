@@ -1,5 +1,5 @@
 import { CgClose } from "react-icons/cg";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useProductsFromStock,
   useAccounts,

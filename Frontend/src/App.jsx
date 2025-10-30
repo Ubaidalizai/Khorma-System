@@ -12,6 +12,7 @@ import Accounts from "./pages/Accounts";
 import AccountDetails from "./pages/AccountDetails";
 import PurchaseDetails from "./pages/PurchaseDetails";
 import Reports from "./pages/Reports";
+import Expenses from "./pages/Expenses";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -54,6 +55,7 @@ function App() {
               <Route path="/purchases" element={<Purchases />} />
               <Route path="/purchases/:id" element={<PurchaseDetails />} />
               <Route path="/sales" element={<Sales />} />
+              <Route path="/expenses" element={<Expenses />} />
               <Route path="/accounts" element={<Accounts />} />
               <Route path="/accounts/:id" element={<AccountDetails />} />
               <Route path="/reports" element={<Reports />} />

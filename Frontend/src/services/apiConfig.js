@@ -163,6 +163,14 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/sales/${id}`,
     REPORTS: "/sales/reports",
   },
+  // Categories (for filters)
+  CATEGORIES: {
+    LIST: "/categories",
+    DETAIL: (id) => `/categories/${id}`,
+    CREATE: "/categories",
+    UPDATE: (id) => `/categories/${id}`,
+    DELETE: (id) => `/categories/${id}`,
+  },
   // Employee stock
 
   EMPLOYEES_STOCK: {
