@@ -39,7 +39,7 @@ router.get('/:id', getExpenseById);
 
 // Create a new expense
 // POST /api/v1/expenses
-// Body: { "category": "64f8a1b2c3d4e5f6a7b8c9d0", "amount": 500, "date": "2024-01-15", "description": "Office supplies" }
+// Body: { "category": "64f8a1b2...", "amount": 500, "paidFromAccount": "65aa...", "date": "2024-01-15", "description": "Office supplies" }
 router.post('/', createExpense);
 
 // Update an expense

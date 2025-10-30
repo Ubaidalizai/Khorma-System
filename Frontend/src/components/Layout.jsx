@@ -6,12 +6,13 @@ import {
   ShieldCheckIcon,
   ShoppingCartIcon,
   UsersIcon,
+  BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { AiOutlineBell, AiOutlineUser } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import DashboardSideButton from "./DashboarSideButton";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
@@ -32,11 +33,9 @@ const tabs = [
     href: "/sales",
     icon: <CurrencyDollarIcon className=" text-sm" />,
   },
-  {
-    name: "حساب‌ها",
-    href: "/accounts",
-    icon: <UsersIcon className=" text-sm" />,
-  },
+  // Finance group items will be rendered together below
+  { name: "حساب‌ها", href: "/accounts", icon: <UsersIcon className=" text-sm" /> },
+  { name: "هزینه‌ها", href: "/expenses", icon: <BanknotesIcon className=" text-sm" /> },
   {
     name: "گزارش‌ها",
     href: "/reports",
@@ -50,8 +49,10 @@ const tabs = [
 ];
 const Layout = () => {
   const [isHover, setIsHover] = useState(false);
+  const [isFinanceOpen, setIsFinanceOpen] = useState(false);
   const { user, logout } = useAuth();
   const menuRef = useRef();
+  const location = useLocation();
   const [notifications] = useState([
     { id: 1, message: "Low stock alert: Dates", type: "warning" },
     { id: 2, message: "New purchase order received", type: "info" },
@@ -211,20 +212,65 @@ const Layout = () => {
               title={tabs[3].name}
               to={tabs[3].href}
             />
-            <DashboardSideButton
-              icon={tabs[4].icon}
-              title={tabs[4].name}
-              to={tabs[4].href}
-            />
-            <DashboardSideButton
-              icon={tabs[5].icon}
-              title={tabs[5].name}
-              to={tabs[5].href}
-            />
+            {/* Finance group - collapsible */}
+            <button
+              type="button"
+              onClick={() => setIsFinanceOpen((v) => !v)}
+              className="w-full flex items-center justify-between text-sm font-medium rounded-lg transition-all duration-200"
+              style={{
+                padding: "var(--space-2) var(--space-4)",
+                backgroundColor:
+                  location.pathname.startsWith("/accounts") || location.pathname.startsWith("/expenses")
+                    ? "var(--primary-brown-light)"
+                    : "transparent",
+                color:
+                  location.pathname.startsWith("/accounts") || location.pathname.startsWith("/expenses")
+                    ? "white"
+                    : "var(--amber-light)",
+                borderRight:
+                  location.pathname.startsWith("/accounts") || location.pathname.startsWith("/expenses")
+                    ? `4px solid var(--amber)`
+                    : "4px solid transparent",
+                textAlign: "right",
+              }}
+              onMouseEnter={(e) => {
+                if (!location.pathname.startsWith("/accounts") && !location.pathname.startsWith("/expenses")) {
+                  e.currentTarget.style.backgroundColor = "var(--primary-brown-light)";
+                  e.currentTarget.style.color = "white";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!location.pathname.startsWith("/accounts") && !location.pathname.startsWith("/expenses")) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "var(--amber-light)";
+                }
+              }}
+            >
+              <span className="flex items-center">
+                <CurrencyDollarIcon className="ml-3 h-5 w-5" />
+                <span className="mr-3">مالی</span>
+              </span>
+              <span className={`transition-transform duration-200 ${isFinanceOpen ? "rotate-180" : ""}`}>⌄</span>
+            </button>
+            {isFinanceOpen && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "4px" }}>
+                <div style={{ marginRight: "var(--space-4)" }}>
+                  <DashboardSideButton icon={tabs[4].icon} title={tabs[4].name} to={tabs[4].href} />
+                </div>
+                <div style={{ marginRight: "var(--space-4)" }}>
+                  <DashboardSideButton icon={tabs[5].icon} title={tabs[5].name} to={tabs[5].href} />
+                </div>
+              </div>
+            )}
             <DashboardSideButton
               icon={tabs[6].icon}
               title={tabs[6].name}
               to={tabs[6].href}
+            />
+            <DashboardSideButton
+              icon={tabs[7].icon}
+              title={tabs[7].name}
+              to={tabs[7].href}
             />
           </div>
         </div>

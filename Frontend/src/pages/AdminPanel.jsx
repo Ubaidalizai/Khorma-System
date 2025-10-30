@@ -11,8 +11,19 @@ import {
   ScaleIcon,
   UserGroupIcon,
   UserIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline";
 import { inputStyle } from "../components/ProductForm";
+import GloableModal from "../components/GloableModal";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
+import { toast } from "react-toastify";
+import {
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 
 const AdminPanel = () => {
   const { isAuthenticated } = useAuth();
@@ -38,6 +49,12 @@ const AdminPanel = () => {
       name: "مدیریت تامین‌کنندگان",
       icon: BuildingOfficeIcon,
       description: "افزودن، ویرایش و حذف تامین‌کنندگان",
+    },
+    {
+      id: "categories",
+      name: "مدیریت دسته‌بندی‌ها",
+      icon: TagIcon,
+      description: "CRUD دسته‌بندی‌ها برای هزینه/درآمد/محصول",
     },
     {
       id: "customers",
@@ -69,6 +86,8 @@ const AdminPanel = () => {
     switch (activeSection) {
       case "suppliers":
         return <SupplierManagement />;
+      case "categories":
+        return <CategoryManagement />;
       case "customers":
         return <CustomerManagement />;
       case "employees":
@@ -325,3 +344,266 @@ const SettingsManagement = () => (
 );
 
 export default AdminPanel;
+
+// Category Management Component
+const CategoryManagement = () => {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState(""); // expense | income | product | both
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({
+    name: "",
+    type: "expense",
+    color: "#95684c",
+    isActive: true,
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["categories", { search, typeFilter }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (typeFilter) params.set("type", typeFilter);
+      params.set("limit", "100");
+      return apiRequest(`${API_ENDPOINTS.CATEGORIES.LIST}?${params.toString()}`);
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (payload) =>
+      apiRequest(API_ENDPOINTS.CATEGORIES.CREATE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      toast.success("دسته‌بندی ایجاد شد");
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setIsModalOpen(false);
+    },
+    onError: (e) => toast.error(e.message || "ایجاد ناموفق بود"),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }) =>
+      apiRequest(API_ENDPOINTS.CATEGORIES.UPDATE(id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      toast.success("دسته‌بندی ویرایش شد");
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setIsModalOpen(false);
+      setEditing(null);
+    },
+    onError: (e) => toast.error(e.message || "ویرایش ناموفق بود"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) =>
+      apiRequest(API_ENDPOINTS.CATEGORIES.DELETE(id), { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success("حذف شد");
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError: (e) => toast.error(e.message || "حذف ناموفق بود"),
+  });
+
+  const categories = data?.data || [];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold" style={{ color: "var(--primary-brown)" }}>
+            مدیریت دسته‌بندی‌ها
+          </h2>
+          <p className="text-gray-600 mt-1">افزودن، ویرایش و حذف دسته‌بندی‌ها</p>
+        </div>
+        <button className="btn-primary flex items-center space-x-2 space-x-reverse" onClick={() => { setEditing(null); setForm({ name: "", type: "expense", color: "#95684c", isActive: true }); setIsModalOpen(true); }}>
+          <PlusIcon className="h-5 w-5" />
+          <span>افزودن دسته‌بندی</span>
+        </button>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="card">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 max-w-md">
+            <MagnifyingGlassIcon className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="جستجو در دسته‌بندی‌ها..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`${inputStyle} pr-10`}
+            />
+          </div>
+          <div className="w-full sm:w-56">
+            <select className={inputStyle} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="">همه انواع</option>
+              <option value="expense">هزینه</option>
+              <option value="income">درآمد</option>
+              <option value="product">محصول</option>
+              <option value="both">هزینه و درآمد</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="card">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رنگ</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">فعال</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اقدامات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {isLoading ? (
+                <tr><td colSpan="5" className="text-center py-6">در حال بارگذاری...</td></tr>
+              ) : categories.length === 0 ? (
+                <tr><td colSpan="5" className="text-center py-6">موردی یافت نشد</td></tr>
+              ) : (
+                categories.map((c) => (
+                  <tr key={c._id}>
+                    <td className="px-4 py-3 whitespace-nowrap">{c.name}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{c.type}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="inline-block w-4 h-4 rounded align-middle" style={{ backgroundColor: c.color || "#ccc" }} />
+                      <span className="mr-2 align-middle">{c.color || "-"}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">{c.isActive ? "بله" : "خیر"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => { setEditing(c); setForm({ name: c.name || "", type: c.type || "expense", color: c.color || "#95684c", isActive: c.isActive ?? true }); setIsModalOpen(true); }}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                          title="ویرایش"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => { if (window.confirm("حذف شود؟")) deleteMutation.mutate(c._id); }}
+                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                          title="حذف"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Add/Edit Modal */}
+      <GloableModal open={isModalOpen} setOpen={setIsModalOpen} isClose={true}>
+        <div className=" w-[480px] max-h-[80vh] bg-white overflow-y-auto rounded-md">
+          <div className=" mx-auto p-5 w-full rounded-md bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">{editing ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"}</h3>
+              <span className="text-sm" style={{ color: "var(--text-medium)" }}>دسته‌بندی‌ها</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block mb-2" style={{ color: "var(--text-medium)" }}>نام</label>
+                <input className="form-input" name="name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block mb-2" style={{ color: "var(--text-medium)" }}>نوع</label>
+                <select className="form-input" name="type" value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
+                  <option value="expense">هزینه</option>
+                  <option value="income">درآمد</option>
+                  <option value="product">محصول</option>
+                  <option value="both">هزینه و درآمد</option>
+                </select>
+              </div>
+              <div>
+                <label className="block mb-2" style={{ color: "var(--text-medium)" }}>رنگ</label>
+                <input className="form-input" type="color" name="color" value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} />
+              </div>
+              <div className="md:col-span-2 flex items-center gap-2">
+                <input id="isActive" type="checkbox" name="isActive" checked={form.isActive} onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />
+                <label htmlFor="isActive" style={{ color: "var(--text-medium)" }}>فعال</label>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 mt-6">
+              <button className="btn-secondary" onClick={() => { setIsModalOpen(false); setEditing(null); }}>لغو</button>
+              <button className="btn-primary" disabled={!form.name || !form.type} onClick={() => editing ? updateMutation.mutate({ id: editing._id, payload: form }) : createMutation.mutate(form)}>
+                {editing ? "ذخیره تغییرات" : "ثبت"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </GloableModal>
+    </div>
+  );
+};
+
+const CategoryModal = ({ initial, onClose, onSubmit }) => {
+  const [form, setForm] = useState({
+    name: initial?.name || "",
+    type: initial?.type || "expense",
+    color: initial?.color || "#95684c",
+    isActive: initial?.isActive ?? true,
+  });
+
+  const canSubmit = form.name && form.type;
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.3)" }} onClick={onClose} />
+      <div className="relative w-full max-w-lg card">
+        <h2 className="text-lg font-bold mb-4" style={{ color: "var(--primary-brown)" }}>
+          {initial ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>نام</label>
+            <input className="form-input" name="name" value={form.name} onChange={handleChange} />
+          </div>
+          <div>
+            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>نوع</label>
+            <select className="form-input" name="type" value={form.type} onChange={handleChange}>
+              <option value="expense">هزینه</option>
+              <option value="income">درآمد</option>
+              <option value="product">محصول</option>
+              <option value="both">هزینه و درآمد</option>
+            </select>
+          </div>
+          <div>
+            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>رنگ</label>
+            <input className="form-input" type="color" name="color" value={form.color} onChange={handleChange} />
+          </div>
+          <div className="md:col-span-2 flex items-center gap-2">
+            <input id="isActive" type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} />
+            <label htmlFor="isActive" style={{ color: "var(--text-medium)" }}>فعال</label>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-6">
+          <button className="btn-secondary" onClick={onClose}>لغو</button>
+          <button className="btn-primary" disabled={!canSubmit} onClick={() => onSubmit(form)}>
+            {initial ? "ذخیره تغییرات" : "ثبت"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

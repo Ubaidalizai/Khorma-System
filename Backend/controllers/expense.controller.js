@@ -4,6 +4,8 @@ const AppError = require('../utils/AppError');
 const Expense = require('../models/expense.model');
 const Category = require('../models/category.model');
 const AuditLog = require('../models/auditLog.model');
+const Account = require('../models/account.model');
+const AccountTransaction = require('../models/accountTransaction.model');
 
 // @desc    Get all expenses with filtering and pagination
 // @route   GET /api/v1/expenses
@@ -172,10 +174,11 @@ exports.getExpenseById = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Create a new expense
+// @desc    Create a new expense (and post account transaction)
 // @route   POST /api/v1/expenses
+// @body    { category, amount, date?, description?, paidFromAccount }
 exports.createExpense = asyncHandler(async (req, res, next) => {
-  const { category, amount, date, description } = req.body;
+  const { category, amount, date, description, paidFromAccount } = req.body;
 
   if (!category || !amount) {
     throw new AppError('Category and amount are required', 400);
@@ -185,66 +188,130 @@ exports.createExpense = asyncHandler(async (req, res, next) => {
     throw new AppError('Amount must be greater than 0', 400);
   }
 
-  // Validate category exists and is for expenses
-  const categoryDoc = await Category.findOne({
-    _id: category,
-    isDeleted: false,
-    isActive: true,
-    $or: [{ type: 'expense' }, { type: 'both' }],
-  });
-
-  if (!categoryDoc) {
-    throw new AppError(
-      'Invalid category or category not available for expenses',
-      400
-    );
+  if (!paidFromAccount) {
+    throw new AppError('paidFromAccount is required', 400);
   }
 
-  const expense = await Expense.create({
-    category,
-    amount,
-    date: date ? new Date(date) : new Date(),
-    description,
-    createdBy: req.user._id,
-  });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    // Validate category
+    const categoryDoc = await Category.findOne(
+      {
+        _id: category,
+        isDeleted: false,
+        isActive: true,
+        $or: [{ type: 'expense' }, { type: 'both' }],
+      },
+      null,
+      { session }
+    );
+    if (!categoryDoc) {
+      throw new AppError(
+        'Invalid category or category not available for expenses',
+        400
+      );
+    }
 
-  await expense.populate([
-    { path: 'category', select: 'name type color' },
-    { path: 'createdBy', select: 'name' },
-  ]);
+    // Validate account type (cashier, safe, saraf)
+    const moneyAccount = await Account.findOne(
+      { _id: paidFromAccount, isDeleted: false },
+      null,
+      { session }
+    );
+    if (!moneyAccount) {
+      throw new AppError('Paid from account not found', 404);
+    }
+    if (!['cashier', 'safe', 'saraf'].includes(moneyAccount.type)) {
+      throw new AppError(
+        'Paid from account must be of type cashier, safe, or saraf',
+        400
+      );
+    }
 
-  // Audit log
-  await AuditLog.create({
-    tableName: 'Expense',
-    recordId: expense._id,
-    operation: 'INSERT',
-    oldData: null,
-    newData: expense.toObject(),
-    reason: `Expense created: ${categoryDoc.name} - ${amount}`,
-    changedBy: req.user?.name || 'System',
-    changedAt: new Date(),
-  });
+    // Create expense
+    const expense = await Expense.create(
+      [
+        {
+          category,
+          paidFromAccount,
+          amount,
+          date: date ? new Date(date) : new Date(),
+          description,
+          createdBy: req.user._id,
+        },
+      ],
+      { session }
+    );
+    const createdExpense = expense[0];
 
-  res.status(201).json({
-    success: true,
-    message: 'Expense created successfully',
-    data: expense,
-  });
+    // Post account transaction (negative to reduce balance)
+    const transaction = await AccountTransaction.create(
+      [
+        {
+          account: paidFromAccount,
+          date: date ? new Date(date) : new Date(),
+          transactionType: 'Expense',
+          amount: -Math.abs(amount),
+          referenceType: 'expense',
+          referenceId: createdExpense._id,
+          description: description || `Expense: ${categoryDoc.name}`,
+          created_by: req.user._id,
+        },
+      ],
+      { session }
+    );
+
+    // Update account balance
+    moneyAccount.currentBalance = (moneyAccount.currentBalance || 0) - Math.abs(amount);
+    await moneyAccount.save({ session });
+
+    // Audit log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Expense',
+          recordId: createdExpense._id,
+          operation: 'INSERT',
+          oldData: null,
+          newData: createdExpense.toObject(),
+          reason: `Expense created: ${categoryDoc.name} - ${amount}`,
+          changedBy: req.user?.name || 'System',
+          changedAt: new Date(),
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await createdExpense.populate([
+      { path: 'category', select: 'name type color' },
+      { path: 'createdBy', select: 'name' },
+      { path: 'paidFromAccount', select: 'name type' },
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: 'Expense created successfully',
+      data: createdExpense,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
 });
 
-// @desc    Update an expense
+// @desc    Update an expense (re-post account transaction if needed)
 // @route   PATCH /api/v1/expenses/:id
 exports.updateExpense = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const { category, amount, date, description } = req.body;
+  const { category, amount, date, description, paidFromAccount } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new AppError('Invalid expense ID', 400);
-  }
-
-  const expense = await Expense.findOne({ _id: id, isDeleted: false });
-  if (!expense) {
-    throw new AppError('Expense not found', 404);
   }
 
   // Validate amount if provided
@@ -260,7 +327,6 @@ exports.updateExpense = asyncHandler(async (req, res, next) => {
       isActive: true,
       $or: [{ type: 'expense' }, { type: 'both' }],
     });
-
     if (!categoryDoc) {
       throw new AppError(
         'Invalid category or category not available for expenses',
@@ -269,40 +335,137 @@ exports.updateExpense = asyncHandler(async (req, res, next) => {
     }
   }
 
-  const oldData = expense.toObject();
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const expense = await Expense.findOne({ _id: id, isDeleted: false }, null, { session });
+    if (!expense) {
+      throw new AppError('Expense not found', 404);
+    }
 
-  // Update fields
-  if (category !== undefined) expense.category = category;
-  if (amount !== undefined) expense.amount = amount;
-  if (date !== undefined) expense.date = new Date(date);
-  if (description !== undefined) expense.description = description;
+    const oldData = expense.toObject();
 
-  await expense.save();
-  await expense.populate([
-    { path: 'category', select: 'name type color' },
-    { path: 'createdBy', select: 'name' },
-  ]);
+    // Find existing transaction
+    const existingTxn = await AccountTransaction.findOne(
+      { referenceType: 'expense', referenceId: expense._id, isDeleted: false },
+      null,
+      { session }
+    );
 
-  // Audit log
-  await AuditLog.create({
-    tableName: 'Expense',
-    recordId: expense._id,
-    operation: 'UPDATE',
-    oldData,
-    newData: expense.toObject(),
-    reason: `Expense updated: ${expense.amount}`,
-    changedBy: req.user?.name || 'System',
-    changedAt: new Date(),
-  });
+    let newPaidFromAccount = paidFromAccount !== undefined ? paidFromAccount : expense.paidFromAccount;
+    if (!newPaidFromAccount) {
+      throw new AppError('paidFromAccount is required', 400);
+    }
 
-  res.status(200).json({
-    success: true,
-    message: 'Expense updated successfully',
-    data: expense,
-  });
+    const moneyAccount = await Account.findOne({ _id: newPaidFromAccount, isDeleted: false }, null, { session });
+    if (!moneyAccount) {
+      throw new AppError('Paid from account not found', 404);
+    }
+    if (!['cashier', 'safe', 'saraf'].includes(moneyAccount.type)) {
+      throw new AppError('Paid from account must be of type cashier, safe, or saraf', 400);
+    }
+
+    // Reverse existing transaction if present
+    if (existingTxn && !existingTxn.reversed) {
+      // credit back the old amount to the old account
+      const oldAccount = await Account.findOne({ _id: existingTxn.account }, null, { session });
+      if (oldAccount) {
+        oldAccount.currentBalance = (oldAccount.currentBalance || 0) + Math.abs(existingTxn.amount);
+        await oldAccount.save({ session });
+      }
+
+      const reversal = await AccountTransaction.create(
+        [
+          {
+            account: existingTxn.account,
+            date: new Date(),
+            transactionType: 'Expense',
+            amount: Math.abs(existingTxn.amount),
+            referenceType: 'expense',
+            referenceId: expense._id,
+            description: `Reversal of expense txn ${existingTxn._id.toString()}`,
+            created_by: req.user._id,
+            reversed: false,
+          },
+        ],
+        { session }
+      );
+
+      existingTxn.reversed = true;
+      existingTxn.reversalTransaction = reversal[0]._id;
+      existingTxn.reversedBy = req.user._id;
+      existingTxn.reversedAt = new Date();
+      await existingTxn.save({ session });
+    }
+
+    // Apply new fields to expense
+    if (category !== undefined) expense.category = category;
+    if (amount !== undefined) expense.amount = amount;
+    if (date !== undefined) expense.date = new Date(date);
+    if (description !== undefined) expense.description = description;
+    expense.paidFromAccount = newPaidFromAccount;
+    await expense.save({ session });
+
+    // Post new transaction
+    const txn = await AccountTransaction.create(
+      [
+        {
+          account: newPaidFromAccount,
+          date: expense.date,
+          transactionType: 'Expense',
+          amount: -Math.abs(expense.amount),
+          referenceType: 'expense',
+          referenceId: expense._id,
+          description: description || `Expense update`,
+          created_by: req.user._id,
+        },
+      ],
+      { session }
+    );
+
+    // Decrease new account balance
+    moneyAccount.currentBalance = (moneyAccount.currentBalance || 0) - Math.abs(expense.amount);
+    await moneyAccount.save({ session });
+
+    // Audit log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Expense',
+          recordId: expense._id,
+          operation: 'UPDATE',
+          oldData,
+          newData: expense.toObject(),
+          reason: `Expense updated: ${expense.amount}`,
+          changedBy: req.user?.name || 'System',
+          changedAt: new Date(),
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await expense.populate([
+      { path: 'category', select: 'name type color' },
+      { path: 'createdBy', select: 'name' },
+      { path: 'paidFromAccount', select: 'name type' },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: 'Expense updated successfully',
+      data: expense,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
 });
 
-// @desc    Delete an expense (soft delete)
+// @desc    Delete an expense (soft delete + reverse account transaction)
 // @route   DELETE /api/v1/expenses/:id
 exports.deleteExpense = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
@@ -311,33 +474,86 @@ exports.deleteExpense = asyncHandler(async (req, res, next) => {
     throw new AppError('Invalid expense ID', 400);
   }
 
-  const expense = await Expense.findOne({ _id: id, isDeleted: false });
-  if (!expense) {
-    throw new AppError('Expense not found', 404);
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const expense = await Expense.findOne({ _id: id, isDeleted: false }, null, { session });
+    if (!expense) {
+      throw new AppError('Expense not found', 404);
+    }
+
+    const oldData = expense.toObject();
+
+    // Reverse any existing txn
+    const existingTxn = await AccountTransaction.findOne(
+      { referenceType: 'expense', referenceId: expense._id, isDeleted: false },
+      null,
+      { session }
+    );
+
+    if (existingTxn && !existingTxn.reversed) {
+      const account = await Account.findOne({ _id: existingTxn.account }, null, { session });
+      if (account) {
+        account.currentBalance = (account.currentBalance || 0) + Math.abs(existingTxn.amount);
+        await account.save({ session });
+      }
+
+      const reversal = await AccountTransaction.create(
+        [
+          {
+            account: existingTxn.account,
+            date: new Date(),
+            transactionType: 'Expense',
+            amount: Math.abs(existingTxn.amount),
+            referenceType: 'expense',
+            referenceId: expense._id,
+            description: `Reversal of expense txn ${existingTxn._id.toString()} (delete)`,
+            created_by: req.user._id,
+          },
+        ],
+        { session }
+      );
+
+      existingTxn.reversed = true;
+      existingTxn.reversalTransaction = reversal[0]._id;
+      existingTxn.reversedBy = req.user._id;
+      existingTxn.reversedAt = new Date();
+      await existingTxn.save({ session });
+    }
+
+    // Soft delete
+    expense.isDeleted = true;
+    await expense.save({ session });
+
+    // Audit log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Expense',
+          recordId: expense._id,
+          operation: 'DELETE',
+          oldData,
+          newData: { isDeleted: true },
+          reason: `Expense deleted: ${expense.amount}`,
+          changedBy: req.user?.name || 'System',
+          changedAt: new Date(),
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      success: true,
+      message: 'Expense deleted successfully',
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
   }
-
-  const oldData = expense.toObject();
-
-  // Soft delete
-  expense.isDeleted = true;
-  await expense.save();
-
-  // Audit log
-  await AuditLog.create({
-    tableName: 'Expense',
-    recordId: expense._id,
-    operation: 'DELETE',
-    oldData,
-    newData: { isDeleted: true },
-    reason: `Expense deleted: ${expense.amount}`,
-    changedBy: req.user?.name || 'System',
-    changedAt: new Date(),
-  });
-
-  res.status(200).json({
-    success: true,
-    message: 'Expense deleted successfully',
-  });
 });
 
 // @desc    Restore a deleted expense

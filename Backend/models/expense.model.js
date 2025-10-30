@@ -7,6 +7,11 @@ const expenseSchema = new mongoose.Schema(
       ref: 'Category',
       required: [true, 'Expense category is required'],
     },
+    paidFromAccount: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account',
+      default: null,
+    },
     amount: {
       type: Number,
       required: true,
