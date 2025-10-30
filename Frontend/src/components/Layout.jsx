@@ -10,15 +10,13 @@ import {
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AiOutlineBell, AiOutlineUser } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import DashboardSideButton from "./DashboarSideButton";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
-import { useAuth } from "../contexts/AuthContext";
-import DashboardSideButton from "./DashboarSideButton";
 const tabs = [
   { name: "داشبورد", href: "/" },
   {
@@ -52,6 +50,7 @@ const tabs = [
 ];
 const Layout = () => {
   const [isHover, setIsHover] = useState(false);
+  const [isOpen,setIsOpen] = useState(false);
   const [isFinanceOpen, setIsFinanceOpen] = useState(false);
   const { user, logout } = useAuth();
   const menuRef = useRef();
