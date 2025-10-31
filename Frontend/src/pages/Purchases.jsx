@@ -30,7 +30,7 @@ import { toast } from "react-toastify";
 
 const Purchases = () => {
   // URL parameters for modal flow
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const openId = searchParams.get("openId");
   const action = searchParams.get("action");
   const { mutate: createpaymentProces } = usePaymentProcess();
@@ -117,10 +117,6 @@ const Purchases = () => {
     setShowEditModal(true);
   };
 
-  const handleDeletePurchase = (purchaseId) => {
-    setDeleteConfirmId(purchaseId);
-  };
-
   const confirmDelete = () => {
     if (deleteConfirmId) {
       deletePurchaseMutation.mutate(deleteConfirmId, {
@@ -145,11 +141,6 @@ const Purchases = () => {
       }
     }
   }, [openId, action, purchases]);
-
-  // Clear URL parameters when modals close
-  const clearUrlParams = () => {
-    setSearchParams({});
-  };
 
   // Payment handler
   const handleRecordPayment = async () => {
@@ -303,7 +294,7 @@ const Purchases = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مجموع خرید</p>
@@ -317,7 +308,7 @@ const Purchases = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مجموع کل</p>
@@ -331,7 +322,7 @@ const Purchases = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مبلغ پرداخت شده</p>
@@ -345,7 +336,7 @@ const Purchases = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
@@ -361,7 +352,7 @@ const Purchases = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg  border border-gray-200 p-6">
         <div className="flex  flex-row gap-4 items-center justify-between">
           <div className="flex w-[50%] gap-4">
             <input
@@ -401,7 +392,7 @@ const Purchases = () => {
       </div>
 
       {/* Purchases Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg  border border-gray-200">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -554,7 +545,7 @@ const Purchases = () => {
         setOpen={setShowDetailsModal}
         isClose={true}
       >
-        <div className=" lg:w-[1200px] md:w-[900px]   bg-white overflow-y-auto h-[90vh]  rounded-md">
+        <div className=" lg:w-[900px] md:w-[900px]   bg-white overflow-y-auto h-[90vh]  rounded-md">
           <div className="bg-white ">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">جزئیات خرید</h2>
@@ -730,7 +721,10 @@ const Purchases = () => {
                       <div>
                         {selectedPurchase.purchase?.dueAmount > 0 && (
                           <button
-                            onClick={() => setShowPaymentModal(true)}
+                            onClick={() => {
+                              setShowPaymentModal(true);
+                              setShowDetailsModal(false);
+                            }}
                             className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
                           >
                             <BanknotesIcon className="h-4 w-4" />
@@ -813,8 +807,8 @@ const Purchases = () => {
                   <XCircleIcon className="h-6 w-6" />
                 </button>
               </div>
-              <div className="p-6 space-y-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="p-6 space-y-4 grid grid-cols-2 gap-x-2">
+                <div className="bg-blue-50 p-4 rounded-lg col-span-2">
                   <p className="text-sm text-blue-900">
                     مبلغ باقی‌مانده:{" "}
                     {formatCurrency(selectedPurchase.purchase?.dueAmount)} AFN
@@ -830,7 +824,7 @@ const Purchases = () => {
                     step="0.01"
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm  "
                     placeholder="مبلغ را وارد کنید"
                     max={selectedPurchase.purchase?.dueAmount}
                   />
@@ -843,7 +837,7 @@ const Purchases = () => {
                   <select
                     value={selectedAccount}
                     onChange={(e) => setSelectedAccount(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-3 py-2 border focus:border-2 border-gray-300 rounded-sm  focus:border-black"
                   >
                     <option value="">انتخاب حساب</option>
                     {systemAccounts?.accounts?.map((acc) => (
@@ -854,30 +848,30 @@ const Purchases = () => {
                   </select>
                 </div>
 
-                <div>
+                <div className=" col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     توضیحات
                   </label>
                   <textarea
                     value={paymentDescription}
                     onChange={(e) => setPaymentDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm  focus:border-amber-500"
                     rows={3}
                     placeholder="توضیحات اختیاری..."
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4">
+                <div className="flex  items-center gap-2 pt-4 col-span-1">
                   <button
                     onClick={() => setShowPaymentModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-sm hover:bg-gray-50"
                   >
                     انصراف
                   </button>
                   <button
                     onClick={handleRecordPayment}
                     disabled={isSubmittingPayment}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    className="px-4 py-2 bg-green-600 text-white rounded-sm hover:bg-green-700 disabled:opacity-50"
                   >
                     {isSubmittingPayment ? "در حال ثبت..." : "ثبت پرداخت"}
                   </button>

@@ -2,8 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
+import { inputStyle } from "../components/ProductForm";
+import Button from "../components/Button";
 
-const fetchExpenses = async ({ page, limit, category, startDate, endDate, search }) => {
+const fetchExpenses = async ({
+  page,
+  limit,
+  category,
+  startDate,
+  endDate,
+  search,
+}) => {
   const params = new URLSearchParams();
   if (page) params.set("page", page);
   if (limit) params.set("limit", limit);
@@ -11,18 +20,24 @@ const fetchExpenses = async ({ page, limit, category, startDate, endDate, search
   if (startDate) params.set("startDate", startDate);
   if (endDate) params.set("endDate", endDate);
   if (search) params.set("search", search);
-  const res = await apiRequest(`${API_ENDPOINTS.EXPENSES.LIST}?${params.toString()}`);
+  const res = await apiRequest(
+    `${API_ENDPOINTS.EXPENSES.LIST}?${params.toString()}`
+  );
   return res;
 };
 
 const fetchCategories = async () => {
-  const res = await apiRequest(`${API_ENDPOINTS.CATEGORIES.LIST}?type=expense&isActive=true`);
+  const res = await apiRequest(
+    `${API_ENDPOINTS.CATEGORIES.LIST}?type=expense&isActive=true`
+  );
   return res;
 };
 
 const fetchAccounts = async () => {
   // Only money accounts: cashier, safe, saraf
-  const res = await apiRequest(`/accounts?types=cashier,safe,saraf&isDeleted=false&limit=100`);
+  const res = await apiRequest(
+    `/accounts?types=cashier,safe,saraf&isDeleted=false&limit=100`
+  );
   return res;
 };
 
@@ -110,7 +125,10 @@ export default function Expenses() {
   });
 
   const expenses = expensesRes?.data || [];
-  const pagination = expensesRes?.pagination || { currentPage: 1, totalPages: 1 };
+  const pagination = expensesRes?.pagination || {
+    currentPage: 1,
+    totalPages: 1,
+  };
   const categories = categoriesRes?.data || [];
   const accounts = accountsRes?.data || [];
 
@@ -131,33 +149,92 @@ export default function Expenses() {
   return (
     <div className="p-4" style={{ color: "var(--text-dark)" }}>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold" style={{ color: "var(--primary-brown)" }}>هزینه‌ها</h1>
-        <button className="btn-primary" onClick={() => { setEditingExpense(null); setIsModalOpen(true); }}>افزودن هزینه</button>
+        <h1
+          className="text-xl font-bold"
+          style={{ color: "var(--primary-brown)" }}
+        >
+          هزینه‌ها
+        </h1>
+        <button
+          className="btn-primary"
+          onClick={() => {
+            setEditingExpense(null);
+            setIsModalOpen(true);
+          }}
+        >
+          افزودن هزینه
+        </button>
       </div>
 
       {/* Filters */}
-      <div className="card mb-4">
+      <div className="card border border-slate-200 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>دسته‌بندی</label>
-            <select className="form-input" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              دسته‌بندی
+            </label>
+            <select
+              className={inputStyle}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
               <option value="">همه</option>
               {categories.map((c) => (
-                <option key={c._id} value={c._id}>{c.name}</option>
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>از تاریخ</label>
-            <input type="date" className="form-input" value={dateRange.start} onChange={(e) => setDateRange((d) => ({ ...d, start: e.target.value }))} />
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              از تاریخ
+            </label>
+            <input
+              type="date"
+              className={inputStyle}
+              value={dateRange.start}
+              onChange={(e) =>
+                setDateRange((d) => ({ ...d, start: e.target.value }))
+              }
+            />
           </div>
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>تا تاریخ</label>
-            <input type="date" className="form-input" value={dateRange.end} onChange={(e) => setDateRange((d) => ({ ...d, end: e.target.value }))} />
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              تا تاریخ
+            </label>
+            <input
+              type="date"
+              className={inputStyle}
+              value={dateRange.end}
+              onChange={(e) =>
+                setDateRange((d) => ({ ...d, end: e.target.value }))
+              }
+            />
           </div>
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>جستجو</label>
-            <input type="text" className="form-input" placeholder="توضیحات..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              جستجو
+            </label>
+            <input
+              type="text"
+              className={inputStyle}
+              placeholder="توضیحات..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </div>
       </div>
@@ -177,9 +254,17 @@ export default function Expenses() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan="6" className="text-center py-6">در حال بارگذاری...</td></tr>
+              <tr>
+                <td colSpan="6" className="text-center py-6">
+                  در حال بارگذاری...
+                </td>
+              </tr>
             ) : expenses.length === 0 ? (
-              <tr><td colSpan="6" className="text-center py-6">موردی یافت نشد</td></tr>
+              <tr>
+                <td colSpan="6" className="text-center py-6">
+                  موردی یافت نشد
+                </td>
+              </tr>
             ) : (
               expenses.map((e) => (
                 <tr key={e._id}>
@@ -190,8 +275,21 @@ export default function Expenses() {
                   <td>{e.description || "-"}</td>
                   <td>
                     <div className="flex gap-2 justify-end">
-                      <button className="btn-secondary" onClick={() => { setEditingExpense(e); setIsModalOpen(true); }}>ویرایش</button>
-                      <button className="btn-secondary" onClick={() => onDelete(e._id)}>حذف</button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => {
+                          setEditingExpense(e);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        ویرایش
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => onDelete(e._id)}
+                      >
+                        حذف
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -203,19 +301,34 @@ export default function Expenses() {
 
       {/* Pagination */}
       <div className="flex items-center justify-center gap-2 mt-4">
-        <button className="btn-secondary" disabled={pagination.currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>قبلی</button>
+        <button
+          className="btn-secondary"
+          disabled={pagination.currentPage <= 1}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+        >
+          قبلی
+        </button>
         <span>
           صفحه {pagination.currentPage} از {pagination.totalPages}
         </span>
-        <button className="btn-secondary" disabled={pagination.currentPage >= pagination.totalPages} onClick={() => setPage((p) => p + 1)}>بعدی</button>
+        <button
+          className="btn-secondary"
+          disabled={pagination.currentPage >= pagination.totalPages}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          بعدی
+        </button>
       </div>
 
       {isModalOpen && (
         <ExpenseModal
-          onClose={() => { setIsModalOpen(false); setEditingExpense(null); }}
-          onSubmit={(form) => (
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingExpense(null);
+          }}
+          onSubmit={(form) =>
             editingExpense ? onUpdate(editingExpense._id, form) : onCreate(form)
-          )}
+          }
           categories={categories}
           accounts={accounts}
           initial={editingExpense}
@@ -229,8 +342,11 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
   const [form, setForm] = useState({
     category: initial?.category?._id || initial?.category || "",
     amount: initial?.amount || "",
-    paidFromAccount: initial?.paidFromAccount?._id || initial?.paidFromAccount || "",
-    date: initial?.date ? new Date(initial.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+    paidFromAccount:
+      initial?.paidFromAccount?._id || initial?.paidFromAccount || "",
+    date: initial?.date
+      ? new Date(initial.date).toISOString().slice(0, 10)
+      : new Date().toISOString().slice(0, 10),
     description: initial?.description || "",
   });
 
@@ -243,58 +359,133 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.3)" }} onClick={onClose} />
+      <div
+        className="absolute inset-0"
+        style={{ background: "rgba(0,0,0,0.3)" }}
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-lg card">
-        <h2 className="text-lg font-bold mb-4" style={{ color: "var(--primary-brown)" }}>
+        <h2
+          className="text-lg font-bold mb-4"
+          style={{ color: "var(--primary-brown)" }}
+        >
           {initial ? "ویرایش هزینه" : "افزودن هزینه"}
         </h2>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>دسته‌بندی</label>
-            <select className="form-input" name="category" value={form.category} onChange={handleChange}>
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              دسته‌بندی
+            </label>
+            <select
+              className={inputStyle}
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+            >
               <option value="">انتخاب کنید</option>
               {categories.map((c) => (
-                <option key={c._id} value={c._id}>{c.name}</option>
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>مبلغ</label>
-            <input className="form-input" name="amount" type="number" min="0" value={form.amount} onChange={handleChange} />
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              مبلغ
+            </label>
+            <input
+              className={inputStyle}
+              name="amount"
+              type="number"
+              min="0"
+              value={form.amount}
+              onChange={handleChange}
+            />
           </div>
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>پرداخت از</label>
-            <select className="form-input" name="paidFromAccount" value={form.paidFromAccount} onChange={handleChange}>
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              پرداخت از
+            </label>
+            <select
+              className={inputStyle}
+              name="paidFromAccount"
+              value={form.paidFromAccount}
+              onChange={handleChange}
+            >
               <option value="">انتخاب حساب</option>
               {accounts.map((a) => (
-                <option key={a._id} value={a._id}>{a.name}</option>
+                <option key={a._id} value={a._id}>
+                  {a.name}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>تاریخ</label>
-            <input className="form-input" name="date" type="date" value={form.date} onChange={handleChange} />
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              تاریخ
+            </label>
+            <input
+              className={inputStyle}
+              name="date"
+              type="date"
+              value={form.date}
+              onChange={handleChange}
+            />
           </div>
-          <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>توضیحات</label>
-            <textarea className="form-input" name="description" value={form.description} onChange={handleChange} />
+          <div className=" col-span-2">
+            <label
+              className="block mb-2"
+              style={{ color: "var(--text-medium)" }}
+            >
+              توضیحات
+            </label>
+            <textarea
+              className={inputStyle}
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+            />
           </div>
         </div>
-        <div className="flex items-center justify-end gap-2 mt-6">
-          <button className="btn-secondary" onClick={onClose}>لغو</button>
-          <button className="btn-primary" disabled={!canSubmit} onClick={() => onSubmit({
-            category: form.category,
-            amount: Number(form.amount),
-            paidFromAccount: form.paidFromAccount,
-            date: form.date,
-            description: form.description,
-          })}>
-            {initial ? "ذخیره تغییرات" : "ثبت"}
-          </button>
+        <div className="flex  items-center justify-start gap-2 mt-6">
+          <div className=" w-[50%] gap-x-2 flex items-center hover:border-slate-600">
+            <Button
+              className=" bg-transparent border rounded-sm "
+              onClick={onClose}
+            >
+              لغو
+            </Button>
+            <Button
+              className=" bg-amber-600 text-white"
+              disabled={!canSubmit}
+              onClick={() =>
+                onSubmit({
+                  category: form.category,
+                  amount: Number(form.amount),
+                  paidFromAccount: form.paidFromAccount,
+                  date: form.date,
+                  description: form.description,
+                })
+              }
+            >
+              {initial ? "ذخیره تغییرات" : "ثبت"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-
