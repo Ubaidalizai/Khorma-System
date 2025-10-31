@@ -21,8 +21,8 @@ const fetchCategories = async () => {
 };
 
 const fetchAccounts = async () => {
-  // Only money accounts: cashier, safe, saraf
-  const res = await apiRequest(`/accounts?types=cashier,safe,saraf&isDeleted=false&limit=100`);
+  // Only system money accounts: cashier, safe, saraf
+  const res = await apiRequest(API_ENDPOINTS.ACCOUNTS.SYSTEM);
   return res;
 };
 
@@ -112,7 +112,7 @@ export default function Expenses() {
   const expenses = expensesRes?.data || [];
   const pagination = expensesRes?.pagination || { currentPage: 1, totalPages: 1 };
   const categories = categoriesRes?.data || [];
-  const accounts = accountsRes?.data || [];
+  const accounts = accountsRes?.accounts || accountsRes?.data || [];
 
   const onCreate = (form) => {
     createMutation.mutate(form);
