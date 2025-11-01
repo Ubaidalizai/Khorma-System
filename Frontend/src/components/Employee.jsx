@@ -1,9 +1,4 @@
-import { FiEdit } from "react-icons/fi";
-import { AiFillEdit } from "react-icons/ai";
-import { AiFillDelete } from "react-icons/ai";
-import { AiOutlineUpCircle } from "react-icons/ai";
-import { AiOutlineSearch } from "react-icons/ai";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useEmployeeStocks,
   useEmployees,
@@ -15,17 +10,13 @@ import TableBody from "../components/TableBody";
 import TableRow from "../components/TableRow";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
-import TableMenuModal from "../components/TableMenuModal";
-import Menus from "../components/Menu";
-import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
-import { BiPencil, BiTransferAlt } from "react-icons/bi";
-import Confirmation from "../components/Confirmation";
 import GloableModal from "../components/GloableModal";
 import Button from "../components/Button";
 import { useForm } from "react-hook-form";
 import { inputStyle } from "./ProductForm";
+import { BiTransferAlt } from "react-icons/bi";
 import { CgEye } from "react-icons/cg";
-import { IoMdClose } from "react-icons/io";
+import Select from "../components/Select";
 
 // Headers in Dari
 const tableHeader = [
@@ -37,14 +28,11 @@ const tableHeader = [
 
 const Employee = () => {
   const [search, setSearch] = useState("");
-  const [employeeSearch, setEmployeeSearch] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferDestination, setTransferDestination] = useState("warehouse");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
   const { register, handleSubmit, reset } = useForm();
 
   const { data: employees } = useEmployees();
@@ -61,26 +49,8 @@ const Employee = () => {
   useEffect(() => {
     if (employees?.data?.length > 0 && !selectedEmployee) {
       setSelectedEmployee(employees.data[0]._id);
-      setEmployeeSearch(employees.data[0].name);
     }
   }, [employees, selectedEmployee]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const filteredEmployees =
-    employees?.data?.filter((emp) =>
-      emp.name.toLowerCase().includes(employeeSearch.toLowerCase())
-    ) || [];
 
   const filteredStocks = stocks?.data || [];
 
@@ -151,70 +121,19 @@ const Employee = () => {
                 onChange={handleSearch}
               />
             </div>
-            <div className="relative w-[350px]" ref={dropdownRef}>
-              <input
-                type="text"
-                placeholder="انتخاب کارمند..."
-                value={employeeSearch}
-                onChange={(e) => {
-                  setEmployeeSearch(e.target.value);
-                  setIsDropdownOpen(true);
-                  const matched = filteredEmployees.find((emp) =>
-                    emp.name
-                      .toLowerCase()
-                      .includes(e.target.value.toLowerCase())
-                  );
-                  if (matched) {
-                    setSelectedEmployee(matched._id);
-                  } else if (e.target.value === "") {
-                    setSelectedEmployee(employees?.data?.[0]?._id || "");
-                  }
-                }}
-                onFocus={() => setIsDropdownOpen(true)}
-                r
-                className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-3.5 transition duration-300 ease focus:outline-none focus:border-slate-200 hover:border-slate-300 shadow-sm pr-10`}
+            <div className="w-[350px]">
+              <Select
+                label=""
+                options={
+                  employees?.data?.map((emp) => ({
+                    value: emp._id,
+                    label: emp.name,
+                  })) || []
+                }
+                value={selectedEmployee}
+                onChange={setSelectedEmployee}
+                defaultSelected={employees?.data?.[0]?._id || ""}
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <AiOutlineSearch
-                  className={` w-6 ${isDropdownOpen ? " text-orange-400" : ""}`}
-                />
-              </div>
-              <div
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
-                onClick={() => {
-                  setEmployeeSearch("");
-                  setIsDropdownOpen(!isDropdownOpen);
-                }}
-              >
-                <AiOutlineUpCircle
-                  className={`w-6 transition-transform ${
-                    isDropdownOpen ? "rotate-180 text-orange-400" : ""
-                  }`}
-                />
-              </div>
-              {isDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {filteredEmployees.length > 0 ? (
-                    filteredEmployees.map((emp) => (
-                      <div
-                        key={emp._id}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          setEmployeeSearch(emp.name);
-                          setSelectedEmployee(emp._id);
-                          setIsDropdownOpen(false);
-                        }}
-                      >
-                        {emp.name}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="px-3 py-2 text-gray-500">
-                      هیچ کارمندی یافت نشد
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         }

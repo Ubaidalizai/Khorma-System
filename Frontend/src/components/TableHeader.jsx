@@ -2,12 +2,12 @@ import React from "react";
 
 function TableHeader({ headerData }) {
   return (
-    <thead className={` w-full  h-12 rounded-sm`}>
-      <tr className=" bg-slate-100 text-slate-500 divide-x-1 divide-slate-200/20">
+    <thead className="bg-gray-50">
+      <tr>
         {headerData.map((header, index) => (
           <th
             key={index}
-            className={` box-border text-center  align-middle  lg:text-[14px] md:text-xs text-[10px]  lg:font-medium font-light   uppercase md:tracking-wider`}
+            className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
           >
             {header.title}
           </th>

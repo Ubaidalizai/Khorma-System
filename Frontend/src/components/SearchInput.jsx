@@ -3,9 +3,9 @@ import { BiSearch } from "react-icons/bi";
 
 function SearchInput({ placeholder }) {
   return (
-    <div className="relative">
+    <div className="relative my-1.5">
       <input
-        className="w-full py-[14px] bg-transparent placeholder:text-slate-500 placeholder:text-[16px]  placeholder:font-[400]  dark:text-slate-200  text-slate-700 text-sm border border-slate-200  rounded-md pl-3 pr-28  transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm focus:shadow"
+        className="w-full py-2 bg-transparent placeholder:text-slate-500 placeholder:text-[16px]  placeholder:font-[400]  dark:text-slate-200  text-slate-700 text-sm border border-slate-200  rounded-sm pl-3 pr-28  transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm focus:shadow"
         placeholder={placeholder}
       />
       <button

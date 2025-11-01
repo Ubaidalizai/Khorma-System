@@ -1,3 +1,4 @@
+import { GiProfit } from "react-icons/gi";
 import { MdOutlineAccountBalance } from "react-icons/md";
 import {
   ChartBarIcon,
@@ -25,11 +26,6 @@ const Layout = () => {
 
   const { user, logout } = useAuth();
 
-  const [notifications] = useState([
-    { id: 1, message: "Low stock alert: Dates", type: "warning" },
-    { id: 2, message: "New purchase order received", type: "info" },
-    { id: 3, message: "Daily sales report ready", type: "success" },
-  ]);
   const tabs = [
     { name: "داشبورد", href: "/", icon: <HomeIcon /> },
     {
@@ -62,6 +58,11 @@ const Layout = () => {
           name: "حساب ها",
           href: "/accounts",
           icon: <MdOutlineAccountBalance className=" text-sm" />,
+        },
+        {
+          name: "درآمد ",
+          href: "/income",
+          icon: <GiProfit className=" text-sm" />,
         },
       ],
     },
@@ -108,9 +109,17 @@ const Layout = () => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className=" rounded-full transition-colors duration-200 flex items-center gap-3"
             >
-              <span className="rounded-full text-slate-600 p-1 shadow-sm hover:bg-slate-300 transition-all duration-150">
-                {user.image ? <img src={`http://localhost:3001/uploads/${user.image}`} alt={user.name} className="w-[40px] h-[20px] rounded-full" /> : <AiOutlineUser className="text-[25px]   text-black" />}
-              </span>
+              {user.image ? (
+                <img
+                  src={`./logo.png`}
+                  alt={user.name}
+                  className="  w-[30px]"
+                />
+              ) : (
+                <span className="text-slate-600 p-1 shadow-sm hover:bg-slate-300 transition-all duration-150">
+                  <AiOutlineUser className="text-[25px]   text-black" />
+                </span>
+              )}
               <p className=" font-medium  text-[15px]">
                 {user?.name || "کاربر مدیر"}
               </p>

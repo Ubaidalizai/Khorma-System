@@ -655,8 +655,8 @@ const Sales = () => {
       >
         {selectedSale && (
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] mx-auto overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">جزئیات فروش</h2>
+            <div className="p-3 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">جزئیات فروش</h2>
               <button
                 onClick={() => {
                   setShowDetailsModal(false);

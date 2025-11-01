@@ -1157,3 +1157,14 @@ export const deleteCompany = async (id) => {
   if (!res.ok) throw new Error("Failed to delete compnay");
   return res.json();
 };
+export const getProfile = async () => {
+  const res = await apiRequest(API_ENDPOINTS.AUTH.PROFILE);
+  if (!res.ok) throw new Error("Faild to fetch the profile");
+  return res.json();
+};
+export const updateCurrentUser = async (newData) => {
+  return await apiRequest(API_ENDPOINTS.AUTH.PROFILE, {
+    method: "PATCH",
+    body: JSON.stringify(newData),
+  });
+};

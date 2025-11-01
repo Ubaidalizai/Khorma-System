@@ -2,7 +2,7 @@ import React from "react";
 
 function TableBody({ children }) {
   return (
-    <tbody className="w-full  divide-y-1 divide-slate-200">{children}</tbody>
+    <tbody className="bg-white divide-y divide-gray-200">{children}</tbody>
   );
 }
 

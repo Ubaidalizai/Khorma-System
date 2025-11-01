@@ -180,7 +180,7 @@ const SupplierManagement = () => {
         </div>
         <button
           onClick={handleAddNew}
-          className="btn-primary flex items-center space-x-2 space-x-reverse"
+          className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
         >
           <PlusIcon className="h-5 w-5" />
           <span>افزودن تامین‌کننده</span>
@@ -300,7 +300,7 @@ const SupplierManagement = () => {
 
       {/* Add/Edit Modal */}
       <GloableModal open={isModalOpen} setOpen={setIsModalOpen} isClose={true}>
-        <div className=" w-[500px] h-[500px] bg-white  rounded-md  overflow-y-auto">
+        <div className=" w-[500px] h-[480px] bg-white  rounded-md  overflow-y-auto">
           <div className="mx-auto p-5   rounded-md bg-white">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
@@ -330,8 +330,11 @@ const SupplierManagement = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-2 grid grid-cols-2 gap-x-2"
+              >
+                <div className=" col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     نام تامین‌کننده *
                   </label>
@@ -346,7 +349,7 @@ const SupplierManagement = () => {
                   />
                 </div>
 
-                <div>
+                <div className=" col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     ایمیل
                   </label>
@@ -360,7 +363,7 @@ const SupplierManagement = () => {
                   />
                 </div>
 
-                <div>
+                <div className=" col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     تلفن
                   </label>
@@ -373,8 +376,20 @@ const SupplierManagement = () => {
                     placeholder="09123456789"
                   />
                 </div>
-
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    کد پستی
+                  </label>
+                  <input
+                    type="text"
+                    name="contact_info.zip_code"
+                    value={formData.contact_info.zip_code}
+                    onChange={handleInputChange}
+                    className={inputStyle}
+                    placeholder="1234567890"
+                  />
+                </div>
+                <div className=" col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     آدرس
                   </label>
@@ -388,7 +403,7 @@ const SupplierManagement = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className=" col-span-2  grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       شهر
@@ -417,25 +432,11 @@ const SupplierManagement = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    کد پستی
-                  </label>
-                  <input
-                    type="text"
-                    name="contact_info.zip_code"
-                    value={formData.contact_info.zip_code}
-                    onChange={handleInputChange}
-                    className={inputStyle}
-                    placeholder="1234567890"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-x-3 space-x-reverse pt-4">
+                <div className="flex justify-start gap-x-3 space-x-reverse pt-4">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="btn-secondary"
+                    className={` bg-transparent cursor-pointer group  text-slate-600 border border-slate-600  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
                   >
                     انصراف
                   </button>
@@ -445,7 +446,7 @@ const SupplierManagement = () => {
                       createSupplierMutation.isPending ||
                       updateSupplierMutation.isPending
                     }
-                    className="btn-primary"
+                    className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
                   >
                     {createSupplierMutation.isPending ||
                     updateSupplierMutation.isPending

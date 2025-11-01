@@ -10,7 +10,7 @@ import Spinner from "./Spinner";
  * - onClose: optional close callback
  */
 export const inputStyle =
-  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-3 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm";
+  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm  px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm";
 
 function ProductForm({ register, handleSubmit, formState, control, onClose }) {
   const { errors } = formState || {};

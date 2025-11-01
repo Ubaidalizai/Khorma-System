@@ -81,6 +81,8 @@ import {
   updateStore,
   updateSupplier,
   updateUnit,
+  getProfile,
+  updateCurrentUser,
 } from "./apiUtiles";
 
 // Authentication hooks
@@ -1109,6 +1111,27 @@ export const usePaymentProcess = () => {
     mutationKey: ["payment"],
     onSuccess: () => {
       queryClient.invalidateQueries(["allPurchases"]);
+    },
+  });
+};
+export const useProfile = () => {
+  return useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getProfile(),
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updatedUser", "userProfile"],
+    mutationFn: updateCurrentUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["profile"]),
+        toast.success("با موفقیت تغییرات ثبت شد");
+    },
+    onError: () => {
+      toast.error("متاسفانه مشکلی پیش آمده است");
     },
   });
 };

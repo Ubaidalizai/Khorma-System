@@ -131,8 +131,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
   return (
     <GloableModal isClose={true} open={isOpen}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+      <div className="bg-white rounded-lg shadow-xl w-[750px]  lg:w-[900px] max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-3 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="bg-amber-100 p-2 rounded-lg">
               <ShoppingCartIcon className="h-6 w-6 text-amber-600" />
@@ -203,7 +203,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 type="number"
                 step="0.01"
                 {...register("paidAmount")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 placeholder="0"
               />
             </div>
@@ -332,9 +332,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={addItem}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                  className="w-full flex text-[12px] items-center justify-center gap-2 px-3 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
                 >
-                  <PlusIcon className="h-5 w-5" />
                   اضافه کردن
                 </button>
               </div>
