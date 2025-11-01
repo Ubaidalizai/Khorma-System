@@ -153,7 +153,7 @@ const UnitManagement = () => {
         </div>
         <button
           onClick={handleAddNew}
-          className="btn-primary flex items-center space-x-2 space-x-reverse"
+          className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
         >
           <PlusIcon className="h-5 w-5" />
           <span>افزودن واحد</span>
@@ -283,7 +283,7 @@ const UnitManagement = () => {
 
       {/* Add/Edit Modal */}
       <GloableModal open={isModalOpen} setOpen={setIsModalOpen} isClose={true}>
-        <div className=" w-[480px] h-[480px] bg-white overflow-y-auto  rounded-md">
+        <div className=" w-[480px] h-[400px] bg-white overflow-y-auto  rounded-md">
           <div className=" mx-auto p-5  w-full rounded-md bg-white">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
@@ -311,7 +311,10 @@ const UnitManagement = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-2 grid grid-cols-2 gap-x-2"
+              >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     نام واحد *
@@ -324,20 +327,6 @@ const UnitManagement = () => {
                     required
                     className={inputStyle}
                     placeholder="مثال: کیلوگرم، کارتن، بسته"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    توضیحات
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={2}
-                    className={inputStyle}
-                    placeholder="توضیحات واحد (اختیاری)"
                   />
                 </div>
 
@@ -361,8 +350,20 @@ const UnitManagement = () => {
                     یک واحد پایه
                   </p>
                 </div>
-
-                <div className="flex items-center">
+                <div className=" col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    توضیحات
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={2}
+                    className={inputStyle}
+                    placeholder="توضیحات واحد (اختیاری)"
+                  />
+                </div>
+                <div className="flex col-span-2 items-center">
                   <input
                     type="checkbox"
                     name="is_base_unit"
@@ -390,11 +391,11 @@ const UnitManagement = () => {
                   </div>
                 )}
 
-                <div className="flex justify-end gap-x-3  space-x-reverse pt-4">
+                <div className="flex justify-start gap-x-3  space-x-reverse pt-4">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="btn-secondary"
+                    className={` bg-transparent border border-slate-600 cursor-pointer group  text-slate-700  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
                   >
                     انصراف
                   </button>
@@ -404,7 +405,7 @@ const UnitManagement = () => {
                       createUnitMutation.isPending ||
                       updateUnitMutation.isPending
                     }
-                    className="btn-primary"
+                    className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
                   >
                     {createUnitMutation.isPending ||
                     updateUnitMutation.isPending

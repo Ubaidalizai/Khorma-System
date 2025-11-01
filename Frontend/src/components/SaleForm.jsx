@@ -227,23 +227,6 @@ function SaleForm({
     }
   };
 
-  // Debug logging
-  console.log("SaleForm Debug:", {
-    accounts,
-    accountsLoading,
-    customerAccounts,
-    employeeAccounts,
-    products,
-    productsLoading,
-    batches,
-    selectedProductId,
-    // Raw API responses
-    customerAccResp,
-    employeeAccResp,
-    customersLoading,
-    employeesLoading,
-  });
-
   // Show loading state if data is being fetched
   if (
     productsLoading ||
@@ -257,12 +240,6 @@ function SaleForm({
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
           <p className="text-gray-600">در حال بارگذاری...</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Loading: Products={productsLoading ? "Yes" : "No"}, Customers=
-            {customersLoading ? "Yes" : "No"}, Employees=
-            {employeesLoading ? "Yes" : "No"}, Accounts=
-            {accountsLoading ? "Yes" : "No"}
-          </p>
         </div>
       </div>
     );
@@ -274,17 +251,17 @@ function SaleForm({
       onSubmit={handleSubmit(handleFormSubmit)}
       className="bg-white w-full"
     >
-      <div className="p-6 relative  border-b border-gray-200 flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
+      <div className="p-3 relative  border-b border-gray-200 flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-900">
           اضافه کردن فروش جدید
         </h2>
         <div className=" ">
           <CgClose className=" text-[20px]" onClick={onClose} />
         </div>
       </div>
-      <div className="p-6">
+      <div className="p-4">
         {/* Sale Type Selection */}
-        <div className="mb-6">
+        <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-3">
             نوع فروش
           </label>
@@ -322,7 +299,7 @@ function SaleForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-4 mb-6">
           {/* Customer/Employee Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -367,7 +344,7 @@ function SaleForm({
               </div>
             )}
             {saleType === "walkin" && (
-              <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 text-center">
+              <div className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-sm text-gray-500 text-center">
                 مشتری عابر
               </div>
             )}
@@ -380,7 +357,9 @@ function SaleForm({
             </label>
             <select
               {...register("invoiceType")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className={
+                "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+              }
             >
               <option value="small">کوچک</option>
               <option value="large">بزرگ</option>
@@ -413,7 +392,7 @@ function SaleForm({
               type="number"
               step="0.01"
               {...register("paidAmount", { valueAsNumber: true })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
               placeholder="0.00"
               min="0"
             />
@@ -428,7 +407,7 @@ function SaleForm({
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                className="px-3 py-2 bg-green-600 text-white rounded-sm text-sm hover:bg-green-700"
               >
                 اضافه کردن
               </button>
@@ -482,7 +461,7 @@ function SaleForm({
               />
             </div>
             <div className=" col-span-1">
-              <label className="mb-1 block text-base font-medium text-slate-600 dark:text-white">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 تاریخ انقضا
               </label>
               <input
@@ -494,11 +473,11 @@ function SaleForm({
                     expiryDate: e.target.value,
                   }))
                 }
-                className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-4 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm`}
+                className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm`}
               />
             </div>
             <div className="col-span-1">
-              <label className="mb-1 block text-base font-medium text-slate-600 dark:text-white">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 تعداد
               </label>
               <input
@@ -508,12 +487,12 @@ function SaleForm({
                   setCurrentItem((s) => ({ ...s, quantity: e.target.value }))
                 }
                 className={
-                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-4 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
                 }
               />
             </div>
             <div className="-col-span-1">
-              <label className="mb-1 block text-base font-medium text-slate-600 dark:text-white">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 قیمت یک
               </label>
               <input
@@ -524,13 +503,13 @@ function SaleForm({
                   setCurrentItem((s) => ({ ...s, unitPrice: e.target.value }))
                 }
                 className={
-                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-4 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
                 }
               />
             </div>
           </div>
           {items?.length > 0 && (
-            <div className="overflow-auto">
+            <div className="overflow-auto mt-3">
               <Table className="w-full text-sm">
                 <TableHeader headerData={productHeader} />
                 <TableBody>
@@ -574,17 +553,8 @@ function SaleForm({
 
         {/* Sale Summary */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-            خلاصه فروش
-          </h3>
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">مجموع:</span>
-              <span className="font-semibold text-gray-900">
-                {calculateTotal().toFixed(2)} افغانی
-              </span>
-            </div>
-            <div className="pt-2 border-t border-gray-300">
+            <div className=" border-gray-300">
               <div className="flex justify-between">
                 <span className="font-bold text-gray-900">مجموع نهایی:</span>
                 <span className="text-xl font-bold text-amber-600">

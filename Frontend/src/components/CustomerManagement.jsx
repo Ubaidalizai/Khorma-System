@@ -184,7 +184,7 @@ const CustomerManagement = () => {
         </div>
         <button
           onClick={handleAddNew}
-          className="btn-primary flex items-center space-x-2 space-x-reverse"
+          className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
         >
           <PlusIcon className="h-5 w-5" />
           <span>افزودن مشتری</span>
@@ -347,7 +347,10 @@ const CustomerManagement = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-2 grid grid-cols-2  gap-x-2"
+              >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     نام مشتری *
@@ -390,8 +393,20 @@ const CustomerManagement = () => {
                     placeholder="09123456789"
                   />
                 </div>
-
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    کد پستی
+                  </label>
+                  <input
+                    type="text"
+                    name="contact_info.zip_code"
+                    value={formData.contact_info.zip_code}
+                    onChange={handleInputChange}
+                    className={inputStyle}
+                    placeholder="1234567890"
+                  />
+                </div>
+                <div className=" col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     آدرس
                   </label>
@@ -405,7 +420,7 @@ const CustomerManagement = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className=" col-span-2  grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       شهر
@@ -434,25 +449,11 @@ const CustomerManagement = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    کد پستی
-                  </label>
-                  <input
-                    type="text"
-                    name="contact_info.zip_code"
-                    value={formData.contact_info.zip_code}
-                    onChange={handleInputChange}
-                    className={inputStyle}
-                    placeholder="1234567890"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-x-3 space-x-reverse pt-4">
+                <div className="flex justify-start gap-x-3 space-x-reverse pt-4">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="btn-secondary"
+                    className={`bg-transparent border border-slate-500 cursor-pointer group  text-slate-600  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
                   >
                     انصراف
                   </button>
@@ -463,6 +464,7 @@ const CustomerManagement = () => {
                       updateCustomerMutation.isPending
                     }
                     className="btn-primary"
+                    className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
                   >
                     {createCustomerMutation.isPending ||
                     updateCustomerMutation.isPending

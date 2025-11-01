@@ -127,7 +127,7 @@ const Login = () => {
               />
               <BsEye
                 onClick={() => setIsOpen((isOpen) => !isOpen)}
-                className=" text-[18px] absolute top-[38px] cursor-pointer text-slate-700 left-3"
+                className=" text-[18px] absolute top-[45px] cursor-pointer text-slate-700 left-3"
               />
             </div>
           </div>
@@ -208,12 +208,12 @@ const Login = () => {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             رمز عبور خود را به یاد آوردید؟
-            <NavLink
-              to="/login"
+            <p
+              onClick={() => setForgotPassword(false)}
               className="text-primary-brown-light  hover:underline"
             >
               بازگشت به ورود
-            </NavLink>
+            </p>
           </p>
         </div>
       </GloableModal>

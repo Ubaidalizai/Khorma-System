@@ -190,7 +190,7 @@ const Inventory = () => {
       </div>
 
       {/* Tabs and Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg bord border-gray-200">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
             <button

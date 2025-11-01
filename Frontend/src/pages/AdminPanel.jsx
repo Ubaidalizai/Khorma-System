@@ -13,6 +13,7 @@ import {
   UserGroupIcon,
   UserIcon,
   TagIcon,
+  IdentificationIcon,
 } from "@heroicons/react/24/outline";
 import { inputStyle } from "../components/ProductForm";
 import GloableModal from "../components/GloableModal";
@@ -26,7 +27,11 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
-import { useUpdatePassword } from "../services/useApi";
+import {
+  useProfile,
+  useUpdatePassword,
+  useUpdateProfile,
+} from "../services/useApi";
 import { useForm } from "react-hook-form";
 import Button from "../components/Button";
 
@@ -48,6 +53,12 @@ const AdminPanel = () => {
   }
 
   const adminSections = [
+    {
+      id: "profile",
+      name: "پروفایل کاربری",
+      icon: IdentificationIcon,
+      description: "مشاهده و مدیریت اطلاعات پروفایل",
+    },
     {
       id: "suppliers",
       name: "مدیریت تامین‌کنندگان",
@@ -88,6 +99,8 @@ const AdminPanel = () => {
 
   const renderSectionContent = () => {
     switch (activeSection) {
+      case "profile":
+        return <ProfileManagement />;
       case "suppliers":
         return <SupplierManagement />;
       case "categories":
@@ -171,9 +184,11 @@ const AdminPanel = () => {
                     }}
                   >
                     <div className="flex items-center">
-                      <section.icon className="h-5 w-5 ml-3" />
+                      <section.icon className="h-3 w-3 ml-3" />
                       <div>
-                        <div className="font-medium">{section.name}</div>
+                        <div className="text-xs font-normal">
+                          {section.name}
+                        </div>
                         <div
                           className="text-xs mt-1"
                           style={{ color: "var(--text-light)" }}
@@ -198,19 +213,6 @@ const AdminPanel = () => {
 
 // Settings Management Component
 const SettingsManagement = () => {
-  const [changeSetting, setChangeSetting] = useState(false);
-  const Navigate = useNavigate();
-  const { mutate: updatePassword } = useUpdatePassword();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-  const handlePassword = (data) => {
-    updatePassword(data, {
-      onSuccess: () => Navigate("/login"),
-    });
-  };
   return (
     <div className="space-y-6">
       <div className="card">
@@ -328,110 +330,17 @@ const SettingsManagement = () => {
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-x-2 space-x-reverse mt-6">
-          <button className="btn-secondary">بازنشانی</button>
-          <button className="btn-primary">ذخیره تنظیمات</button>
-        </div>
-      </div>
-
-      {/* Security Settings */}
-      <div className="card">
-        <h3
-          className="text-lg font-semibold mb-4"
-          style={{ color: "var(--text-dark)" }}
-        >
-          تنظیمات امنیتی
-        </h3>
-        <div className="space-y-4">
-          <div
-            className="flex items-center justify-between p-4 rounded-lg"
-            style={{ backgroundColor: "var(--beige-light)" }}
+          <button
+            className={` bg-transparent border border-slate-600 cursor-pointer group  text-slate-600   duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
           >
-            <div>
-              <h4 className="font-medium" style={{ color: "var(--text-dark)" }}>
-                تغییر رمز عبور
-              </h4>
-              <p className="text-sm" style={{ color: "var(--text-medium)" }}>
-                رمز عبور خود را به‌روزرسانی کنید
-              </p>
-            </div>
-            <button
-              onClick={() => setChangeSetting(true)}
-              className="btn-secondary"
-            >
-              تغییر رمز
-            </button>
-          </div>
-        </div>
-        {changeSetting && (
-          <form
-            noValidate
-            onSubmit={handleSubmit(handlePassword)}
-            className=" space-y-3"
+            بازنشانی
+          </button>
+          <button
+            className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
           >
-            <div className=" w-full pt-3 font-semibold  text-xl ">
-              تغییر دادن پسورد
-            </div>
-            <div className=" flex  w-full gap-x-6  mx-auto">
-              <div className="flex-1 flex flex-col  gap-y-2">
-                <label
-                  className=" text-[16px] text-slate-600"
-                  htmlFor="pastPassword"
-                >
-                  پسورد قبلی
-                </label>
-                <input
-                  type="password"
-                  {...register("currentPassword", {
-                    required: "لطفا پسورد قبلی تانرا وارد کنید",
-                  })}
-                  id="pastPassword"
-                  placeholder="اینجا پسورد فعلی تانرا بنوسید"
-                  className={inputStyle}
-                />
-                {errors.currentPassword && (
-                  <p className=" text-[9px] text-red-500">
-                    {errors.currentPassword.message}
-                  </p>
-                )}
-              </div>
-              <div className=" flex-1 flex flex-col gap-y-2">
-                <label
-                  className=" text-[16px] text-slate-600"
-                  htmlFor="newPassword"
-                >
-                  پسورد جدید{" "}
-                </label>
-                <input
-                  type="password"
-                  {...register("newPassword", {
-                    required: "لطفا پسورد جدید تانرا وارد کنید",
-                  })}
-                  id="newPassword"
-                  placeholder="اینجا پسورد جدید تانرا بنوسید"
-                  className={inputStyle}
-                />
-                {errors.newPassword && (
-                  <p className=" text-[9px] text-red-500">
-                    {errors.newPassword.message}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className=" w-[300px] flex gap-1">
-              <Button type="submit">تغییر دادن</Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  setChangeSetting(false);
-                }}
-                className=" bg-transparent border border-slate-600"
-              >
-                {" "}
-                انصراف
-              </Button>
-            </div>
-          </form>
-        )}
+            ذخیره تنظیمات
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -525,7 +434,7 @@ const CategoryManagement = () => {
           </p>
         </div>
         <button
-          className="btn-primary flex items-center space-x-2 space-x-reverse"
+          className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200`}
           onClick={() => {
             setEditing(null);
             setForm({
@@ -683,7 +592,7 @@ const CategoryManagement = () => {
                   نام
                 </label>
                 <input
-                  className="form-input"
+                  className={inputStyle}
                   name="name"
                   value={form.name}
                   onChange={(e) =>
@@ -699,7 +608,7 @@ const CategoryManagement = () => {
                   نوع
                 </label>
                 <select
-                  className="form-input"
+                  className={inputStyle}
                   name="type"
                   value={form.type}
                   onChange={(e) =>
@@ -720,7 +629,7 @@ const CategoryManagement = () => {
                   رنگ
                 </label>
                 <input
-                  className="form-input"
+                  className={inputStyle}
                   type="color"
                   name="color"
                   value={form.color}
@@ -747,9 +656,9 @@ const CategoryManagement = () => {
                 </label>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 mt-6">
+            <div className="flex items-center justify-start gap-2 mt-6">
               <button
-                className="btn-secondary"
+                className={` cursor-pointer bg-transparent border border-slate-500 group  text-slate-600   duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
                 onClick={() => {
                   setIsModalOpen(false);
                   setEditing(null);
@@ -758,7 +667,7 @@ const CategoryManagement = () => {
                 لغو
               </button>
               <button
-                className="btn-primary"
+                className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200`}
                 disabled={!form.name || !form.type}
                 onClick={() =>
                   editing
@@ -776,108 +685,394 @@ const CategoryManagement = () => {
   );
 };
 
-const CategoryModal = ({ initial, onClose, onSubmit }) => {
-  const [form, setForm] = useState({
-    name: initial?.name || "",
-    type: initial?.type || "expense",
-    color: initial?.color || "#95684c",
-    isActive: initial?.isActive ?? true,
-  });
+// Profile Management Component
+const ProfileManagement = () => {
+  const { user } = useAuth();
+  const [imagePreview, setImagePreview] = useState(null);
+  const [changeSetting, setChangeSetting] = useState(false);
+  const [changeEmail, setChangeEmail] = useState(false);
+  const fileInputRef = React.useRef(null);
+  const Navigate = useNavigate();
+  const { mutate: updatePassword } = useUpdatePassword();
+  const queryClient = useQueryClient();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const {
+    register: emailReigster,
+    handleSubmit: emailtHandleSubmit,
+    formState: { errors: editError },
+  } = useForm();
+  const { data: profile, isLoading } = useProfile();
 
-  const canSubmit = form.name && form.type;
+  const updateEmailMutation = useUpdateProfile();
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+  const handlePassword = (data) => {
+    updatePassword(data, {
+      onSuccess: () => Navigate("/login"),
+    });
   };
 
+  const handleEmail = (data) => {
+    updateEmailMutation.mutate(data);
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-600">در حال بارگذاری...</div>
+      </div>
+    );
+  }
+
+  const displayData = profile || user;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0"
-        style={{ background: "rgba(0,0,0,0.3)" }}
-        onClick={onClose}
-      />
-      <div className="relative w-full max-w-lg card">
-        <h2
-          className="text-lg font-bold mb-4"
-          style={{ color: "var(--primary-brown)" }}
-        >
-          {initial ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
-            >
-              نام
-            </label>
-            <input
-              className="form-input"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-            />
+    <div className="space-y-6">
+      {/* Profile Header */}
+      <div className="card">
+        <div className="flex items-center space-x-4 space-x-reverse">
+          <div
+            className="w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white text-2xl font-bold cursor-pointer"
+            onClick={handleImageClick}
+            title="برای تغییر تصویر کلیک کنید"
+          >
+            {imagePreview ? (
+              <img
+                src={imagePreview}
+                alt="Profile"
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : displayData?.name ? (
+              displayData.name.charAt(0).toUpperCase()
+            ) : (
+              "U"
+            )}
           </div>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            className="hidden"
+          />
           <div>
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
+            <h2
+              className="text-2xl font-bold"
+              style={{ color: "var(--primary-brown)" }}
             >
-              نوع
-            </label>
-            <select
-              className="form-input"
-              name="type"
-              value={form.type}
-              onChange={handleChange}
-            >
-              <option value="expense">هزینه</option>
-              <option value="income">درآمد</option>
-              <option value="product">محصول</option>
-              <option value="both">هزینه و درآمد</option>
-            </select>
-          </div>
-          <div>
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
-            >
-              رنگ
-            </label>
-            <input
-              className="form-input"
-              type="color"
-              name="color"
-              value={form.color}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="md:col-span-2 flex items-center gap-2">
-            <input
-              id="isActive"
-              type="checkbox"
-              name="isActive"
-              checked={form.isActive}
-              onChange={handleChange}
-            />
-            <label htmlFor="isActive" style={{ color: "var(--text-medium)" }}>
-              فعال
-            </label>
+              پروفایل کاربری
+            </h2>
+            <p className="text-gray-600 mt-1">مشاهده اطلاعات پروفایل خود</p>
+            <div className="flex items-center mt-2">
+              <span
+                className="px-3 py-1 rounded-full text-sm font-medium"
+                style={{
+                  backgroundColor: "var(--beige-light)",
+                  color: "var(--primary-brown)",
+                }}
+              >
+                {displayData?.role || "کاربر"}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-2 mt-6">
-          <button className="btn-secondary" onClick={onClose}>
-            لغو
-          </button>
-          <button
-            className="btn-primary"
-            disabled={!canSubmit}
-            onClick={() => onSubmit(form)}
+      </div>
+
+      {/* Profile Information */}
+      <div className="card">
+        <h3
+          className="text-xl font-semibold mb-6"
+          style={{ color: "var(--text-dark)" }}
+        >
+          اطلاعات شخصی
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-dark)" }}
+            >
+              نام کامل
+            </label>
+            <p className="text-gray-600">{displayData?.name || "نامشخص"}</p>
+          </div>
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-dark)" }}
+            >
+              ایمیل
+            </label>
+            <p className="text-gray-600">{displayData?.email || "نامشخص"}</p>
+          </div>
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-dark)" }}
+            >
+              شماره تلفن
+            </label>
+            <p className="text-gray-600">{displayData?.phone || "نامشخص"}</p>
+          </div>
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-dark)" }}
+            >
+              نقش
+            </label>
+            <p className="text-gray-600">{displayData?.role || "کاربر"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Account Info */}
+      <div className="card">
+        <h3
+          className="text-xl font-semibold mb-6"
+          style={{ color: "var(--text-dark)" }}
+        >
+          اطلاعات حساب
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-dark)" }}
+            >
+              تاریخ عضویت
+            </label>
+            <p className="text-gray-600">
+              {displayData?.createdAt
+                ? new Date(displayData.createdAt).toLocaleDateString("fa-IR")
+                : "نامشخص"}
+            </p>
+          </div>
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-dark)" }}
+            >
+              وضعیت حساب
+            </label>
+            <span
+              className="px-3 py-1 rounded-full text-sm font-medium"
+              style={{
+                backgroundColor: "var(--success-green)",
+                color: "white",
+              }}
+            >
+              فعال
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Security Settings */}
+      <div className="card">
+        <h3
+          className="text-lg font-semibold mb-4"
+          style={{ color: "var(--text-dark)" }}
+        >
+          تنظیمات امنیتی
+        </h3>
+        <div className="space-y-4">
+          <div
+            className="flex items-center justify-between p-4 rounded-lg"
+            style={{ backgroundColor: "var(--beige-light)" }}
           >
-            {initial ? "ذخیره تغییرات" : "ثبت"}
-          </button>
+            <div>
+              <h4 className="font-medium" style={{ color: "var(--text-dark)" }}>
+                تغییر رمز عبور
+              </h4>
+              <p className="text-sm" style={{ color: "var(--text-medium)" }}>
+                رمز عبور خود را به‌روزرسانی کنید
+              </p>
+            </div>
+            <button
+              onClick={() => setChangeSetting(true)}
+              className="btn-secondary"
+            >
+              تغییر رمز
+            </button>
+          </div>
+          {changeSetting && (
+            <form
+              noValidate
+              onSubmit={handleSubmit(handlePassword)}
+              className=" space-y-3"
+            >
+              <div className=" w-full pt-3 font-semibold  text-xl ">
+                تغییر دادن پسورد
+              </div>
+              <div className=" flex  w-full gap-x-6  mx-auto">
+                <div className="flex-1 flex flex-col  gap-y-2">
+                  <label
+                    className=" text-[16px] text-slate-600"
+                    htmlFor="pastPassword"
+                  >
+                    پسورد قبلی
+                  </label>
+                  <input
+                    type="password"
+                    {...register("currentPassword", {
+                      required: "لطفا پسورد قبلی تانرا وارد کنید",
+                    })}
+                    id="pastPassword"
+                    placeholder="اینجا پسورد فعلی تانرا بنوسید"
+                    className={inputStyle}
+                  />
+                  {errors.currentPassword && (
+                    <p className=" text-[9px] text-red-500">
+                      {errors.currentPassword.message}
+                    </p>
+                  )}
+                </div>
+                <div className=" flex-1 flex flex-col gap-y-2">
+                  <label
+                    className=" text-[16px] text-slate-600"
+                    htmlFor="newPassword"
+                  >
+                    پسورد جدید{" "}
+                  </label>
+                  <input
+                    type="password"
+                    {...register("newPassword", {
+                      required: "لطفا پسورد جدید تانرا وارد کنید",
+                    })}
+                    id="newPassword"
+                    placeholder="اینجا پسورد جدید تانرا بنوسید"
+                    className={inputStyle}
+                  />
+                  {errors.newPassword && (
+                    <p className=" text-[9px] text-red-500">
+                      {errors.newPassword.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className=" w-[300px] flex gap-1">
+                <Button type="submit">تغییر دادن</Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setChangeSetting(false);
+                  }}
+                  className=" bg-transparent border border-slate-600"
+                >
+                  {" "}
+                  انصراف
+                </Button>
+              </div>
+            </form>
+          )}
+
+          <div
+            className="flex items-center justify-between p-4 rounded-lg"
+            style={{ backgroundColor: "var(--beige-light)" }}
+          >
+            <div>
+              <h4 className="font-medium" style={{ color: "var(--text-dark)" }}>
+                تغییر ایمیل
+              </h4>
+              <p className="text-sm" style={{ color: "var(--text-medium)" }}>
+                ایمیل خود را به‌روزرسانی کنید
+              </p>
+            </div>
+            <button
+              onClick={() => setChangeEmail(true)}
+              className="btn-secondary"
+            >
+              تغییر ایمیل
+            </button>
+          </div>
+
+          {changeEmail && (
+            <form
+              noValidate
+              onSubmit={emailtHandleSubmit(handleEmail)}
+              className=" space-y-3"
+            >
+              <div className=" w-full pt-3 font-semibold  text-xl ">
+                تغییر دادن ایمیل
+              </div>
+              <div className=" flex  w-full gap-x-6  mx-auto">
+                <div className="flex-1 flex flex-col  gap-y-2">
+                  <label className=" text-[16px] text-slate-600" htmlFor="name">
+                    نام کامل
+                  </label>
+                  <input
+                    type="text"
+                    {...emailReigster("name", {
+                      required: "لطفا نام تانرا وارد کنید",
+                    })}
+                    id="name"
+                    placeholder="اینجا نام تانرا بنوسید"
+                    className={inputStyle}
+                  />
+                  {editError.name && (
+                    <p className=" text-[9px] text-red-500">
+                      {editError.name.message}
+                    </p>
+                  )}
+                </div>
+                <div className=" flex-1 flex flex-col gap-y-2">
+                  <label
+                    className=" text-[16px] text-slate-600"
+                    htmlFor="newEmail"
+                  >
+                    ایمیل جدید{" "}
+                  </label>
+                  <input
+                    type="email"
+                    {...emailReigster("email", {
+                      required: "لطفا ایمیل جدید تانرا وارد کنید",
+                    })}
+                    id="email"
+                    placeholder="اینجا ایمیل جدید تانرا بنوسید"
+                    className={inputStyle}
+                  />
+                  {editError.email && (
+                    <p className=" text-[9px] text-red-500">
+                      {editError.email.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className=" w-[300px] flex gap-1">
+                <Button type="submit">تغییر دادن</Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setChangeEmail(false);
+                  }}
+                  className=" bg-transparent border border-slate-600"
+                >
+                  {" "}
+                  انصراف
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

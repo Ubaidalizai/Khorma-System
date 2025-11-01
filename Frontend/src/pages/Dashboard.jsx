@@ -213,7 +213,7 @@ const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [reason, setReason] = useState("");
-  const [activeTab, setActiveTab] = useState("transaction");
+  const [activeTab, setActiveTab] = useState("logs");
   const { data: recentTransactions, isLoading: statsLoading } =
     useRecentTransactions({
       page: currentPage,
@@ -498,16 +498,6 @@ const Dashboard = () => {
         <div className="border-b border-slate-200">
           <nav className="flex -mb-px">
             <button
-              onClick={() => setActiveTab("transaction")}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "transaction"
-                  ? "border-amber-600 text-amber-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              انتقالات اخیر
-            </button>
-            <button
               onClick={() => setActiveTab("logs")}
               className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === "logs"
@@ -518,13 +508,23 @@ const Dashboard = () => {
               <BuildingOffice2Icon className="h-5 w-5" />
               لاگ های سیستم
             </button>
+            <button
+              onClick={() => setActiveTab("transaction")}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "transaction"
+                  ? "border-amber-600 text-amber-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              انتقالات اخیر
+            </button>
           </nav>
         </div>
       </div>
       {activeTab === "transaction" && (
         <div className="">
           {/* Search and Pagination Row */}
-          <div className="flex items-center justify-between bg-white rounded-lg">
+          <div className="flex my-2 items-center justify-between bg-white rounded-lg">
             <div className="flex items-center gap-4">
               <div className="relative">
                 <input
@@ -532,7 +532,7 @@ const Dashboard = () => {
                   placeholder="جستجو در تراکنش‌ها..."
                   value={transactionSearch}
                   onChange={(e) => setTransactionSearch(e.target.value)}
-                  className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-4 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
+                  className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg
@@ -670,8 +670,8 @@ const Dashboard = () => {
         </div>
       )}
       {activeTab === "logs" && (
-        <div className="">
-          <div className=" space-x-4 flex  items-center justify-between bg-white">
+        <div className="my-2 bg-white">
+          <div className=" space-x-4 flex  items-center justify-between">
             <div className="flex flex-col md:flex-row gap-x-4   items-end">
               <div className=" w-[200px]">
                 <Select
@@ -689,7 +689,7 @@ const Dashboard = () => {
                     placeholder="جستجو بر اساس دلیل، تغییر دهنده یا عملیات..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-4 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
+                    className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg

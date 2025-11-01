@@ -1,10 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { CiTrash } from "react-icons/ci";
+import { MdOutlineEditLocationAlt } from "react-icons/md";
+import { RiEditBoxLine } from "react-icons/ri";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
 import { formatNumber } from "../utilies/helper";
 import { inputStyle } from "../components/ProductForm";
 import Button from "../components/Button";
+import Table from "../components/Table";
+import TableHeader from "../components/TableHeader";
+import TableBody from "../components/TableBody";
+import TableRow from "../components/TableRow";
+import TableColumn from "../components/TableColumn";
+import Pagination from "../components/Pagination";
 
 const fetchExpenses = async ({
   page,
@@ -63,7 +72,7 @@ const deleteExpenseApi = async (id) => {
 export default function Expenses() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit, setLimit] = useState(20);
   const [category, setCategory] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [search, setSearch] = useState("");
@@ -128,6 +137,7 @@ export default function Expenses() {
     currentPage: 1,
     totalPages: 1,
   };
+  const total = expensesRes?.total || 0;
   const categories = categoriesRes?.data || [];
   const accounts = accountsRes?.accounts || accountsRes?.data || [];
 
@@ -155,7 +165,7 @@ export default function Expenses() {
           هزینه‌ها
         </h1>
         <button
-          className="btn-primary"
+          className=" bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200`"
           onClick={() => {
             setEditingExpense(null);
             setIsModalOpen(true);
@@ -166,7 +176,7 @@ export default function Expenses() {
       </div>
 
       {/* Filters */}
-      <div className="card border border-slate-200 mb-4">
+      <div className=" bg-white p-3 rounded-sm  border border-slate-200 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label
@@ -239,85 +249,71 @@ export default function Expenses() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>تاریخ</th>
-              <th>دسته‌بندی</th>
-              <th>مبلغ</th>
-              <th>پرداخت از</th>
-              <th>توضیحات</th>
-              <th>اقدامات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan="6" className="text-center py-6">
-                  در حال بارگذاری...
-                </td>
-              </tr>
-            ) : expenses.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center py-6">
-                  موردی یافت نشد
-                </td>
-              </tr>
-            ) : (
-              expenses.map((e) => (
-                <tr key={e._id}>
-                  <td>{new Date(e.date).toLocaleDateString()}</td>
-                  <td>{e.category?.name || "-"}</td>
-                  <td>{formatNumber(e.amount || 0)} افغانی</td>
-                  <td>{e.paidFromAccount?.name || "-"}</td>
-                  <td>{e.description || "-"}</td>
-                  <td>
-                    <div className="flex gap-2 justify-end">
-                      <button
-                        className="btn-secondary"
-                        onClick={() => {
-                          setEditingExpense(e);
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        ویرایش
-                      </button>
-                      <button
-                        className="btn-secondary"
-                        onClick={() => onDelete(e._id)}
-                      >
-                        حذف
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader
+          headerData={[
+            { title: "تاریخ" },
+            { title: "دسته‌بندی" },
+            { title: "مبلغ" },
+            { title: "پرداخت از" },
+            { title: "توضیحات" },
+            { title: "اقدامات" },
+          ]}
+        />
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableColumn colSpan="6" className="text-center py-6">
+                در حال بارگذاری...
+              </TableColumn>
+            </TableRow>
+          ) : expenses.length === 0 ? (
+            <TableRow>
+              <TableColumn colSpan="6" className="text-center py-6">
+                موردی یافت نشد
+              </TableColumn>
+            </TableRow>
+          ) : (
+            expenses.map((e) => (
+              <TableRow key={e._id}>
+                <TableColumn>
+                  {new Date(e.date).toLocaleDateString()}
+                </TableColumn>
+                <TableColumn>{e.category?.name || "-"}</TableColumn>
+                <TableColumn>{formatNumber(e.amount || 0)} افغانی</TableColumn>
+                <TableColumn>{e.paidFromAccount?.name || "-"}</TableColumn>
+                <TableColumn>{e.description || "-"}</TableColumn>
+                <TableColumn>
+                  <div className="flex gap-2 justify-end">
+                    <RiEditBoxLine
+                      className=" text-[16px] text-green-500"
+                      onClick={() => {
+                        setEditingExpense(e);
+                        setIsModalOpen(true);
+                      }}
+                    />
+
+                    <CiTrash
+                      className=" text-[16px] text-red-600"
+                      onClick={() => onDelete(e._id)}
+                    />
+                  </div>
+                </TableColumn>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       {/* Pagination */}
-      <div className="flex items-center justify-center gap-2 mt-4">
-        <button
-          className="btn-secondary"
-          disabled={pagination.currentPage <= 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-        >
-          قبلی
-        </button>
-        <span>
-          صفحه {pagination.currentPage} از {pagination.totalPages}
-        </span>
-        <button
-          className="btn-secondary"
-          disabled={pagination.currentPage >= pagination.totalPages}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          بعدی
-        </button>
-      </div>
+      <Pagination
+        page={pagination.currentPage}
+        limit={limit}
+        total={total}
+        totalPages={pagination.totalPages}
+        onPageChange={setPage}
+        onRowsPerPageChange={setLimit}
+      />
 
       {isModalOpen && (
         <ExpenseModal

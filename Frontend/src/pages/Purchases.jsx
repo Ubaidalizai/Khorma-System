@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import Pagination from "../components/Pagination";
 import {
   usePurchases,
   useSuppliers,
@@ -38,7 +39,7 @@ const Purchases = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [supplierFilter, setSupplierFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedPurchaseId, setSelectedPurchaseId] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -128,6 +129,11 @@ const Purchases = () => {
         },
       });
     }
+  };
+
+  const handleRowsPerPageChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
   };
 
   // Handle URL parameters for modal flow
@@ -509,27 +515,14 @@ const Purchases = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              صفحه {page} از {totalPages} (مجموع {total} خرید)
-            </div>
-            <div className="flex gap-2">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                قبلی
-              </button>
-              <button
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                بعدی
-              </button>
-            </div>
-          </div>
+          <Pagination
+            page={page}
+            limit={limit}
+            total={total}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onRowsPerPageChange={handleRowsPerPageChange}
+          />
         )}
       </div>
 
@@ -894,7 +887,7 @@ const Purchases = () => {
         setOpen={setShowEditModal}
         isClose={true}
       >
-        <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-lg w-[700px] md:w-[900px]  max-h-[90vh] overflow-y-auto">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">
               ویرایش کامل خرید

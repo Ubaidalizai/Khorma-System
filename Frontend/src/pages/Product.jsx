@@ -1,3 +1,4 @@
+import { CiTrash } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
 import { BsTrash3 } from "react-icons/bs";
 import { FaTrashAlt } from "react-icons/fa";
@@ -21,6 +22,7 @@ import Confirmation from "../components/Confirmation";
 import EditProduct from "../components/EditProduct";
 import GloableModal from "../components/GloableModal";
 import Menus from "../components/Menu";
+import Pagination from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
@@ -29,7 +31,6 @@ import TableHeader from "../components/TableHeader";
 import TableMenuModal from "../components/TableMenuModal";
 import TableRow from "../components/TableRow";
 import { useDeleteProdcut } from "../services/useApi";
-import { motion } from "framer-motion";
 const headers = [
   { title: "اسم جنس" },
   { title: "واحد پایه" },
@@ -43,7 +44,9 @@ import { formatNumber } from "../utilies/helper";
 function Product() {
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProdcut();
   const [search, setSearch] = useState("");
-  const { data: productList, isLoading } = useProduct({ search });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { data: productList, isLoading } = useProduct({ search, page, limit });
 
   const [isEditable, setIsEditable] = useState(false);
   const [showData, setShowData] = useState(false);
@@ -133,15 +136,15 @@ function Product() {
                 <TableColumn>
                   <div className=" flex items-center justify-center  gap-x-2">
                     <BsEye
-                      className=" text-[18px] text-yellow-500"
+                      className=" text-[14px] text-yellow-500"
                       onClick={() => handleViewProduct(el)}
                     />
-                    <BsTrash3
-                      className=" text-[18px] text-red-500"
+                    <CiTrash
+                      className=" text-[14px] text-red-500"
                       onClick={() => handleDeleteProduct(el)}
                     />
                     <FaRegEdit
-                      className=" text-[18px] text-green-500"
+                      className=" text-[14px] text-green-500"
                       onClick={() => handleEditProduct(el)}
                     />
                   </div>
@@ -160,6 +163,16 @@ function Product() {
           )}
         </TableBody>
       </Table>
+      <div className="mt-2 w-full items-center justify-center">
+        <Pagination
+          page={page}
+          limit={limit}
+          total={productList?.total || 0}
+          totalPages={productList?.totalPages || 0}
+          onPageChange={setPage}
+          onRowsPerPageChange={setLimit}
+        />
+      </div>
       <GloableModal open={isEditable} setOpen={handleCloseEdit}>
         <EditProduct productId={selectedPro?._id} onClose={handleCloseEdit} />
       </GloableModal>
@@ -231,7 +244,9 @@ function Product() {
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
                     {selectedPro.latestPurchasePrice
-                      ? `${formatNumber(selectedPro.latestPurchasePrice)} افغانی`
+                      ? `${formatNumber(
+                          selectedPro.latestPurchasePrice
+                        )} افغانی`
                       : "نامشخص"}
                   </p>
                 </div>
