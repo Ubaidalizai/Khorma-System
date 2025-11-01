@@ -98,20 +98,20 @@ const Layout = () => {
   };
   return (
     <section className="peer mx-auto  w-full min-h-screen grid   grid-cols-[0.12fr_.19fr_1fr_auto] sm:grid-cols-[0.06fr_.15fr_1fr_auto] md:grid-cols-[0.06fr_.13fr_1fr_auto] lg:grid-cols-[0.07fr_.12fr_1fr_auto]  grid-rows-[46px_auto]">
-      <header className="relative z-50  bg-white   col-span-4 row-start-1  duration-100 ease-out px-2 py-2 transition-all   xl:block   w-full  mx-auto   min-h-10">
+      <header className="relative z-50 col-span-4 row-start-1  duration-100 ease-out px-2 py-2 transition-all   xl:block   w-full  mx-auto   min-h-10">
         <span className=" absolute top-2/4 -translate-y-2/4 right-4 cursor-pointer group">
           <AnimatedMenuIcon isOpen={isOpen} toggle={() => setIsOpen(!isOpen)} />
         </span>
-        <div className=" absolute left-4 top-2/4 -translate-y-2/4 flex items-center gap-2">
+        <div className=" absolute left-6 top-2/4 -translate-y-2/4 flex items-center gap-4">
           <div className="relative " style={{ direction: "ltr" }}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className=" rounded-full transition-colors duration-200 flex items-center gap-3"
             >
-              <span className="rounded-full text-slate-600 p-1  bg-slate-200 hover:bg-slate-300 transition-all duration-150">
-                <AiOutlineUser className="text-[24px]   text-black" />
+              <span className="rounded-full text-slate-600 p-1 shadow-sm hover:bg-slate-300 transition-all duration-150">
+                {user.image ? <img src={`http://localhost:3001/uploads/${user.image}`} alt={user.name} className="w-[40px] h-[20px] rounded-full" /> : <AiOutlineUser className="text-[25px]   text-black" />}
               </span>
-              <p className=" font-medium  text-[10px]">
+              <p className=" font-medium  text-[15px]">
                 {user?.name || "کاربر مدیر"}
               </p>
             </button>
@@ -155,7 +155,7 @@ const Layout = () => {
               </div>
             )}
           </div>
-          <span className=" relative  p-1 rounded-full bg-slate-200 hover:bg-slate-300 transition-all duration-150">
+          {/* <span className=" relative  p-1 rounded-full shadow-sm hover:bg-slate-300 transition-all duration-150">
             <AiOutlineBell className="text-[24px] text-black" />
             {notifications.length > 0 && (
               <span
@@ -165,7 +165,7 @@ const Layout = () => {
                 {notifications.length}
               </span>
             )}
-          </span>
+          </span> */}
         </div>
       </header>
       <div
