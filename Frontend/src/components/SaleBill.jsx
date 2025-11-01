@@ -40,11 +40,26 @@ const SaleBill = forwardRef(({ sale, customer, customerAccount }, ref) => {
       )}
 
       {/* Customer Account Balance */}
-      {customerAccount && (
-        <div className={`bg-blue-50 border border-blue-200 rounded p-2 mb-3 ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
-          <p className="font-semibold text-blue-900">وضعیت حساب مشتری:</p>
-          <p className="text-blue-800">
-            موجودی فعلی: {formatCurrency(customerAccount.currentBalance)} AFN
+      {customerAccount && customerAccount.currentBalance !== 0 && (
+        <div className={`${
+          customerAccount.currentBalance > 0 
+            ? 'bg-red-50 border border-red-200' 
+            : 'bg-green-50 border border-green-200'
+        } rounded p-2 mb-3 ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
+          <p className={`font-semibold ${
+            customerAccount.currentBalance > 0 
+              ? 'text-red-900' 
+              : 'text-green-900'
+          }`}>وضعیت حساب مشتری:</p>
+          <p className={
+            customerAccount.currentBalance > 0 
+              ? 'text-red-800' 
+              : 'text-green-800'
+          }>
+            {customerAccount.currentBalance > 0 
+              ? `باقی مانده: ${formatCurrency(Math.abs(customerAccount.currentBalance))} افغانی`
+              : `اعتبار: ${formatCurrency(Math.abs(customerAccount.currentBalance))} افغانی`
+            }
           </p>
         </div>
       )}

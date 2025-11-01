@@ -23,7 +23,12 @@ const incomeSchema = new mongoose.Schema(
     source: {
       type: String,
       trim: true,
-      required: [true, 'Income source is required'],
+      default: 'درآمد عمومی',
+    },
+    placedInAccount: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account',
+      default: null,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

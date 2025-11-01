@@ -4,6 +4,8 @@ const AppError = require('../utils/AppError');
 const Income = require('../models/income.model');
 const Category = require('../models/category.model');
 const AuditLog = require('../models/auditLog.model');
+const Account = require('../models/account.model');
+const AccountTransaction = require('../models/accountTransaction.model');
 
 // @desc    Get all income records with filtering and pagination
 // @route   GET /api/v1/income
@@ -55,6 +57,7 @@ exports.getAllIncome = asyncHandler(async (req, res, next) => {
     Income.find(filter)
       .populate('category', 'name type color')
       .populate('createdBy', 'name')
+      .populate('placedInAccount', 'name type')
       .sort(sort)
       .skip(skip)
       .limit(limitNum)
@@ -226,6 +229,7 @@ exports.getIncomeById = asyncHandler(async (req, res, next) => {
   const income = await Income.findOne({ _id: id, isDeleted: false })
     .populate('category', 'name type color')
     .populate('createdBy', 'name')
+    .populate('placedInAccount', 'name type')
     .lean();
 
   if (!income) {
@@ -238,80 +242,150 @@ exports.getIncomeById = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Create a new income record
+// @desc    Create a new income record (and post account transaction)
 // @route   POST /api/v1/income
+// @body    { category, amount, date?, description?, source?, placedInAccount }
 exports.createIncome = asyncHandler(async (req, res, next) => {
-  const { category, amount, date, description, source } = req.body;
+  const { category, amount, date, description, source, placedInAccount } = req.body;
 
-  if (!category || !amount || !source) {
-    throw new AppError('Category, amount, and source are required', 400);
+  if (!category || !amount) {
+    throw new AppError('Category and amount are required', 400);
   }
 
   if (amount <= 0) {
     throw new AppError('Amount must be greater than 0', 400);
   }
 
-  // Validate category exists and is for income
-  const categoryDoc = await Category.findOne({
-    _id: category,
-    isDeleted: false,
-    isActive: true,
-    $or: [{ type: 'income' }, { type: 'both' }],
-  });
-
-  if (!categoryDoc) {
-    throw new AppError(
-      'Invalid category or category not available for income',
-      400
-    );
+  if (!placedInAccount) {
+    throw new AppError('placedInAccount is required', 400);
   }
 
-  const income = await Income.create({
-    category,
-    amount,
-    date: date ? new Date(date) : new Date(),
-    description,
-    source,
-    createdBy: req.user._id,
-  });
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  await income.populate([
-    { path: 'category', select: 'name type color' },
-    { path: 'createdBy', select: 'name' },
-  ]);
+  try {
+    // Validate category exists and is for income
+    const categoryDoc = await Category.findOne(
+      {
+        _id: category,
+        isDeleted: false,
+        isActive: true,
+        $or: [{ type: 'income' }, { type: 'both' }],
+      },
+      null,
+      { session }
+    );
 
-  // Audit log
-  await AuditLog.create({
-    tableName: 'Income',
-    recordId: income._id,
-    operation: 'INSERT',
-    oldData: null,
-    newData: income.toObject(),
-    reason: `Income created: ${categoryDoc.name} - ${amount} from ${source}`,
-    changedBy: req.user?.name || 'System',
-    changedAt: new Date(),
-  });
+    if (!categoryDoc) {
+      throw new AppError(
+        'Invalid category or category not available for income',
+        400
+      );
+    }
 
-  res.status(201).json({
-    success: true,
-    message: 'Income record created successfully',
-    data: income,
-  });
+    // Validate account type (cashier, safe, saraf)
+    const moneyAccount = await Account.findOne(
+      { _id: placedInAccount, isDeleted: false },
+      null,
+      { session }
+    );
+
+    if (!moneyAccount) {
+      throw new AppError('Placed in account not found', 404);
+    }
+    if (!['cashier', 'safe', 'saraf'].includes(moneyAccount.type)) {
+      throw new AppError(
+        'Placed in account must be of type cashier, safe, or saraf',
+        400
+      );
+    }
+
+    // Create income
+    const income = await Income.create(
+      [
+        {
+          category,
+          placedInAccount,
+          amount,
+          date: date ? new Date(date) : new Date(),
+          description,
+          createdBy: req.user._id,
+        },
+      ],
+      { session }
+    );
+    const createdIncome = income[0];
+
+    // Post account transaction (positive to increase balance)
+    const transaction = await AccountTransaction.create(
+      [
+        {
+          account: placedInAccount,
+          date: date ? new Date(date) : new Date(),
+          transactionType: 'Credit',
+          amount: Math.abs(amount),
+          referenceType: 'income',
+          referenceId: createdIncome._id,
+          description: description || `Income: ${categoryDoc.name} from ${finalSource}`,
+          created_by: req.user._id,
+        },
+      ],
+      { session }
+    );
+
+    // Update account balance (increase by income amount)
+    await Account.findByIdAndUpdate(
+      placedInAccount,
+      { $inc: { currentBalance: Math.abs(amount) } },
+      { session }
+    );
+
+    // Audit log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Income',
+          recordId: createdIncome._id,
+          operation: 'INSERT',
+          oldData: null,
+          newData: createdIncome.toObject(),
+          reason: `Income created: ${categoryDoc.name} - ${amount} from ${source}`,
+          changedBy: req.user?.name || 'System',
+          changedAt: new Date(),
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await createdIncome.populate([
+      { path: 'category', select: 'name type color' },
+      { path: 'createdBy', select: 'name' },
+      { path: 'placedInAccount', select: 'name type' },
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: 'Income record created successfully',
+      data: createdIncome,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
 });
 
-// @desc    Update an income record
+// @desc    Update an income record (re-post account transaction if needed)
 // @route   PATCH /api/v1/income/:id
 exports.updateIncome = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const { category, amount, date, description, source } = req.body;
+  const { category, amount, date, description, source, placedInAccount } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new AppError('Invalid income ID', 400);
-  }
-
-  const income = await Income.findOne({ _id: id, isDeleted: false });
-  if (!income) {
-    throw new AppError('Income record not found', 404);
   }
 
   // Validate amount if provided
@@ -336,41 +410,149 @@ exports.updateIncome = asyncHandler(async (req, res, next) => {
     }
   }
 
-  const oldData = income.toObject();
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  // Update fields
-  if (category !== undefined) income.category = category;
-  if (amount !== undefined) income.amount = amount;
-  if (date !== undefined) income.date = new Date(date);
-  if (description !== undefined) income.description = description;
-  if (source !== undefined) income.source = source;
+  try {
+    const income = await Income.findOne({ _id: id, isDeleted: false }, null, { session });
+    if (!income) {
+      throw new AppError('Income record not found', 404);
+    }
 
-  await income.save();
-  await income.populate([
-    { path: 'category', select: 'name type color' },
-    { path: 'createdBy', select: 'name' },
-  ]);
+    const oldData = income.toObject();
 
-  // Audit log
-  await AuditLog.create({
-    tableName: 'Income',
-    recordId: income._id,
-    operation: 'UPDATE',
-    oldData,
-    newData: income.toObject(),
-    reason: `Income updated: ${income.amount} from ${income.source}`,
-    changedBy: req.user?.name || 'System',
-    changedAt: new Date(),
-  });
+    // Find existing transaction
+    const existingTxn = await AccountTransaction.findOne(
+      { referenceType: 'income', referenceId: income._id, isDeleted: false },
+      null,
+      { session }
+    );
 
-  res.status(200).json({
-    success: true,
-    message: 'Income record updated successfully',
-    data: income,
-  });
+    let newPlacedInAccount = placedInAccount !== undefined ? placedInAccount : income.placedInAccount;
+    if (!newPlacedInAccount) {
+      throw new AppError('placedInAccount is required', 400);
+    }
+
+    const moneyAccount = await Account.findOne({ _id: newPlacedInAccount, isDeleted: false }, null, { session });
+    if (!moneyAccount) {
+      throw new AppError('Placed in account not found', 404);
+    }
+    if (!['cashier', 'safe', 'saraf'].includes(moneyAccount.type)) {
+      throw new AppError('Placed in account must be of type cashier, safe, or saraf', 400);
+    }
+
+    // Reverse existing transaction if present
+    if (existingTxn && !existingTxn.reversed) {
+      // Debit back the old amount from the old account (reversing the credit)
+      const oldAccountId = existingTxn.account.toString();
+      // existingTxn.amount is positive for income, so we subtract it
+      await Account.findByIdAndUpdate(
+        oldAccountId,
+        { $inc: { currentBalance: -Math.abs(existingTxn.amount) } },
+        { session }
+      );
+
+      const reversal = await AccountTransaction.create(
+        [
+          {
+            account: existingTxn.account,
+            date: new Date(),
+            transactionType: 'Credit',
+            amount: -Math.abs(existingTxn.amount), // Negative amount to reverse the positive
+            referenceType: 'income',
+            referenceId: income._id,
+            description: `Reversal of income txn ${existingTxn._id.toString()}`,
+            created_by: req.user._id,
+            reversed: false,
+          },
+        ],
+        { session }
+      );
+
+      existingTxn.reversed = true;
+      existingTxn.reversalTransaction = reversal[0]._id;
+      existingTxn.reversedBy = req.user._id;
+      existingTxn.reversedAt = new Date();
+      await existingTxn.save({ session });
+    }
+
+    // Apply new fields to income
+    if (category !== undefined) income.category = category;
+    if (amount !== undefined) income.amount = amount;
+    if (date !== undefined) income.date = new Date(date);
+    if (description !== undefined) income.description = description;
+    // Source is optional - keep existing if not provided
+    if (source !== undefined) income.source = source || 'درآمد عمومی';
+    income.placedInAccount = newPlacedInAccount;
+    await income.save({ session });
+
+    // Post new transaction
+    // Get category name for description
+    const updatedCategoryDoc = await Category.findById(income.category, null, { session });
+    const categoryName = updatedCategoryDoc ? updatedCategoryDoc.name : 'Income';
+    
+    const txn = await AccountTransaction.create(
+      [
+        {
+          account: newPlacedInAccount,
+          date: income.date,
+          transactionType: 'Credit',
+          amount: Math.abs(income.amount),
+          referenceType: 'income',
+          referenceId: income._id,
+          description: description || `Income update`,
+          created_by: req.user._id,
+        },
+      ],
+      { session }
+    );
+
+    // Increase new account balance using atomic increment
+    await Account.findByIdAndUpdate(
+      newPlacedInAccount,
+      { $inc: { currentBalance: Math.abs(income.amount) } },
+      { session }
+    );
+
+    // Audit log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Income',
+          recordId: income._id,
+          operation: 'UPDATE',
+          oldData,
+          newData: income.toObject(),
+          reason: `Income updated: ${income.amount}`,
+          changedBy: req.user?.name || 'System',
+          changedAt: new Date(),
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await income.populate([
+      { path: 'category', select: 'name type color' },
+      { path: 'createdBy', select: 'name' },
+      { path: 'placedInAccount', select: 'name type' },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: 'Income record updated successfully',
+      data: income,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
 });
 
-// @desc    Delete an income record (soft delete)
+// @desc    Delete an income record (soft delete + reverse account transaction)
 // @route   DELETE /api/v1/income/:id
 exports.deleteIncome = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
@@ -379,33 +561,95 @@ exports.deleteIncome = asyncHandler(async (req, res, next) => {
     throw new AppError('Invalid income ID', 400);
   }
 
-  const income = await Income.findOne({ _id: id, isDeleted: false });
-  if (!income) {
-    throw new AppError('Income record not found', 404);
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const income = await Income.findOne({ _id: id, isDeleted: false }, null, { session });
+    if (!income) {
+      throw new AppError('Income record not found', 404);
+    }
+
+    const oldData = income.toObject();
+
+    // Find the LATEST non-reversed transaction (to handle updates correctly)
+    const existingTxn = await AccountTransaction.findOne(
+      { 
+        referenceType: 'income', 
+        referenceId: income._id, 
+        isDeleted: false,
+        $or: [{ reversed: false }, { reversed: { $exists: false } }]
+      },
+      null,
+      { session, sort: { createdAt: -1 } } // Get the latest transaction
+    );
+
+    if (existingTxn) {
+      // Debit back the amount from the account (reversing the credit)
+      const accountId = existingTxn.account.toString();
+      // existingTxn.amount is positive for income, so we subtract it
+      await Account.findByIdAndUpdate(
+        accountId,
+        { $inc: { currentBalance: -Math.abs(existingTxn.amount) } },
+        { session }
+      );
+
+      const reversal = await AccountTransaction.create(
+        [
+          {
+            account: existingTxn.account,
+            date: new Date(),
+            transactionType: 'Credit',
+            amount: -Math.abs(existingTxn.amount), // Negative amount to reverse the positive
+            referenceType: 'income',
+            referenceId: income._id,
+            description: `Reversal of income txn ${existingTxn._id.toString()} (delete)`,
+            created_by: req.user._id,
+          },
+        ],
+        { session }
+      );
+
+      existingTxn.reversed = true;
+      existingTxn.reversalTransaction = reversal[0]._id;
+      existingTxn.reversedBy = req.user._id;
+      existingTxn.reversedAt = new Date();
+      await existingTxn.save({ session });
+    }
+
+    // Soft delete
+    income.isDeleted = true;
+    await income.save({ session });
+
+    // Audit log
+    await AuditLog.create(
+      [
+        {
+          tableName: 'Income',
+          recordId: income._id,
+          operation: 'DELETE',
+          oldData,
+          newData: { isDeleted: true },
+          reason: `Income deleted: ${income.amount} from ${income.source}`,
+          changedBy: req.user?.name || 'System',
+          changedAt: new Date(),
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      success: true,
+      message: 'Income record deleted successfully',
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
   }
-
-  const oldData = income.toObject();
-
-  // Soft delete
-  income.isDeleted = true;
-  await income.save();
-
-  // Audit log
-  await AuditLog.create({
-    tableName: 'Income',
-    recordId: income._id,
-    operation: 'DELETE',
-    oldData,
-    newData: { isDeleted: true },
-    reason: `Income deleted: ${income.amount} from ${income.source}`,
-    changedBy: req.user?.name || 'System',
-    changedAt: new Date(),
-  });
-
-  res.status(200).json({
-    success: true,
-    message: 'Income record deleted successfully',
-  });
 });
 
 // @desc    Restore a deleted income record

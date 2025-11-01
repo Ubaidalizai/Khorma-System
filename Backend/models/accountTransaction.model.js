@@ -32,7 +32,7 @@ const accountTransactionSchema = new mongoose.Schema(
     },
     referenceType: {
       type: String,
-      enum: ['sale', 'purchase', 'transfer', 'expense', 'saleReturn'],
+      enum: ['sale', 'purchase', 'transfer', 'expense', 'income', 'saleReturn'],
     },
     referenceId: {
       type: mongoose.Schema.Types.ObjectId,

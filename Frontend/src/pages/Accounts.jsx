@@ -27,6 +27,7 @@ import {
 import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
+import { formatNumber } from "../utilies/helper";
 
 const Accounts = () => {
   const navigate = useNavigate();
@@ -278,12 +279,10 @@ const Accounts = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {acc.openingBalance?.toLocaleString?.() ??
-                        acc.openingBalance}
+                      {formatNumber(acc.openingBalance ?? 0)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {acc.currentBalance?.toLocaleString?.() ??
-                        acc.currentBalance}
+                      {formatNumber(acc.currentBalance ?? 0)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {acc.currency || "AFN"}
@@ -547,8 +546,7 @@ const Accounts = () => {
                   </h3>
                   <p className="text-sm text-blue-700">
                     موجودی فعلی:{" "}
-                    {selectedAccount.currentBalance?.toLocaleString?.() ??
-                      selectedAccount.currentBalance}{" "}
+                    {formatNumber(selectedAccount.currentBalance ?? 0)}{" "}
                     AFN
                   </p>
                 </div>

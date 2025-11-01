@@ -11,25 +11,40 @@ import {
   XMarkIcon,
   ChevronDownIcon,
   ShieldCheckIcon,
+  ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
+
+// Flat items and grouped sections
+const navigation = [
+    { type: "item", name: "داشبورد", href: "/", icon: HomeIcon },
+    { type: "item", name: "موجودی", href: "/inventory", icon: CubeIcon },
+    { type: "item", name: "خریدها", href: "/purchases", icon: ShoppingCartIcon },
+    { type: "item", name: "فروش‌ها", href: "/sales", icon: CurrencyDollarIcon },
+    { 
+      type: "group", 
+      name: "مالی", 
+      icon: CurrencyDollarIcon, 
+      items: [
+        { name: "حساب‌ها", href: "/accounts", icon: UsersIcon },
+        { name: "هزینه‌ها", href: "/expenses", icon: BanknotesIcon },
+        { name: "درآمد‌ها", href: "/income", icon: ArrowTrendingUpIcon },
+      ]
+    },
+    { type: "item", name: "گزارش‌ها", href: "/reports", icon: ChartBarIcon },
+    { type: "item", name: "پنل مدیریت", href: "/admin", icon: ShieldCheckIcon },
+  ];
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const [isFinanceOpen, setIsFinanceOpen] = React.useState(false);
 
-  // Flat items and grouped sections
-  const navigation = [
-    { type: "item", name: "داشبورد", href: "/", icon: HomeIcon },
-    { type: "item", name: "موجودی", href: "/inventory", icon: CubeIcon },
-    { type: "item", name: "خریدها", href: "/purchases", icon: ShoppingCartIcon },
-    { type: "item", name: "فروش‌ها", href: "/sales", icon: CurrencyDollarIcon },
-    { type: "group", name: "مالی", icon: CurrencyDollarIcon, items: [
-      { name: "حساب‌ها", href: "/accounts", icon: UsersIcon },
-      { name: "هزینه‌ها", href: "/expenses", icon: BanknotesIcon },
-    ]},
-    { type: "item", name: "گزارش‌ها", href: "/reports", icon: ChartBarIcon },
-    { type: "item", name: "پنل مدیریت", href: "/admin", icon: ShieldCheckIcon },
-  ];
+  // Auto-open finance section if current route is in finance group
+  React.useEffect(() => {
+    const financePaths = ["/accounts", "/expenses", "/income"];
+    if (financePaths.includes(location.pathname)) {
+      setIsFinanceOpen(true);
+    }
+  }, [location.pathname]);
 
   return (
     <>
@@ -147,15 +162,21 @@ const Sidebar = ({ isOpen, onClose }) => {
               }
 
               // group (collapsible/select-like)
-              const groupActive = entry.items.some((it) => location.pathname === it.href);
-              // auto-open when route is inside the group
-              if (groupActive && !isFinanceOpen) setIsFinanceOpen(true);
-              const isOpen = isFinanceOpen;
+              const groupActive = entry.items && entry.items.some((it) => location.pathname === it.href);
+              const isOpen = entry.name === "مالی" ? isFinanceOpen : false;
+              
+              // Handle click for finance group
+              const handleGroupClick = () => {
+                if (entry.name === "مالی") {
+                  setIsFinanceOpen((v) => !v);
+                }
+              };
+              
               return (
                 <li key={entry.name}>
                   <button
                     type="button"
-                    onClick={() => setIsFinanceOpen((v) => !v)}
+                    onClick={handleGroupClick}
                     className="w-full flex items-center justify-between text-sm font-medium rounded-lg transition-all duration-200"
                     style={{
                       padding: "var(--space-2) var(--space-4)",
@@ -185,12 +206,16 @@ const Sidebar = ({ isOpen, onClose }) => {
                       className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                     />
                   </button>
-                  {isOpen && (
+                  {isOpen && entry.items && (
                     <ul style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "4px" }}>
-                      {entry.items.map((item) => {
+                      {entry.items.map((item, idx) => {
                         const isActive = location.pathname === item.href;
+                        if (!item.href || !item.name) {
+                          console.warn('Invalid menu item:', item, 'at index', idx);
+                          return null;
+                        }
                         return (
-                          <li key={item.name}>
+                          <li key={`${item.href}-${idx}`}>
                             <Link
                               to={item.href}
                               onClick={onClose}
@@ -216,7 +241,11 @@ const Sidebar = ({ isOpen, onClose }) => {
                                 }
                               }}
                             >
-                              <item.icon className="ml-3 h-5 w-5" />
+                              {item.icon ? (
+                                <item.icon className="ml-3 h-5 w-5" />
+                              ) : (
+                                <div className="ml-3 h-5 w-5" />
+                              )}
                               <span className="mr-3">{item.name}</span>
                             </Link>
                           </li>

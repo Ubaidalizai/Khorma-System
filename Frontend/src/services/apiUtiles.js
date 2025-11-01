@@ -502,6 +502,44 @@ export const fetchSalesReports = async (params = {}) => {
   return await apiRequest(url);
 };
 
+// Profit Reports
+export const fetchNetProfit = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+
+  const url = query.toString()
+    ? `${API_ENDPOINTS.PROFIT.NET}?${query.toString()}`
+    : API_ENDPOINTS.PROFIT.NET;
+
+  return await apiRequest(url);
+};
+
+export const fetchProfitStats = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+
+  const url = query.toString()
+    ? `${API_ENDPOINTS.PROFIT.STATS}?${query.toString()}`
+    : API_ENDPOINTS.PROFIT.STATS;
+
+  return await apiRequest(url);
+};
+
+export const fetchProfitSummary = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.groupBy) query.set("groupBy", params.groupBy);
+
+  const url = query.toString()
+    ? `${API_ENDPOINTS.PROFIT.SUMMARY}?${query.toString()}`
+    : API_ENDPOINTS.PROFIT.SUMMARY;
+
+  return await apiRequest(url);
+};
+
 // Record payment against a purchase
 export const recordPurchasePayment = async (purchaseId, paymentData) => {
   return await apiRequest(

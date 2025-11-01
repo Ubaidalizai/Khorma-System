@@ -18,6 +18,7 @@ import {
   useUpdateInventory,
   useWarehouseStocks,
 } from "../services/useApi";
+import { formatNumber } from "../utilies/helper";
 import { getStockStatus } from "../utilies/stockStatus";
 import { inputStyle } from "./../components/ProductForm";
 import { formatCurrency } from "../utilies/helper";
@@ -150,8 +151,7 @@ function Warehouse() {
                   : "—"}
               </TableColumn>
               <TableColumn>
-                {row?.purchasePricePerBaseUnit?.toLocaleString?.() ||
-                  row?.purchasePricePerBaseUnit}
+                {formatNumber(row?.purchasePricePerBaseUnit ?? 0)}
               </TableColumn>
               <TableColumn className="font-semibold">
                 {row?.quantity}

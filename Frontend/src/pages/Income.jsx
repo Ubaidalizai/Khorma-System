@@ -4,7 +4,7 @@ import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
 import { formatNumber } from "../utilies/helper";
 
-const fetchExpenses = async ({ page, limit, category, startDate, endDate, search }) => {
+const fetchIncome = async ({ page, limit, category, startDate, endDate, search }) => {
   const params = new URLSearchParams();
   if (page) params.set("page", page);
   if (limit) params.set("limit", limit);
@@ -12,12 +12,12 @@ const fetchExpenses = async ({ page, limit, category, startDate, endDate, search
   if (startDate) params.set("startDate", startDate);
   if (endDate) params.set("endDate", endDate);
   if (search) params.set("search", search);
-  const res = await apiRequest(`${API_ENDPOINTS.EXPENSES.LIST}?${params.toString()}`);
+  const res = await apiRequest(`${API_ENDPOINTS.INCOME.LIST}?${params.toString()}`);
   return res;
 };
 
 const fetchCategories = async () => {
-  const res = await apiRequest(`${API_ENDPOINTS.CATEGORIES.LIST}?type=expense&isActive=true`);
+  const res = await apiRequest(`${API_ENDPOINTS.CATEGORIES.LIST}?type=income&isActive=true`);
   return res;
 };
 
@@ -27,27 +27,27 @@ const fetchAccounts = async () => {
   return res;
 };
 
-const createExpenseApi = async (payload) => {
-  return apiRequest(API_ENDPOINTS.EXPENSES.CREATE, {
+const createIncomeApi = async (payload) => {
+  return apiRequest(API_ENDPOINTS.INCOME.CREATE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 };
 
-const updateExpenseApi = async ({ id, payload }) => {
-  return apiRequest(API_ENDPOINTS.EXPENSES.UPDATE(id), {
+const updateIncomeApi = async ({ id, payload }) => {
+  return apiRequest(API_ENDPOINTS.INCOME.UPDATE(id), {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 };
 
-const deleteExpenseApi = async (id) => {
-  return apiRequest(API_ENDPOINTS.EXPENSES.DELETE(id), { method: "DELETE" });
+const deleteIncomeApi = async (id) => {
+  return apiRequest(API_ENDPOINTS.INCOME.DELETE(id), { method: "DELETE" });
 };
 
-export default function Expenses() {
+export default function Income() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
@@ -55,12 +55,12 @@ export default function Expenses() {
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
+  const [editingIncome, setEditingIncome] = useState(null);
 
-  const { data: expensesRes, isLoading } = useQuery({
-    queryKey: ["expenses", { page, limit, category, dateRange, search }],
+  const { data: incomeRes, isLoading } = useQuery({
+    queryKey: ["income", { page, limit, category, dateRange, search }],
     queryFn: () =>
-      fetchExpenses({
+      fetchIncome({
         page,
         limit,
         category: category || undefined,
@@ -71,7 +71,7 @@ export default function Expenses() {
   });
 
   const { data: categoriesRes } = useQuery({
-    queryKey: ["expense-categories"],
+    queryKey: ["income-categories"],
     queryFn: fetchCategories,
   });
 
@@ -81,37 +81,37 @@ export default function Expenses() {
   });
 
   const createMutation = useMutation({
-    mutationFn: createExpenseApi,
+    mutationFn: createIncomeApi,
     onSuccess: () => {
-      toast.success("هزینه ثبت شد");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      toast.success("درآمد ثبت شد");
+      queryClient.invalidateQueries({ queryKey: ["income"] });
       setIsModalOpen(false);
     },
-    onError: (e) => toast.error(e.message || "ثبت هزینه ناموفق بود"),
+    onError: (e) => toast.error(e.message || "ثبت درآمد ناموفق بود"),
   });
 
   const updateMutation = useMutation({
-    mutationFn: updateExpenseApi,
+    mutationFn: updateIncomeApi,
     onSuccess: () => {
-      toast.success("هزینه ویرایش شد");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      toast.success("درآمد ویرایش شد");
+      queryClient.invalidateQueries({ queryKey: ["income"] });
       setIsModalOpen(false);
-      setEditingExpense(null);
+      setEditingIncome(null);
     },
-    onError: (e) => toast.error(e.message || "ویرایش هزینه ناموفق بود"),
+    onError: (e) => toast.error(e.message || "ویرایش درآمد ناموفق بود"),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteExpenseApi,
+    mutationFn: deleteIncomeApi,
     onSuccess: () => {
       toast.success("حذف شد");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["income"] });
     },
     onError: (e) => toast.error(e.message || "حذف ناموفق بود"),
   });
 
-  const expenses = expensesRes?.data || [];
-  const pagination = expensesRes?.pagination || { currentPage: 1, totalPages: 1 };
+  const income = incomeRes?.data || [];
+  const pagination = incomeRes?.pagination || { currentPage: 1, totalPages: 1 };
   const categories = categoriesRes?.data || [];
   const accounts = accountsRes?.accounts || accountsRes?.data || [];
 
@@ -124,7 +124,7 @@ export default function Expenses() {
   };
 
   const onDelete = (id) => {
-    if (window.confirm("آیا از حذف این هزینه مطمئن هستید؟")) {
+    if (window.confirm("آیا از حذف این درآمد مطمئن هستید؟")) {
       deleteMutation.mutate(id);
     }
   };
@@ -132,8 +132,8 @@ export default function Expenses() {
   return (
     <div className="p-4" style={{ color: "var(--text-dark)" }}>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold" style={{ color: "var(--primary-brown)" }}>هزینه‌ها</h1>
-        <button className="btn-primary" onClick={() => { setEditingExpense(null); setIsModalOpen(true); }}>افزودن هزینه</button>
+        <h1 className="text-xl font-bold" style={{ color: "var(--primary-brown)" }}>درآمد‌ها</h1>
+        <button className="btn-primary" onClick={() => { setEditingIncome(null); setIsModalOpen(true); }}>افزودن درآمد</button>
       </div>
 
       {/* Filters */}
@@ -158,7 +158,7 @@ export default function Expenses() {
           </div>
           <div>
             <label className="block mb-2" style={{ color: "var(--text-medium)" }}>جستجو</label>
-            <input type="text" className="form-input" placeholder="توضیحات..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input type="text" className="form-input" placeholder="منبع یا توضیحات..." value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
       </div>
@@ -171,28 +171,30 @@ export default function Expenses() {
               <th>تاریخ</th>
               <th>دسته‌بندی</th>
               <th>مبلغ</th>
-              <th>پرداخت از</th>
+              <th>منبع</th>
+              <th>قرار داده شده در</th>
               <th>توضیحات</th>
               <th>اقدامات</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan="6" className="text-center py-6">در حال بارگذاری...</td></tr>
-            ) : expenses.length === 0 ? (
-              <tr><td colSpan="6" className="text-center py-6">موردی یافت نشد</td></tr>
+              <tr><td colSpan="7" className="text-center py-6">در حال بارگذاری...</td></tr>
+            ) : income.length === 0 ? (
+              <tr><td colSpan="7" className="text-center py-6">موردی یافت نشد</td></tr>
             ) : (
-              expenses.map((e) => (
-                <tr key={e._id}>
-                  <td>{new Date(e.date).toLocaleDateString()}</td>
-                  <td>{e.category?.name || "-"}</td>
-                  <td>{formatNumber(e.amount || 0)} افغانی</td>
-                  <td>{e.paidFromAccount?.name || "-"}</td>
-                  <td>{e.description || "-"}</td>
+              income.map((i) => (
+                <tr key={i._id}>
+                  <td>{new Date(i.date).toLocaleDateString()}</td>
+                  <td>{i.category?.name || "-"}</td>
+                  <td>{formatNumber(i.amount || 0)} افغانی</td>
+                  <td>{i.source || "-"}</td>
+                  <td>{i.placedInAccount?.name || "-"}</td>
+                  <td>{i.description || "-"}</td>
                   <td>
                     <div className="flex gap-2 justify-end">
-                      <button className="btn-secondary" onClick={() => { setEditingExpense(e); setIsModalOpen(true); }}>ویرایش</button>
-                      <button className="btn-secondary" onClick={() => onDelete(e._id)}>حذف</button>
+                      <button className="btn-secondary" onClick={() => { setEditingIncome(i); setIsModalOpen(true); }}>ویرایش</button>
+                      <button className="btn-secondary" onClick={() => onDelete(i._id)}>حذف</button>
                     </div>
                   </td>
                 </tr>
@@ -206,36 +208,36 @@ export default function Expenses() {
       <div className="flex items-center justify-center gap-2 mt-4">
         <button className="btn-secondary" disabled={pagination.currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>قبلی</button>
         <span>
-          صفحه {pagination.currentPage} از {pagination.totalPages}
+          صفحه {formatNumber(pagination.currentPage)} از {formatNumber(pagination.totalPages)}
         </span>
         <button className="btn-secondary" disabled={pagination.currentPage >= pagination.totalPages} onClick={() => setPage((p) => p + 1)}>بعدی</button>
       </div>
 
       {isModalOpen && (
-        <ExpenseModal
-          onClose={() => { setIsModalOpen(false); setEditingExpense(null); }}
+        <IncomeModal
+          onClose={() => { setIsModalOpen(false); setEditingIncome(null); }}
           onSubmit={(form) => (
-            editingExpense ? onUpdate(editingExpense._id, form) : onCreate(form)
+            editingIncome ? onUpdate(editingIncome._id, form) : onCreate(form)
           )}
           categories={categories}
           accounts={accounts}
-          initial={editingExpense}
+          initial={editingIncome}
         />
       )}
     </div>
   );
 }
 
-function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
+function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
   const [form, setForm] = useState({
     category: initial?.category?._id || initial?.category || "",
     amount: initial?.amount || "",
-    paidFromAccount: initial?.paidFromAccount?._id || initial?.paidFromAccount || "",
+    placedInAccount: initial?.placedInAccount?._id || initial?.placedInAccount || "",
     date: initial?.date ? new Date(initial.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
     description: initial?.description || "",
   });
 
-  const canSubmit = form.category && form.amount && form.paidFromAccount;
+  const canSubmit = form.category && form.amount && form.placedInAccount;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -247,7 +249,7 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
       <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.3)" }} onClick={onClose} />
       <div className="relative w-full max-w-lg card">
         <h2 className="text-lg font-bold mb-4" style={{ color: "var(--primary-brown)" }}>
-          {initial ? "ویرایش هزینه" : "افزودن هزینه"}
+          {initial ? "ویرایش درآمد" : "افزودن درآمد"}
         </h2>
         <div className="grid grid-cols-1 gap-4">
           <div>
@@ -261,11 +263,11 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
           </div>
           <div>
             <label className="block mb-2" style={{ color: "var(--text-medium)" }}>مبلغ</label>
-            <input className="form-input" name="amount" type="number" min="0" value={form.amount} onChange={handleChange} />
+            <input className="form-input" name="amount" type="number" min="0" step="0.01" value={form.amount} onChange={handleChange} />
           </div>
           <div>
-            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>پرداخت از</label>
-            <select className="form-input" name="paidFromAccount" value={form.paidFromAccount} onChange={handleChange}>
+            <label className="block mb-2" style={{ color: "var(--text-medium)" }}>قرار داده شده در</label>
+            <select className="form-input" name="placedInAccount" value={form.placedInAccount} onChange={handleChange}>
               <option value="">انتخاب حساب</option>
               {accounts.map((a) => (
                 <option key={a._id} value={a._id}>{a.name}</option>
@@ -278,7 +280,7 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
           </div>
           <div>
             <label className="block mb-2" style={{ color: "var(--text-medium)" }}>توضیحات</label>
-            <textarea className="form-input" name="description" value={form.description} onChange={handleChange} />
+            <textarea className="form-input" name="description" value={form.description} onChange={handleChange} rows="3" />
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 mt-6">
@@ -286,7 +288,7 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
           <button className="btn-primary" disabled={!canSubmit} onClick={() => onSubmit({
             category: form.category,
             amount: Number(form.amount),
-            paidFromAccount: form.paidFromAccount,
+            placedInAccount: form.placedInAccount,
             date: form.date,
             description: form.description,
           })}>
@@ -297,5 +299,4 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
     </div>
   );
 }
-
 
