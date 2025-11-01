@@ -264,3 +264,187 @@ exports.restoreAccount = asyncHandler(async (req, res, next) => {
     throw new AppError(err.message || 'Failed to restore account', 500);
   }
 });
+
+// @desc    Get account balances overview (grouped by type)
+// @route   GET /api/v1/accounts/reports/balances
+exports.getAccountBalances = asyncHandler(async (req, res, next) => {
+  const accounts = await Account.find({ isDeleted: false }).lean();
+
+  // Group accounts by type and calculate totals
+  const balancesByType = {
+    cashier: { accounts: [], totalBalance: 0 },
+    safe: { accounts: [], totalBalance: 0 },
+    saraf: { accounts: [], totalBalance: 0 },
+    supplier: { accounts: [], totalBalance: 0 },
+    customer: { accounts: [], totalBalance: 0 },
+    employee: { accounts: [], totalBalance: 0 },
+  };
+
+  accounts.forEach((account) => {
+    if (balancesByType[account.type]) {
+      balancesByType[account.type].accounts.push({
+        _id: account._id,
+        name: account.name,
+        currentBalance: account.currentBalance,
+        openingBalance: account.openingBalance,
+      });
+      balancesByType[account.type].totalBalance += account.currentBalance;
+    }
+  });
+
+  // Calculate overall totals
+  const totalCashAccounts = 
+    balancesByType.cashier.totalBalance + 
+    balancesByType.safe.totalBalance + 
+    balancesByType.saraf.totalBalance;
+
+  const totalSupplierDebt = balancesByType.supplier.totalBalance; // Positive = you owe them
+  const totalCustomerCredit = balancesByType.customer.totalBalance; // Positive = they owe you
+
+  res.status(200).json({
+    success: true,
+    data: {
+      byType: balancesByType,
+      summary: {
+        totalCashAccounts,
+        totalSupplierDebt,
+        totalCustomerCredit,
+        netPosition: totalCashAccounts + totalCustomerCredit - totalSupplierDebt,
+      },
+    },
+  });
+});
+
+// @desc    Get cash flow report (money in vs out over time)
+// @route   GET /api/v1/accounts/reports/cashflow
+exports.getCashFlowReport = asyncHandler(async (req, res, next) => {
+  const { startDate, endDate, groupBy = 'day' } = req.query;
+
+  if (!startDate || !endDate) {
+    throw new AppError('Start date and end date are required', 400);
+  }
+
+  const AccountTransaction = require('../models/accountTransaction.model');
+
+  // Get all transactions in date range from cash accounts only (cashier, safe, saraf)
+  const cashAccountTypes = ['cashier', 'safe', 'saraf'];
+  const cashAccounts = await Account.find({
+    type: { $in: cashAccountTypes },
+    isDeleted: false,
+  }).select('_id');
+
+  const cashAccountIds = cashAccounts.map(acc => acc._id);
+
+  let groupStage;
+  switch (groupBy) {
+    case 'day':
+      groupStage = {
+        _id: {
+          year: { $year: '$date' },
+          month: { $month: '$date' },
+          day: { $dayOfMonth: '$date' },
+        },
+      };
+      break;
+    case 'week':
+      groupStage = {
+        _id: {
+          year: { $year: '$date' },
+          week: { $week: '$date' },
+        },
+      };
+      break;
+    case 'month':
+      groupStage = {
+        _id: {
+          year: { $year: '$date' },
+          month: { $month: '$date' },
+        },
+      };
+      break;
+    default:
+      throw new AppError(
+        'Invalid groupBy parameter. Must be day, week, or month',
+        400
+      );
+  }
+
+  // Get cash flow data grouped by period
+  const cashFlowData = await AccountTransaction.aggregate([
+    {
+      $match: {
+        isDeleted: false,
+        reversed: { $ne: true },
+        account: { $in: cashAccountIds },
+        date: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        },
+      },
+    },
+    {
+      $group: {
+        ...groupStage,
+        moneyIn: {
+          $sum: {
+            $cond: [{ $gt: ['$amount', 0] }, '$amount', 0],
+          },
+        },
+        moneyOut: {
+          $sum: {
+            $cond: [{ $lt: ['$amount', 0] }, { $abs: ['$amount'] }, 0],
+          },
+        },
+        transactionCount: { $sum: 1 },
+      },
+    },
+    { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 } },
+  ]);
+
+  // Format dates for frontend
+  const formattedData = cashFlowData.map(item => {
+    let dateLabel;
+    if (groupBy === 'day') {
+      dateLabel = `${item._id.year}-${String(item._id.month).padStart(2, '0')}-${String(item._id.day).padStart(2, '0')}`;
+    } else if (groupBy === 'week') {
+      dateLabel = `Week ${item._id.week}, ${item._id.year}`;
+    } else if (groupBy === 'month') {
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      dateLabel = `${monthNames[item._id.month - 1]} ${item._id.year}`;
+    }
+    
+    return {
+      date: dateLabel,
+      moneyIn: item.moneyIn,
+      moneyOut: item.moneyOut,
+      netFlow: item.moneyIn - item.moneyOut,
+      transactionCount: item.transactionCount,
+    };
+  });
+
+  // Calculate totals
+  const totals = formattedData.reduce(
+    (acc, item) => {
+      acc.totalIn += item.moneyIn;
+      acc.totalOut += item.moneyOut;
+      acc.totalTransactions += item.transactionCount;
+      return acc;
+    },
+    { totalIn: 0, totalOut: 0, totalTransactions: 0 }
+  );
+
+  totals.netFlow = totals.totalIn - totals.totalOut;
+
+  res.status(200).json({
+    success: true,
+    data: {
+      period: { startDate, endDate },
+      groupBy,
+      summary: formattedData,
+      totals,
+    },
+  });
+});

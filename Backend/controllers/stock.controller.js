@@ -161,6 +161,107 @@ exports.deleteStock = asyncHandler(async (req, res) => {
     .json({ status: 'success', message: 'Stock deleted successfully (soft)' });
 });
 
+// @desc    Get stock report with location and stock level filters
+// @route   GET /api/v1/stocks/reports
+exports.getStockReport = asyncHandler(async (req, res, next) => {
+  const { location, stockLevel } = req.query;
+
+  const query = { isDeleted: false };
+
+  // Filter by location (warehouse or store)
+  if (location && (location === 'warehouse' || location === 'store')) {
+    query.location = location;
+  }
+
+  // Note: Stock level filtering will be done in JavaScript after fetching
+  // MongoDB expressions for minLevel calculations are complex, so we filter in memory
+
+  // Fetch all stocks matching location filter
+  const allStocks = await Stock.find(query)
+    .populate('product', 'name baseUnit latestPurchasePrice trackByBatch')
+    .populate('unit', 'name conversion_to_base')
+    .sort({ quantity: 1 }); // Sort by quantity ascending (lowest first)
+
+  // Calculate stock value and determine status for each item
+  let stockItems = allStocks.map(stock => {
+    const stockValue = stock.quantity * stock.purchasePricePerBaseUnit;
+    let status = 'normal';
+    
+    // Determine status based on quantity and minLevel
+    if (stock.quantity === 0) {
+      status = 'out';
+    } else if (stock.minLevel > 0) {
+      // Has minLevel defined
+      if (stock.quantity <= stock.minLevel * 0.5) {
+        status = 'critical';
+      } else if (stock.quantity <= stock.minLevel) {
+        status = 'low';
+      }
+    } else {
+      // No minLevel defined, use default thresholds
+      if (stock.quantity <= 10) {
+        status = 'critical';
+      } else if (stock.quantity <= 50) {
+        status = 'low';
+      }
+    }
+
+    return {
+      _id: stock._id,
+      product: {
+        _id: stock.product._id,
+        name: stock.product.name,
+        latestPurchasePrice: stock.product.latestPurchasePrice,
+      },
+      unit: stock.unit ? {
+        _id: stock.unit._id,
+        name: stock.unit.name,
+        conversion_to_base: stock.unit.conversion_to_base,
+      } : null,
+      batchNumber: stock.batchNumber,
+      location: stock.location,
+      quantity: stock.quantity,
+      minLevel: stock.minLevel,
+      purchasePricePerBaseUnit: stock.purchasePricePerBaseUnit,
+      stockValue,
+      status,
+      expiryDate: stock.expiryDate,
+    };
+  });
+
+  // Filter by stock level if specified
+  if (stockLevel) {
+    if (stockLevel === 'out') {
+      stockItems = stockItems.filter(item => item.status === 'out');
+    } else if (stockLevel === 'critical') {
+      stockItems = stockItems.filter(item => item.status === 'critical');
+    } else if (stockLevel === 'low') {
+      stockItems = stockItems.filter(item => item.status === 'low');
+    }
+  }
+
+  // Count by status
+  const counts = {
+    total: stockItems.length,
+    out: stockItems.filter(item => item.status === 'out').length,
+    critical: stockItems.filter(item => item.status === 'critical').length,
+    low: stockItems.filter(item => item.status === 'low').length,
+    normal: stockItems.filter(item => item.status === 'normal').length,
+  };
+
+  res.status(200).json({
+    success: true,
+    data: {
+      stocks: stockItems,
+      counts,
+      filters: {
+        location: location || 'all',
+        stockLevel: stockLevel || 'all',
+      },
+    },
+  });
+});
+
 // Get all batches for a product at a specific location
 exports.getBatchesByProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
