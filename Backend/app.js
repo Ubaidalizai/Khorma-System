@@ -32,6 +32,7 @@ const auditLogRoutes = require('./routes/auditLog.routes');
 const categoryRoutes = require('./routes/category.routes');
 const expenseRoutes = require('./routes/expense.routes');
 const incomeRoutes = require('./routes/income.routes');
+const profitRoutes = require('./routes/profit.routes');
 
 const app = express();
 
@@ -108,6 +109,7 @@ app.use('/api/v1/audit-logs', auditLogRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/expenses', expenseRoutes);
 app.use('/api/v1/income', incomeRoutes);
+app.use('/api/v1/profit', profitRoutes);
 
 app.all('*', (req, res) => {
   throw new AppError(`Can't find ${req.originalUrl} on this server!`, 404);

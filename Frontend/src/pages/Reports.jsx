@@ -5,7 +5,8 @@ import {
   PrinterIcon,
   EyeIcon,
 } from "@heroicons/react/24/outline";
-import { useSalesReports } from "../services/useApi";
+import { useSalesReports, useNetProfit, useProfitStats, useProfitSummary } from "../services/useApi";
+import { formatNumber, formatCurrency } from "../utilies/helper";
 import {
   LineChart,
   Line,
@@ -19,6 +20,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 
 const Reports = () => {
@@ -76,6 +78,23 @@ const Reports = () => {
       groupBy: groupByMap[dateRange] || "day",
     });
 
+  // Fetch profit data
+  const { data: netProfitData, isLoading: netProfitLoading } = useNetProfit({
+    startDate: dateParams.startDate,
+    endDate: dateParams.endDate,
+  });
+
+  const { data: profitStatsData, isLoading: profitStatsLoading } = useProfitStats({
+    startDate: dateParams.startDate,
+    endDate: dateParams.endDate,
+  });
+
+  const { data: profitSummaryData, isLoading: profitSummaryLoading } = useProfitSummary({
+    startDate: dateParams.startDate,
+    endDate: dateParams.endDate,
+    groupBy: groupByMap[dateRange] || "day",
+  });
+
   const inventoryData = [
     { product: "Fresh Dates", currentStock: 150, minStock: 50, status: "Good" },
     { product: "Chickpeas", currentStock: 200, minStock: 100, status: "Good" },
@@ -90,6 +109,8 @@ const Reports = () => {
         return salesReportsData?.data?.summary || [];
       case "inventory":
         return inventoryData;
+      case "profit":
+        return profitSummaryData?.data?.summary || [];
       default:
         return [];
     }
@@ -105,6 +126,18 @@ const Reports = () => {
       due: item.due || 0,
     }));
   }, [salesReportsData, selectedReport]);
+
+  // Chart data for profit reports
+  const profitChartData = useMemo(() => {
+    const data = profitSummaryData?.data?.summary || [];
+    return data.map((item) => ({
+      period: item.period,
+      grossProfit: item.grossProfit || 0,
+      otherIncome: item.otherIncome || 0,
+      expenses: item.expenses || 0,
+      netProfit: item.netProfit || 0,
+    }));
+  }, [profitSummaryData]);
 
   // System colors for charts
   const chartColors = {
@@ -253,7 +286,7 @@ const Reports = () => {
                         <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip
                           formatter={(value, name) => [
-                            `$${value.toLocaleString()}`,
+                            formatCurrency(value),
                             name === "sales"
                               ? "فروش"
                               : name === "paid"
@@ -292,7 +325,7 @@ const Reports = () => {
                         <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip
                           formatter={(value, name) => [
-                            `$${value.toLocaleString()}`,
+                            formatCurrency(value),
                             name === "paid" ? "پرداخت شده" : "بدهی",
                           ]}
                           labelStyle={{ color: "#374151" }}
@@ -369,7 +402,94 @@ const Reports = () => {
             </div>
           )}
 
-          {!["sales", "inventory"].includes(selectedReport) && (
+          {selectedReport === "profit" && (
+            <div className="space-y-6">
+              {profitSummaryLoading || netProfitLoading || profitStatsLoading ? (
+                <div className="text-center text-gray-500">
+                  در حال بارگذاری داده های سود و زیان...
+                </div>
+              ) : profitChartData.length === 0 ? (
+                <div className="text-center text-gray-500">
+                  هیچ داده سود و زیانی برای دوره انتخاب شده یافت نشد.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Net Profit Trend Chart */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                      روند سود خالص
+                    </h4>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart data={profitChartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="period"
+                          tick={{ fontSize: 12 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip
+                          formatter={(value) => [
+                            `${formatNumber(parseFloat(value))} افغانی`,
+                          ]}
+                          labelStyle={{ color: "#374151" }}
+                        />
+                        <Legend />
+                        <Bar 
+                          dataKey="netProfit" 
+                          fill={(entry) => {
+                            const value = entry.netProfit || 0;
+                            return value >= 0 ? "#10B981" : "#EF4444";
+                          }}
+                          name="سود خالص"
+                        >
+                          {profitChartData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.netProfit >= 0 ? "#10B981" : "#EF4444"} 
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Gross Profit and Income Chart */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                      سود ناخالص و درآمد دیگر
+                    </h4>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart data={profitChartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="period"
+                          tick={{ fontSize: 12 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip
+                          formatter={(value) => [
+                            `${formatNumber(parseFloat(value))} افغانی`,
+                          ]}
+                          labelStyle={{ color: "#374151" }}
+                        />
+                        <Legend />
+                        <Bar dataKey="grossProfit" fill="#3B82F6" name="سود ناخالص" />
+                        <Bar dataKey="otherIncome" fill="#10B981" name="درآمد دیگر" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!["sales", "inventory", "profit"].includes(selectedReport) && (
             <div className="text-center py-12">
               <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -383,7 +503,7 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards for Sales */}
       {selectedReport === "sales" && salesReportsData?.data?.totals && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -394,7 +514,7 @@ const Reports = () => {
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">مجموع فروش</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${salesReportsData.data.totals.totalSales.toLocaleString()}
+                  {formatCurrency(salesReportsData.data.totals.totalSales)}
                 </p>
               </div>
             </div>
@@ -410,7 +530,7 @@ const Reports = () => {
                   مجموع پرداخت شده
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${salesReportsData.data.totals.totalPaid.toLocaleString()}
+                  {formatCurrency(salesReportsData.data.totals.totalPaid)}
                 </p>
               </div>
             </div>
@@ -424,7 +544,76 @@ const Reports = () => {
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">مجموع بدهی</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${salesReportsData.data.totals.totalDue.toLocaleString()}
+                  {formatCurrency(salesReportsData.data.totals.totalDue)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Summary cards for Profit */}
+      {selectedReport === "profit" && netProfitData?.data && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-blue-500">
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">سود ناخالص</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatNumber(netProfitData.data.grossProfit || 0)} افغانی
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-green-500">
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">درآمد دیگر</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatNumber(netProfitData.data.otherIncome || 0)} افغانی
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-red-500">
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">هزینه ها</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatNumber(netProfitData.data.expenses || 0)} افغانی
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className={`p-3 rounded-full ${
+                (netProfitData.data.netProfit || 0) >= 0
+                  ? "bg-emerald-500"
+                  : "bg-red-500"
+              }`}>
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">سود خالص</p>
+                <p className={`text-2xl font-bold ${
+                  (netProfitData.data.netProfit || 0) >= 0
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                }`}>
+                  {formatNumber(netProfitData.data.netProfit || 0)} افغانی
                 </p>
               </div>
             </div>

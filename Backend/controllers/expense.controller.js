@@ -262,9 +262,13 @@ exports.createExpense = asyncHandler(async (req, res, next) => {
       { session }
     );
 
-    // Update account balance
-    moneyAccount.currentBalance = (moneyAccount.currentBalance || 0) - Math.abs(amount);
-    await moneyAccount.save({ session });
+    // Update account balance (decrease by expense amount)
+    // Reload to ensure we have the latest balance in case of concurrent transactions
+    await Account.findByIdAndUpdate(
+      paidFromAccount,
+      { $inc: { currentBalance: -Math.abs(amount) } },
+      { session }
+    );
 
     // Audit log
     await AuditLog.create(
@@ -367,12 +371,14 @@ exports.updateExpense = asyncHandler(async (req, res, next) => {
 
     // Reverse existing transaction if present
     if (existingTxn && !existingTxn.reversed) {
-      // credit back the old amount to the old account
-      const oldAccount = await Account.findOne({ _id: existingTxn.account }, null, { session });
-      if (oldAccount) {
-        oldAccount.currentBalance = (oldAccount.currentBalance || 0) + Math.abs(existingTxn.amount);
-        await oldAccount.save({ session });
-      }
+      // Credit back the old amount to the old account using atomic increment
+      const oldAccountId = existingTxn.account.toString();
+      // existingTxn.amount is negative, so Math.abs gives us the positive amount to add back
+      await Account.findByIdAndUpdate(
+        oldAccountId,
+        { $inc: { currentBalance: Math.abs(existingTxn.amount) } },
+        { session }
+      );
 
       const reversal = await AccountTransaction.create(
         [
@@ -380,7 +386,7 @@ exports.updateExpense = asyncHandler(async (req, res, next) => {
             account: existingTxn.account,
             date: new Date(),
             transactionType: 'Expense',
-            amount: Math.abs(existingTxn.amount),
+            amount: Math.abs(existingTxn.amount), // Positive amount to reverse the negative
             referenceType: 'expense',
             referenceId: expense._id,
             description: `Reversal of expense txn ${existingTxn._id.toString()}`,
@@ -407,6 +413,13 @@ exports.updateExpense = asyncHandler(async (req, res, next) => {
     await expense.save({ session });
 
     // Post new transaction
+    // Get category name for auto-generated description
+    const updatedCategoryDoc = await Category.findById(expense.category, null, { session });
+    const categoryName = updatedCategoryDoc ? updatedCategoryDoc.name : 'هزینه';
+    
+    // Auto-generate description from expense data
+    const autoDescription = `هزینه: ${categoryName}${expense.amount ? ` - مبلغ: ${expense.amount.toLocaleString()} افغانی` : ''}`;
+    
     const txn = await AccountTransaction.create(
       [
         {
@@ -416,16 +429,19 @@ exports.updateExpense = asyncHandler(async (req, res, next) => {
           amount: -Math.abs(expense.amount),
           referenceType: 'expense',
           referenceId: expense._id,
-          description: description || `Expense update`,
+          description: autoDescription,
           created_by: req.user._id,
         },
       ],
       { session }
     );
 
-    // Decrease new account balance
-    moneyAccount.currentBalance = (moneyAccount.currentBalance || 0) - Math.abs(expense.amount);
-    await moneyAccount.save({ session });
+    // Decrease new account balance using atomic increment
+    await Account.findByIdAndUpdate(
+      newPaidFromAccount,
+      { $inc: { currentBalance: -Math.abs(expense.amount) } },
+      { session }
+    );
 
     // Audit log
     await AuditLog.create(
@@ -484,19 +500,27 @@ exports.deleteExpense = asyncHandler(async (req, res, next) => {
 
     const oldData = expense.toObject();
 
-    // Reverse any existing txn
+    // Find the LATEST non-reversed transaction (to handle updates correctly)
     const existingTxn = await AccountTransaction.findOne(
-      { referenceType: 'expense', referenceId: expense._id, isDeleted: false },
+      { 
+        referenceType: 'expense', 
+        referenceId: expense._id, 
+        isDeleted: false,
+        $or: [{ reversed: false }, { reversed: { $exists: false } }]
+      },
       null,
-      { session }
+      { session, sort: { createdAt: -1 } } // Get the latest transaction
     );
 
-    if (existingTxn && !existingTxn.reversed) {
-      const account = await Account.findOne({ _id: existingTxn.account }, null, { session });
-      if (account) {
-        account.currentBalance = (account.currentBalance || 0) + Math.abs(existingTxn.amount);
-        await account.save({ session });
-      }
+    if (existingTxn) {
+      // Credit back the amount to the account using atomic increment
+      const accountId = existingTxn.account.toString();
+      // existingTxn.amount is negative, so Math.abs gives us the positive amount to add back
+      await Account.findByIdAndUpdate(
+        accountId,
+        { $inc: { currentBalance: Math.abs(existingTxn.amount) } },
+        { session }
+      );
 
       const reversal = await AccountTransaction.create(
         [
@@ -504,7 +528,7 @@ exports.deleteExpense = asyncHandler(async (req, res, next) => {
             account: existingTxn.account,
             date: new Date(),
             transactionType: 'Expense',
-            amount: Math.abs(existingTxn.amount),
+            amount: Math.abs(existingTxn.amount), // Positive amount to reverse the negative
             referenceType: 'expense',
             referenceId: expense._id,
             description: `Reversal of expense txn ${existingTxn._id.toString()} (delete)`,

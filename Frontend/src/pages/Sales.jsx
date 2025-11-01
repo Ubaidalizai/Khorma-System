@@ -13,7 +13,7 @@ import {
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import Button from "../components/Button";
-import { formatCurrency } from "../utilies/helper";
+import { formatCurrency, formatNumber } from "../utilies/helper";
 import Modal from "./../components/Modal";
 import { useForm } from "react-hook-form";
 import {
@@ -357,7 +357,7 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-600">مجموع فروش</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.totalSales}
+                {formatNumber(stats.totalSales || 0)}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
@@ -371,7 +371,7 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-600">مجموع عواید</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(stats.totalRevenue?.toFixed(2))}
+                {formatCurrency(stats.totalRevenue || 0)}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -385,7 +385,7 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-600">مبلغ جمع آوری شده</p>
               <p className="text-2xl font-bold text-green-600 mt-1">
-                {formatCurrency(stats.totalPaid?.toFixed(2))}
+                {formatCurrency(stats.totalPaid || 0)}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -399,7 +399,7 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
               <p className="text-2xl font-bold text-red-600 mt-1">
-                {formatCurrency(stats.totalOwed?.toFixed(2))}
+                {formatCurrency(stats.totalOwed || 0)}
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
@@ -527,13 +527,13 @@ const Sales = () => {
                         "نامشخص"}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-purple-600">
-                      {formatCurrency(sale.totalAmount?.toFixed(2))}
+                      {formatCurrency(sale.totalAmount || 0)}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-blue-600">
-                      {formatCurrency(sale.paidAmount?.toFixed(2))}
+                      {formatCurrency(sale.paidAmount || 0)}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-orange-600">
-                      {formatCurrency(sale.dueAmount?.toFixed(2))}
+                      {formatCurrency(sale.dueAmount || 0)}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span
@@ -680,25 +680,25 @@ const Sales = () => {
                   <div className="bg-purple-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">قیمت مجموعی</p>
                     <p className="text-lg font-semibold text-purple-600">
-                      {formatCurrency(selectedSale.totalAmount?.toFixed(2))}
+                      {formatCurrency(selectedSale.totalAmount || 0)}
                     </p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">مبلغ پرداخت شده</p>
                     <p className="text-lg font-semibold text-green-600">
-                      {formatCurrency(selectedSale.paidAmount?.toFixed(2))}
+                      {formatCurrency(selectedSale.paidAmount || 0)}
                     </p>
                   </div>
                   <div className="bg-red-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">مبلغ باقی مانده</p>
                     <p className="text-lg font-semibold text-red-600">
-                      {formatCurrency(selectedSale.dueAmount?.toFixed(2))}
+                      {formatCurrency(selectedSale.dueAmount || 0)}
                     </p>
                   </div>
                   <div className="bg-blue-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">تعداد اجناس</p>
                     <p className="text-lg font-semibold text-blue-600">
-                      {selectedSale.items?.length || 0}
+                      {formatNumber(selectedSale.items?.length || 0)}
                     </p>
                   </div>
                 </div>
@@ -803,10 +803,10 @@ const Sales = () => {
                                 {item.quantity || 0}
                               </td>
                               <td className="px-3 py-2 text-sm text-gray-900">
-                                {formatCurrency(item.unitPrice?.toFixed(2))}
+                                {formatCurrency(item.unitPrice || 0)}
                               </td>
                               <td className="px-3 py-2 text-sm font-medium text-purple-600">
-                                {formatCurrency(item.totalPrice?.toFixed(2))}
+                                {formatCurrency(item.totalPrice || 0)}
                               </td>
                             </tr>
                           ))
@@ -832,7 +832,7 @@ const Sales = () => {
                       <div className="text-right">
                         <div className="text-sm font-semibold text-gray-900">
                           مجموع کل:{" "}
-                          {formatCurrency(selectedSale.totalAmount?.toFixed(2))}
+                          {formatCurrency(selectedSale.totalAmount || 0)}
                         </div>
                       </div>
                     </div>

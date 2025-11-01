@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
+import { formatNumber } from "../utilies/helper";
 import { inputStyle } from "../components/ProductForm";
 import Button from "../components/Button";
 
@@ -268,7 +269,7 @@ export default function Expenses() {
                 <tr key={e._id}>
                   <td>{new Date(e.date).toLocaleDateString()}</td>
                   <td>{e.category?.name || "-"}</td>
-                  <td>{e.amount?.toLocaleString()} افغانی</td>
+                  <td>{formatNumber(e.amount || 0)} افغانی</td>
                   <td>{e.paidFromAccount?.name || "-"}</td>
                   <td>{e.description || "-"}</td>
                   <td>

@@ -1,22 +1,32 @@
+// Convert Western numerals (0-9) to Persian/Dari numerals (٠-٩)
+export function toPersianDigits(num) {
+  const persianDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return num.toString().replace(/\d/g, (digit) => persianDigits[parseInt(digit)]);
+}
+
+// Format number with Persian digits and comma separators
+export function formatNumberWithPersianDigits(num) {
+  if (isNaN(num) || num === null || num === undefined) return '٠';
+  
+  // Format with comma separators (using Western digits first)
+  const formatted = Math.abs(num).toLocaleString('en-US');
+  
+  // Convert to Persian digits
+  return toPersianDigits(formatted);
+}
+
 export function formatCurrency(amount) {
-  if (isNaN(amount)) return "؋0.00";
+  if (isNaN(amount) || amount === null || amount === undefined) return "؋٠";
 
-  // Format large numbers with Dari suffixes
-  const formatNumber = (num) => {
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + " میلیارد";
-    }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + " میلیون";
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, "") + " هزار";
-    }
-    return num.toString();
-  };
-
-  const formattedAmount = formatNumber(Math.abs(amount));
+  // Format with full digits and comma separators
+  const formattedAmount = formatNumberWithPersianDigits(Math.abs(amount));
   const sign = amount < 0 ? "-" : "";
 
   return `${sign}؋${formattedAmount}`;
+}
+
+// Format number without currency symbol (for general use)
+export function formatNumber(num) {
+  if (isNaN(num) || num === null || num === undefined) return '٠';
+  return formatNumberWithPersianDigits(num);
 }

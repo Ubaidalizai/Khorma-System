@@ -48,6 +48,9 @@ import {
   fetchSales,
   fetchSalesReports,
   fetchStock,
+  fetchNetProfit,
+  fetchProfitStats,
+  fetchProfitSummary,
   fetchStockItem,
   fetchStockTransfers,
   fetchStore,
@@ -549,6 +552,32 @@ export const useSalesReports = (params = {}) => {
   return useQuery({
     queryKey: ["salesReports", params],
     queryFn: () => fetchSalesReports(params),
+    enabled: !!(params.startDate && params.endDate),
+    keepPreviousData: true,
+  });
+};
+
+// Profit Reports
+export const useNetProfit = (params = {}) => {
+  return useQuery({
+    queryKey: ["netProfit", params],
+    queryFn: () => fetchNetProfit(params),
+    keepPreviousData: true,
+  });
+};
+
+export const useProfitStats = (params = {}) => {
+  return useQuery({
+    queryKey: ["profitStats", params],
+    queryFn: () => fetchProfitStats(params),
+    keepPreviousData: true,
+  });
+};
+
+export const useProfitSummary = (params = {}) => {
+  return useQuery({
+    queryKey: ["profitSummary", params],
+    queryFn: () => fetchProfitSummary(params),
     enabled: !!(params.startDate && params.endDate),
     keepPreviousData: true,
   });

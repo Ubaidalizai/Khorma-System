@@ -38,6 +38,7 @@ const headers = [
 ];
 
 import { useProduct } from "../services/useApi";
+import { formatNumber } from "../utilies/helper";
 
 function Product() {
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProdcut();
@@ -230,7 +231,7 @@ function Product() {
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
                     {selectedPro.latestPurchasePrice
-                      ? `${selectedPro.latestPurchasePrice.toLocaleString()} افغانی`
+                      ? `${formatNumber(selectedPro.latestPurchasePrice)} افغانی`
                       : "نامشخص"}
                   </p>
                 </div>

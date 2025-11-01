@@ -25,6 +25,7 @@ import {
   useStoreStocks,
   useUpdateInventory,
 } from "../services/useApi";
+import { formatNumber } from "../utilies/helper";
 // Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
   { title: "نمبر بچ" },
@@ -142,8 +143,7 @@ function Store() {
                   : "—"}
               </TableColumn>
               <TableColumn>
-                {el?.purchasePricePerBaseUnit?.toLocaleString?.() ||
-                  el?.purchasePricePerBaseUnit}
+                {formatNumber(el?.purchasePricePerBaseUnit ?? 0)}
               </TableColumn>
               <TableColumn>{el?.unit?.name || el?.unit}</TableColumn>
               <TableColumn className="font-semibold">

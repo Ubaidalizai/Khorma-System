@@ -284,6 +284,13 @@ export const API_ENDPOINTS = {
     SUMMARY: "/income/summary",
   },
 
+  // Profit
+  PROFIT: {
+    NET: "/profit/net",
+    STATS: "/profit/stats",
+    SUMMARY: "/profit/summary",
+  },
+
   // Dashboard Statistics
   DASHBOARD: {
     STATS: "/dashboard/stats",
