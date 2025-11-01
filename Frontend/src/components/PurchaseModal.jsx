@@ -16,9 +16,10 @@ import {
 } from "../services/useApi";
 import { formatCurrency } from "../utilies/helper";
 import GloableModal from "./GloableModal";
+import { toast } from "react-toastify";
 
 const PurchaseModal = ({ isOpen, onClose }) => {
-  const { register, handleSubmit, watch, reset, setValue } = useForm();
+  const { register, handleSubmit, watch, reset } = useForm();
   const { data: suppliers } = useSuppliers();
   const { data: products } = useProducts();
   const { data: units } = useUnits();
@@ -68,7 +69,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
       currentItem.quantity <= 0 ||
       currentItem.unitPrice <= 0
     ) {
-      alert("لطفاً تمام فیلدهای مورد نیاز را پر کنید");
+      toast.error("لطفاً تمام فیلدهای مورد نیاز را پر کنید");
       return;
     }
 
@@ -94,7 +95,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
   const onSubmit = (data) => {
     if (items.length === 0) {
-      alert("لطفاً حداقل یک جنس اضافه کنید");
+      toast.error("لطفاً حداقل یک جنس اضافه کنید");
       return;
     }
 

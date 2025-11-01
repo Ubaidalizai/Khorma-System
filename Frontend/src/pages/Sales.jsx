@@ -51,6 +51,8 @@ const Sales = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [showAddSaleModal, setShowAddSaleModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [saleToEdit, setSaleToEdit] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [selectedAccount, setSelectedAccount] = useState("");
@@ -140,6 +142,8 @@ const Sales = () => {
   const handleEditSale = (sale) => {
     console.log("Edit sale:", sale);
     setSelectedSaleId(sale._id);
+    setEditMode(true);
+    setSaleToEdit(sale);
     setShowAddSaleModal(true);
   };
 
@@ -348,7 +352,7 @@ const Sales = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مجموع فروش</p>
@@ -362,7 +366,7 @@ const Sales = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مجموع عواید</p>
@@ -376,7 +380,7 @@ const Sales = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مبلغ جمع آوری شده</p>
@@ -390,7 +394,7 @@ const Sales = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مبلغ باقی مانده</p>
@@ -406,7 +410,7 @@ const Sales = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white w-full  rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white w-full  rounded-lg border border-gray-200 p-6">
         <div className=" flex gap-x-3">
           <div>
             <input
@@ -625,14 +629,21 @@ const Sales = () => {
         setOpen={setShowAddSaleModal}
         isClose={true}
       >
-        <div className="bg-white  w-[90%] max-h-[90vh] rounded-md mx-auto overflow-y-auto">
+        <div className="bg-white w-[700px]  lg:w-[950px] max-h-[90vh] rounded-md mx-auto overflow-y-auto">
           <SaleForm
             register={register}
             handleSubmit={handleSubmit}
             watch={watch}
             setValue={setValue}
-            onClose={() => setShowAddSaleModal(false)}
+            onClose={() => {
+              setShowAddSaleModal(false);
+              setEditMode(false);
+              setSaleToEdit(null);
+              setSelectedSaleId(null);
+            }}
             onSubmit={handleCreateSale}
+            editMode={editMode}
+            saleToEdit={saleToEdit}
           />
         </div>
       </GloableModal>

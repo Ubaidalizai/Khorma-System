@@ -143,13 +143,13 @@ export const useForgotPassword = () => {
 
 // ✅ Get all inventory items
 export const useProduct = (opts = {}) => {
-  const { search, includeDeleted } = opts;
+  const { search, includeDeleted, page = 1, limit = 10 } = opts;
   return useQuery({
     queryKey: [
       "product",
-      { search: search || "", includeDeleted: !!includeDeleted },
+      { search: search || "", includeDeleted: !!includeDeleted, page, limit },
     ],
-    queryFn: () => fetchProducts({ search, includeDeleted }),
+    queryFn: () => fetchProducts({ search, includeDeleted, page, limit }),
     keepPreviousData: true,
   });
 };
@@ -340,7 +340,13 @@ export const useCreatePurchase = () => {
   return useMutation({
     mutationFn: createPurchase,
     mutationKey: ["newPurchase"],
-    onSuccess: () => queryClient.invalidateQueries(["allPurchases"]),
+    onSuccess: () => {
+      toast.success("خرید شما موفقانه اجرا شد، تشکر...");
+      queryClient.invalidateQueries(["allPurchases"]);
+    },
+    onError: () => {
+      toast.error("در خریداری شما مشکلی است");
+    },
   });
 };
 

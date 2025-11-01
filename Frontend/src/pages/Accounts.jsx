@@ -177,7 +177,7 @@ const Accounts = () => {
       </div>
 
       {/* Type filter and search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg  border border-gray-200 p-6">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex flex-wrap gap-2">
             {[
@@ -415,7 +415,7 @@ const Accounts = () => {
             </div>
             <form
               onSubmit={handleSubmit(onSubmitAccount)}
-              className="p-6 space-y-2"
+              className="p-6 space-y-2 grid grid-cols-2 gap-x-2"
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -477,11 +477,12 @@ const Accounts = () => {
                   defaultValue={0}
                   {...register("openingBalance", { valueAsNumber: true })}
                 />
-                <p className='text-xs text-gray-500 mt-1'>
-                  (موجودی فعلی به صورت خودکار برابر با موجودی اولیه تنظیم می‌شود)
+                <p className="text-xs text-gray-500 mt-1">
+                  (موجودی فعلی به صورت خودکار برابر با موجودی اولیه تنظیم
+                  می‌شود)
                 </p>
               </div>
-              <div>
+              <div className=" col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   ارز
                 </label>
@@ -491,14 +492,14 @@ const Accounts = () => {
                   {...register("currency")}
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="col-span-2 space-x-2 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowAccountModal(false);
                     setEditingAccount(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-sm cursor-pointer hover:bg-gray-50"
+                  className="px-4 py-2  border border-gray-300 rounded-sm cursor-pointer hover:bg-gray-50"
                 >
                   انصراف
                 </button>
