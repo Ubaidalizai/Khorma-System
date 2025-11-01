@@ -144,6 +144,16 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/stock-transfers/${id}`,
   },
 
+  // Stocks
+  STOCKS: {
+    LIST: "/stocks",
+    DETAIL: (id) => `/stocks/${id}`,
+    CREATE: "/stocks",
+    UPDATE: (id) => `/stocks/${id}`,
+    DELETE: (id) => `/stocks/${id}`,
+    REPORTS: "/stocks/reports",
+  },
+
   // Purchases
   PURCHASES: {
     LIST: "/purchases",
@@ -152,6 +162,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id) => `/purchases/${id}`,
     DELETE: (id) => `/purchases/${id}`,
     RESTORE: (id) => `/purchases/${id}/restore`,
+    REPORTS: "/purchases/reports",
   },
 
   // Sales
@@ -166,6 +177,7 @@ export const API_ENDPOINTS = {
   // Categories (for filters)
   CATEGORIES: {
     LIST: "/categories",
+    BY_TYPE: (type) => `/categories/type/${type}`,
     DETAIL: (id) => `/categories/${id}`,
     CREATE: "/categories",
     UPDATE: (id) => `/categories/${id}`,
@@ -207,6 +219,8 @@ export const API_ENDPOINTS = {
     UPDATE: (id) => `/accounts/${id}`,
     DELETE: (id) => `/accounts/${id}`,
     LEDGER: (id) => `/accounts/${id}/ledger`,
+    BALANCES: "/accounts/reports/balances",
+    CASHFLOW: "/accounts/reports/cashflow",
   },
 
   // Account Transactions

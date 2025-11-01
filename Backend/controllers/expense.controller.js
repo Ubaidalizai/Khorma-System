@@ -749,7 +749,7 @@ exports.getExpenseStats = asyncHandler(async (req, res, next) => {
 // @desc    Get expense summary by date range
 // @route   GET /api/v1/expenses/summary
 exports.getExpenseSummary = asyncHandler(async (req, res, next) => {
-  const { startDate, endDate, groupBy = 'day' } = req.query;
+  const { startDate, endDate, groupBy = 'day', category } = req.query;
 
   if (!startDate || !endDate) {
     throw new AppError('Start date and end date are required', 400);
@@ -762,6 +762,14 @@ exports.getExpenseSummary = asyncHandler(async (req, res, next) => {
       $lte: new Date(endDate),
     },
   };
+
+  // Add category filter if provided
+  if (category) {
+    if (!mongoose.Types.ObjectId.isValid(category)) {
+      throw new AppError('Invalid category ID', 400);
+    }
+    matchStage.category = new mongoose.Types.ObjectId(category);
+  }
 
   let groupStage;
   switch (groupBy) {
@@ -809,12 +817,38 @@ exports.getExpenseSummary = asyncHandler(async (req, res, next) => {
     { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 } },
   ]);
 
+  // Format dates for frontend (similar to purchase/sales reports)
+  const formattedSummary = summary.map(item => {
+    let dateLabel;
+    if (groupBy === 'day') {
+      dateLabel = `${item._id.year}-${String(item._id.month).padStart(2, '0')}-${String(item._id.day).padStart(2, '0')}`;
+    } else if (groupBy === 'week') {
+      dateLabel = `Week ${item._id.week}, ${item._id.year}`;
+    } else if (groupBy === 'month') {
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      dateLabel = `${monthNames[item._id.month - 1]} ${item._id.year}`;
+    }
+    
+    return {
+      date: dateLabel,
+      expenses: item.totalAmount,
+      count: item.count,
+    };
+  });
+
   res.status(200).json({
     success: true,
     data: {
       period: { startDate, endDate },
       groupBy,
-      summary,
+      summary: formattedSummary,
+      totals: {
+        totalExpenses: formattedSummary.reduce((sum, item) => sum + item.expenses, 0),
+        totalCount: formattedSummary.reduce((sum, item) => sum + item.count, 0),
+      },
     },
   });
 });

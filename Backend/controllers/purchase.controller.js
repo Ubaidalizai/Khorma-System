@@ -869,3 +869,112 @@ exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
     throw new AppError(err.message || 'Failed to record payment', 500);
   }
 });
+
+/**
+ * @desc    Get purchase reports by date range (daily/monthly)
+ * @route   GET /api/v1/purchases/reports
+ */
+exports.getPurchaseReports = asyncHandler(async (req, res, next) => {
+  const { startDate, endDate, groupBy = 'day' } = req.query;
+
+  if (!startDate || !endDate) {
+    throw new AppError('Start date and end date are required', 400);
+  }
+
+  const matchStage = {
+    isDeleted: false,
+    purchaseDate: {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    },
+  };
+
+  let groupStage;
+  
+  switch (groupBy) {
+    case 'day':
+      groupStage = {
+        _id: {
+          year: { $year: '$purchaseDate' },
+          month: { $month: '$purchaseDate' },
+          day: { $dayOfMonth: '$purchaseDate' },
+        },
+      };
+      break;
+    case 'week':
+      groupStage = {
+        _id: {
+          year: { $year: '$purchaseDate' },
+          week: { $week: '$purchaseDate' },
+        },
+      };
+      break;
+    case 'month':
+      groupStage = {
+        _id: {
+          year: { $year: '$purchaseDate' },
+          month: { $month: '$purchaseDate' },
+        },
+      };
+      break;
+    default:
+      throw new AppError(
+        'Invalid groupBy parameter. Must be day, week, or month',
+        400
+      );
+  }
+
+  // Get purchases summary
+  const purchasesSummary = await Purchase.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        ...groupStage,
+        totalPurchases: { $sum: '$totalAmount' },
+        totalPaid: { $sum: '$paidAmount' },
+        totalDue: { $sum: '$dueAmount' },
+        purchasesCount: { $sum: 1 },
+      },
+    },
+    { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 } },
+  ]);
+
+  // Format dates for frontend
+  const formattedSummary = purchasesSummary.map(item => {
+    let dateLabel;
+    if (groupBy === 'day') {
+      dateLabel = `${item._id.year}-${String(item._id.month).padStart(2, '0')}-${String(item._id.day).padStart(2, '0')}`;
+    } else if (groupBy === 'week') {
+      dateLabel = `Week ${item._id.week}, ${item._id.year}`;
+    } else if (groupBy === 'month') {
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      dateLabel = `${monthNames[item._id.month - 1]} ${item._id.year}`;
+    }
+    
+    return {
+      date: dateLabel,
+      purchases: item.totalPurchases,
+      paid: item.totalPaid,
+      due: item.totalDue,
+      count: item.purchasesCount,
+    };
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      period: { startDate, endDate },
+      groupBy,
+      summary: formattedSummary,
+      totals: {
+        totalPurchases: formattedSummary.reduce((sum, item) => sum + item.purchases, 0),
+        totalPaid: formattedSummary.reduce((sum, item) => sum + item.paid, 0),
+        totalDue: formattedSummary.reduce((sum, item) => sum + item.due, 0),
+        totalCount: formattedSummary.reduce((sum, item) => sum + item.count, 0),
+      },
+    },
+  });
+});

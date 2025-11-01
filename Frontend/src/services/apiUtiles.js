@@ -527,6 +527,71 @@ export const fetchSalesReports = async (params = {}) => {
   return await apiRequest(url);
 };
 
+// Fetch purchase reports with date range and grouping
+export const fetchPurchaseReports = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.groupBy) query.set("groupBy", params.groupBy);
+
+  const url = query.toString()
+    ? `${API_ENDPOINTS.PURCHASES.REPORTS}?${query.toString()}`
+    : API_ENDPOINTS.PURCHASES.REPORTS;
+
+  return await apiRequest(url);
+};
+
+// Fetch expense summary with date range and grouping
+export const fetchExpenseSummary = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.groupBy) query.set("groupBy", params.groupBy);
+  if (params.category) query.set("category", params.category);
+
+  const url = query.toString()
+    ? `${API_ENDPOINTS.EXPENSES.SUMMARY}?${query.toString()}`
+    : API_ENDPOINTS.EXPENSES.SUMMARY;
+
+  return await apiRequest(url);
+};
+
+// Fetch categories by type (expense, income, both)
+export const fetchCategoriesByType = async (type = "expense") => {
+  return await apiRequest(API_ENDPOINTS.CATEGORIES.BY_TYPE(type));
+};
+
+// Account Reports
+export const fetchAccountBalances = async () => {
+  return await apiRequest(API_ENDPOINTS.ACCOUNTS.BALANCES);
+};
+
+export const fetchCashFlowReport = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.groupBy) query.set("groupBy", params.groupBy);
+
+  const url = query.toString()
+    ? `${API_ENDPOINTS.ACCOUNTS.CASHFLOW}?${query.toString()}`
+    : API_ENDPOINTS.ACCOUNTS.CASHFLOW;
+
+  return await apiRequest(url);
+};
+
+// Stock Reports
+export const fetchStockReport = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.location) query.set("location", params.location);
+  if (params.stockLevel) query.set("stockLevel", params.stockLevel);
+
+  const url = query.toString()
+    ? `${API_ENDPOINTS.STOCKS.REPORTS}?${query.toString()}`
+    : API_ENDPOINTS.STOCKS.REPORTS;
+
+  return await apiRequest(url);
+};
+
 // Profit Reports
 export const fetchNetProfit = async (params = {}) => {
   const query = new URLSearchParams();

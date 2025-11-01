@@ -47,6 +47,12 @@ import {
   fetchSale,
   fetchSales,
   fetchSalesReports,
+  fetchPurchaseReports,
+  fetchExpenseSummary,
+  fetchCategoriesByType,
+  fetchAccountBalances,
+  fetchCashFlowReport,
+  fetchStockReport,
   fetchStock,
   fetchNetProfit,
   fetchProfitStats,
@@ -553,6 +559,63 @@ export const useSalesReports = (params = {}) => {
     queryKey: ["salesReports", params],
     queryFn: () => fetchSalesReports(params),
     enabled: !!(params.startDate && params.endDate),
+    keepPreviousData: true,
+  });
+};
+
+// Purchase Reports
+export const usePurchaseReports = (params = {}) => {
+  return useQuery({
+    queryKey: ["purchaseReports", params],
+    queryFn: () => fetchPurchaseReports(params),
+    enabled: !!(params.startDate && params.endDate),
+    keepPreviousData: true,
+  });
+};
+
+// Expense Summary
+export const useExpenseSummary = (params = {}) => {
+  return useQuery({
+    queryKey: ["expenseSummary", params],
+    queryFn: () => fetchExpenseSummary(params),
+    enabled: !!(params.startDate && params.endDate),
+    keepPreviousData: true,
+  });
+};
+
+// Categories by type (for expense/income filters)
+export const useCategoriesByType = (type = "expense") => {
+  return useQuery({
+    queryKey: ["categoriesByType", type],
+    queryFn: () => fetchCategoriesByType(type),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
+
+// Account Reports
+export const useAccountBalances = () => {
+  return useQuery({
+    queryKey: ["accountBalances"],
+    queryFn: () => fetchAccountBalances(),
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+  });
+};
+
+export const useCashFlowReport = (params = {}) => {
+  return useQuery({
+    queryKey: ["cashFlowReport", params],
+    queryFn: () => fetchCashFlowReport(params),
+    enabled: !!(params.startDate && params.endDate),
+    keepPreviousData: true,
+  });
+};
+
+// Stock Reports
+export const useStockReport = (params = {}) => {
+  return useQuery({
+    queryKey: ["stockReport", params],
+    queryFn: () => fetchStockReport(params),
+    staleTime: 1 * 60 * 1000, // Cache for 1 minute
     keepPreviousData: true,
   });
 };
