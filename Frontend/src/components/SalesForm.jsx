@@ -40,6 +40,14 @@ export default function SalesForm({
   const { data: units, isLoading: isLoadingUnits } = useUnits();
   const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
   const { data: employees, isLoading: isLoadingEmployees } = useEmployees();
+
+  const getProductName = (id) => {
+    return products?.data?.find((p) => p._id === id)?.name || id;
+  };
+
+  const getUnitName = (id) => {
+    return units?.data?.find((u) => u._id === id)?.name || id;
+  };
   const handleAddItem = () => {
     const quantity = Number(currentItem.quantity) || 0;
     const unitPrice = Number(currentItem.unitPrice) || 0;
@@ -300,8 +308,8 @@ export default function SalesForm({
                 className={inputStyle}
               >
                 <option value="">Unit</option>
-                {units?.data?.map((u, index) => (
-                  <option key={index} value={u.id}>
+                {units?.data?.map((u) => (
+                  <option key={u._id} value={u._id}>
                     {u.name}
                   </option>
                 ))}
@@ -358,12 +366,16 @@ export default function SalesForm({
                 <TableBody>
                   {items?.map((item, index) => (
                     <TableRow key={index}>
-                      <TableColumn>{item.product}</TableColumn>
-                      <TableColumn>{item.unit}</TableColumn>
+                      <TableColumn>{getProductName(item.product)}</TableColumn>
+                      <TableColumn>{getUnitName(item.unit)}</TableColumn>
                       <TableColumn>{item.quantity}</TableColumn>
                       <TableColumn>{item.batchNumber}</TableColumn>
-                      <TableColumn>{item.unitPrice}</TableColumn>
-                      <TableColumn>{item.total}</TableColumn>
+                      <TableColumn>
+                        {formatCurrency(item.unitPrice)}
+                      </TableColumn>
+                      <TableColumn>
+                        {formatCurrency(item.totalPrice)}
+                      </TableColumn>
                       <TableColumn>
                         <button
                           onClick={() => handleRemove(index)}
@@ -429,7 +441,7 @@ export default function SalesForm({
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">مجموع نسبی:</span>
                 <span className="font-semibold">
-                  {console.log(formatCurrency(summary().subtotal))}
+                  {formatCurrency(summary().subtotal)}
                 </span>
               </div>
               <div className="flex justify-between">

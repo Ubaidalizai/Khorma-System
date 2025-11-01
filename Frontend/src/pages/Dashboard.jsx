@@ -31,10 +31,10 @@ import GloableModal from "../components/GloableModal";
 const Dashboard = () => {
   const headers = [
     { title: "حساب" },
-    { title: "نوع انتقال" },
-    { title: "انتقال دهنده" },
+    { title: "نوع" },
     { title: "تاریخ" },
     { title: "مبلغ" },
+    { title: "مرجع" },
     { title: "عملیات" },
   ];
 
@@ -424,7 +424,7 @@ const Dashboard = () => {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "var(--space-6)",
+        gap: "10px",
       }}
     >
       {/* Page header */}
@@ -448,10 +448,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats grid */}
-      <div
-        className="grid  grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-        style={{ gap: "var(--space-6)" }}
-      >
+      <div className="grid  grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3">
         <StatCard
           title="کل محصولات"
           value={statsLoading || productsLoading ? "..." : stats.totalProducts}
@@ -497,8 +494,8 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="bg-white rounded-lg  border border-gray-100">
-        <div className="border-b border-gray-200">
+      <div className="bg-white rounded-lg  border border-slate-100">
+        <div className="border-b border-slate-200">
           <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("transaction")}
@@ -525,9 +522,9 @@ const Dashboard = () => {
         </div>
       </div>
       {activeTab === "transaction" && (
-        <div className="card">
+        <div className="">
           {/* Search and Pagination Row */}
-          <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between bg-white rounded-lg">
             <div className="flex items-center gap-4">
               <div className="relative">
                 <input
@@ -570,7 +567,27 @@ const Dashboard = () => {
                     (transaction, index) => (
                       <TableRow key={index}>
                         <TableColumn className="px-4 py-2">
-                          {transaction.account?.name || "Unknown"}
+                          {transaction.transactionType === "Transfer" ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-red-600 font-semibold">
+                                From: {transaction.account?.name || "Unknown"}
+                              </span>
+                              <span className="text-green-600 font-semibold">
+                                To:{" "}
+                                {transaction.pairedAccount?.name || "Unknown"}
+                              </span>
+                            </div>
+                          ) : (
+                            <span
+                              className={`font-semibold ${
+                                (transaction.amount || 0) > 0
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {transaction.account?.name || "Unknown"}
+                            </span>
+                          )}
                         </TableColumn>
                         <TableColumn
                           className={`font-semibold text-center ${getTypeColor(
@@ -582,9 +599,6 @@ const Dashboard = () => {
                           )}
                         </TableColumn>
                         <TableColumn className="px-4">
-                          {transaction.created_by?.name || "Unknown"}
-                        </TableColumn>
-                        <TableColumn className="px-4">
                           {formatTimeAgo(transaction.date)}
                         </TableColumn>
                         <TableColumn
@@ -594,7 +608,26 @@ const Dashboard = () => {
                               : "text-red-600"
                           }`}
                         >
-                          {formatCurrency(transaction.amount || 0)}
+                          {formatCurrency(Math.abs(transaction.amount || 0))}
+                        </TableColumn>
+                        <TableColumn className="px-4">
+                          {transaction.referenceData ? (
+                            <div className="text-sm">
+                              {transaction.referenceData.purchaseNumber && (
+                                <span className="text-blue-600">
+                                  خرید:{" "}
+                                  {transaction.referenceData.purchaseNumber}
+                                </span>
+                              )}
+                              {transaction.referenceData.saleNumber && (
+                                <span className="text-green-600">
+                                  فروش: {transaction.referenceData.saleNumber}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            "-"
+                          )}
                         </TableColumn>
                         <TableColumn className="px-4">
                           <button
@@ -623,6 +656,9 @@ const Dashboard = () => {
                 page={currentPage}
                 limit={transactionLimit}
                 total={recentTransactions?.data?.pagination?.total || 0}
+                totalPages={
+                  recentTransactions?.data?.pagination?.totalPages || 0
+                }
                 onPageChange={setCurrentPage}
                 onRowsPerPageChange={(newLimit) => {
                   setTransactionLimit(newLimit);
@@ -634,13 +670,10 @@ const Dashboard = () => {
         </div>
       )}
       {activeTab === "logs" && (
-        <div className="card">
-          <div className="mb-6 space-y-4 flex  items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-4   items-end">
-              <div className="">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  انتخاب جدول برای نمایش لاگ‌ها
-                </label>
+        <div className="">
+          <div className=" space-x-4 flex  items-center justify-between bg-white">
+            <div className="flex flex-col md:flex-row gap-x-4   items-end">
+              <div className=" w-[200px]">
                 <Select
                   label=""
                   id="table-select"
@@ -650,9 +683,6 @@ const Dashboard = () => {
                 />
               </div>
               <div className="">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  جستجو در لاگ‌ها
-                </label>
                 <div className="relative">
                   <input
                     type="text"

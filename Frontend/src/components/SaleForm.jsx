@@ -1,4 +1,5 @@
 import { CgClose } from "react-icons/cg";
+import { BiTrashAlt } from "react-icons/bi";
 import React, { useState, useEffect } from "react";
 import {
   useProductsFromStock,
@@ -8,97 +9,24 @@ import {
   useBatchesByProduct,
   useEmployeeStocks,
 } from "../services/useApi";
+import Table from "./Table";
+import { formatCurrency } from "../utilies/helper";
+import TableHeader from "./TableHeader";
+import TableBody from "./TableBody";
+import TableRow from "./TableRow";
+import TableColumn from "./TableColumn";
+import Select from "./Select";
 
-// Searchable Select Component
-const SearchableSelect = ({
-  options = [],
-  value,
-  onChange,
-  placeholder = "انتخاب کنید...",
-  searchPlaceholder = "جستجو...",
-  className = "",
-  disabled = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const filteredOptions = (Array.isArray(options) ? options : []).filter(
-    (option) =>
-      option.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      option.label?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const selectedOption = (Array.isArray(options) ? options : []).find(
-    (option) => option._id === value || option.value === value
-  );
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-right flex justify-between items-center ${className}`}
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={disabled}
-      >
-        <span className={selectedOption ? "text-gray-900" : "text-gray-500"}>
-          {selectedOption
-            ? selectedOption.name || selectedOption.label
-            : placeholder}
-        </span>
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
-          <div className="p-2 border-b border-gray-200">
-            <input
-              type="text"
-              placeholder={searchPlaceholder}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-right"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-          <div className="max-h-48 overflow-y-auto">
-            {filteredOptions.length === 0 ? (
-              <div className="px-3 py-2 text-gray-500 text-sm">
-                نتیجه‌ای یافت نشد
-              </div>
-            ) : (
-              filteredOptions.map((option) => (
-                <button
-                  key={option._id || option.value}
-                  type="button"
-                  className="w-full px-3 py-2 text-right hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                  onClick={() => {
-                    onChange(option._id || option.value);
-                    setIsOpen(false);
-                    setSearchTerm("");
-                  }}
-                >
-                  {option.name || option.label}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+const productHeader = [
+  { title: "محصول" },
+  { title: "واحد" },
+  { title: "نمبر بچ" },
+  { title: "تاریخ انقضا" },
+  { title: "تعداد" },
+  { title: "قیمت واحد" },
+  { title: "قیمت مجموعی" },
+  { title: "عملیات" },
+];
 
 function SaleForm({
   register,
@@ -110,9 +38,15 @@ function SaleForm({
   editMode = false,
   saleToEdit = null,
 }) {
-  const [items, setItems] = useState([
-    { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 },
-  ]);
+  const [items, setItems] = useState([]);
+  const [currentItem, setCurrentItem] = useState({
+    product: "",
+    unit: "",
+    batchNumber: "",
+    quantity: 0,
+    unitPrice: 0,
+    expiryDate: "",
+  });
   const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
   const [loading, setLoading] = useState(false);
 
@@ -130,6 +64,7 @@ function SaleForm({
     false
   ); // false = exclude products with zero quantity
   // People accounts (customers/employees) instead of raw people
+
   const { data: customerAccResp, isLoading: customersLoading } = useAccounts({
     type: "customer",
     page: 1,
@@ -166,12 +101,6 @@ function SaleForm({
         ? employeeStockData.data || employeeStockData
         : stockData;
 
-    console.log("SaleForm Debug:");
-    console.log("- selectedEmployee:", selectedEmployee);
-    console.log("- employeeStockData:", employeeStockData);
-    console.log("- stockData:", stockData);
-    console.log("- dataSource:", dataSource);
-
     if (!dataSource || !Array.isArray(dataSource)) return [];
 
     // Group by product ID to get unique products
@@ -179,8 +108,8 @@ function SaleForm({
     dataSource.forEach((stock) => {
       if (stock.product && !productMap.has(stock.product._id)) {
         productMap.set(stock.product._id, {
-          _id: stock.product._id,
-          name: stock.product.name,
+          value: stock.product._id,
+          label: stock.product.name,
         });
       }
     });
@@ -192,9 +121,9 @@ function SaleForm({
 
   // Get batches for selected product - only fetch when product is selected
   // Use employee location if employee is selected
-  const selectedProductId = items[0]?.product;
+  const selectedProductId = currentItem?.product;
   const locationForBatches = selectedEmployee ? "employee" : "store";
-  const { data: batchesData, isLoading: batchesLoading } = useBatchesByProduct(
+  const { data: batchesData } = useBatchesByProduct(
     selectedProductId,
     locationForBatches
   );
@@ -218,6 +147,7 @@ function SaleForm({
           product: item.product?._id || item.product || "",
           unit: item.unit?._id || item.unit || "",
           batchNumber: item.batchNumber || "",
+          expiryDate: item.expiryDate || "",
           quantity: item.quantity || 0,
           unitPrice: item.unitPrice || 0,
         }));
@@ -237,39 +167,26 @@ function SaleForm({
     }
   }, [editMode, saleToEdit, setValue]);
 
-  const addItem = () => {
-    setItems([
-      ...items,
-      { product: "", unit: "", batchNumber: "", quantity: 0, unitPrice: 0 },
-    ]);
-  };
-
   const removeItem = (index) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const handleAddItem = () => {
+    if (currentItem.product && currentItem.quantity > 0) {
+      setItems([...items, currentItem]);
+      setCurrentItem({
+        product: "",
+        unit: "",
+        batchNumber: "",
+        quantity: 0,
+        unitPrice: 0,
+        expiryDate: "",
+      });
     }
   };
 
-  const updateItem = (index, field, value) => {
-    const newItems = [...items];
-    newItems[index][field] = value;
-
-    // If product changes, reset unit, batch, and price
-    if (field === "product") {
-      newItems[index].unit = "";
-      newItems[index].batchNumber = "";
-      newItems[index].unitPrice = 0;
-    }
-
-    // If batch changes, update price
-    if (field === "batchNumber") {
-      const batch = batches?.find((b) => b.batchNumber === value);
-      if (batch) {
-        newItems[index].unitPrice = batch.purchasePricePerBaseUnit || 0;
-      }
-    }
-
-    setItems(newItems);
+  const handleRemove = (index) => {
+    removeItem(index);
   };
 
   const calculateTotal = () => {
@@ -417,15 +334,15 @@ function SaleForm({
             </label>
             {saleType === "customer" && (
               <div>
-                <SearchableSelect
+                <Select
+                  label=""
                   options={customerAccounts.map((acc) => ({
-                    _id: acc.refId,
-                    name: acc.name,
+                    value: acc.refId,
+                    label: acc.name,
                   }))}
                   value={watch("customer")}
                   onChange={(value) => setValue("customer", value)}
-                  placeholder="انتخاب مشتری (حساب)"
-                  searchPlaceholder="جستجو حساب مشتری..."
+                  defaultSelected="انتخاب مشتری (حساب)"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Found {customerAccounts.length} customer accounts
@@ -434,15 +351,15 @@ function SaleForm({
             )}
             {saleType === "employee" && (
               <div>
-                <SearchableSelect
+                <Select
+                  label=""
                   options={employeeAccounts.map((acc) => ({
-                    _id: acc.refId,
-                    name: acc.name,
+                    value: acc.refId,
+                    label: acc.name,
                   }))}
                   value={watch("employee")}
                   onChange={(value) => setValue("employee", value)}
-                  placeholder="انتخاب کارمند (حساب)"
-                  searchPlaceholder="جستجو حساب کارمند..."
+                  defaultSelected="انتخاب کارمند (حساب)"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Found {employeeAccounts.length} employee accounts
@@ -475,14 +392,15 @@ function SaleForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               حساب دریافت
             </label>
-            <SearchableSelect
-              options={accounts || []}
+            <Select
+              label=""
+              options={accounts.map((acc) => ({
+                value: acc._id,
+                label: acc.name,
+              }))}
               value={watch("placedIn")}
-              onChange={(value) =>
-                register("placedIn").onChange({ target: { value } })
-              }
-              placeholder="انتخاب حساب"
-              searchPlaceholder="جستجو حساب..."
+              onChange={(value) => setValue("placedIn", value)}
+              defaultSelected="انتخاب حساب"
             />
           </div>
 
@@ -503,140 +421,155 @@ function SaleForm({
         </div>
 
         {/* Items Section */}
-        <div className="mb-6">
+        <div className="border col-start-1 col-end-4 border-gray-100 rounded-lg p-4 mb-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">اقلام فروش</h3>
-            <button
-              type="button"
-              onClick={addItem}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              اضافه کردن قلم
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {items.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border border-gray-200 rounded-lg"
+            <h3 className="text-lg font-semibold text-gray-900">خرید اجناس</h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
               >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    محصول *
-                  </label>
-                  <SearchableSelect
-                    options={products || []}
-                    value={item.product}
-                    onChange={(value) => updateItem(index, "product", value)}
-                    placeholder="انتخاب محصول"
-                    searchPlaceholder="جستجو محصول..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    واحد *
-                  </label>
-                  <SearchableSelect
-                    options={units?.data || []}
-                    value={item.unit}
-                    onChange={(value) => updateItem(index, "unit", value)}
-                    placeholder="انتخاب واحد"
-                    searchPlaceholder="جستجو واحد..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    شماره بچ (اختیاری - برای وضوح)
-                  </label>
-                  <SearchableSelect
-                    options={
-                      batches?.map((batch) => ({
-                        _id: batch.batchNumber,
-                        name: `${batch.batchNumber} (موجودی: ${batch.quantity})`,
-                        batchNumber: batch.batchNumber,
-                        quantity: batch.quantity,
-                      })) || []
-                    }
-                    value={item.batchNumber}
-                    onChange={(value) =>
-                      updateItem(index, "batchNumber", value)
-                    }
-                    placeholder="انتخاب بچ (اختیاری)"
-                    searchPlaceholder="جستجو بچ..."
-                  />
-                  {batchesLoading && selectedProductId && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      در حال بارگذاری بچ‌ها...
-                    </p>
-                  )}
-                  {!batchesLoading &&
-                    batches.length === 0 &&
-                    selectedProductId && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        هیچ بچ موجودی برای این محصول یافت نشد
-                      </p>
-                    )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    مقدار *
-                  </label>
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateItem(
-                        index,
-                        "quantity",
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="0"
-                    min="0"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    قیمت واحد *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={item.unitPrice}
-                    onChange={(e) =>
-                      updateItem(
-                        index,
-                        "unitPrice",
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="0.00"
-                    min="0"
-                    required
-                  />
-                </div>
-
-                <div className="flex items-end col-span-5">
-                  <button
-                    type="button"
-                    onClick={() => removeItem(index)}
-                    disabled={items.length === 1}
-                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    حذف
-                  </button>
-                </div>
-              </div>
-            ))}
+                اضافه کردن
+              </button>
+            </div>
           </div>
+
+          <div className="grid grid-cols-3 md:grid-cols-6  gap-4 w-full rounded-lg ">
+            <div className="col-span-1">
+              <Select
+                id={"product"}
+                label={" اسم محصول "}
+                value={currentItem?.product}
+                onChange={(value) =>
+                  setCurrentItem((s) => ({ ...s, product: value }))
+                }
+                options={products}
+              ></Select>
+            </div>
+            <div className=" col-span-1">
+              <Select
+                id={"unit"}
+                label={" واحد اندازه گیری "}
+                value={currentItem?.unit}
+                onChange={(value) =>
+                  setCurrentItem((s) => ({ ...s, unit: value }))
+                }
+                options={
+                  units?.data?.map((u) => ({
+                    value: u._id,
+                    label: u.name,
+                  })) || []
+                }
+              />
+            </div>
+            <div className="col-span-1">
+              <Select
+                label={"  نمبر بچ     "}
+                id="batch"
+                value={currentItem?.batchNumber || ""}
+                onChange={(value) =>
+                  setCurrentItem((s) => ({
+                    ...s,
+                    batchNumber: value,
+                  }))
+                }
+                options={batches.map((batch) => ({
+                  value: batch.batchNumber,
+                  label: batch.batchNumber,
+                }))}
+                placeholder="اختیاری"
+              />
+            </div>
+            <div className=" col-span-1">
+              <label className="mb-1 block text-base font-medium text-slate-600 dark:text-white">
+                تاریخ انقضا
+              </label>
+              <input
+                type="date"
+                value={currentItem?.expiryDate || ""}
+                onChange={(e) =>
+                  setCurrentItem((s) => ({
+                    ...s,
+                    expiryDate: e.target.value,
+                  }))
+                }
+                className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-4 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm`}
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="mb-1 block text-base font-medium text-slate-600 dark:text-white">
+                تعداد
+              </label>
+              <input
+                type="number"
+                value={currentItem?.quantity}
+                onChange={(e) =>
+                  setCurrentItem((s) => ({ ...s, quantity: e.target.value }))
+                }
+                className={
+                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-4 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+                }
+              />
+            </div>
+            <div className="-col-span-1">
+              <label className="mb-1 block text-base font-medium text-slate-600 dark:text-white">
+                قیمت یک
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={currentItem?.unitPrice}
+                onChange={(e) =>
+                  setCurrentItem((s) => ({ ...s, unitPrice: e.target.value }))
+                }
+                className={
+                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-4 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+                }
+              />
+            </div>
+          </div>
+          {items?.length > 0 && (
+            <div className="overflow-auto">
+              <Table className="w-full text-sm">
+                <TableHeader headerData={productHeader} />
+                <TableBody>
+                  {items?.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableColumn>
+                        {products.find((p) => p.value === item.product)
+                          ?.label || item.product}
+                      </TableColumn>
+                      <TableColumn>
+                        {units?.data?.find((u) => u._id === item.unit)?.name ||
+                          item.unit}
+                      </TableColumn>
+                      <TableColumn>{item.batchNumber}</TableColumn>
+                      <TableColumn>{item.expiryDate}</TableColumn>
+                      <TableColumn>{item.quantity}</TableColumn>
+                      <TableColumn>
+                        {formatCurrency(item.unitPrice)}
+                      </TableColumn>
+                      <TableColumn>
+                        {formatCurrency(
+                          (item.quantity || 0) * (item.unitPrice || 0)
+                        )}
+                      </TableColumn>
+                      <TableColumn>
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(index)}
+                          className=" p-1 "
+                        >
+                          <BiTrashAlt className=" text-warning-orange" />
+                        </button>
+                      </TableColumn>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
 
         {/* Sale Summary */}

@@ -4,6 +4,8 @@ const AppError = require('../utils/AppError');
 const Account = require('../models/account.model');
 const AccountTransaction = require('../models/accountTransaction.model');
 const AuditLog = require('../models/auditLog.model');
+const Purchase = require('../models/purchase.model');
+const Sale = require('../models/sale.model');
 
 // @desc Get all account transactions with pagination and filters
 // @route GET /api/v1/account-transactions
@@ -82,9 +84,57 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
     .populate('account', 'name type')
     .populate('created_by', 'name')
     .populate('reversedBy', 'name')
+
     .sort(sort)
     .skip(skip)
     .limit(limitNum);
+
+  // Add paired account and reference data for transactions with referenceId
+  for (let tx of transactions) {
+    if (tx.referenceId) {
+      const paired = await AccountTransaction.findOne({
+        _id: { $ne: tx._id },
+        referenceId: tx.referenceId,
+        isDeleted: false,
+      }).populate('account', 'name type');
+      if (paired) {
+        tx.pairedAccount = paired.account;
+      }
+
+      // Populate reference data based on referenceType
+      if (tx.referenceType === 'purchase') {
+        const purchase = await Purchase.findById(tx.referenceId)
+          .select('purchaseNumber supplier totalAmount')
+          .populate('supplier', 'name');
+        if (purchase) {
+          tx.referenceData = purchase;
+          tx.referenceData.reference = `خرید ${purchase.purchaseNumber} - ${purchase.supplier?.name || 'Unknown'}`;
+        }
+      } else if (tx.referenceType === 'sale') {
+        const sale = await Sale.findById(tx.referenceId)
+          .select('saleNumber customer totalAmount')
+          .populate('customer', 'name');
+        if (sale) {
+          tx.referenceData = sale;
+          tx.referenceData.reference = `فروش ${sale.saleNumber} - ${sale.customer?.name || 'Unknown'}`;
+        }
+      } else if (tx.referenceType) {
+        // For any other referenceType, attempt to populate name if the model has it
+        // This is a general fallback, assuming the referenceId points to a document with a 'name' field
+        try {
+          const Model = require(`../models/${tx.referenceType}.model`);
+          if (Model) {
+            const doc = await Model.findById(tx.referenceId).select('name');
+            if (doc && doc.name) {
+              tx.referenceData = { name: doc.name, reference: doc.name };
+            }
+          }
+        } catch (error) {
+          // Ignore errors for unknown models
+        }
+      }
+    }
+  }
 
   // Get total count for pagination
   const totalTransactions = await AccountTransaction.countDocuments(query);
@@ -97,8 +147,12 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
       $group: {
         _id: null,
         totalAmount: { $sum: '$amount' },
-        totalCredit: { $sum: { $cond: [{ $gt: ['$amount', 0] }, '$amount', 0] } },
-        totalDebit: { $sum: { $cond: [{ $lt: ['$amount', 0] }, '$amount', 0] } },
+        totalCredit: {
+          $sum: { $cond: [{ $gt: ['$amount', 0] }, '$amount', 0] },
+        },
+        totalDebit: {
+          $sum: { $cond: [{ $lt: ['$amount', 0] }, '$amount', 0] },
+        },
         avgAmount: { $avg: '$amount' },
         maxAmount: { $max: '$amount' },
         minAmount: { $min: '$amount' },
@@ -165,7 +219,7 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
     .populate('created_by', 'name')
     .sort({ date: 1 });
 
-  let runningBalance = (account.openingBalance);
+  let runningBalance = account.openingBalance;
   const ledger = transactions.map((txn) => {
     runningBalance += txn.amount;
     return {
@@ -195,7 +249,7 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
 const validateAccountBalance = async (accountId, requiredAmount, session) => {
   const account = await Account.findById(accountId).session(session);
   if (!account) throw new AppError('Account not found', 404);
-  
+
   if (requiredAmount > 0) {
     // Only validate cashier and safe accounts - they cannot go negative
     if (account.type === 'cashier' || account.type === 'safe') {
@@ -208,7 +262,7 @@ const validateAccountBalance = async (accountId, requiredAmount, session) => {
     }
     // Saraf account can go negative (credit account), so no validation needed
   }
-  
+
   return account;
 };
 
@@ -231,7 +285,7 @@ exports.createManualTransaction = asyncHandler(async (req, res, next) => {
     let actualAmount = amount;
     if (transactionType === 'Debit' || transactionType === 'Expense') {
       actualAmount = -amount; // Debit and Expense should decrease balance
-      
+
       // Validate that the account has enough balance before decreasing it
       await validateAccountBalance(accountId, amount, session);
     }

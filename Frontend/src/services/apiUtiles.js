@@ -65,24 +65,49 @@ export const forgotPassword = async ({ email }) => {
   });
 };
 // Products
-export const fetchProducts = async () => {
+export const fetchProducts = async (params = {}) => {
   try {
-    const response = await apiRequest(API_ENDPOINTS.PRODUCTS.LIST);
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    if (params.includeDeleted) query.set("includeDeleted", "true");
+
+    const url = query.toString()
+      ? `${API_ENDPOINTS.PRODUCTS.LIST}?${query.toString()}`
+      : API_ENDPOINTS.PRODUCTS.LIST;
+
+    const response = await apiRequest(url);
 
     // Handle both direct array response and paginated response with data property
     if (Array.isArray(response)) {
-      return { data: response };
+      return {
+        data: response,
+        total: response.length,
+        totalPages: 1,
+        currentPage: 1,
+      };
     } else if (response && Array.isArray(response.products)) {
-      return { data: response.products };
+      return {
+        data: response.products,
+        total: response.total || response.products.length,
+        totalPages: response.totalPages || 1,
+        currentPage: response.currentPage || 1,
+      };
     } else if (response && Array.isArray(response.data)) {
-      return { data: response.data };
+      return {
+        data: response.data,
+        total: response.total || response.data.length,
+        totalPages: response.totalPages || 1,
+        currentPage: response.currentPage || 1,
+      };
     } else {
       console.warn("Unexpected products response format:", response);
-      return { data: [] };
+      return { data: [], total: 0, totalPages: 1, currentPage: 1 };
     }
   } catch (error) {
     console.error("Error fetching products:", error);
-    return { data: [] }; // Return empty array on error
+    return { data: [], total: 0, totalPages: 1, currentPage: 1 }; // Return empty array on error
   }
 };
 
