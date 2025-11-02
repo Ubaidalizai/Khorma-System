@@ -51,6 +51,11 @@ const Inventory = () => {
   const { data: inventoryStats, isLoading: isStatsLoading } =
     useInventoryStats();
   const { mutate: createProduct } = useCreateProdcut();
+
+  // Function to convert numbers to Persian numerals
+  const toPersianNumber = (num) => {
+    return num.toString().replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
+  };
   const handleDelete = () => {
     deleteStockTransfer(id);
     setOpenConfirm(false);
@@ -124,13 +129,13 @@ const Inventory = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2  lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">تمام اجناس</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.totalProducts}
+                {toPersianNumber(stats.totalProducts)}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
@@ -144,10 +149,10 @@ const Inventory = () => {
             <div>
               <p className="text-sm text-gray-600">موجودی گدام</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.warehouse.totalQuantity}
+                {toPersianNumber(stats.warehouse.totalQuantity)}
               </p>
               <p className="text-sm text-gray-500">
-                {stats.warehouse.uniqueProducts} محصول
+                {toPersianNumber(stats.warehouse.uniqueProducts)} محصول
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -161,10 +166,10 @@ const Inventory = () => {
             <div>
               <p className="text-sm text-gray-600">موجودی فروشگاه</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.store.totalQuantity}
+                {toPersianNumber(stats.store.totalQuantity)}
               </p>
               <p className="text-sm text-gray-500">
-                {stats.store.uniqueProducts} محصول
+                {toPersianNumber(stats.store.uniqueProducts)} محصول
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -178,7 +183,7 @@ const Inventory = () => {
             <div>
               <p className="text-sm text-gray-600">کمبود موجودی</p>
               <p className="text-2xl font-bold text-red-600 mt-1">
-                {stats.lowStockItems}
+                {toPersianNumber(stats.lowStockItems)}
               </p>
               <p className="text-sm text-gray-500">محصول نیاز به خرید</p>
             </div>
@@ -190,8 +195,8 @@ const Inventory = () => {
       </div>
 
       {/* Tabs and Table */}
-      <div className="bg-white rounded-lg bord border-gray-200">
-        <div className="border-b border-gray-200">
+      <div className="bg-white rounded-lg bord border-gray-200/70 ">
+        <div className="border-b border-gray-200/70 mb-1 rounded-md">
           <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("all")}
@@ -280,7 +285,7 @@ const Inventory = () => {
                   ?.filter((transfer) => {
                     // Filter out soft-deleted transfers
                     if (transfer.isDeleted === true) return false;
-                    
+
                     if (activeTab === "store") {
                       return transfer.fromLocation?.toLowerCase() === "store";
                     } else if (activeTab === "warehouse") {
@@ -299,7 +304,9 @@ const Inventory = () => {
                       <TableColumn>
                         {transfer.product?.name || "N/A"}
                       </TableColumn>
-                      <TableColumn>{transfer.quantity}</TableColumn>
+                      <TableColumn>
+                        {toPersianNumber(transfer.quantity)}
+                      </TableColumn>
 
                       <TableColumn>
                         <div

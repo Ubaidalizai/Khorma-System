@@ -110,34 +110,30 @@ const Employee = () => {
 
   return (
     <section>
-      <div className="mb-6"></div>
-      <Table
-        firstRow={
-          <div className="w-full flex gap-4  items-center px-1.5">
-            <div className=" w-[350px]">
-              <SearchInput
-                placeholder="جستجو کنید"
-                value={search}
-                onChange={handleSearch}
-              />
-            </div>
-            <div className="w-[350px]">
-              <Select
-                label=""
-                options={
-                  employees?.data?.map((emp) => ({
-                    value: emp._id,
-                    label: emp.name,
-                  })) || []
-                }
-                value={selectedEmployee}
-                onChange={setSelectedEmployee}
-                defaultSelected={employees?.data?.[0]?._id || ""}
-              />
-            </div>
-          </div>
-        }
-      >
+      <div className="w-full flex gap-4 bg-white py-3 border border-slate-200 my-1.5 rounded-md  items-center px-1.5">
+        <div className=" w-[350px]">
+          <SearchInput
+            placeholder="جستجو کنید"
+            value={search}
+            onChange={handleSearch}
+          />
+        </div>
+        <div className="w-[350px]">
+          <Select
+            label=""
+            options={
+              employees?.data?.map((emp) => ({
+                value: emp._id,
+                label: emp.name,
+              })) || []
+            }
+            value={selectedEmployee}
+            onChange={setSelectedEmployee}
+            defaultSelected={employees?.data?.[0]?._id || ""}
+          />
+        </div>
+      </div>
+      <Table>
         <TableHeader headerData={tableHeader} />
         <TableBody>
           {filteredStocks?.map((item) => (

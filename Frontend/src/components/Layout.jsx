@@ -1,5 +1,8 @@
 import { GiProfit } from "react-icons/gi";
-import { MdOutlineAccountBalance, MdAccountBalanceWallet } from "react-icons/md";
+import {
+  MdOutlineAccountBalance,
+  MdAccountBalanceWallet,
+} from "react-icons/md";
 import {
   ChartBarIcon,
   CubeIcon,
@@ -20,7 +23,7 @@ import { motion } from "framer-motion";
 const Layout = () => {
   const [isHover, setIsHover] = useState(false);
   const [isOpen, setIsOpen] = useState(() => {
-    const savedState = localStorage.getItem('sidebarIsOpen');
+    const savedState = localStorage.getItem("sidebarIsOpen");
     return savedState ? JSON.parse(savedState) : false;
   });
   const [openSubMenu, setOpenSubMenu] = useState(null);
@@ -29,7 +32,7 @@ const Layout = () => {
   const toggleSidebar = () => {
     setIsOpen((prev) => {
       const newState = !prev;
-      localStorage.setItem('sidebarIsOpen', JSON.stringify(newState));
+      localStorage.setItem("sidebarIsOpen", JSON.stringify(newState));
       return newState;
     });
   };
@@ -108,7 +111,7 @@ const Layout = () => {
     setIsHover(false);
   };
   return (
-    <section className="peer mx-auto  w-full min-h-screen grid   grid-cols-[0.12fr_.19fr_1fr_auto] sm:grid-cols-[0.06fr_.15fr_1fr_auto] md:grid-cols-[0.06fr_.13fr_1fr_auto] lg:grid-cols-[0.07fr_.12fr_1fr_auto]">
+    <section className="grid grid-cols-[0.05fr_0.4fr_1fr_auto] sm:grid-cols-[0.06fr_0.3fr_1fr_auto] md:grid-cols-[0.08fr_0.3fr_1fr_auto] lg:grid-cols-[0.07fr_.17fr_1fr_auto] min-h-screen max-w-[1540px] w-full mx-auto">
       <div
         onMouseEnter={handleEnterHover}
         onMouseLeave={handleLeaveHover}
@@ -119,22 +122,22 @@ const Layout = () => {
         }}
         className={`peer  max-h-screen  dark:bg-primary-dark-400 bg-accent-300  hover:col-end-3  col-start-1 ${
           isOpen ? "col-end-3" : "col-end-2"
-        } row-start-1 row-end-2   flex flex-col transition-all duration-200 `}
+        } row-start-1 row-end-2   flex flex-col `}
       >
         <div className="w-full relative px-2 h-full group flex flex-col">
           {/* Menu Toggle Button */}
-          <div className="w-full flex justify-end pt-3 pb-0">
+          <div className="w-full flex justify-end items-center pt-1 pb-0">
             <span className="cursor-pointer group">
               <AnimatedMenuIcon isOpen={isOpen} toggle={toggleSidebar} />
             </span>
           </div>
-          
+
           {/* Logo Section */}
           <div className="h-[15%] flex flex-col items-center justify-center py-2">
             {isHover || isOpen ? (
               <div className="text-center">
-                <h1 className="font-bold text-white text-[16px]">
-                  خرما عسگری
+                <h1 className=" md:font-bold font-medium text-white md:text-[16px] text-[14px]">
+                  اصغری خرما فروشی{" "}
                 </h1>
                 <p
                   className="text-sm"
@@ -152,7 +155,7 @@ const Layout = () => {
               </div>
             )}
           </div>
-          
+
           {/* Navigation Items - Middle */}
           <div className="flex-1 flex flex-col justify-start gap-y-1 w-full py-2 overflow-y-auto">
             <DashboardSideButton
@@ -211,14 +214,14 @@ const Layout = () => {
           </div>
 
           {/* User Info Section - Bottom */}
-          <div className="h-auto border-t border-white/20 py-3 px-2">
-            {(isHover || isOpen) ? (
+          <div className="h-auto border-t border-slate-200/20 py-3 px-2">
+            {isHover || isOpen ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  {user?.image && user.image !== 'default-user.jpg' ? (
+                  {user?.image && user.image !== "default-user.jpg" ? (
                     <img
                       src={`http://localhost:3001/public/images/users/${user.image}`}
                       alt={user.name}
@@ -238,7 +241,7 @@ const Layout = () => {
                     </p>
                   </div>
                 </button>
-                
+
                 {/* User dropdown menu */}
                 {showUserMenu && (
                   <div
@@ -280,7 +283,7 @@ const Layout = () => {
               </div>
             ) : (
               <div className="flex justify-center">
-                {user?.image && user.image !== 'default-user.jpg' ? (
+                {user?.image && user.image !== "default-user.jpg" ? (
                   <img
                     src={`http://localhost:3001/public/images/users/${user.image}`}
                     alt={user.name}
@@ -288,7 +291,7 @@ const Layout = () => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                   />
                 ) : (
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold cursor-pointer"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                   >
@@ -323,12 +326,12 @@ const AnimatedMenuIcon = ({ isOpen, toggle }) => {
       onClick={toggle}
       aria-label="Toggle menu"
       whileTap={{ scale: 0.9 }}
-      className="relative w-10 h-10 flex cursor-pointer items-center justify-center group"
+      className="relative  flex cursor-pointer items-center justify-center group"
     >
       <motion.svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
-        className="w-7 h-7 text-amber-300 group-hover:text-white"
+        className="w-5 h-5 text-amber-300 group-hover:text-white"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.5"

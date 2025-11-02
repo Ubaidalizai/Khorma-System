@@ -3,7 +3,7 @@ import {
   BuildingOffice2Icon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
@@ -205,8 +205,8 @@ const Dashboard = () => {
       page: currentPage,
       limit: transactionLimit,
       search: transactionSearch,
-      sortBy: 'date',
-      sortOrder: 'desc',
+      sortBy: "date",
+      sortOrder: "desc",
     });
   const { mutate: reverseTransaction, isLoading: reverseLoading } =
     useReverseTransaction();
@@ -249,16 +249,16 @@ const Dashboard = () => {
     page: auditPage,
     limit: auditLimit,
     search: searchTerm,
-    sortBy: 'changedAt',
-    sortOrder: 'desc',
+    sortBy: "changedAt",
+    sortOrder: "desc",
   });
 
   const tableAuditLogs = useAuditLogsByTable(selectedTable, {
     page: auditPage,
     limit: auditLimit,
     search: searchTerm,
-    sortBy: 'changedAt',
-    sortOrder: 'desc',
+    sortBy: "changedAt",
+    sortOrder: "desc",
   });
   const tableLogs = selectedTable === "all" ? allAuditLogs : tableAuditLogs;
   const auditLogs = tableLogs.data;
@@ -300,7 +300,6 @@ const Dashboard = () => {
     // For older dates, show the date in Dari format
     return date.toLocaleDateString("fa-IR");
   };
-
 
   return (
     <div
@@ -359,33 +358,31 @@ const Dashboard = () => {
         </div>
       </div>
       {activeTab === "transaction" && (
-        <div className="">
+        <Fragment>
           {/* Search and Pagination Row */}
-          <div className="flex my-2 items-center justify-between bg-white rounded-lg">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="جستجو در تراکنش‌ها..."
-                  value={transactionSearch}
-                  onChange={(e) => setTransactionSearch(e.target.value)}
-                  className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
+          <div className="flex py-3 border border-slate-200 items-center justify-between bg-white rounded-md">
+            <div className="relative pr-3">
+              <input
+                type="text"
+                placeholder="جستجو در تراکنش‌ها..."
+                value={transactionSearch}
+                onChange={(e) => setTransactionSearch(e.target.value)}
+                className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </div>
             </div>
           </div>
@@ -504,13 +501,13 @@ const Dashboard = () => {
               />
             </div>
           </div>
-        </div>
+        </Fragment>
       )}
       {activeTab === "logs" && (
-        <div className="my-2 bg-white">
-          <div className=" space-x-4 flex  items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-x-4   items-end">
-              <div className=" w-[200px]">
+        <Fragment>
+          <div className=" space-x-4 flex bg-white py-3 border border-slate-200 rounded-md   items-center justify-between">
+            <div className="flex w-[40%] flex-col md:flex-row gap-x-4   items-center pr-3">
+              <div className=" flex-1  flex items-center">
                 <Select
                   label=""
                   id="table-select"
@@ -519,30 +516,29 @@ const Dashboard = () => {
                   onChange={(value) => setSelectedTable(value)}
                 />
               </div>
-              <div className="">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="جستجو بر اساس دلیل، تغییر دهنده یا عملیات..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </div>
+
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="جستجو بر اساس دلیل، تغییر دهنده یا عملیات..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm pr-10`}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -625,7 +621,7 @@ const Dashboard = () => {
               />
             </div>
           </div>
-        </div>
+        </Fragment>
       )}
 
       <GloableModal open={showModal} setOpen={setShowModal} isClose={true}>

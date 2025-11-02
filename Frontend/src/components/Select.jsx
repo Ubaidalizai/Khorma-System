@@ -35,12 +35,14 @@ function Select({
 
   return (
     <div className="relative w-full" ref={ref}>
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-gray-700 mb-2"
-      >
-        {label}
-      </label>
+      {label && (
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
+          {label}
+        </label>
+      )}
 
       {/* Select Box */}
       <div
@@ -57,7 +59,7 @@ function Select({
 
       {/* Dropdown List */}
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full bg-white  border border-slate-200 rounded-sm shadow-lg p-2">
+        <div className="absolute z-10 w-full bg-white  border border-slate-200 rounded-sm shadow-lg p-2">
           {/* Search box */}
           <input
             type="text"

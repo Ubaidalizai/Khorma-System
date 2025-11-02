@@ -18,6 +18,7 @@ import { CgEye } from "react-icons/cg";
 import { IoMdClose } from "react-icons/io";
 import Button from "../components/Button";
 import { inputStyle } from "../components/ProductForm";
+import Pagination from "../components/Pagination";
 
 import {
   useCreateStockTransfer,
@@ -41,7 +42,13 @@ const storeHeader = [
 ];
 
 function Store() {
-  const { data: stocks } = useStoreStocks({ includeZeroQuantity: true });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { data: stocks } = useStoreStocks({
+    includeZeroQuantity: true,
+    page,
+    limit,
+  });
   const { data: employees } = useEmployees();
   const { mutate: createUpdateStock } = useUpdateInventory();
   const { register, handleSubmit, watch, reset } = useForm();
@@ -120,19 +127,16 @@ function Store() {
   };
   return (
     <section>
-      <Table
-        firstRow={
-          <div className=" w-full flex  justify-between ">
-            <div className=" w-[300px]">
-              <SearchInput
-                placeholder="جستجو بر اساس نام محصول..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-        }
-      >
+      <div className=" w-full flex  py-3 my-1.5 border border-slate-200 bg-white rounded-md justify-between ">
+        <div className=" w-[200px] md:w-[330px] pr-3">
+          <SearchInput
+            placeholder="جستجو بر اساس نام محصول..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+      <Table>
         <TableHeader headerData={storeHeader} />
         <TableBody>
           {stocks?.data?.map((el) => (
@@ -604,6 +608,13 @@ function Store() {
           </form>
         </div>
       </GloableModal>
+      <Pagination
+        currentPage={page}
+        totalPages={stocks?.totalPages || 1}
+        onPageChange={setPage}
+        onLimitChange={setLimit}
+        limit={limit}
+      />
     </section>
   );
 }

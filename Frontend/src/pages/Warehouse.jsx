@@ -12,6 +12,7 @@ import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
+import Pagination from "../components/Pagination";
 import {
   useCreateStockTransfer,
   useEmployees,
@@ -51,8 +52,14 @@ function Warehouse() {
   const [selectedPro, setSelectedPro] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [search] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const { mutate: createStockTransfer } = useCreateStockTransfer();
-  const { data: warehouseData, isLoading } = useWarehouseStocks({ search });
+  const { data: warehouseData, isLoading } = useWarehouseStocks({
+    search,
+    page,
+    limit,
+  });
   const warehouses = warehouseData?.data || warehouseData || [];
 
   const transferType = watch("transferType") || "warehouse-store";
@@ -130,15 +137,12 @@ function Warehouse() {
     );
   return (
     <section>
-      <Table
-        firstRow={
-          <div className="w-full flex ">
-            <div className=" flex-1  flex justify-start items-end">
-              <SearchInput placeholder="جستجو کنید" />
-            </div>
-          </div>
-        }
-      >
+      <div className="w-full flex bg-white border border-slate-200 rounded-md py-3  my-1.5 ">
+        <div className=" flex-1  flex justify-start items-end pr-3">
+          <SearchInput placeholder="جستجو کنید" />
+        </div>
+      </div>
+      <Table>
         <TableHeader headerData={tableHeader} />
         <TableBody>
           {warehouses?.map((row) => (
@@ -477,6 +481,13 @@ function Warehouse() {
           </div>
         </form>
       </GloableModal>
+      <Pagination
+        currentPage={page}
+        totalPages={warehouseData?.totalPages || 1}
+        onPageChange={setPage}
+        onLimitChange={setLimit}
+        limit={limit}
+      />
     </section>
   );
 }

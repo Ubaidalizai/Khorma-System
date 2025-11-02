@@ -30,6 +30,11 @@ import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
 
 const Purchases = () => {
+  // Function to convert numbers to Persian numerals
+  const toPersianNumber = (num) => {
+    return num.toString().replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
+  };
+
   // URL parameters for modal flow
   const [searchParams] = useSearchParams();
   const openId = searchParams.get("openId");
@@ -299,13 +304,13 @@ const Purchases = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg  border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">مجموع خرید</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.totalPurchases}
+                {toPersianNumber(stats.totalPurchases)}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
@@ -319,7 +324,9 @@ const Purchases = () => {
             <div>
               <p className="text-sm text-gray-600">مجموع کل</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(Number(stats?.totalAmount).toFixed(2))}
+                {toPersianNumber(
+                  formatCurrency(Number(stats?.totalAmount).toFixed(2))
+                )}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -360,7 +367,7 @@ const Purchases = () => {
       {/* Filters and Search */}
       <div className="bg-white rounded-lg  border border-gray-200 p-6">
         <div className="flex  flex-row gap-4 items-center justify-between">
-          <div className="flex w-[50%] gap-4">
+          <div className="flex w-[60%]  md:w-[50%] gap-4">
             <input
               type="text"
               placeholder="جستجو بر اساس نام تهیه کننده..."
