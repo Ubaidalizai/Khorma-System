@@ -15,7 +15,7 @@ const stockValidationSchema = Joi.object({
     'string.max': `"batchNumber" should have a maximum length of {#limit}`,
     'any.required': `"batchNumber" is a required field`,
   }),
-  expiry_date: Joi.date().greater('now').allow(null).optional().messages({
+  expiry_date: Joi.date().greater('now').allow(null, '').optional().messages({
     'date.base': `"expiry_date" should be a valid date`,
     'date.greater': `"expiry_date" must be a future date`,
   }),
@@ -61,7 +61,7 @@ const updateStockValidationSchema = Joi.object({
     'string.min': `"batchNumber" should have a minimum length of {#limit}`,
     'string.max': `"batchNumber" should have a maximum length of {#limit}`,
   }),
-  expiry_date: Joi.date().greater('now').allow(null).optional().messages({
+  expiry_date: Joi.date().greater('now').allow(null, '').optional().messages({
     'date.base': `"expiry_date" should be a valid date`,
     'date.greater': `"expiry_date" must be a future date`,
   }),

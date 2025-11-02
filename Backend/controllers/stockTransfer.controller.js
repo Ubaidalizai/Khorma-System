@@ -222,14 +222,18 @@ exports.getAllStockTransfers = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
 
-  const transfers = await StockTransfer.find()
+  // Filter out soft-deleted transfers
+  const query = { isDeleted: { $ne: true } };
+
+  const transfers = await StockTransfer.find(query)
     .populate('product', 'name')
     .populate('employee', 'name') // optional, only if employee transfer
     .populate('transferredBy', 'name email')
+    .sort({ createdAt: -1 }) // Newest first
     .skip(skip)
     .limit(parseInt(limit));
 
-  const total = await StockTransfer.countDocuments();
+  const total = await StockTransfer.countDocuments(query);
 
   res.status(200).json({
     status: 'success',
@@ -244,7 +248,10 @@ exports.getAllStockTransfers = asyncHandler(async (req, res) => {
 // @desc    Get single transfer
 // @route   GET /api/v1/stock-transfers/:id
 exports.getStockTransfer = asyncHandler(async (req, res) => {
-  const transfer = await StockTransfer.findById(req.params.id)
+  const transfer = await StockTransfer.findOne({
+    _id: req.params.id,
+    isDeleted: { $ne: true }
+  })
     .populate('product', 'name')
     .populate('employee', 'name')
     .populate('transferredBy', 'name email');

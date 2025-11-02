@@ -30,7 +30,12 @@ router.use(authenticate);
 
 router.post("/logout", userController.logout);
 router.get("/profile", userController.getUserProfile);
-router.patch("/profile", userController.updateCurrentUserProfile);
+router.patch(
+  "/profile",
+  uploadUserPhoto,
+  processUserPhoto,
+  userController.updateCurrentUserProfile
+);
 router.patch("/updatePassword", userController.updatePassword);
 router.patch(
   "/updatePhoto",

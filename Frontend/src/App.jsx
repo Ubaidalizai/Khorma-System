@@ -82,7 +82,7 @@ function App() {
             transition={Bounce}
           />
         </Router>
-        <ReactQueryDevtools />
+        
       </AuthProvider>
     </QueryClientProvider>
   );

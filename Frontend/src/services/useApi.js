@@ -1028,10 +1028,10 @@ export const useDeleteUnit = () => {
 // };
 
 export const useRecentTransactions = (params = {}) => {
-  const { page = 1, limit = 10 } = params;
+  const { page = 1, limit = 10, search, sortBy = 'date', sortOrder = 'desc' } = params;
   return useQuery({
-    queryKey: ["recentTransactions", { page, limit }],
-    queryFn: () => fetchAccountTransactions({ page, limit }),
+    queryKey: ["recentTransactions", { page, limit, search, sortBy, sortOrder }],
+    queryFn: () => fetchAccountTransactions({ page, limit, search, sortBy, sortOrder }),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

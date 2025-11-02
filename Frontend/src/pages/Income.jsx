@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
@@ -293,21 +294,23 @@ export default function Income() {
                 <TableColumn>{i.placedInAccount?.name || "-"}</TableColumn>
                 <TableColumn>{i.description || "-"}</TableColumn>
                 <TableColumn>
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex gap-2 justify-end items-center">
                     <button
-                      className="btn-secondary"
+                      className="text-indigo-600 hover:text-indigo-900"
                       onClick={() => {
                         setEditingIncome(i);
                         setIsModalOpen(true);
                       }}
+                      title="ویرایش"
                     >
-                      ویرایش
+                      <PencilIcon className="h-4 w-4" />
                     </button>
                     <button
-                      className="btn-secondary"
+                      className="text-red-600 hover:text-red-900"
                       onClick={() => onDelete(i._id)}
+                      title="حذف"
                     >
-                      حذف
+                      <TrashIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </TableColumn>

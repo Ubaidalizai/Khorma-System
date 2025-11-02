@@ -100,7 +100,7 @@ function DashboardSideButton({
                   to={el.href}
                   className={`peer group cursor-pointer lg:w-[90%] w-full mx-auto rounded-sm flex items-center gap-x-1 p-2 font-poppins text-[10px] hover:bg-accent-900 dark:hover:bg-primary-700 hover:bg-primary-brown-light *hover:text-white transition-all duration-200 ${
                     el.href === location.pathname
-                      ? "bg-primary-brown-light text-white border-r-4"
+                      ? "bg-primary-brown-light text-white"
                       : "bg-transparent text-[var(--amber-light)] border-transparent"
                   }`}
                 >
