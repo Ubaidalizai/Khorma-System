@@ -878,6 +878,8 @@ export const fetchAccountTransactions = async (params = {}) => {
   if (params.type) query.set("type", params.type);
   if (params.page) query.set("page", String(params.page));
   if (params.limit) query.set("limit", String(params.limit));
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortOrder) query.set("sortOrder", params.sortOrder);
   const url = query.toString()
     ? `${API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST}?${query.toString()}`
     : API_ENDPOINTS.ACCOUNT_TRANSACTIONS.LIST;
@@ -1223,13 +1225,46 @@ export const deleteCompany = async (id) => {
   return res.json();
 };
 export const getProfile = async () => {
-  const res = await apiRequest(API_ENDPOINTS.AUTH.PROFILE);
-  if (!res.ok) throw new Error("Faild to fetch the profile");
-  return res.json();
+  return await apiRequest(API_ENDPOINTS.AUTH.PROFILE);
 };
 export const updateCurrentUser = async (newData) => {
-  return await apiRequest(API_ENDPOINTS.AUTH.PROFILE, {
-    method: "PATCH",
-    body: JSON.stringify(newData),
-  });
+  // Check if newData contains a File object (image upload)
+  const hasFile = Object.values(newData).some(value => value instanceof File || (value && value.length && value[0] instanceof File));
+  
+  if (hasFile) {
+    // Use FormData for file uploads
+    const formData = new FormData();
+    Object.keys(newData).forEach(key => {
+      if (newData[key]) {
+        if (key === 'image' && newData[key][0]) {
+          formData.append('image', newData[key][0]);
+        } else if (key !== 'image') {
+          formData.append(key, newData[key]);
+        }
+      }
+    });
+
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`http://localhost:3001/api/v1${API_ENDPOINTS.AUTH.PROFILE}`, {
+      method: "PATCH",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      credentials: "include",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Profile update failed");
+    }
+
+    return response.json();
+  } else {
+    // Use regular JSON for text-only updates
+    return await apiRequest(API_ENDPOINTS.AUTH.PROFILE, {
+      method: "PATCH",
+      body: JSON.stringify(newData),
+    });
+  }
 };

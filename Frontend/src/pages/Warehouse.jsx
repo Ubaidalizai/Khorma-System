@@ -1,8 +1,8 @@
-import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { BiLoaderAlt, BiPencil, BiTransferAlt } from "react-icons/bi";
+import { BiLoaderAlt, BiTransferAlt } from "react-icons/bi";
 import { CgEye } from "react-icons/cg";
+import { PencilIcon } from "@heroicons/react/24/outline";
 import { IoMdClose } from "react-icons/io";
 import Button from "../components/Button";
 import GloableModal from "../components/GloableModal";
@@ -114,8 +114,12 @@ function Warehouse() {
     [selectedPro, reset]
   );
   const onSubmitEdit = (data) => {
-    console.log(data);
-    updateInventory({ id: selectedPro._id, stockData: data });
+    // Convert empty expiry_date to null (backend expects null, not empty string)
+    const stockData = {
+      ...data,
+      expiry_date: data.expiry_date || null,
+    };
+    updateInventory({ id: selectedPro._id, stockData });
     setShowEdit(false);
   };
   if (isLoading)
@@ -182,13 +186,16 @@ function Warehouse() {
                       setShowTransfer(true);
                     }}
                   />
-                  <FaRegEdit
-                    className=" text-[18px] hover:bg-slate-200 text-green-500"
+                  <button
+                    className="text-indigo-600 hover:text-indigo-900"
                     onClick={() => {
                       setSelectedPro(row);
                       setShowEdit(true);
                     }}
-                  />
+                    title="ویرایش"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </button>
                 </div>
               </TableColumn>
             </TableRow>
@@ -316,9 +323,9 @@ function Warehouse() {
                     type="date"
                     className={inputStyle}
                     {...editRegister("expiry_date", {
-                      required: "تاریخ انقضا الزامی است",
                       validate: (value) => {
-                        if (!value) return "تاریخ انقضا الزامی است";
+                        // Only validate if a date is provided (optional field)
+                        if (!value) return true;
 
                         const today = new Date();
                         const selected = new Date(value);

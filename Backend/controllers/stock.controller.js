@@ -89,10 +89,11 @@ exports.getAllStocks = asyncHandler(async (req, res) => {
     query.product = { $in: productIds };
   }
 
-  // Step 2️⃣ — Fetch paginated stocks
+  // Step 2️⃣ — Fetch paginated stocks (sorted by newest first)
   const stocks = await Stock.find(query)
     .populate('product', 'name')
     .populate('unit', 'name')
+    .sort({ createdAt: -1 }) // Newest first
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
 
@@ -124,6 +125,11 @@ exports.getStock = asyncHandler(async (req, res) => {
 // @desc    Update stock (e.g., adjust quantity manually)
 // @route   PATCH /api/v1/stocks/:id
 exports.updateStock = asyncHandler(async (req, res) => {
+  // Convert empty string expiry_date to null before validation
+  if (req.body.expiry_date === '' || req.body.expiry_date === undefined) {
+    req.body.expiry_date = null;
+  }
+
   // Validate the request body
   const { error } = updateStockValidationSchema.validate(req.body);
 
@@ -134,9 +140,16 @@ exports.updateStock = asyncHandler(async (req, res) => {
     });
   }
 
+  // Prepare update data - convert expiry_date to expiryDate (model field name) and handle null
+  const updateData = { ...req.body };
+  if (updateData.expiry_date !== undefined) {
+    updateData.expiryDate = updateData.expiry_date === null || updateData.expiry_date === '' ? null : updateData.expiry_date;
+    delete updateData.expiry_date; // Remove the snake_case version
+  }
+
   const stock = await Stock.findOneAndUpdate(
     { _id: req.params.id, isDeleted: false },
-    req.body,
+    updateData,
     { new: true, runValidators: true }
   );
 
@@ -180,25 +193,30 @@ exports.getStockReport = asyncHandler(async (req, res, next) => {
   const allStocks = await Stock.find(query)
     .populate('product', 'name baseUnit latestPurchasePrice trackByBatch')
     .populate('unit', 'name conversion_to_base')
-    .sort({ quantity: 1 }); // Sort by quantity ascending (lowest first)
+    .sort({ createdAt: -1 }); // Sort by newest first
 
   // Calculate stock value and determine status for each item
   let stockItems = allStocks.map(stock => {
     const stockValue = stock.quantity * stock.purchasePricePerBaseUnit;
     let status = 'normal';
     
-    // Determine status based on quantity and minLevel
+    // Determine status based on the difference between quantity and minLevel
     if (stock.quantity === 0) {
       status = 'out';
     } else if (stock.minLevel > 0) {
-      // Has minLevel defined
-      if (stock.quantity <= stock.minLevel * 0.5) {
-        status = 'critical';
-      } else if (stock.quantity <= stock.minLevel) {
-        status = 'low';
+      // Has minLevel defined - calculate difference
+      const difference = stock.quantity - stock.minLevel;
+      if (difference <= 0) {
+        // Quantity is at or below minLevel
+        if (stock.quantity <= stock.minLevel * 0.5) {
+          status = 'critical';
+        } else {
+          status = 'low';
+        }
       }
+      // If difference > 0, status remains 'normal'
     } else {
-      // No minLevel defined, use default thresholds
+      // No minLevel defined (minLevel = 0), use default thresholds
       if (stock.quantity <= 10) {
         status = 'critical';
       } else if (stock.quantity <= 50) {

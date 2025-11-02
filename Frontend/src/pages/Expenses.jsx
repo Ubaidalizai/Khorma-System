@@ -1,7 +1,5 @@
-import { CiTrash } from "react-icons/ci";
-import { MdOutlineEditLocationAlt } from "react-icons/md";
-import { RiEditBoxLine } from "react-icons/ri";
 import { useState } from "react";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
@@ -284,19 +282,24 @@ export default function Expenses() {
                 <TableColumn>{e.paidFromAccount?.name || "-"}</TableColumn>
                 <TableColumn>{e.description || "-"}</TableColumn>
                 <TableColumn>
-                  <div className="flex gap-2 justify-end">
-                    <RiEditBoxLine
-                      className=" text-[16px] text-green-500"
+                  <div className="flex gap-2 justify-end items-center">
+                    <button
+                      className="text-indigo-600 hover:text-indigo-900"
                       onClick={() => {
                         setEditingExpense(e);
                         setIsModalOpen(true);
                       }}
-                    />
-
-                    <CiTrash
-                      className=" text-[16px] text-red-600"
+                      title="ویرایش"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="text-red-600 hover:text-red-900"
                       onClick={() => onDelete(e._id)}
-                    />
+                      title="حذف"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
                   </div>
                 </TableColumn>
               </TableRow>

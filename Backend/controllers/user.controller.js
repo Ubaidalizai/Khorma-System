@@ -205,6 +205,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       role: user.role,
       image: user.image,
     },
@@ -307,6 +308,15 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
     user.email = email || user.email;
     user.phone = phone || user.phone;
 
+    // Update image if a new file was uploaded
+    if (req.file) {
+      // Delete old image if it exists and is not the default
+      if (user.image && user.image !== 'default-user.jpg') {
+        deleteOldImage(user.image, 'users');
+      }
+      user.image = req.file.filename;
+    }
+
     const updatedUser = await user.save();
 
     res.json({
@@ -316,6 +326,7 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
       email: updatedUser.email,
       phone: updatedUser.phone,
       role: updatedUser.role,
+      image: updatedUser.image,
       isActive: updatedUser.isActive,
     });
   } else {

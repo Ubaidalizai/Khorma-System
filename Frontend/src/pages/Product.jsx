@@ -1,34 +1,21 @@
-import { CiTrash } from "react-icons/ci";
-import { FaRegEdit } from "react-icons/fa";
-import { BsTrash3 } from "react-icons/bs";
-import { FaTrashAlt } from "react-icons/fa";
-import { BsEye } from "react-icons/bs";
-import { AiFillEdit } from "react-icons/ai";
-import { AiFillDelete } from "react-icons/ai";
-import { AiFillEye } from "react-icons/ai";
-// import { motion } from "framer-motion";
+import { PencilIcon, TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
 import {
   CalendarDays,
   ClipboardList,
   Info,
   Package,
-  TrashIcon,
   User,
 } from "lucide-react";
 import { useState } from "react";
-import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import Button from "../components/Button";
-import Confirmation from "../components/Confirmation";
 import EditProduct from "../components/EditProduct";
 import GloableModal from "../components/GloableModal";
-import Menus from "../components/Menu";
 import Pagination from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
-import TableMenuModal from "../components/TableMenuModal";
 import TableRow from "../components/TableRow";
 import { useDeleteProdcut } from "../services/useApi";
 const headers = [
@@ -134,19 +121,28 @@ function Product() {
                   </span>
                 </TableColumn>
                 <TableColumn>
-                  <div className=" flex items-center justify-center  gap-x-2">
-                    <BsEye
-                      className=" text-[14px] text-yellow-500"
+                  <div className=" flex items-center justify-center gap-x-2">
+                    <button
+                      className="text-yellow-600 hover:text-yellow-900"
                       onClick={() => handleViewProduct(el)}
-                    />
-                    <CiTrash
-                      className=" text-[14px] text-red-500"
-                      onClick={() => handleDeleteProduct(el)}
-                    />
-                    <FaRegEdit
-                      className=" text-[14px] text-green-500"
+                      title="مشاهده"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="text-indigo-600 hover:text-indigo-900"
                       onClick={() => handleEditProduct(el)}
-                    />
+                      title="ویرایش"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="text-red-600 hover:text-red-900"
+                      onClick={() => handleDeleteProduct(el)}
+                      title="حذف"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
                   </div>
                 </TableColumn>
               </TableRow>
@@ -194,10 +190,7 @@ function Product() {
       </GloableModal>
       <GloableModal open={showData} setOpen={handleCloseView}>
         {selectedPro && (
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+          <div
             dir="rtl"
             className="w-[500px] mx-auto bg-white rounded-sm shadow-sm overflow-hidden"
           >
@@ -309,7 +302,7 @@ function Product() {
             <div className="bg-gray-50 border-t border-gray-200 p-4 flex justify-end">
               <Button onClick={handleCloseView}>بسته کردن</Button>
             </div>
-          </motion.div>
+          </div>
         )}
       </GloableModal>
 

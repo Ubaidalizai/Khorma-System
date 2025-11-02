@@ -1,5 +1,5 @@
 import { GiProfit } from "react-icons/gi";
-import { MdOutlineAccountBalance } from "react-icons/md";
+import { MdOutlineAccountBalance, MdAccountBalanceWallet } from "react-icons/md";
 import {
   ChartBarIcon,
   CubeIcon,
@@ -7,13 +7,11 @@ import {
   HomeIcon,
   ShieldCheckIcon,
   ShoppingCartIcon,
-  UsersIcon,
   BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { AiOutlineBell, AiOutlineUser } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import DashboardSideButton from "./DashboarSideButton";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
@@ -21,8 +19,20 @@ import { motion } from "framer-motion";
 
 const Layout = () => {
   const [isHover, setIsHover] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    const savedState = localStorage.getItem('sidebarIsOpen');
+    return savedState ? JSON.parse(savedState) : false;
+  });
   const [openSubMenu, setOpenSubMenu] = useState(null);
+
+  // Save sidebar state to localStorage whenever it changes
+  const toggleSidebar = () => {
+    setIsOpen((prev) => {
+      const newState = !prev;
+      localStorage.setItem('sidebarIsOpen', JSON.stringify(newState));
+      return newState;
+    });
+  };
 
   const { user, logout } = useAuth();
 
@@ -47,7 +57,7 @@ const Layout = () => {
     {
       name: "مالی",
       href: "/accounts",
-      icon: <UsersIcon className=" text-sm" />,
+      icon: <MdAccountBalanceWallet className=" text-sm" />,
       otherOption: [
         {
           name: "هزینه‌ها",
@@ -98,85 +108,7 @@ const Layout = () => {
     setIsHover(false);
   };
   return (
-    <section className="peer mx-auto  w-full min-h-screen grid   grid-cols-[0.12fr_.19fr_1fr_auto] sm:grid-cols-[0.06fr_.15fr_1fr_auto] md:grid-cols-[0.06fr_.13fr_1fr_auto] lg:grid-cols-[0.07fr_.12fr_1fr_auto]  grid-rows-[46px_auto]">
-      <header className="relative z-50 col-span-4 row-start-1  duration-100 ease-out px-2 py-2 transition-all   xl:block   w-full  mx-auto   min-h-10">
-        <span className=" absolute top-2/4 -translate-y-2/4 right-4 cursor-pointer group">
-          <AnimatedMenuIcon isOpen={isOpen} toggle={() => setIsOpen(!isOpen)} />
-        </span>
-        <div className=" absolute left-6 top-2/4 -translate-y-2/4 flex items-center gap-4">
-          <div className="relative " style={{ direction: "ltr" }}>
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className=" rounded-full transition-colors duration-200 flex items-center gap-3"
-            >
-              {user.image ? (
-                <img
-                  src={`./logo.png`}
-                  alt={user.name}
-                  className="  w-[30px]"
-                />
-              ) : (
-                <span className="text-slate-600 p-1 shadow-sm hover:bg-slate-300 transition-all duration-150">
-                  <AiOutlineUser className="text-[25px]   text-black" />
-                </span>
-              )}
-              <p className=" font-medium  text-[15px]">
-                {user?.name || "کاربر مدیر"}
-              </p>
-            </button>
-
-            {/* User dropdown menu */}
-            {showUserMenu && (
-              <div
-                className="absolute left-0 mt-2 w-48 rounded-md shadow-lg z-50"
-                style={{
-                  backgroundColor: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                <div className="py-1">
-                  <div
-                    className="px-4 py-2 border-b"
-                    style={{ borderColor: "var(--border)" }}
-                  >
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: "var(--text-dark)" }}
-                    >
-                      {user?.name || user?.email || "کاربر"}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: "var(--text-medium)" }}
-                    >
-                      {user?.email}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 hover:bg-slate-100 py-2 text-sm transition-colors duration-200"
-                  >
-                    <RiLogoutBoxLine className="text-[18px] text-black" />
-                    خروج از سیستم
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          {/* <span className=" relative  p-1 rounded-full shadow-sm hover:bg-slate-300 transition-all duration-150">
-            <AiOutlineBell className="text-[24px] text-black" />
-            {notifications.length > 0 && (
-              <span
-                className="absolute -top-1 -right-1 h-3 w-3 text-white text-[8px] rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "var(--error-red)" }}
-              >
-                {notifications.length}
-              </span>
-            )}
-          </span> */}
-        </div>
-      </header>
+    <section className="peer mx-auto  w-full min-h-screen grid   grid-cols-[0.12fr_.19fr_1fr_auto] sm:grid-cols-[0.06fr_.15fr_1fr_auto] md:grid-cols-[0.06fr_.13fr_1fr_auto] lg:grid-cols-[0.07fr_.12fr_1fr_auto]">
       <div
         onMouseEnter={handleEnterHover}
         onMouseLeave={handleLeaveHover}
@@ -187,14 +119,22 @@ const Layout = () => {
         }}
         className={`peer  max-h-screen  dark:bg-primary-dark-400 bg-accent-300  hover:col-end-3  col-start-1 ${
           isOpen ? "col-end-3" : "col-end-2"
-        } row-start-1 row-end-4   flex flex-col gap-2  cursor-pointer transition-all duration-200 `}
+        } row-start-1 row-end-2   flex flex-col transition-all duration-200 `}
       >
-        <div className="w-full  relative px-2  h-full group flex items-center flex-col justify-center">
-          <div className="h-[23%]  flex flex-col items-center justify-around">
+        <div className="w-full relative px-2 h-full group flex flex-col">
+          {/* Menu Toggle Button */}
+          <div className="w-full flex justify-end pt-3 pb-0">
+            <span className="cursor-pointer group">
+              <AnimatedMenuIcon isOpen={isOpen} toggle={toggleSidebar} />
+            </span>
+          </div>
+          
+          {/* Logo Section */}
+          <div className="h-[15%] flex flex-col items-center justify-center py-2">
             {isHover || isOpen ? (
               <div className="text-center">
                 <h1 className="font-bold text-white text-[16px]">
-                  سیستم مدیریت
+                  خرما عسگری
                 </h1>
                 <p
                   className="text-sm"
@@ -212,7 +152,9 @@ const Layout = () => {
               </div>
             )}
           </div>
-          <div className="flex  py-2  flex-2  flex-col justify-start gap-y-0.5   w-full ">
+          
+          {/* Navigation Items - Middle */}
+          <div className="flex-1 flex flex-col justify-start gap-y-1 w-full py-2 overflow-y-auto">
             <DashboardSideButton
               icon={<HomeIcon className=" text-sm" />}
               title={tabs[0].name}
@@ -267,11 +209,100 @@ const Layout = () => {
               isHover={isHover}
             />
           </div>
+
+          {/* User Info Section - Bottom */}
+          <div className="h-auto border-t border-white/20 py-3 px-2">
+            {(isHover || isOpen) ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  {user?.image && user.image !== 'default-user.jpg' ? (
+                    <img
+                      src={`http://localhost:3001/public/images/users/${user.image}`}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                    </div>
+                  )}
+                  <div className="flex-1 text-right">
+                    <p className="text-sm font-medium text-white">
+                      {user?.name || "کاربر مدیر"}
+                    </p>
+                    <p className="text-xs text-white/70 truncate">
+                      {user?.email || ""}
+                    </p>
+                  </div>
+                </button>
+                
+                {/* User dropdown menu */}
+                {showUserMenu && (
+                  <div
+                    className="absolute bottom-full left-0 mb-2 w-48 rounded-md shadow-lg z-50"
+                    style={{
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <div className="py-1">
+                      <div
+                        className="px-4 py-2 border-b"
+                        style={{ borderColor: "var(--border)" }}
+                      >
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: "var(--text-dark)" }}
+                        >
+                          {user?.name || user?.email || "کاربر"}
+                        </p>
+                        <p
+                          className="text-xs"
+                          style={{ color: "var(--text-medium)" }}
+                        >
+                          {user?.email}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 hover:bg-slate-100 py-2 text-sm transition-colors duration-200"
+                      >
+                        <RiLogoutBoxLine className="text-[18px] text-black" />
+                        خروج از سیستم
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                {user?.image && user.image !== 'default-user.jpg' ? (
+                  <img
+                    src={`http://localhost:3001/public/images/users/${user.image}`}
+                    alt={user.name}
+                    className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  />
+                ) : (
+                  <div 
+                    className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold cursor-pointer"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  >
+                    {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <main
-        className={`py-1 h-screen p-3  max-md:pl-1 w-[98%]  md:w-[98%] lg:w-full xl:w-[98%] peer-hover:col-start-3 transition-all  duration-1000  col-start-2 col-end-4 row-start-2 row-end-4  scroll-smooth max-h-[calc(100vh-50px)]    mx-auto ${
+        className={`pt-6 pb-1 h-screen p-3  max-md:pl-1 w-[98%]  md:w-[98%] lg:w-full xl:w-[98%] peer-hover:col-start-3 transition-all  duration-1000  col-start-2 col-end-4  scroll-smooth max-h-screen    mx-auto ${
           isOpen ? "col-start-3" : ""
         }`}
       >
@@ -297,7 +328,7 @@ const AnimatedMenuIcon = ({ isOpen, toggle }) => {
       <motion.svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
-        className="w-7 h-7 text-primary-brown-light group-hover:text-amber-600"
+        className="w-7 h-7 text-amber-300 group-hover:text-white"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.5"

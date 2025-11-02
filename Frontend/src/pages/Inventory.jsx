@@ -278,6 +278,9 @@ const Inventory = () => {
               <TableBody>
                 {transferHistoryData?.data
                   ?.filter((transfer) => {
+                    // Filter out soft-deleted transfers
+                    if (transfer.isDeleted === true) return false;
+                    
                     if (activeTab === "store") {
                       return transfer.fromLocation?.toLowerCase() === "store";
                     } else if (activeTab === "warehouse") {

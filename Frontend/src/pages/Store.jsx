@@ -1,8 +1,8 @@
 import { MdOutlineDescription } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { BiTransferAlt } from "react-icons/bi";
-import { FaRegEdit } from "react-icons/fa";
 import { ImPriceTag } from "react-icons/im";
+import { PencilIcon } from "@heroicons/react/24/outline";
 import GloableModal from "../components/GloableModal";
 import SearchInput from "../components/SearchInput";
 import Table from "../components/Table";
@@ -110,7 +110,12 @@ function Store() {
     });
   }
   const handleEdit = (data) => {
-    createUpdateStock({ id: selectedData._id, stockData: data });
+    // Convert empty expiry_date to null (backend expects null, not empty string)
+    const stockData = {
+      ...data,
+      expiry_date: data.expiry_date || null,
+    };
+    createUpdateStock({ id: selectedData._id, stockData });
     setShowEdit(false);
   };
   return (
@@ -175,13 +180,16 @@ function Store() {
                       setShowTransfer(true);
                     }}
                   />
-                  <FaRegEdit
-                    className=" text-[18px] hover:bg-slate-200 text-green-500"
+                  <button
+                    className="text-indigo-600 hover:text-indigo-900"
                     onClick={() => {
                       setSelectedData(el);
                       setShowEdit(true);
                     }}
-                  />
+                    title="ویرایش"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </button>
                 </div>
               </TableColumn>
             </TableRow>
@@ -543,9 +551,9 @@ function Store() {
                     type="date"
                     className={inputStyle}
                     {...editRegister("expiry_date", {
-                      required: "تاریخ انقضا الزامی است",
                       validate: (value) => {
-                        if (!value) return "تاریخ انقضا الزامی است";
+                        // Only validate if a date is provided (optional field)
+                        if (!value) return true;
 
                         const today = new Date();
                         const selected = new Date(value);

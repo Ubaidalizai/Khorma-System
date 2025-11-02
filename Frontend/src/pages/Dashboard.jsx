@@ -1,25 +1,16 @@
 import {
   ArrowUturnLeftIcon,
   BuildingOffice2Icon,
-  ChartBarIcon,
-  CubeIcon,
   DocumentTextIcon,
-  ExclamationTriangleIcon,
-  ReceiptRefundIcon,
 } from "@heroicons/react/24/outline";
-import { TrendingDown, TrendingUp } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableRow from "../components/TableRow";
 import {
-  useInventoryStats,
-  useProduct,
-  usePurchases,
   useRecentTransactions,
   useReverseTransaction,
-  useSales,
 } from "../services/useApi";
 import { useAuditLogsByTable, useAuditLogs } from "../services/useAuditLogs";
 import TableHeader from "./../components/TableHeader";
@@ -202,11 +193,6 @@ const Dashboard = () => {
   };
 
   // API hooks
-  const { data: products, isLoading: productsLoading } = useProduct();
-  const { data: sales, isLoading: salesLoading } = useSales();
-  const { data: purchases, isLoading: purchasesLoading } = usePurchases();
-  // const { data: inventory, isLoading: inventoryLoading } = useInventory();
-
   const [currentPage, setCurrentPage] = useState(1);
   const [transactionLimit, setTransactionLimit] = useState(10);
   const [transactionSearch, setTransactionSearch] = useState("");
@@ -219,10 +205,9 @@ const Dashboard = () => {
       page: currentPage,
       limit: transactionLimit,
       search: transactionSearch,
+      sortBy: 'date',
+      sortOrder: 'desc',
     });
-  // const { data: lowStockItems, isLoading: lowStockLoading } =
-  //   useLowStockItems();
-  const { data: lowStock, isLoading: lowStockLoading } = useInventoryStats();
   const { mutate: reverseTransaction, isLoading: reverseLoading } =
     useReverseTransaction();
   // Audit logs hooks
@@ -264,12 +249,16 @@ const Dashboard = () => {
     page: auditPage,
     limit: auditLimit,
     search: searchTerm,
+    sortBy: 'changedAt',
+    sortOrder: 'desc',
   });
 
   const tableAuditLogs = useAuditLogsByTable(selectedTable, {
     page: auditPage,
     limit: auditLimit,
     search: searchTerm,
+    sortBy: 'changedAt',
+    sortOrder: 'desc',
   });
   const tableLogs = selectedTable === "all" ? allAuditLogs : tableAuditLogs;
   const auditLogs = tableLogs.data;
@@ -278,17 +267,6 @@ const Dashboard = () => {
   useEffect(() => {
     setAuditPage(1);
   }, [selectedTable]);
-
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    totalSales: 0,
-    totalPurchases: 0,
-    lowStockItems: 0,
-    totalStock: 0,
-    totalReceivables: 0,
-    totalPayables: 0,
-    netProfit: 0,
-  });
 
   const handleReverseClick = (transaction) => {
     if (transaction && transaction._id && transaction._id !== "undefined") {
@@ -306,45 +284,6 @@ const Dashboard = () => {
     }
   };
 
-  // Use dashboard stats from API or calculate from individual endpoints
-  useEffect(() => {
-    // Fallback calculation if dashboard stats not available
-    // Ensure sales is an array before calling reduce
-
-    const totalSalesAmount =
-      sales?.data?.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0) || 0;
-    const totalPurchasesAmount =
-      purchases?.purchases?.reduce(
-        (sum, purchase) => sum + (purchase.totalAmount || 0),
-        0
-      ) || 0;
-    const totalStockQuantity =
-      products?.data?.reduce(
-        (sum, product) => sum + (product.quantity || 0),
-        0
-      ) || 0;
-    const totalReceivables =
-      sales?.data?.reduce((sum, sale) => sum + (sale.dueAmount || 0), 0) || 0;
-    const totalPayables =
-      purchases?.purchases?.reduce(
-        (sum, purchase) => sum + (purchase.dueAmount || 0),
-        0
-      ) || 0;
-    const netProfit = sales?.summary?.totalProfit || 0;
-
-    const newStats = {
-      totalProducts: Array.isArray(products?.data) ? products?.data.length : 0,
-      totalSales: totalSalesAmount,
-      totalPurchases: totalPurchasesAmount,
-      lowStockItems: lowStock?.data?.lowStockDetails?.length || 0,
-      totalStock: totalStockQuantity,
-      totalReceivables,
-      totalPayables,
-      netProfit,
-    };
-
-    setStats(newStats);
-  }, [products, sales, purchases, lowStock]);
   // Format recent transactions from API data
 
   // Helper function to format time ago
@@ -362,61 +301,6 @@ const Dashboard = () => {
     return date.toLocaleDateString("fa-IR");
   };
 
-  const StatCard = ({ title, value, icon, color = "#6366F1", change }) => {
-    const isPositive = change > 0;
-    return (
-      <div className="bg-white hover:translate-y-1.5 transition-all duration-200 cursor-pointer rounded-lg  border border-gray-200/80 p-4 min-h-[120px] flex flex-col justify-between">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-600 truncate">{title}</p>
-            <div className="text-xl font-bold text-gray-900 mt-1 break-words">
-              {change ? (
-                <div
-                  className={`mt-2 text-center w-full flex items-center gap-1 text-sm font-medium ${
-                    isPositive
-                      ? "text-green-500 dark:text-green-400"
-                      : "text-red-500 dark:text-red-400"
-                  }`}
-                >
-                  <div className="flex items-center justify-start">
-                    {isPositive ? (
-                      <span className="p-2">
-                        <TrendingUp size={20} />
-                      </span>
-                    ) : (
-                      <span className="p-2">
-                        <TrendingDown size={20} />
-                      </span>
-                    )}
-                    <span className="">
-                      {isPositive ? "+" : "-"}%
-                      {change > 0 ? change : change * -1}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-lg break-words" style={{ color }}>
-                  {value}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div
-            className="p-2 rounded-lg border border-slate-200 flex-shrink-0 ml-2"
-            style={{
-              background: `linear-gradient(135deg, ${color}33, ${color}99)`,
-            }}
-          >
-            {React.createElement(icon, {
-              className: "h-5 w-5",
-              style: { color },
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div
@@ -445,53 +329,6 @@ const Dashboard = () => {
         >
           خوش آمدید! اینجا وضعیت کسب‌وکار شما نمایش داده می‌شود.
         </p>
-      </div>
-
-      {/* Stats grid */}
-      <div className="grid  grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3">
-        <StatCard
-          title="کل محصولات"
-          value={statsLoading || productsLoading ? "..." : stats.totalProducts}
-          icon={CubeIcon}
-          color="var(--info-blue)"
-        />
-
-        <StatCard
-          title="موجودی کم"
-          value={statsLoading || lowStockLoading ? "..." : stats.lowStockItems}
-          icon={ExclamationTriangleIcon}
-          color="var(--error-red)"
-        />
-        <StatCard
-          title="دریافتنی‌ها"
-          value={
-            statsLoading || salesLoading
-              ? "..."
-              : formatCurrency(stats.totalReceivables)
-          }
-          icon={ReceiptRefundIcon}
-          color="var(--success-green)"
-        />
-        <StatCard
-          title="پرداختنی‌ها"
-          value={
-            statsLoading || purchasesLoading
-              ? "..."
-              : formatCurrency(stats.totalPayables)
-          }
-          icon={DocumentTextIcon}
-          color="var(--error-red)"
-        />
-        <StatCard
-          title="سود خالص"
-          value={
-            statsLoading || salesLoading
-              ? "..."
-              : formatCurrency(stats.netProfit)
-          }
-          icon={ChartBarIcon}
-          color="var(--success-green)"
-        />
       </div>
 
       <div className="bg-white rounded-lg  border border-slate-100">
