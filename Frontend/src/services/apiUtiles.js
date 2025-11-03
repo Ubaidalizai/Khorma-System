@@ -2,11 +2,11 @@
 // API Utility Functions
 // ========================================
 
-import { apiRequest, API_ENDPOINTS } from "./apiConfig";
+import { apiRequest, API_ENDPOINTS, API_BASE_URL } from "./apiConfig";
 
 // Authentication functions
 export const loginUser = async (credentials) => {
-  const response = await fetch(`http://localhost:3001/api/v1/users/login`, {
+  const response = await fetch(`${API_BASE_URL}/users/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -24,7 +24,7 @@ export const loginUser = async (credentials) => {
 };
 
 export const logoutUser = async () => {
-  const response = await fetch(`http://localhost:3001/api/v1/users/logout`, {
+  const response = await fetch(`${API_BASE_URL}/users/logout`, {
     method: "POST",
     credentials: "include",
   });
@@ -37,7 +37,7 @@ export const logoutUser = async () => {
 };
 
 export const refreshUserToken = async () => {
-  const response = await fetch(`http://localhost:3001/api/v1/users/refresh`, {
+  const response = await fetch(`${API_BASE_URL}/users/refresh`, {
     method: "POST",
     credentials: "include",
   });
@@ -1245,7 +1245,7 @@ export const updateCurrentUser = async (newData) => {
     });
 
     const token = localStorage.getItem("authToken");
-    const response = await fetch(`http://localhost:3001/api/v1${API_ENDPOINTS.AUTH.PROFILE}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.PROFILE}`, {
       method: "PATCH",
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),

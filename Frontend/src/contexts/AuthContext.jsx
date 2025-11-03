@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiRequest, clearAuthTokens, setAuthTokens } from '../services/apiConfig';
+import { apiRequest, clearAuthTokens, setAuthTokens, API_BASE_URL } from '../services/apiConfig';
 
-// import base url from environment variables
-const BASE_URL = "http://localhost:3001/api/v1";
+const BASE_URL = API_BASE_URL;
 
 const AuthContext = createContext();
 

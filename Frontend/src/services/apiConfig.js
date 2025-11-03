@@ -2,7 +2,9 @@
 // API Configuration and Utilities
 // ========================================
 
-const API_BASE_URL = "http://localhost:3001/api/v1";
+// Use environment variable if available, otherwise fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api/v1";
+const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:3001";
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -316,3 +318,4 @@ export const API_ENDPOINTS = {
 };
 
 export default API_BASE_URL;
+export { BACKEND_BASE_URL, API_BASE_URL };
