@@ -1,11 +1,5 @@
 import { PencilIcon, TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
-import {
-  CalendarDays,
-  ClipboardList,
-  Info,
-  Package,
-  User,
-} from "lucide-react";
+import { CalendarDays, ClipboardList, Info, Package, User } from "lucide-react";
 import { useState } from "react";
 import Button from "../components/Button";
 import EditProduct from "../components/EditProduct";
@@ -88,19 +82,16 @@ function Product() {
   }
   return (
     <section className="w-full">
-      <Table
-        firstRow={
-          <div className=" w-full flex  justify-between ">
-            <div className=" w-[300px]">
-              <SearchInput
-                placeholder="جستجو بر اساس نام جنس..."
-                value={search}
-                onChange={(e) => setSearch(e?.target ? e.target.value : e)}
-              />
-            </div>
-          </div>
-        }
-      >
+      <div className=" w-full flex py-3 bg-white border-slate-200 rounded-md border my-1.5  justify-between ">
+        <div className=" w-[200px] md:w-[320px] pr-3">
+          <SearchInput
+            placeholder="جستجو بر اساس نام جنس..."
+            value={search}
+            onChange={(e) => setSearch(e?.target ? e.target.value : e)}
+          />
+        </div>
+      </div>
+      <Table>
         <TableHeader headerData={headers} />
         <TableBody>
           {productList?.data?.length > 0 ? (

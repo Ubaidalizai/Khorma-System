@@ -64,7 +64,9 @@ function DashboardSideButton({
         onClick={handleClick}
         className="text-sm text-[var(--amber-light)] font-medium px-4 py-2 text-right hover:bg-primary-brown-light hover:text-white transition-all duration-200 peer group relative text- cursor-pointer w-full mx-auto rounded-sm flex items-center gap-x-2"
       >
-        <span>{cloneElement(icon, { className: "w-[20px]" })}</span>
+        <span>
+          {cloneElement(icon, { className: "w-[20px] hover:text-white" })}
+        </span>
         <span
           className={` md:text-[14px] text-[12px] group-hover:block  ${
             sidebarOpen || isHover ? "block" : "hidden"
@@ -98,7 +100,7 @@ function DashboardSideButton({
                 <NavLink
                   key={index}
                   to={el.href}
-                  className={`peer group cursor-pointer lg:w-[90%] w-full mx-auto rounded-sm flex items-center gap-x-1 p-2 font-poppins text-[10px] hover:bg-accent-900 dark:hover:bg-primary-700 hover:bg-primary-brown-light *hover:text-white transition-all duration-200 ${
+                  className={`peer group cursor-pointer lg:w-[90%] w-full mx-auto rounded-sm flex items-center gap-x-1 p-2 font-poppins text-[10px] hover:bg-accent-900 dark:hover:bg-primary-700 hover:bg-primary-brown-light hover:text-white transition-all duration-200 ${
                     el.href === location.pathname
                       ? "bg-primary-brown-light text-white"
                       : "bg-transparent text-[var(--amber-light)] border-transparent"
@@ -110,13 +112,20 @@ function DashboardSideButton({
                   >
                     <motion.span className="flex justify-center ">
                       {cloneElement(el.icon, {
-                        className:
-                          "w-[16px] h-[16px]  text-[var(--amber-light)] ",
+                        className: `w-[16px] h-[16px]  text-[var(--amber-light)] hover:text-white ${
+                          el.href === location.pathname
+                            ? "bg-primary-brown-light text-white"
+                            : "bg-transparent text-[var(--amber-light)] border-transparent"
+                        }  `,
                       })}
                     </motion.span>
                     <span
-                      className={`text- text-[12px] font-[600] text-[var(--amber-light)]  ${
+                      className={`text- text-[12px] font-[600] text-[var(--amber-light)] hover:text-white ${
                         isOpen && (isHover || sidebarOpen) ? "block" : "hidden"
+                      } ${
+                        el.href === location.pathname
+                          ? "bg-primary-brown-light text-white"
+                          : "bg-transparent text-[var(--amber-light)] border-transparent"
                       }`}
                     >
                       {el.name}
