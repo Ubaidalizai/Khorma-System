@@ -17,7 +17,7 @@ import {
 import { inputStyle } from "../components/ProductForm";
 import GloableModal from "../components/GloableModal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
+import { apiRequest, API_ENDPOINTS, BACKEND_BASE_URL } from "../services/apiConfig";
 import { toast } from "react-toastify";
 import {
   PlusIcon,
@@ -173,7 +173,7 @@ const AdminPanel = () => {
                     <div className="flex items-center">
                       <section.icon className="h-4 w-4 ml-3" />
                       <span className="text-sm font-medium">
-                        {section.name}
+                          {section.name}
                       </span>
                     </div>
                   </button>
@@ -616,7 +616,7 @@ const ProfileManagement = () => {
           <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
             {displayData?.image && displayData.image !== 'default-user.jpg' ? (
               <img
-                src={`http://localhost:3001/public/images/users/${displayData.image}`}
+                src={`${BACKEND_BASE_URL}/public/images/users/${displayData.image}`}
                 alt="Profile"
                 className="w-full h-full rounded-full object-cover"
               />
@@ -676,7 +676,7 @@ const ProfileManagement = () => {
               <span className="text-sm font-medium" style={{ color: "var(--text-dark)" }}>
                 تغییر رمز عبور
               </span>
-            </div>
+          </div>
             <span className="text-xs" style={{ color: "var(--text-medium)" }}>✎</span>
           </button>
           
@@ -687,8 +687,8 @@ const ProfileManagement = () => {
             <div className="flex items-center">
               <span className="text-sm font-medium" style={{ color: "var(--text-dark)" }}>
                 ویرایش پروفایل
-              </span>
-            </div>
+            </span>
+          </div>
             <span className="text-xs" style={{ color: "var(--text-medium)" }}>✎</span>
           </button>
         </div>
@@ -711,39 +711,39 @@ const ProfileManagement = () => {
               <div>
                 <label className="block mb-2 text-sm font-medium" style={{ color: "var(--text-dark)" }}>
                   رمز عبور فعلی
-                </label>
-                <input
-                  type="password"
-                  {...register("currentPassword", {
-                    required: "لطفا پسورد قبلی تانرا وارد کنید",
-                  })}
+                  </label>
+                  <input
+                    type="password"
+                    {...register("currentPassword", {
+                      required: "لطفا پسورد قبلی تانرا وارد کنید",
+                    })}
                   placeholder="رمز عبور فعلی"
-                  className={inputStyle}
-                />
-                {errors.currentPassword && (
+                    className={inputStyle}
+                  />
+                  {errors.currentPassword && (
                   <p className="text-xs text-red-500 mt-1">
-                    {errors.currentPassword.message}
-                  </p>
-                )}
-              </div>
+                      {errors.currentPassword.message}
+                    </p>
+                  )}
+                </div>
               <div>
                 <label className="block mb-2 text-sm font-medium" style={{ color: "var(--text-dark)" }}>
                   رمز عبور جدید
-                </label>
-                <input
-                  type="password"
-                  {...register("newPassword", {
-                    required: "لطفا پسورد جدید تانرا وارد کنید",
-                  })}
+                  </label>
+                  <input
+                    type="password"
+                    {...register("newPassword", {
+                      required: "لطفا پسورد جدید تانرا وارد کنید",
+                    })}
                   placeholder="رمز عبور جدید"
-                  className={inputStyle}
-                />
-                {errors.newPassword && (
+                    className={inputStyle}
+                  />
+                  {errors.newPassword && (
                   <p className="text-xs text-red-500 mt-1">
-                    {errors.newPassword.message}
-                  </p>
-                )}
-              </div>
+                      {errors.newPassword.message}
+                    </p>
+                  )}
+                </div>
               <div className="flex items-center justify-end gap-2 mt-6">
                 <button
                   type="button"
@@ -752,13 +752,13 @@ const ProfileManagement = () => {
                 >
                   لغو
                 </button>
-                <button
+            <button
                   type="submit"
                   className="bg-amber-600 cursor-pointer text-white hover:bg-amber-600/90 duration-200 flex gap-2 justify-center items-center px-4 py-2 rounded-sm font-medium text-sm transition-all ease-in"
-                >
+            >
                   تغییر رمز
-                </button>
-              </div>
+            </button>
+          </div>
             </form>
           </div>
         </div>
@@ -780,43 +780,43 @@ const ProfileManagement = () => {
             >
               <div>
                 <label className="block mb-2 text-sm font-medium" style={{ color: "var(--text-dark)" }}>
-                  نام کامل
-                </label>
-                <input
-                  type="text"
+                    نام کامل
+                  </label>
+                  <input
+                    type="text"
                   {...emailReigster("name")}
                   placeholder="نام کامل"
                   defaultValue={displayData?.name || ""}
-                  className={inputStyle}
-                />
-                {editError.name && (
+                    className={inputStyle}
+                  />
+                  {editError.name && (
                   <p className="text-xs text-red-500 mt-1">
-                    {editError.name.message}
-                  </p>
-                )}
-              </div>
+                      {editError.name.message}
+                    </p>
+                  )}
+                </div>
               <div>
                 <label className="block mb-2 text-sm font-medium" style={{ color: "var(--text-dark)" }}>
                   ایمیل
-                </label>
-                <input
-                  type="email"
-                  {...emailReigster("email", {
+                  </label>
+                  <input
+                    type="email"
+                    {...emailReigster("email", {
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                       message: "فرمت ایمیل صحیح نیست",
                     },
-                  })}
+                    })}
                   placeholder="ایمیل"
                   defaultValue={displayData?.email || ""}
-                  className={inputStyle}
-                />
-                {editError.email && (
+                    className={inputStyle}
+                  />
+                  {editError.email && (
                   <p className="text-xs text-red-500 mt-1">
-                    {editError.email.message}
-                  </p>
-                )}
-              </div>
+                      {editError.email.message}
+                    </p>
+                  )}
+                </div>
               <div>
                 <label className="block mb-2 text-sm font-medium" style={{ color: "var(--text-dark)" }}>
                   شماره تلفن
@@ -877,8 +877,8 @@ const ProfileManagement = () => {
                 </button>
               </div>
             </form>
-          </div>
         </div>
+      </div>
       </GloableModal>
     </div>
   );

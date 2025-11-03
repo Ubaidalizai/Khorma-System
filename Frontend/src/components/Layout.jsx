@@ -16,6 +16,7 @@ import DashboardSideButton from "./DashboarSideButton";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { BACKEND_BASE_URL } from "../services/apiConfig";
 
 const Layout = () => {
   const [isHover, setIsHover] = useState(false);
@@ -220,7 +221,7 @@ const Layout = () => {
                 >
                   {user?.image && user.image !== 'default-user.jpg' ? (
                     <img
-                      src={`http://localhost:3001/public/images/users/${user.image}`}
+                      src={`${BACKEND_BASE_URL}/public/images/users/${user.image}`}
                       alt={user.name}
                       className="w-10 h-10 rounded-full object-cover"
                     />
@@ -282,7 +283,7 @@ const Layout = () => {
               <div className="flex justify-center">
                 {user?.image && user.image !== 'default-user.jpg' ? (
                   <img
-                    src={`http://localhost:3001/public/images/users/${user.image}`}
+                    src={`${BACKEND_BASE_URL}/public/images/users/${user.image}`}
                     alt={user.name}
                     className="w-10 h-10 rounded-full object-cover cursor-pointer"
                     onClick={() => setShowUserMenu(!showUserMenu)}

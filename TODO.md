@@ -1,4 +1,0 @@
-- [x] Create Pagination component
-- [x] Provide explanation of logic
-- [x] Provide demo snippet
-- [x] Provide backend integration example
