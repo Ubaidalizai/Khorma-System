@@ -122,7 +122,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
         setItems([]);
       },
       onError: (error) => {
-        alert(`خطا در ایجاد خرید: ${error.message}`);
+        toast.error(error.message || "خطا در ایجاد خرید");
       },
     });
   };

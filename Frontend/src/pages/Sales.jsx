@@ -93,6 +93,8 @@ const Sales = () => {
   const deleteSaleMutation = useDeleteSales();
   const { data: accountsData } = useAccounts({ type: "cashier" });
   const accounts = accountsData?.accounts || [];
+  const { data: customerAccountsData } = useAccounts({ type: "customer" });
+  const customerAccounts = customerAccountsData?.accounts || [];
   const createSaleMutation = useCreateSale();
   const updateSaleMutation = useUpdateSale();
 
@@ -158,7 +160,7 @@ const Sales = () => {
           setDeleteConfirmId(null);
         },
         onError: (error) => {
-          alert(`خطا در حذف فروش: ${error.message}`);
+          toast.error(error.message || "خطا در حذف فروش");
         },
       });
     }
@@ -336,18 +338,9 @@ const Sales = () => {
   return (
     <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Page header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">مدیریت فروش</h1>
-          <p className="text-gray-600 mt-1">مشاهده و مدیریت فروشها</p>
-        </div>
-        <button
-          onClick={() => setShowAddSaleModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 transition-colors"
-        >
-          <PlusIcon className="h-5 w-5" />
-          اضافه کردن فروش
-        </button>
+      <div>
+        <h1 className="text-xl font-bold text-gray-900">مدیریت فروش</h1>
+        <p className="text-gray-600 mt-1">مشاهده و مدیریت فروشها</p>
       </div>
 
       {/* Statistics Cards */}
@@ -411,51 +404,63 @@ const Sales = () => {
 
       {/* Filters and Search */}
       <div className="bg-white w-full  rounded-lg border border-gray-200 p-6">
-        <div className=" flex gap-x-3">
-          <div>
-            <input
-              type="text"
-              placeholder="جستجو بر اساس نام مشتری..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className={inputStyle}
-            />
+        <div className="flex justify-between items-center gap-3">
+          <div className="flex gap-3 flex-[2]">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="جستجو بر اساس نام مشتری..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className={inputStyle}
+              />
+            </div>
+            <div className="flex-1">
+              <select
+                value={customerFilter}
+                onChange={(e) => {
+                  setCustomerFilter(e.target.value);
+                  setPage(1);
+                }}
+                className={inputStyle}
+              >
+                <option value="">همه مشتری ها</option>
+                {customers?.data
+                  ?.filter((customer) =>
+                    customerAccounts.some((acc) => acc.refId === customer._id)
+                  )
+                  .map((customer) => (
+                    <option key={customer._id} value={customer._id}>
+                      {customer.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className={inputStyle}
+              >
+                <option value="">همه حالات</option>
+                <option value="paid">پرداخت شده</option>
+                <option value="partial">نسبی پرداخت شده</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <select
-              value={customerFilter}
-              onChange={(e) => {
-                setCustomerFilter(e.target.value);
-                setPage(1);
-              }}
-              className={inputStyle}
-            >
-              <option value="">همه مشتری ها</option>
-              {customers?.data?.map((customer) => (
-                <option key={customer._id} value={customer._id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className={inputStyle}
-            >
-              <option value="">همه حالات</option>
-              <option value="paid">پرداخت شده</option>
-              <option value="partial">نسبی پرداخت شده</option>
-              <option value="pending">پرداخت معلق</option>
-            </select>
-          </div>
+          <button
+            onClick={() => setShowAddSaleModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 transition-colors whitespace-nowrap"
+          >
+            <PlusIcon className="h-5 w-5" />
+            اضافه کردن فروش
+          </button>
         </div>
       </div>
 

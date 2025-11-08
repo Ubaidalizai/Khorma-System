@@ -84,7 +84,7 @@ const Purchases = () => {
     page,
     limit,
   });
-  const { data: selectedPurchase, isLoading: isLoadingDetails } =
+  const { data: selectedPurchase, isLoading: isLoadingDetails, error: errorDetails } =
     usePurchase(selectedPurchaseId);
   const updatePurchaseMutation = useUpdatePurchase();
   const deletePurchaseMutation = useDeletePurchase();
@@ -130,7 +130,7 @@ const Purchases = () => {
           setDeleteConfirmId(null);
         },
         onError: (error) => {
-          alert(`خطا در حذف خرید: ${error.message}`);
+          toast.error(error.message || "خطا در حذف خرید");
         },
       });
     }
@@ -561,6 +561,10 @@ const Purchases = () => {
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">در حال بارگذاری...</p>
+              </div>
+            ) : errorDetails ? (
+              <div className="p-8 text-center">
+                <p className="text-red-600">{errorDetails.message || "خطا در بارگذاری اطلاعات خرید"}</p>
               </div>
             ) : selectedPurchase && selectedPurchaseId ? (
               <div className="p-4 space-y-4">
@@ -1253,7 +1257,7 @@ const Purchases = () => {
                       });
                     },
                     onError: (error) => {
-                      alert(`خطا در ویرایش خرید: ${error.message}`);
+                      toast.error(error.message || "خطا در ویرایش خرید");
                     },
                   });
                 }}

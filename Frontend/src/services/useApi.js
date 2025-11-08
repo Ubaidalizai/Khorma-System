@@ -131,8 +131,8 @@ export const useUpdatePassword = () => {
     onSuccess: () => {
       toast.success("پسورد شما تغییر داده شد");
     },
-    onError: () => {
-      toast.error("مشکلی پیش آمده است دو باره کوشش کنید");
+    onError: (error) => {
+      toast.error(error.message || "مشکلی پیش آمده است دو باره کوشش کنید");
     },
   });
 };
@@ -143,8 +143,8 @@ export const useForgotPassword = () => {
     onSuccess: () => {
       toast.success("لطفا ایمیل تانرا چک کنید!");
     },
-    onError: () => {
-      toast.error("ایمیل مورد نظر اشتباه میباشد");
+    onError: (error) => {
+      toast.error(error.message || "ایمیل مورد نظر اشتباه میباشد");
     },
   });
 };
@@ -188,8 +188,8 @@ export const useCreateProdcut = () => {
       queryClient.invalidateQueries(["product"]);
       toast.success("محصول  موفقانه اضافه شد");
     },
-    onError: () => {
-      toast.error("مشکل در ساختن محصول");
+    onError: (error) => {
+      toast.error(error.message || "مشکل در ساختن محصول");
     },
   });
 };
@@ -204,8 +204,8 @@ export const useUpdateProdcut = () => {
       queryClient.invalidateQueries(["product"]);
       toast.success("محصول با موفقیت بروزرسانی شد");
     },
-    onError: () => {
-      toast.error("خطا در بروزرسانی محصول");
+    onError: (error) => {
+      toast.error(error.message || "خطا در بروزرسانی محصول");
     },
   });
 };
@@ -225,8 +225,8 @@ export const useDeleteProdcut = () => {
       queryClient.invalidateQueries(["product"]);
       toast.success("محصول موفقانه حذف گردید!");
     },
-    onError: () => {
-      toast.error("در حذف کردن محصول مشکلی پیش آمده است");
+    onError: (error) => {
+      toast.error(error.message || "در حذف کردن محصول مشکلی پیش آمده است");
     },
   });
 };
@@ -267,8 +267,8 @@ export const useUpdateInventory = () => {
       queryClient.invalidateQueries(["inventory"]);
       toast.success("موفقانه بروز رسانی شد");
     },
-    onError: () => {
-      toast.error("در بروز رسانی مشکلی پیش آمده است");
+    onError: (error) => {
+      toast.error(error.message || "در بروز رسانی مشکلی پیش آمده است");
     },
   });
 };
@@ -312,8 +312,8 @@ export const useUpdateStore = () => {
       queryClient.invalidateQueries(["allstores"]);
       toast.success("موجودی موفقانه بروز رسانی شد");
     },
-    onError: () => {
-      toast.error("بروز رسانی در موجودی مشکل پیش آمده است");
+    onError: (error) => {
+      toast.error(error.message || "بروز رسانی در موجودی مشکل پیش آمده است");
     },
   });
 };
@@ -352,8 +352,8 @@ export const useCreatePurchase = () => {
       toast.success("خرید شما موفقانه اجرا شد، تشکر...");
       queryClient.invalidateQueries(["allPurchases"]);
     },
-    onError: () => {
-      toast.error("در خریداری شما مشکلی است");
+    onError: (error) => {
+      toast.error(error.message || "در خریداری شما مشکلی است");
     },
   });
 };
@@ -474,8 +474,8 @@ export const useCreateSupplier = () => {
       queryClient.invalidateQueries(["allSupplier"]);
       toast.success("تامین‌کننده با موفقیت  ساخته  شد");
     },
-    onError: () => {
-      toast.error("خطا در حذف تامین‌کننده");
+    onError: (error) => {
+      toast.error(error.message || "خطا در ساختن تامین‌کننده");
     },
   });
 };
@@ -490,8 +490,8 @@ export const useUpdateSupplier = () => {
       queryClient.invalidateQueries(["allSupplier"]);
       toast.success("تامین‌کننده با موفقیت  بروز رسانی  شد");
     },
-    onError: () => {
-      toast.error("خطا در حذف تامین‌کننده");
+    onError: (error) => {
+      toast.error(error.message || "خطا در بروز رسانی تامین‌کننده");
     },
   });
 };
@@ -505,8 +505,8 @@ export const useDeleteSupplier = () => {
       queryClient.invalidateQueries(["allSupplier"]);
       toast.success("تامین‌کننده با موفقیت حذف شد");
     },
-    onError: () => {
-      toast.error("خطا در حذف تامین‌کننده");
+    onError: (error) => {
+      toast.error(error.message || "خطا در حذف تامین‌کننده");
     },
   });
 };
@@ -714,8 +714,8 @@ export const useCreateCustomer = () => {
       queryClient.invalidateQueries(["allCustomers"]);
       toast.success("موفقانه مشتری مورد نظر ایجاد  گردید!");
     },
-    onError: () => {
-      toast.error("متاسفانه در ایجاد کردن مشتری مورد نظر مشکلی پیش آمده است ");
+    onError: (error) => {
+      toast.error(error.message || "متاسفانه در ایجاد کردن مشتری مورد نظر مشکلی پیش آمده است ");
     },
   });
 };
@@ -729,10 +729,8 @@ export const useUpdateCustomer = () => {
       queryClient.invalidateQueries(["allCustomers"]);
       toast.success("موفقانه مشتری مورد نظر  بروز رسانی  گردید!");
     },
-    onError: () => {
-      toast.error(
-        "متاسفانه در بروز رسانی  کردن مشتری مورد نظر مشکلی پیش آمده است "
-      );
+    onError: (error) => {
+      toast.error(error.message || "متاسفانه در بروز رسانی  کردن مشتری مورد نظر مشکلی پیش آمده است ");
     },
   });
 };
@@ -746,8 +744,8 @@ export const useDeleteCustomer = () => {
       queryClient.invalidateQueries(["allCustomers"]);
       toast.success("موفقانه مشتری مورد نظر حذف گردید!");
     },
-    onError: () => {
-      toast.error("متاسفانه در حذف کردن مشتری مورد نظر مشکلی پیش آمده است ");
+    onError: (error) => {
+      toast.error(error.message || "متاسفانه در حذف کردن مشتری مورد نظر مشکلی پیش آمده است ");
     },
   });
 };
@@ -848,8 +846,8 @@ export const useCreateAccount = () => {
       queryClient.invalidateQueries(["accounts"]);
       toast.success("موفقانه حساب جدید ساخته شده");
     },
-    onError: () => {
-      toast.error("متاسفانه در ساختن حساب جدید تان مشکلی پیش آمده است");
+    onError: (error) => {
+      toast.error(error.message || "متاسفانه در ساختن حساب جدید تان مشکلی پیش آمده است");
     },
   });
 };
@@ -863,8 +861,8 @@ export const useUpdateAccount = () => {
       queryClient.invalidateQueries(["accounts"]);
       toast.success("موفقانه بروز رسانی شد");
     },
-    onError: () => {
-      toast.error("در بروز رسانی مشکلی پیش آمده است");
+    onError: (error) => {
+      toast.error(error.message || "در بروز رسانی مشکلی پیش آمده است");
     },
   });
 };
@@ -878,8 +876,8 @@ export const useDeleteAccount = () => {
       queryClient.invalidateQueries(["accounts"]);
       toast.success("موفقانه حذف گردید!");
     },
-    onError: () => {
-      toast.error("متاسفانه مشکلی پیش آمده");
+    onError: (error) => {
+      toast.error(error.message || "متاسفانه مشکلی پیش آمده");
     },
   });
 };
@@ -916,8 +914,8 @@ export const useCreateEmployee = () => {
 
       toast.success("کارمند با موفقیت ساخته  شد");
     },
-    onError: () => {
-      toast.error("خطا در ساختن کارمند");
+    onError: (error) => {
+      toast.error(error.message || "خطا در ساختن کارمند");
     },
   });
 };
@@ -932,8 +930,8 @@ export const useUpdateEmployee = () => {
 
       toast.success("کارمند با موفقیت بروز رسانی شد");
     },
-    onError: () => {
-      toast.error("خطا در بروز رسانی کارمند");
+    onError: (error) => {
+      toast.error(error.message || "خطا در بروز رسانی کارمند");
     },
   });
 };
@@ -948,8 +946,8 @@ export const useDeleteEmployee = () => {
 
       toast.success("کارمند با موفقیت حذف شد");
     },
-    onError: () => {
-      toast.error("خطا در حذف کارمند");
+    onError: (error) => {
+      toast.error(error.message || "خطا در حذف کارمند");
     },
   });
 };
@@ -980,8 +978,8 @@ export const useCreateUnit = () => {
 
       toast.success("واحد با موفقیت ساخته شد");
     },
-    onError: () => {
-      toast.error("خطا در ساختن واحد");
+    onError: (error) => {
+      toast.error(error.message || "خطا در ساختن واحد");
     },
   });
 };
@@ -996,8 +994,8 @@ export const useUpdateUnit = () => {
 
       toast.success("واحد با موفقیت بروز رسانی شد");
     },
-    onError: () => {
-      toast.error("خطا در بروز رسانی واحد");
+    onError: (error) => {
+      toast.error(error.message || "خطا در بروز رسانی واحد");
     },
   });
 };
@@ -1012,8 +1010,8 @@ export const useDeleteUnit = () => {
 
       toast.success("واحد با موفقیت حذف شد");
     },
-    onError: () => {
-      toast.error("خطا در حذف واحد");
+    onError: (error) => {
+      toast.error(error.message || "خطا در حذف واحد");
     },
   });
 };
@@ -1076,8 +1074,8 @@ export const useStockTransferDelete = () => {
         transition: Bounce,
       });
     },
-    onError: () => {
-      toast.error(" عملیه  نا  موفق بود", {
+    onError: (error) => {
+      toast.error(error.message || " عملیه  نا  موفق بود", {
         position: "top-right",
         autoClose: 4000,
         hideProgressBar: true,
@@ -1113,8 +1111,8 @@ export const useCreateStockTransfer = () => {
         transition: Bounce,
       });
     },
-    onError: () => {
-      toast.error("نتقال موفقانه نبود", {
+    onError: (error) => {
+      toast.error(error.message || "نتقال موفقانه نبود", {
         position: "top-right",
         autoClose: 4000,
         hideProgressBar: true,
@@ -1193,8 +1191,8 @@ export const useUpdateProfile = () => {
       queryClient.invalidateQueries(["profile"]),
         toast.success("با موفقیت تغییرات ثبت شد");
     },
-    onError: () => {
-      toast.error("متاسفانه مشکلی پیش آمده است");
+    onError: (error) => {
+      toast.error(error.message || "متاسفانه مشکلی پیش آمده است");
     },
   });
 };

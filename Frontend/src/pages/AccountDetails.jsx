@@ -157,7 +157,7 @@ const AccountDetails = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-600 mb-4">خطا در بارگذاری اطلاعات حساب</p>
+          <p className="text-red-600 mb-4">{error.message || "خطا در بارگذاری اطلاعات حساب"}</p>
           <button
             onClick={() => navigate('/accounts')}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"

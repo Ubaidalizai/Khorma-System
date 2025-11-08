@@ -142,7 +142,7 @@ function DashboardSideButton({
     <button
       onClick={() => {
         Navigate(to);
-        setOpen(null);
+        if (setOpen) setOpen(null);
       }}
       className={`text-sm font-medium px-4 py-2 text-right hover:bg-primary-brown-light hover:border-[var(--amber)]  transition-all duration-200 peer group relative hover:text-white cursor-pointer w-full mx-auto rounded-sm flex items-center gap-x-2 ${
         isActive

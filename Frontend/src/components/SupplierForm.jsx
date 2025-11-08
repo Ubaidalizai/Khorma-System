@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { inputStyle } from "./ProductForm";
+import { toast } from "react-toastify";
 
 function SupplierForm({ handleSubmit, register, onSubmit, close }) {
   const [contactInfo, setContactInfo] = useState({
@@ -33,7 +34,7 @@ function SupplierForm({ handleSubmit, register, onSubmit, close }) {
 
   const handleOnSubmit = (data) => {
     if (!data.name || !contactInfo.phone) {
-      alert("لطفا نام تماس و تلفن را وارد کنید");
+      toast.error("لطفا نام تماس و تلفن را وارد کنید");
       return;
     }
     const supplierData = {
