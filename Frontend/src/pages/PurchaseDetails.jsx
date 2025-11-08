@@ -13,6 +13,7 @@ import {
 import { usePurchase, useSuppliers, useAccounts } from "../services/useApi";
 import { formatCurrency } from "../utilies/helper";
 import { recordPurchasePayment } from "../services/apiUtiles";
+import { toast } from "react-toastify";
 
 const PurchaseDetails = () => {
   const { id } = useParams();
@@ -51,13 +52,13 @@ const PurchaseDetails = () => {
 
   const handleRecordPayment = async () => {
     if (!paymentAmount || !selectedAccount) {
-      alert("لطفاً مبلغ و حساب پرداخت را وارد کنید");
+      toast.error("لطفاً مبلغ و حساب پرداخت را وارد کنید");
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     if (amount <= 0 || amount > purchase.dueAmount) {
-      alert(`مبلغ وارد شده باید بین 0 و ${purchase.dueAmount} باشد`);
+      toast.error(`مبلغ وارد شده باید بین 0 و ${purchase.dueAmount} باشد`);
       return;
     }
 
@@ -69,14 +70,14 @@ const PurchaseDetails = () => {
         description: paymentDescription || `Payment for purchase`,
       });
       
-      alert("پرداخت با موفقیت ثبت شد!");
+      toast.success("پرداخت با موفقیت ثبت شد!");
       setShowPaymentModal(false);
       setPaymentAmount("");
       setSelectedAccount("");
       setPaymentDescription("");
       window.location.reload();
     } catch (error) {
-      alert("خطا در ثبت پرداخت: " + error.message);
+      toast.error(error.message || "خطا در ثبت پرداخت");
     } finally {
       setIsSubmitting(false);
     }
@@ -97,7 +98,7 @@ const PurchaseDetails = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-600 mb-4">خطا در بارگذاری اطلاعات خرید</p>
+          <p className="text-red-600 mb-4">{error?.message || "خطا در بارگذاری اطلاعات خرید"}</p>
           <button
             onClick={() => navigate('/purchases')}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"

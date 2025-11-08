@@ -462,6 +462,7 @@ exports.getAllSales = asyncHandler(async (req, res, next) => {
     invoiceType,
     minTotal,
     maxTotal,
+    status,
   } = req.query;
 
   const query = { isDeleted: false };
@@ -479,6 +480,13 @@ exports.getAllSales = asyncHandler(async (req, res, next) => {
     query.saleDate = {};
     if (fromDate) query.saleDate.$gte = new Date(fromDate);
     if (toDate) query.saleDate.$lte = new Date(toDate);
+  }
+  
+  // Payment status filter
+  if (status === 'paid') {
+    query.dueAmount = { $eq: 0 };
+  } else if (status === 'partial') {
+    query.dueAmount = { $gt: 0 };
   }
 
   const [sales, total, profitAgg] = await Promise.all([

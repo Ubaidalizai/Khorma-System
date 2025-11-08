@@ -102,7 +102,7 @@ const Layout = () => {
       navigate("/login");
     } catch (error) {
       console.error("Logout error:", error);
-      toast.error("خطا در خروج از سیستم");
+      toast.error(error.message || "خطا در خروج از سیستم");
     }
   };
   const handleEnterHover = () => {

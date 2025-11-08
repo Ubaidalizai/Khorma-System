@@ -30,7 +30,8 @@ export const logoutUser = async () => {
   });
 
   if (!response.ok) {
-    throw new Error("Logout failed");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Logout failed");
   }
 
   return response.json();
@@ -43,7 +44,8 @@ export const refreshUserToken = async () => {
   });
 
   if (!response.ok) {
-    throw new Error("Token refresh failed");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Token refresh failed");
   }
 
   return response.json();
@@ -124,12 +126,15 @@ export const createProduct = async (productData) => {
 
 // ✅ Update an item
 export const updateProductItem = async ({ id, updatedItem }) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/product/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/product/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedItem),
   });
-  if (!res.ok) throw new Error("Failed to update product");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to update product");
+  }
   return res.json();
 };
 
@@ -1184,44 +1189,59 @@ export const deleteStore = async (id) => {
 // Company
 
 export const fetchCompanies = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/company`);
-  if (!res.ok) throw new Error("Failed to fetch companies");
+  const res = await fetch(`${API_BASE_URL}/company`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch companies");
+  }
   return res.json();
 };
 export const fetchCompany = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/company/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch compnay");
+  const res = await fetch(`${API_BASE_URL}/company/${id}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch company");
+  }
   return res.json();
 };
 
-// Create COMPNAY
+// Create COMPANY
 export const createCompnay = async (newCompany) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/company`, {
+  const res = await fetch(`${API_BASE_URL}/company`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(newCompany),
   });
-  if (!res.ok) throw new Error("Failed to create employee");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to create company");
+  }
   return res.json();
 };
 
-// Update COMPNAY
+// Update COMPANY
 export const updateCompany = async ({ id, updatedEmployee }) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/company/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/company/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedEmployee),
   });
-  if (!res.ok) throw new Error("Failed to update company");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to update company");
+  }
   return res.json();
 };
 
-// Delete COMPNAY
+// Delete COMPANY
 export const deleteCompany = async (id) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/company/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/company/${id}`, {
     method: "DELETE",
   });
-  if (!res.ok) throw new Error("Failed to delete compnay");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to delete company");
+  }
   return res.json();
 };
 export const getProfile = async () => {

@@ -160,7 +160,7 @@ const CustomerManagement = () => {
           خطا در بارگذاری داده‌ها
         </h3>
         <p className="text-gray-600 mb-4">
-          لطفاً صفحه را رفرش کنید یا دوباره تلاش کنید
+          {error.message || "لطفاً صفحه را رفرش کنید یا دوباره تلاش کنید"}
         </p>
         <button onClick={() => refetch()} className="btn-primary">
           تلاش مجدد
