@@ -1,11 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-tan-100: #edeae3;
-  --color-tan-200: #d7d1bc;
-  --color-tan-300: #a9a28d;
-  --color-tan-400: #8d8571;
-  --color-tan-500: #6f6958;
+
 
   /* : #95684c */
   --color-dategold-100: #e8d8cd;
@@ -20,23 +16,16 @@
   --color-palm-300: #577671;
   --color-palm-400: #435c57;
   --color-palm-500: #2e413d;
-  --primary-brown: #8B4513;
-  --primary-brown-light: #A0522D;
-  --primary-brown-dark: #654321;
+  --color-primary-brown: #8B4513;
+  --color-primary-brown-light: #A0522D;
+  --color-primary-brown-dark: #654321;
 
 
-  /* : #8B4513 */
-  --color-deepdate-300: ##8B4513;
-  --color-deepdate-400: #A0522D;
-  --color-deepdate-500: #654321;
   --color-warning-orange: #FF8C00;
   --color-warning-light: #FFE4B5;
   --color-error-red: #DC143C;
   --color-success-green: #228B22;
   --color-success-light: #90EE90;
-  --color-primary-brown: #8B4513;
-  --color-primary-brown-light: #A0522D;
-  --color-primary-brown-dark: #654321;
 }
 
 :root {
@@ -353,5 +342,86 @@ html {
 @media (min-width: 769px) {
   .hide-desktop {
     display: none !important;
+  }
+}
+
+
+
+
+@layer utilities {
+  .menu-item {
+    @apply relative text-[var(--amber-light)] hover:text-white flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg;
+  }
+
+  .menu-item-active {
+    @apply bg-primary-brown-light text-white;
+  }
+
+  .menu-item-inactive {
+    @apply hover:bg-primary-brown-light hover:text-white;
+  }
+
+  .menu-item-icon {
+    @apply text-[var(--amber-light)];
+  }
+
+  .menu-item-icon-active {
+    @apply text-white;
+  }
+
+  .menu-item-icon-size svg {
+    @apply !size-6;
+  }
+
+  .menu-item-icon-inactive {
+    @apply text-[var(--amber-light)] group-hover:text-white;
+  }
+
+  .menu-item-arrow {
+    @apply relative;
+  }
+
+  .menu-item-arrow-active {
+    @apply rotate-180 text-[var(--amber-light)];
+  }
+
+  .menu-item-arrow-inactive {
+    @apply text-[var(--amber-light)] group-hover:text-white;
+  }
+
+  .menu-dropdown-item {
+    @apply relative flex items-center mr-5 gap-3 rounded-lg px-3 py-2.5 font-medium text-[var(--amber-light)] hover:bg-primary-brown-light hover:text-white;
+  }
+
+  .menu-dropdown-item-active {
+    @apply bg-primary-brown-light text-white;
+  }
+
+  .menu-dropdown-item-inactive {
+    @apply text-[var(--amber-light)] hover:bg-primary-brown-light hover:text-white;
+  }
+
+  .menu-dropdown-badge {
+    @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-dategold-500 dark:text-dategold-400;
+  }
+
+  .menu-dropdown-badge-active {
+    @apply bg-dategold-100 dark:bg-dategold-500/20;
+  }
+
+  .menu-dropdown-badge-inactive {
+    @apply bg-dategold-100 group-hover:bg-dategold-100 dark:bg-dategold-500/15 dark:group-hover:bg-dategold-500/20;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge, and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 }
