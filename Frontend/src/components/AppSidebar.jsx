@@ -1,5 +1,6 @@
+import { AiOutlineHome } from "react-icons/ai";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HiChevronDown, HiDotsHorizontal } from "react-icons/hi";
+import { HiChevronDown } from "react-icons/hi";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -13,10 +14,12 @@ import {
   MdAccountBalanceWallet,
   MdOutlineAccountBalance,
 } from "react-icons/md";
-import { useSidebar } from "../contexts/SidebarContext";
-import { HomeIcon } from "./Icons";
-import { useAuth } from "../contexts/AuthContext";
+import { RiLogoutBoxLine } from "react-icons/ri";
 import { toast } from "react-toastify";
+import { useAuth } from "../contexts/AuthContext";
+import { useSidebar } from "../contexts/SidebarContext";
+import { BACKEND_BASE_URL } from "../services/apiConfig";
+
 const othersItems = [
   {
     name: "مالی",
@@ -41,7 +44,7 @@ const othersItems = [
   },
 ];
 const navItem = [
-  { name: "داشبورد", path: "/", icon: <HomeIcon /> },
+  { name: "داشبورد", path: "/", icon: <AiOutlineHome /> },
   {
     name: "موجودی",
     path: "/inventory",
@@ -70,8 +73,6 @@ const navItem = [
     icon: <ShieldCheckIcon className=" text-[20px]" />,
   },
 ];
-import { BACKEND_BASE_URL } from "../services/apiConfig";
-import { RiLogoutBoxLine } from "react-icons/ri";
 
 function AppSidebar() {
   const { isMobileOpen, isExpanded, isHoverd, setIsHoverd } = useSidebar();
