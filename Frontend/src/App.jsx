@@ -1,29 +1,27 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  Navigate,
+  Route,
   BrowserRouter as Router,
   Routes,
-  Route,
-  Navigate,
 } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Inventory from "./pages/Inventory";
-import Purchases from "./pages/Purchases";
-import Sales from "./pages/Sales";
-import Accounts from "./pages/Accounts";
+import { Bounce, ToastContainer } from "react-toastify";
+import AppLayout from "./components/AppLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
+import "./index.css";
 import AccountDetails from "./pages/AccountDetails";
-import PurchaseDetails from "./pages/PurchaseDetails";
-import Reports from "./pages/Reports";
+import Accounts from "./pages/Accounts";
+import AdminPanel from "./pages/AdminPanel";
+import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
+import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
-import AdminPanel from "./pages/AdminPanel";
-import ProtectedRoute from "./components/ProtectedRoute";
-import "./index.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ToastContainer } from "react-toastify";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { AuthProvider } from "./contexts/AuthContext";
-import { Bounce } from "react-toastify";
-import Layout from "./components/Layout";
+import PurchaseDetails from "./pages/PurchaseDetails";
+import Purchases from "./pages/Purchases";
+import Reports from "./pages/Reports";
+import Sales from "./pages/Sales";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -47,7 +45,7 @@ function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <Layout />
+                  <AppLayout />
                 </ProtectedRoute>
               }
             >
@@ -82,7 +80,6 @@ function App() {
             transition={Bounce}
           />
         </Router>
-        
       </AuthProvider>
     </QueryClientProvider>
   );
