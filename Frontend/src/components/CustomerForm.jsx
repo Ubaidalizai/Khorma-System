@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { inputStyle } from "./ProductForm";
 import Button from "./Button";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 function CustomerForm({ onClose = () => {}, onSave, close }) {
   const {
@@ -9,11 +10,10 @@ function CustomerForm({ onClose = () => {}, onSave, close }) {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const [submitting, setSubmitting] = useState(false);
+  const { isSubmitting, wrapSubmit } = useSubmitLock();
 
-  const onSubmit = async (data) => {
+  const onSubmit = wrapSubmit(async (data) => {
     try {
-      setSubmitting(true);
       if (onSave) {
         await onSave(data);
       } else {
@@ -25,10 +25,8 @@ function CustomerForm({ onClose = () => {}, onSave, close }) {
     } catch (err) {
       // You may want to show an error toast here
       console.error("Failed to save customer", err);
-    } finally {
-      setSubmitting(false);
     }
-  };
+  });
   return (
     <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] mx-auto p-6 overflow-y-auto">
       <div className="p-6 border-b  border-slate-300 flex justify-between items-center">
@@ -139,12 +137,12 @@ function CustomerForm({ onClose = () => {}, onSave, close }) {
         <Button
           type="submit"
           form="customerForm"
-          disabled={submitting}
+          disabled={isSubmitting}
           className={` bg-success-green ${
-            submitting ? "opacity-60 cursor-not-allowed" : ""
+            isSubmitting ? "opacity-60 cursor-not-allowed" : ""
           }`}
         >
-          {submitting ? "در حال ذخیره..." : "ذخیره کردن"}
+          {isSubmitting ? "در حال ذخیره..." : "ذخیره کردن"}
         </Button>
       </div>
     </div>

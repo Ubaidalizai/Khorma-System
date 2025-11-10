@@ -19,7 +19,7 @@ exports.getAllExpenses = asyncHandler(async (req, res, next) => {
     minAmount,
     maxAmount,
     createdBy,
-    sortBy = 'date',
+    sortBy = 'createdAt',
     sortOrder = 'desc',
   } = req.query;
 

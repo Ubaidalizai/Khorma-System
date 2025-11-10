@@ -11,6 +11,7 @@ import TableRow from "../components/TableRow";
 import TableColumn from "../components/TableColumn";
 import Pagination from "../components/Pagination";
 import GloableModal from "../components/GloableModal";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 const fetchIncome = async ({
   page,
@@ -101,9 +102,18 @@ export default function Income() {
 
   const createMutation = useMutation({
     mutationFn: createIncomeApi,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("درآمد ثبت شد");
       queryClient.invalidateQueries({ queryKey: ["income"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      if (variables?.placedInAccount) {
+        queryClient.invalidateQueries({
+          queryKey: ["accountLedger", variables.placedInAccount],
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
+      }
       setIsModalOpen(false);
     },
     onError: (e) => toast.error(e.message || "ثبت درآمد ناموفق بود"),
@@ -111,9 +121,22 @@ export default function Income() {
 
   const updateMutation = useMutation({
     mutationFn: updateIncomeApi,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("درآمد ویرایش شد");
       queryClient.invalidateQueries({ queryKey: ["income"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      const targetAccount =
+        variables?.payload?.placedInAccount ||
+        editingIncome?.placedInAccount?._id ||
+        editingIncome?.placedInAccount;
+      if (targetAccount) {
+        queryClient.invalidateQueries({
+          queryKey: ["accountLedger", targetAccount],
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
+      }
       setIsModalOpen(false);
       setEditingIncome(null);
     },
@@ -125,6 +148,9 @@ export default function Income() {
     onSuccess: () => {
       toast.success("حذف شد");
       queryClient.invalidateQueries({ queryKey: ["income"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
     },
     onError: (e) => toast.error(e.message || "حذف ناموفق بود"),
   });
@@ -138,13 +164,10 @@ export default function Income() {
   const categories = categoriesRes?.data || [];
   const accounts = accountsRes?.accounts || accountsRes?.data || [];
 
-  const onCreate = (form) => {
-    createMutation.mutate(form);
-  };
+  const onCreate = (form) => createMutation.mutateAsync(form);
 
-  const onUpdate = (id, form) => {
-    updateMutation.mutate({ id, payload: form });
-  };
+  const onUpdate = (id, form) =>
+    updateMutation.mutateAsync({ id, payload: form });
 
   const onDelete = (id) => {
     if (window.confirm("آیا از حذف این درآمد مطمئن هستید؟")) {
@@ -359,6 +382,7 @@ function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
       : new Date().toISOString().slice(0, 10),
     description: initial?.description || "",
   });
+  const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   const canSubmit = form.category && form.amount && form.placedInAccount;
 
@@ -366,6 +390,17 @@ function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   };
+
+  const handleSubmit = wrapSubmit(async () => {
+    if (!canSubmit) return;
+    await onSubmit({
+      category: form.category,
+      amount: Number(form.amount),
+      placedInAccount: form.placedInAccount,
+      date: form.date,
+      description: form.description,
+    });
+  });
 
   return (
     <div className="relative  w-[530px] bg-white p-6 rounded-sm  ">
@@ -469,19 +504,19 @@ function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
           لغو
         </button>
         <button
-          className={`className=" bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90    flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in duration-200`}
-          disabled={!canSubmit}
-          onClick={() =>
-            onSubmit({
-              category: form.category,
-              amount: Number(form.amount),
-              placedInAccount: form.placedInAccount,
-              date: form.date,
-              description: form.description,
-            })
-          }
+          className={`bg-amber-600 text-white hover:bg-amber-600/90 flex gap-2 justify-center items-center px-4 py-2 rounded-sm font-medium text-sm transition-all ease-in duration-200 ${
+            !canSubmit || isSubmitting ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+          }`}
+          disabled={!canSubmit || isSubmitting}
+          onClick={handleSubmit}
         >
-          {initial ? "ذخیره تغییرات" : "ثبت"}
+          {isSubmitting
+            ? initial
+              ? "در حال ذخیره..."
+              : "در حال ثبت..."
+            : initial
+            ? "ذخیره تغییرات"
+            : "ثبت"}
         </button>
       </div>
     </div>

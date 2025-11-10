@@ -137,6 +137,10 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
     // 7️⃣ ACCOUNT TRANSACTIONS
 
     // Supplier (Debit)
+    const billRef = purchase[0].purchaseNumber
+      ? ` - بل نمبر: ${purchase[0].purchaseNumber}`
+      : "";
+
     await AccountTransaction.create(
       [
         {
@@ -146,7 +150,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
           referenceType: 'purchase',
           referenceId: purchase[0]._id,
           created_by: req.user._id,
-          description: `خریداری از تاجر ${supplierAccount.name} - بل نمبر: ${purchase[0].purchaseNumber || 'N/A'}`,
+          description: `خریداری از تاجر ${supplierAccount.name}${billRef}`,
         },
       ],
       { session }
@@ -167,7 +171,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
             referenceType: 'purchase',
             referenceId: purchase[0]._id,
             created_by: req.user._id,
-            description: `پرداخت برای خریداری - بل نمبر: ${purchase[0].purchaseNumber || 'N/A'}`,
+          description: `پرداخت برای خریداری${billRef}`,
           },
         ],
         { session }
@@ -186,7 +190,7 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
             referenceType: 'purchase',
             referenceId: purchase[0]._id,
             created_by: req.user._id,
-            description: `پرداخت برای خریداری - بل نمبر: ${purchase[0].purchaseNumber || 'N/A'}`,
+          description: `پرداخت برای خریداری${billRef}`,
           },
         ],
         { session }
@@ -788,6 +792,10 @@ exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
     // 4️⃣ Validate payment account and check balance
     const payAccount = await validateAccountBalance(paymentAccount, amount, session);
 
+    const billRef = purchase.purchaseNumber
+      ? ` - بل نمبر: ${purchase.purchaseNumber}`
+      : '';
+
     // 5️⃣ Create payment transactions
     // Reduce cashier balance
     await AccountTransaction.create(
@@ -799,7 +807,7 @@ exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
           referenceType: 'purchase',
           referenceId: purchase._id,
           created_by: req.user._id,
-          description: description || `پرداخت اضافی برای خریداری - بل نمبر: ${purchase.purchaseNumber || 'N/A'}`,
+          description: description || `پرداخت اضافی برای خریداری${billRef}`,
         },
       ],
       { session }
@@ -818,7 +826,7 @@ exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
           referenceType: 'purchase',
           referenceId: purchase._id,
           created_by: req.user._id,
-          description: description || `پرداخت اضافی برای خریداری - بل نمبر: ${purchase.purchaseNumber || 'N/A'}`,
+          description: description || `پرداخت اضافی برای خریداری${billRef}`,
         },
       ],
       { session }

@@ -17,6 +17,7 @@ import {
 import { formatCurrency } from "../utilies/helper";
 import GloableModal from "./GloableModal";
 import { toast } from "react-toastify";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 const PurchaseModal = ({ isOpen, onClose }) => {
   const { register, handleSubmit, watch, reset } = useForm();
@@ -24,7 +25,11 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   const { data: products } = useProducts();
   const { data: units } = useUnits();
   const { data: systemAccounts } = useSystemAccounts();
-  const createPurchaseMutation = useCreatePurchase();
+  const {
+    mutate: createPurchase,
+    isPending: isCreatingPurchase,
+  } = useCreatePurchase();
+  const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   const [items, setItems] = useState([]);
   const [currentItem, setCurrentItem] = useState({
@@ -93,7 +98,21 @@ const PurchaseModal = ({ isOpen, onClose }) => {
     setItems(items.filter((item) => item.id !== itemId));
   };
 
-  const onSubmit = (data) => {
+  const runMutation = (mutateFn, payload, callbacks = {}) =>
+    new Promise((resolve, reject) => {
+      mutateFn(payload, {
+        onSuccess: (...args) => {
+          callbacks.onSuccess?.(...args);
+          resolve(...args);
+        },
+        onError: (error) => {
+          callbacks.onError?.(error);
+          reject(error);
+        },
+      });
+    });
+
+  const onSubmit = wrapSubmit(async (data) => {
     if (items.length === 0) {
       toast.error("لطفاً حداقل یک جنس اضافه کنید");
       return;
@@ -115,7 +134,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
       })),
     };
 
-    createPurchaseMutation.mutate(purchaseData, {
+    await runMutation(createPurchase, purchaseData, {
       onSuccess: () => {
         onClose();
         reset();
@@ -125,7 +144,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
         toast.error(error.message || "خطا در ایجاد خرید");
       },
     });
-  };
+  });
 
   if (!isOpen) return null;
 
@@ -439,10 +458,10 @@ const PurchaseModal = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              disabled={createPurchaseMutation.isPending}
+              disabled={isCreatingPurchase || isSubmitting}
               className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {createPurchaseMutation.isPending
+              {isCreatingPurchase || isSubmitting
                 ? "در حال ایجاد..."
                 : "ایجاد خرید"}
             </button>

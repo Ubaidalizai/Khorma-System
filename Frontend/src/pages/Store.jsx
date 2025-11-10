@@ -19,6 +19,7 @@ import { IoMdClose } from "react-icons/io";
 import Button from "../components/Button";
 import { inputStyle } from "../components/ProductForm";
 import Pagination from "../components/Pagination";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 import {
   useCreateStockTransfer,
@@ -50,15 +51,24 @@ function Store() {
     limit,
   });
   const { data: employees } = useEmployees();
-  const { mutate: createUpdateStock } = useUpdateInventory();
-  const { register, handleSubmit, watch, reset } = useForm();
+  const { mutate: createUpdateStock, isPending: isUpdatingStock } =
+    useUpdateInventory();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset: transferReset,
+  } = useForm();
   const {
     register: editRegister,
     handleSubmit: editHandleSubmit,
     reset: editReset,
     formState: { errors },
   } = useForm();
-  const { mutate: createStockTransfer } = useCreateStockTransfer();
+  const { mutate: createStockTransfer, isPending: isCreatingTransfer } =
+    useCreateStockTransfer();
+  const transferSubmitLock = useSubmitLock();
+  const editSubmitLock = useSubmitLock();
   const transferType = watch("transferType") || "store-warehouse";
   const quantity = watch("quantity");
   const employee = watch("employee");
@@ -98,7 +108,15 @@ function Store() {
     "employee-warehouse",
   ].includes(transferType);
 
-  function onSubmit(data) {
+  const runMutation = (mutateFn, payload) =>
+    new Promise((resolve, reject) => {
+      mutateFn(payload, {
+        onSuccess: resolve,
+        onError: reject,
+      });
+    });
+
+  const onSubmit = transferSubmitLock.wrapSubmit(async (data) => {
     if (!data.quantity || data.quantity <= 0) return;
     const stockTransfer = {
       product: selectedData.product?._id || selectedData.product,
@@ -109,22 +127,23 @@ function Store() {
       transferDate: new Date(),
       transferredBy: "currentUserId", // replace if you have user context
     };
-    createStockTransfer(stockTransfer, {
-      onSuccess: () => {
-        setShowTransfer(false);
-        reset();
-      },
+    await runMutation(createStockTransfer, stockTransfer);
+    setShowTransfer(false);
+    transferReset({
+      transferType: "store-warehouse",
+      quantity: "",
+      employee: "",
     });
-  }
-  const handleEdit = (data) => {
+  });
+  const handleEdit = editSubmitLock.wrapSubmit(async (data) => {
     // Convert empty expiry_date to null (backend expects null, not empty string)
     const stockData = {
       ...data,
       expiry_date: data.expiry_date || null,
     };
-    createUpdateStock({ id: selectedData._id, stockData });
+    await runMutation(createUpdateStock, { id: selectedData._id, stockData });
     setShowEdit(false);
-  };
+  });
   return (
     <section>
       <div className=" w-full flex  py-3 my-1.5 border border-slate-200 bg-white rounded-md justify-between ">
@@ -182,6 +201,11 @@ function Store() {
                     onClick={() => {
                       setSelectedData(el);
                       setShowTransfer(true);
+                      transferReset({
+                        transferType: "store-warehouse",
+                        quantity: "",
+                        employee: "",
+                      });
                     }}
                   />
                   <button
@@ -398,8 +422,13 @@ function Store() {
               type="submit"
               className=" bg-primary-brown-light text-white px-4 py-2 rounded-md"
               disabled={
-                !quantity || quantity <= 0 || (needsEmployee && !employee)
+                !quantity ||
+                quantity <= 0 ||
+                (needsEmployee && !employee) ||
+                isCreatingTransfer ||
+                transferSubmitLock.isSubmitting
               }
+              isLoading={isCreatingTransfer || transferSubmitLock.isSubmitting}
             >
               انتقال موجودی
             </Button>
@@ -592,6 +621,8 @@ function Store() {
               <Button
                 type="submit"
                 className={" bg-primary-brown-light text-white"}
+                isLoading={isUpdatingStock || editSubmitLock.isSubmitting}
+                disabled={isUpdatingStock || editSubmitLock.isSubmitting}
               >
                 عملی کردن تغییرات{" "}
               </Button>

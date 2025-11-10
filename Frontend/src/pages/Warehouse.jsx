@@ -23,6 +23,7 @@ import { formatNumber } from "../utilies/helper";
 import { getStockStatus } from "../utilies/stockStatus";
 import { inputStyle } from "./../components/ProductForm";
 import { formatCurrency } from "../utilies/helper";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 // Headers aligned with Backend stock.model.js
 const tableHeader = [
@@ -44,17 +45,25 @@ function Warehouse() {
     reset,
     formState: { errors },
   } = useForm();
-  const { mutate: updateInventory } = useUpdateInventory();
+  const { mutate: updateInventory, isPending: isUpdatingInventory } =
+    useUpdateInventory();
   const [showTransfer, setShowTransfer] = useState(false);
-  const transferForm = useForm();
-  const { register, watch } = transferForm;
+  const {
+    register: transferRegister,
+    handleSubmit: transferHandleSubmit,
+    watch: transferWatch,
+    reset: transferReset,
+  } = useForm();
   const [show, setShow] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [search] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const { mutate: createStockTransfer } = useCreateStockTransfer();
+  const { mutate: createStockTransfer, isPending: isCreatingTransfer } =
+    useCreateStockTransfer();
+  const transferSubmitLock = useSubmitLock();
+  const editSubmitLock = useSubmitLock();
   const { data: warehouseData, isLoading } = useWarehouseStocks({
     search,
     page,
@@ -62,9 +71,9 @@ function Warehouse() {
   });
   const warehouses = warehouseData?.data || warehouseData || [];
 
-  const transferType = watch("transferType") || "warehouse-store";
-  const quantity = watch("quantity");
-  const employee = watch("employee");
+  const transferType = transferWatch("transferType") || "warehouse-store";
+  const quantity = transferWatch("quantity");
+  const employee = transferWatch("employee");
 
   const { data: employees } = useEmployees();
   // Example fromLocation/toLocation logic
@@ -90,7 +99,15 @@ function Warehouse() {
     "store-employee",
     "employee-store",
   ].includes(transferType);
-  function onSubmit(data) {
+  const runMutation = (mutateFn, payload) =>
+    new Promise((resolve, reject) => {
+      mutateFn(payload, {
+        onSuccess: resolve,
+        onError: reject,
+      });
+    });
+
+  const onSubmit = transferSubmitLock.wrapSubmit(async (data) => {
     if (!data.quantity || data.quantity <= 0) return;
     const stockTransfer = {
       product: selectedPro.product?._id || selectedPro.product,
@@ -100,15 +117,13 @@ function Warehouse() {
       quantity: Number(quantity),
       notes: "", // optional notes
     };
-    createStockTransfer(stockTransfer, {
-      onSuccess: () => {
-        setShowTransfer(false);
-      },
-      onError: () => {
-        // Error toast is handled in the hook
-      },
-    });
-  }
+    await runMutation(createStockTransfer, stockTransfer);
+    transferReset({ transferType: "warehouse-store", quantity: "", employee: "" });
+    setShowTransfer(false);
+  });
+  const isTransferBusy =
+    isCreatingTransfer || transferSubmitLock.isSubmitting;
+  const isEditBusy = isUpdatingInventory || editSubmitLock.isSubmitting;
 
   useEffect(
     function () {
@@ -120,15 +135,15 @@ function Warehouse() {
     },
     [selectedPro, reset]
   );
-  const onSubmitEdit = (data) => {
+  const onSubmitEdit = editSubmitLock.wrapSubmit(async (data) => {
     // Convert empty expiry_date to null (backend expects null, not empty string)
     const stockData = {
       ...data,
       expiry_date: data.expiry_date || null,
     };
-    updateInventory({ id: selectedPro._id, stockData });
+    await runMutation(updateInventory, { id: selectedPro._id, stockData });
     setShowEdit(false);
-  };
+  });
   if (isLoading)
     return (
       <div className=" w-full h-[250px] flex justify-center items-center">
@@ -364,6 +379,8 @@ function Warehouse() {
               <Button
                 type="submit"
                 className={" bg-primary-brown-light text-white"}
+                isLoading={isEditBusy}
+                disabled={isEditBusy}
               >
                 تغییر دادن گدام
               </Button>
@@ -384,7 +401,7 @@ function Warehouse() {
         <form
           noValidate
           className="bg-white rounded-lg  w-[480px] p-2 h-[500px]"
-          onSubmit={transferForm.handleSubmit(onSubmit)}
+          onSubmit={transferHandleSubmit(onSubmit)}
         >
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-900">انتقال موجودی</h2>
@@ -401,7 +418,10 @@ function Warehouse() {
                 <span className="block text-[12px] font-medium text-gray-600 mb-1">
                   نوع انتقال
                 </span>
-                <select className={inputStyle} {...register("transferType")}>
+                <select
+                  className={inputStyle}
+                  {...transferRegister("transferType")}
+                >
                   <option value="warehouse-store">گدام ↔ فروشگاه</option>
                   <option value="warehouse-employee">گدام → کارمند</option>
                 </select>
@@ -411,7 +431,10 @@ function Warehouse() {
                   <span className="block text-[12px] font-medium text-gray-600 mb-1">
                     کارمند
                   </span>
-                  <select className={inputStyle} {...register("employee")}>
+                  <select
+                    className={inputStyle}
+                    {...transferRegister("employee")}
+                  >
                     <option value="">کارمند را انتخاب کنید</option>
                     {employees?.data?.map((emp) => (
                       <option key={emp._id} value={emp._id}>
@@ -457,7 +480,7 @@ function Warehouse() {
                 type="number"
                 placeholder="تعداد مورد نظر"
                 min="1"
-                {...register("quantity", { required: true, min: 1 })}
+                {...transferRegister("quantity", { required: true, min: 1 })}
               />
             </div>
           </div>
@@ -473,8 +496,12 @@ function Warehouse() {
               type="submit"
               className=" bg-primary-brown-light text-white px-4 py-2 rounded-md"
               disabled={
-                !quantity || quantity <= 0 || (needsEmployee && !employee)
+                !quantity ||
+                quantity <= 0 ||
+                (needsEmployee && !employee) ||
+                isTransferBusy
               }
+              isLoading={isTransferBusy}
             >
               انتقال موجودی
             </Button>

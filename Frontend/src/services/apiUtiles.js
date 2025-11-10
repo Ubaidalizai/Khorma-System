@@ -304,6 +304,8 @@ export const deleteType = async (id) => {
 export const fetchAccounts = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.type) query.set("type", params.type);
+  if (params.transactionType && !params.type)
+    query.set("transactionType", params.transactionType);
   if (params.search) query.set("search", params.search);
   if (params.page) query.set("page", String(params.page));
   if (params.limit) query.set("limit", String(params.limit));
@@ -357,6 +359,7 @@ export const fetchAccountLedger = async (accountId, params = {}) => {
   if (params.startDate) query.set("startDate", params.startDate);
   if (params.endDate) query.set("endDate", params.endDate);
   if (params.type) query.set("type", params.type);
+  query.set("sortOrder", params.sortOrder || "desc");
 
   const url = query.toString()
     ? `${API_ENDPOINTS.ACCOUNTS.LEDGER(accountId)}?${query.toString()}`
@@ -436,7 +439,6 @@ export const restorePurchase = async (id) => {
 export const fetchSales = async (params = {}) => {
   try {
     const query = new URLSearchParams();
-    if (params.search) query.set("search", params.search);
     if (params.customer) query.set("customer", params.customer);
     if (params.status) query.set("status", params.status);
     if (params.page) query.set("page", params.page);
@@ -747,9 +749,7 @@ export const fetchProductsFromStock = async (
     const url = `${API_ENDPOINTS.STOCK.LIST}?location=${location}${
       includeZeroQuantity ? "&includeZeroQuantity=true" : ""
     }`;
-    console.log("fetchProductsFromStock - URL:", url);
     const response = await apiRequest(url);
-    console.log("fetchProductsFromStock - response:", response);
     return response.data || response || [];
   } catch (error) {
     console.error("Error fetching products from stock:", error);
@@ -881,6 +881,7 @@ export const fetchAccountTransactions = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
   if (params.type) query.set("type", params.type);
+  if (params.accountId) query.set("accountId", params.accountId);
   if (params.page) query.set("page", String(params.page));
   if (params.limit) query.set("limit", String(params.limit));
   if (params.sortBy) query.set("sortBy", params.sortBy);

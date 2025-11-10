@@ -433,7 +433,7 @@ const Dashboard = () => {
                           )}
                         </TableColumn>
                         <TableColumn className="px-4">
-                          {formatTimeAgo(transaction.date)}
+                          {formatTimeAgo(transaction.createdAt || transaction.date)}
                         </TableColumn>
                         <TableColumn
                           className={`px-4 font-semibold ${

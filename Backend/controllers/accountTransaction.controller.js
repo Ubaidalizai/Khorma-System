@@ -6,6 +6,68 @@ const AccountTransaction = require('../models/accountTransaction.model');
 const AuditLog = require('../models/auditLog.model');
 const Purchase = require('../models/purchase.model');
 const Sale = require('../models/sale.model');
+const Expense = require('../models/expense.model');
+const Income = require('../models/income.model');
+
+const recordAuditLog = async ({ session, tableName, recordId, operation, oldData, newData, reason, user }) => {
+  await AuditLog.create(
+    [
+      {
+        tableName,
+        recordId,
+        operation,
+        oldData,
+        newData,
+        reason,
+        changedBy: user?.name || 'System',
+        changedAt: new Date(),
+      },
+    ],
+    { session }
+  );
+};
+
+const handleLinkedReferenceReversal = async ({ tx, session, reason, user }) => {
+  if (!tx.referenceType || !tx.referenceId) return;
+
+  if (tx.referenceType === 'expense') {
+    const expense = await Expense.findById(tx.referenceId).session(session);
+    if (expense && !expense.isDeleted) {
+      const oldExpense = expense.toObject();
+      expense.isDeleted = true;
+      await expense.save({ session });
+      await recordAuditLog({
+        session,
+        tableName: 'Expense',
+        recordId: expense._id,
+        operation: 'DELETE',
+        oldData: oldExpense,
+        newData: expense.toObject(),
+        reason: reason || 'Expense transaction reversed',
+        user,
+      });
+    }
+  }
+
+  if (tx.referenceType === 'income') {
+    const income = await Income.findById(tx.referenceId).session(session);
+    if (income && !income.isDeleted) {
+      const oldIncome = income.toObject();
+      income.isDeleted = true;
+      await income.save({ session });
+      await recordAuditLog({
+        session,
+        tableName: 'Income',
+        recordId: income._id,
+        operation: 'DELETE',
+        oldData: oldIncome,
+        newData: income.toObject(),
+        reason: reason || 'Income transaction reversed',
+        user,
+      });
+    }
+  }
+};
 
 // @desc Get all account transactions with pagination and filters
 // @route GET /api/v1/account-transactions
@@ -13,17 +75,18 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
   const {
     page = 1,
     limit = 10,
-    sortBy = 'date',
+    sortBy,
     sortOrder = 'desc',
     accountId,
     transactionType,
+    type,
     referenceType,
-    startDate,
-    endDate,
     minAmount,
     maxAmount,
     isReversed,
     search,
+    startDate,
+    endDate,
   } = req.query;
 
   // Build query object
@@ -34,9 +97,16 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
     query.account = accountId;
   }
 
+  if (startDate || endDate) {
+    query.date = {};
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
+  }
+
   // Filter by transaction type
-  if (transactionType) {
-    query.transactionType = transactionType;
+  const resolvedTransactionType = transactionType || type;
+  if (resolvedTransactionType) {
+    query.transactionType = resolvedTransactionType;
   }
 
   // Filter by reference type
@@ -45,12 +115,10 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
   }
 
   // Filter by date range
-  if (startDate && endDate) {
-    query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
-  } else if (startDate) {
-    query.date = { $gte: new Date(startDate) };
-  } else if (endDate) {
-    query.date = { $lte: new Date(endDate) };
+  if (startDate || endDate) {
+    query.date = {};
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
   }
 
   // Filter by amount range
@@ -77,7 +145,12 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
 
   // Build sort object
   const sort = {};
-  sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+  sort.createdAt = sortOrder === 'desc' ? -1 : 1;
+  if (sortBy && sortBy !== 'createdAt') {
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+  } else {
+    sort.date = sortOrder === 'desc' ? -1 : 1;
+  }
 
   // Execute query with pagination
   const transactions = await AccountTransaction.find(query)
@@ -192,6 +265,8 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
         maxAmount,
         isReversed,
         search,
+        sortBy,
+        sortOrder,
       },
     },
   });
@@ -201,7 +276,7 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
 // @route GET /api/v1/accounts/:id/ledger
 exports.getAccountLedger = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const { startDate, endDate, type } = req.query;
+  const { startDate, endDate, type, sortOrder = 'desc' } = req.query;
 
   const account = await Account.findById(id);
   if (!account || account.isDeleted)
@@ -215,19 +290,30 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
 
   if (type) query.transactionType = type;
 
+  const sortDirection = sortOrder === 'desc' ? -1 : 1;
   const transactions = await AccountTransaction.find(query)
     .populate('created_by', 'name')
-    .sort({ date: 1 });
+    .sort({ createdAt: sortDirection, date: sortDirection, _id: sortDirection });
 
-  let runningBalance = account.openingBalance;
+  let runningBalance =
+    sortOrder === 'desc' ? account.currentBalance : account.openingBalance;
+
   const ledger = transactions.map((txn) => {
-    runningBalance += txn.amount;
+    let balanceAfter;
+    if (sortOrder === 'desc') {
+      balanceAfter = runningBalance;
+      runningBalance -= txn.amount;
+    } else {
+      runningBalance += txn.amount;
+      balanceAfter = runningBalance;
+    }
+
     return {
       date: txn.date,
       type: txn.transactionType,
       amount: txn.amount,
       description: txn.description,
-      balanceAfter: runningBalance,
+      balanceAfter,
       referenceType: txn.referenceType,
       referenceId: txn.referenceId,
       transactionId: txn._id,
@@ -242,6 +328,7 @@ exports.getAccountLedger = asyncHandler(async (req, res, next) => {
     currentBalance: account.currentBalance,
     totalTransactions: transactions.length,
     ledger,
+    sortOrder,
   });
 });
 
@@ -581,6 +668,13 @@ exports.reverseTransaction = asyncHandler(async (req, res, next) => {
         ],
         { session }
       );
+
+      await handleLinkedReferenceReversal({
+        tx,
+        session,
+        reason,
+        user: req.user,
+      });
 
       reversals.push(rev[0]);
     }

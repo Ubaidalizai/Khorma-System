@@ -9,21 +9,16 @@ import {
   ChartBarIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  PlusIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import Button from "../components/Button";
-import Modal from "../components/Modal";
-import ProductForm from "../components/ProductForm";
+import GloableModal from "../components/GloableModal";
 import Table from "../components/Table";
 import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
 import {
-  useCreateProdcut,
   useProduct,
   useInventoryStats,
   useStockTransfers,
@@ -33,24 +28,20 @@ import Product from "./Product";
 import Store from "./Store";
 import Warehouse from "./Warehouse";
 import { BiLoaderAlt } from "react-icons/bi";
-import GloableModal from "../components/GloableModal";
 import Confirmation from "../components/Confirmation";
 import { useSearchParams } from "react-router-dom";
 import Employee from "../components/Employee";
 import { TrashIcon } from "lucide-react";
 
 const Inventory = () => {
-  const [openCreateProduct, setOpenCreateProduct] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openConfirm, setOpenConfirm] = useState(false);
-  const { register, handleSubmit, formState, reset, control } = useForm();
   const { isLoading: isLoadingProducts } = useProduct();
   const { mutate: deleteStockTransfer, isPending: isDeleting } =
     useStockTransferDelete();
   const [id, setIds] = useState();
   const { data: inventoryStats, isLoading: isStatsLoading } =
     useInventoryStats();
-  const { mutate: createProduct } = useCreateProdcut();
 
   // Function to convert numbers to Persian numerals
   const toPersianNumber = (num) => {
@@ -59,17 +50,6 @@ const Inventory = () => {
   const handleDelete = () => {
     deleteStockTransfer(id);
     setOpenConfirm(false);
-  };
-  const onSubmit = async (data) => {
-    createProduct(
-      { ...data },
-      {
-        onSuccess: () => {
-          setOpenCreateProduct(false);
-        },
-      }
-    );
-    reset();
   };
 
   const [activeTab, setActiveTab] = useState("all");
@@ -108,23 +88,6 @@ const Inventory = () => {
           <p className="text-gray-600 mt-1">
             مدیریت کردن تمام دیتا های و نماینده گی های تان
           </p>
-        </div>
-        <div className=" w-[200px] pt-2 ">
-          <Button
-            onClick={() => setOpenCreateProduct(true)}
-            icon={<PlusIcon className="h-5 w-5" />}
-          >
-            اضافه کردن جنس
-          </Button>
-          <GloableModal open={openCreateProduct} setOpen={setOpenCreateProduct}>
-            <ProductForm
-              register={register}
-              handleSubmit={handleSubmit(onSubmit)}
-              formState={formState}
-              control={control}
-              onClose={() => setOpenCreateProduct(false)}
-            />
-          </GloableModal>
         </div>
       </div>
 

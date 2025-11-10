@@ -210,9 +210,25 @@ export const useUpdateProdcut = () => {
   });
 };
 export const useCreateTransaction = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["createTransaction"],
     mutationFn: createManualTransaction,
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      if (variables?.accountId) {
+        queryClient.invalidateQueries({
+          queryKey: ["accountLedger", variables.accountId],
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      toast.success("تراکنش با موفقیت ثبت شد");
+    },
+    onError: (error) => {
+      toast.error(error.message || "ثبت تراکنش ناموفق بود");
+    },
   });
 };
 // ✅ Delete item mutation
@@ -1026,7 +1042,7 @@ export const useDeleteUnit = () => {
 // };
 
 export const useRecentTransactions = (params = {}) => {
-  const { page = 1, limit = 10, search, sortBy = 'date', sortOrder = 'desc' } = params;
+  const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc' } = params;
   return useQuery({
     queryKey: ["recentTransactions", { page, limit, search, sortBy, sortOrder }],
     queryFn: () => fetchAccountTransactions({ page, limit, search, sortBy, sortOrder }),
@@ -1135,6 +1151,8 @@ export const useReverseTransaction = () => {
     mutationKey: ["reverseTransaction"],
     onSuccess: () => {
       queryClient.invalidateQueries(["recentTransactions"]);
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
       toast.success("تراکنش با موفقیت برگردانده شد", {
         position: "top-right",
         autoClose: 4000,
@@ -1168,10 +1186,23 @@ export const useReverseTransaction = () => {
 export const usePaymentProcess = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: recordPurchasePayment,
+    mutationFn: ({ purchaseId, payload }) =>
+      recordPurchasePayment(purchaseId, payload),
     mutationKey: ["payment"],
-    onSuccess: () => {
-      queryClient.invalidateQueries(["allPurchases"]);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["allPurchases"] });
+      if (variables?.purchaseId) {
+        queryClient.invalidateQueries({
+          queryKey: ["purchase", variables.purchaseId],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      toast.success("پرداخت خرید با موفقیت ثبت شد");
+    },
+    onError: (error) => {
+      toast.error(error.message || "ثبت پرداخت خرید ناموفق بود");
     },
   });
 };
