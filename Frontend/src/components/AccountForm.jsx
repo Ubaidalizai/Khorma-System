@@ -4,6 +4,7 @@ import {
   fetchCustomers,
   fetchEmployees,
 } from "../services/apiUtiles";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 function AccountForm({ register, handleSubmit, watch, onClose }) {
   const [suppliers, setSuppliers] = useState([]);
@@ -12,6 +13,7 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
   const [loading, setLoading] = useState(false);
   const [accountType, setAccountType] = useState("supplier");
   const [currentBalance, setCurrentBalance] = useState("0");
+  const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   useEffect(() => {
     const loadData = async () => {
@@ -56,7 +58,7 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
     return ['cashier', 'safe', 'saraf'].includes(accountType);
   };
 
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = async (data) => {
     const accountData = {
       type: data.type,
       refId: isSystemAccount() ? null : data.refId,
@@ -66,7 +68,7 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
       currency: data.currency || "AFN",
       isDeleted: false,
     };
-    handleSubmit(accountData);
+    await Promise.resolve(handleSubmit(accountData));
   };
 
   // Watch openingBalance to auto-update currentBalance
@@ -81,7 +83,7 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(handleFormSubmit)}
+      onSubmit={handleSubmit(wrapSubmit(handleFormSubmit))}
       className='bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto'
     >
       <div className='p-6 border-b border-gray-200 flex justify-between items-center'>
@@ -200,10 +202,10 @@ function AccountForm({ register, handleSubmit, watch, onClose }) {
         </button>
         <button
           type='submit'
-          className='px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700'
-          disabled={loading}
+          className='px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed'
+          disabled={loading || isSubmitting}
         >
-          {loading ? "در حال بارگذاری..." : "اضافه کردن حساب"}
+          {loading || isSubmitting ? "در حال پردازش..." : "اضافه کردن حساب"}
         </button>
       </div>
     </form>

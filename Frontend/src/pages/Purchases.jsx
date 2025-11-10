@@ -40,9 +40,9 @@ const Purchases = () => {
   const openId = searchParams.get("openId");
   const action = searchParams.get("action");
   const { mutate: createpaymentProces } = usePaymentProcess();
-  const [search, setSearch] = useState("");
   const [deleteModal, setDeleteModal] = useState(false);
   const [supplierFilter, setSupplierFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -56,6 +56,7 @@ const Purchases = () => {
   const [selectedAccount, setSelectedAccount] = useState("");
   const [paymentDescription, setPaymentDescription] = useState("");
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [selectedPurchaseSummary, setSelectedPurchaseSummary] = useState(null);
   const [editFormData, setEditFormData] = useState({
     supplier: "",
     purchaseDate: "",
@@ -79,8 +80,8 @@ const Purchases = () => {
   const { data: units } = useUnits();
   const { data: systemAccounts } = useSystemAccounts();
   const { data: purchasesResp, isLoading } = usePurchases({
-    search,
-    supplier: supplierFilter,
+    supplier: supplierFilter || undefined,
+    status: statusFilter || undefined,
     page,
     limit,
   });
@@ -102,12 +103,15 @@ const Purchases = () => {
 
   const handleViewDetails = (purchaseId) => {
     setSelectedPurchaseId(purchaseId);
+    const summary = purchases.find((p) => p._id === purchaseId) || null;
+    setSelectedPurchaseSummary(summary);
     setShowDetailsModal(true);
   };
 
   const handleEditPurchase = (purchase) => {
     setEditingPurchase(purchase);
     setSelectedPurchaseId(purchase._id); // This will trigger usePurchase hook
+    setSelectedPurchaseSummary(purchase);
 
     // Populate form with existing purchase data
     setEditFormData({
@@ -149,42 +153,81 @@ const Purchases = () => {
       if (purchase) {
         setSelectedPurchaseId(openId);
         setShowDetailsModal(true);
+        setSelectedPurchaseSummary(purchase);
       }
     }
   }, [openId, action, purchases]);
 
   // Payment handler
-  const handleRecordPayment = async () => {
+  const resolvePurchaseData = () => {
+    if (selectedPurchase?.purchase) return selectedPurchase.purchase;
+    if (selectedPurchase && !selectedPurchase.purchase) return selectedPurchase;
+    return selectedPurchaseSummary;
+  };
+
+  const paymentPurchase = resolvePurchaseData();
+  const detailPurchase =
+    selectedPurchase?.purchase ||
+    selectedPurchaseSummary ||
+    selectedPurchase ||
+    {};
+  const detailItems =
+    selectedPurchase?.purchase?.items ||
+    selectedPurchaseSummary?.items ||
+    [];
+
+  useEffect(() => {
+    if (selectedPurchase?.purchase) {
+      setSelectedPurchaseSummary(selectedPurchase.purchase);
+    }
+  }, [selectedPurchase]);
+
+  const handleRecordPayment = () => {
     if (!paymentAmount || !selectedAccount) {
       toast.error("لطفا مبلغ را وارد کنید");
       return;
     }
 
     const amount = parseFloat(paymentAmount);
-    if (amount <= 0 || amount > selectedPurchase.purchase.dueAmount) {
-      toast.error(
-        `مبلغ وارد شده باید بین 0 و ${selectedPurchase.purchase.dueAmount} باشد`
-      );
+    const purchaseData = resolvePurchaseData();
+    const remaining = parseFloat(purchaseData?.dueAmount ?? 0);
+
+    if (!purchaseData) {
+      toast.error("خریدی برای ثبت پرداخت انتخاب نشده است");
+      return;
+    }
+
+    if (Number.isNaN(remaining) || remaining <= 0) {
+      toast.error("برای این خرید بدهی باقی نمانده است");
+      return;
+    }
+
+    if (amount <= 0 || amount > remaining) {
+      toast.error(`مبلغ وارد شده باید بین 0 و ${remaining} باشد`);
       return;
     }
 
     setIsSubmittingPayment(true);
-    try {
-      createpaymentProces(selectedPurchaseId, {
-        amount,
-        paymentAccount: selectedAccount,
-        description: paymentDescription || `Payment for purchase`,
-      });
-      toast.success("پرداخت با موفقیت ثبت شد!");
-      setShowPaymentModal(false);
-      setPaymentAmount("");
-      setSelectedAccount("");
-      setPaymentDescription("");
-    } catch (error) {
-      toast.error("خطا در ثبت پرداخت: " + error.message);
-    } finally {
-      setIsSubmittingPayment(false);
-    }
+    createpaymentProces(
+      {
+        purchaseId: selectedPurchaseId,
+        payload: {
+          amount,
+          paymentAccount: selectedAccount,
+          description: paymentDescription || `Payment for purchase`,
+        },
+      },
+      {
+        onSuccess: () => {
+          setShowPaymentModal(false);
+          setPaymentAmount("");
+          setSelectedAccount("");
+          setPaymentDescription("");
+          setSelectedPurchaseSummary(null);
+        },
+        onSettled: () => setIsSubmittingPayment(false),
+      }
+    );
   };
 
   // Helper functions for edit form
@@ -250,6 +293,12 @@ const Purchases = () => {
       }));
     }
   }, [selectedPurchase, showEditModal, editingPurchase]);
+
+  useEffect(() => {
+    if (selectedPurchase?.purchase) {
+      setSelectedPurchaseSummary(selectedPurchase.purchase);
+    }
+  }, [selectedPurchase]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("fa-IR");
@@ -364,34 +413,37 @@ const Purchases = () => {
         </div>
       </div>
 
-      {/* Filters and Search */}
+      {/* Filters */}
       <div className="bg-white rounded-lg  border border-gray-200 p-6">
-        <div className="flex  flex-row gap-4 items-center justify-between">
-          <div className="flex w-[60%]  md:w-[50%] gap-4">
-            <input
-              type="text"
-              placeholder="جستجو بر اساس نام تهیه کننده..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className={inputStyle}
-            />
+        <div className="flex flex-row gap-4 items-center justify-between">
+          <div className="flex w-full md:w-[60%] gap-4">
             <select
               value={supplierFilter}
               onChange={(e) => {
                 setSupplierFilter(e.target.value);
                 setPage(1);
               }}
-              className={inputStyle}
+              className={`${inputStyle} flex-1`}
             >
-              <option value="">همه تهیه کننده ها</option>
+              <option value="">همه تهیه‌کننده‌ها</option>
               {suppliers?.data?.map((supplier) => (
                 <option key={supplier._id} value={supplier._id}>
                   {supplier.name}
                 </option>
               ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className={`${inputStyle} flex-1`}
+            >
+              <option value="">همه حالات پرداخت</option>
+              <option value="paid">پرداخت شده</option>
+              <option value="partial">پرداخت نسبی</option>
+              <option value="pending">باقی مانده</option>
             </select>
           </div>
           <button
@@ -494,6 +546,20 @@ const Purchases = () => {
                         >
                           <EyeIcon className="h-4 w-4" />
                         </button>
+                        {Number(purchase?.dueAmount ?? 0) > 0 && (
+                          <button
+                            onClick={() => {
+                              setSelectedPurchaseId(purchase._id);
+                              setSelectedPurchaseSummary(purchase);
+                              setShowDetailsModal(false);
+                              setShowPaymentModal(true);
+                            }}
+                            className="text-green-600 hover:text-green-900 flex items-center gap-1"
+                            title="ثبت پرداخت"
+                          >
+                            <BanknotesIcon className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEditPurchase(purchase)}
                           className="text-green-600 hover:text-green-900 flex items-center gap-1"
@@ -550,7 +616,10 @@ const Purchases = () => {
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">جزئیات خرید</h2>
               <button
-                onClick={() => setShowDetailsModal(false)}
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedPurchaseSummary(null);
+                }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <XCircleIcon className="h-6 w-6" />
@@ -573,31 +642,25 @@ const Purchases = () => {
                   <div className="bg-purple-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">قیمت مجموعی</p>
                     <p className="text-lg font-semibold text-purple-600">
-                      {formatCurrency(
-                        selectedPurchase.purchase?.totalAmount?.toFixed(2)
-                      )}
+                      {formatCurrency(Number(detailPurchase?.totalAmount || 0))}
                     </p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">مبلغ پرداخت شده</p>
                     <p className="text-lg font-semibold text-green-600">
-                      {formatCurrency(
-                        selectedPurchase.purchase?.paidAmount?.toFixed(2)
-                      )}
+                      {formatCurrency(Number(detailPurchase?.paidAmount || 0))}
                     </p>
                   </div>
                   <div className="bg-red-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">مبلغ باقی مانده</p>
                     <p className="text-lg font-semibold text-red-600">
-                      {formatCurrency(
-                        selectedPurchase.purchase?.dueAmount?.toFixed(2)
-                      )}
+                      {formatCurrency(Number(detailPurchase?.dueAmount || 0))}
                     </p>
                   </div>
                   <div className="bg-blue-50 rounded-lg p-3">
                     <p className="text-xs text-gray-600">تعداد اجناس</p>
                     <p className="text-lg font-semibold text-blue-600">
-                      {selectedPurchase.purchase?.items?.length || 0}
+                      {detailItems.length || 0}
                     </p>
                   </div>
                 </div>
@@ -613,7 +676,7 @@ const Purchases = () => {
                         نمبر فاکتور
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedPurchase.purchase?.batchNumber || "نامشخص"}
+                        {detailPurchase?.batchNumber || "نامشخص"}
                       </p>
                     </div>
                     <div>
@@ -621,7 +684,7 @@ const Purchases = () => {
                         تاریخ خرید
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {formatDate(selectedPurchase.purchase?.purchaseDate)}
+                        {formatDate(detailPurchase?.purchaseDate)}
                       </p>
                     </div>
                     <div>
@@ -629,8 +692,8 @@ const Purchases = () => {
                         تهیه کننده
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedPurchase.purchase?.supplier?.name ||
-                          findSupplier(selectedPurchase.purchase?.supplier)
+                        {detailPurchase?.supplier?.name ||
+                          findSupplier(detailPurchase?.supplier)
                             ?.name ||
                           "نامشخص"}
                       </p>
@@ -641,12 +704,12 @@ const Purchases = () => {
                       </h4>
                       <span
                         className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
-                          selectedPurchase.purchase?.dueAmount > 0
+                          (detailPurchase?.dueAmount ?? 0) > 0
                             ? "partial"
                             : "paid"
                         )}`}
                       >
-                        {selectedPurchase.purchase?.dueAmount > 0
+                        {(detailPurchase?.dueAmount ?? 0) > 0
                           ? "نسبی پرداخت شده"
                           : "تمام پرداخت شده"}
                       </span>
@@ -683,7 +746,7 @@ const Purchases = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {selectedPurchase.purchase?.items?.length === 0 ? (
+                        {detailItems.length === 0 ? (
                           <tr>
                             <td
                               colSpan={5}
@@ -693,8 +756,7 @@ const Purchases = () => {
                             </td>
                           </tr>
                         ) : (
-                          selectedPurchase.purchase?.items?.map(
-                            (item, index) => (
+                          detailItems.map((item, index) => (
                               <tr key={index} className="hover:bg-gray-50">
                                 <td className="px-3 py-2 text-sm text-gray-900">
                                   {item.product?.name || "نامشخص"}
@@ -723,9 +785,10 @@ const Purchases = () => {
                   <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
                     <div className="flex justify-between items-center">
                       <div>
-                        {selectedPurchase.purchase?.dueAmount > 0 && (
+                        {(detailPurchase?.dueAmount ?? 0) > 0 && (
                           <button
                             onClick={() => {
+                              setSelectedPurchaseSummary(detailPurchase);
                               setShowPaymentModal(true);
                               setShowDetailsModal(false);
                             }}
@@ -739,9 +802,7 @@ const Purchases = () => {
                       <div className="text-right">
                         <div className="text-sm font-semibold text-gray-900">
                           مجموع کل:{" "}
-                          {formatCurrency(
-                            selectedPurchase.purchase?.totalAmount?.toFixed(2)
-                          )}
+                          {formatCurrency(Number(detailPurchase?.totalAmount || 0))}
                         </div>
                       </div>
                     </div>
@@ -796,16 +857,24 @@ const Purchases = () => {
       {/* Payment Modal */}
       <GloableModal
         open={showPaymentModal}
-        setOpen={setShowPaymentModal}
+        setOpen={(open) => {
+          setShowPaymentModal(open);
+          if (!open) {
+            setSelectedPurchaseSummary(null);
+          }
+        }}
         isClose={true}
       >
-        {selectedPurchase && (
+        {paymentPurchase && (
           <div className=" w-[500px] h-[500px] bg-white overflow-y-auto rounded-md">
             <div className="bg-white rounded-lg   w-full">
               <div className="p-6 border-b flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900">ثبت پرداخت</h2>
                 <button
-                  onClick={() => setShowPaymentModal(false)}
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setSelectedPurchaseSummary(null);
+                  }}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <XCircleIcon className="h-6 w-6" />
@@ -815,7 +884,7 @@ const Purchases = () => {
                 <div className="bg-blue-50 p-4 rounded-lg col-span-2">
                   <p className="text-sm text-blue-900">
                     مبلغ باقی‌مانده:{" "}
-                    {formatCurrency(selectedPurchase.purchase?.dueAmount)} AFN
+                    {formatCurrency(Number(paymentPurchase?.dueAmount || 0))} AFN
                   </p>
                 </div>
 
@@ -830,7 +899,7 @@ const Purchases = () => {
                     onChange={(e) => setPaymentAmount(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-sm  "
                     placeholder="مبلغ را وارد کنید"
-                    max={selectedPurchase.purchase?.dueAmount}
+                    max={paymentPurchase?.dueAmount ?? undefined}
                   />
                 </div>
 
@@ -867,7 +936,10 @@ const Purchases = () => {
 
                 <div className="flex  items-center gap-2 pt-4 col-span-1">
                   <button
-                    onClick={() => setShowPaymentModal(false)}
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      setSelectedPurchaseSummary(null);
+                    }}
                     className="px-4 py-2 border border-gray-300 rounded-sm hover:bg-gray-50"
                   >
                     انصراف

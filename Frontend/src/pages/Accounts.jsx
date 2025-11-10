@@ -28,6 +28,7 @@ import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
 import { formatNumber } from "../utilies/helper";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 const Accounts = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ const Accounts = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [editingAccount, setEditingAccount] = useState(null);
-  const { register, handleSubmit, reset, watch } = useForm();
+  const { register, handleSubmit, reset, watch, setValue } = useForm();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deletedId, setDeletedId] = useState(null);
   const { data: accountsResp, isLoading } = useAccounts({
@@ -52,6 +53,8 @@ const Accounts = () => {
   const total = accountsResp?.total || accounts.length || 0;
   const totalPages =
     accountsResp?.pages || Math.max(1, Math.ceil(total / limit));
+  const accountSubmitLock = useSubmitLock();
+  const transactionSubmitLock = useSubmitLock();
 
   // Fetch entities for reference selection
   const { data: suppliersData } = useSuppliers();
@@ -81,24 +84,46 @@ const Accounts = () => {
     }
   };
 
-  const onSubmitAccount = async (data) => {
+  const runMutation = (mutateFn, payload) =>
+    new Promise((resolve, reject) => {
+      mutateFn(payload, {
+        onSuccess: resolve,
+        onError: reject,
+      });
+    });
+
+  const watchedTransactionType = watch("transactionType") || "Credit";
+  const isAccountActionPending = accountSubmitLock.isSubmitting;
+  const isTransactionActionPending = transactionSubmitLock.isSubmitting;
+
+  const onSubmitAccount = accountSubmitLock.wrapSubmit(async (data) => {
     const accountData = {
       ...data,
       refId: isSystemAccount(data.type) ? null : data.refId,
     };
 
     if (editingAccount) {
-      updateAccountMutation({
+      await runMutation(updateAccountMutation, {
         id: editingAccount._id,
         accountData,
       });
     } else {
-      createAccountMutation(accountData);
+      await runMutation(createAccountMutation, accountData);
     }
     setShowAccountModal(false);
     setEditingAccount(null);
-    reset();
-  };
+    reset({
+      type,
+      refId: "",
+      name: "",
+      openingBalance: 0,
+      currency: "AFN",
+      transactionType: "Credit",
+      amount: "",
+      description: "",
+    });
+    setAccountType(type);
+  });
 
   const handleEdit = (acc) => {
     setEditingAccount(acc);
@@ -110,6 +135,7 @@ const Accounts = () => {
       openingBalance: acc.openingBalance || 0,
       currency: acc.currency || "AFN",
     });
+  setAccountType(acc.type || type);
   };
 
   const handleDelete = async () => {
@@ -120,14 +146,12 @@ const Accounts = () => {
   const handleAddTransaction = (acc) => {
     setSelectedAccount(acc);
     setShowTransactionModal(true);
-    reset({
-      transactionType: "Credit",
-      amount: "",
-      description: "",
-    });
+    setValue("transactionType", "Credit");
+    setValue("amount", "");
+    setValue("description", "");
   };
 
-  const onSubmitTransaction = async (data) => {
+  const onSubmitTransaction = transactionSubmitLock.wrapSubmit(async (data) => {
     try {
       const transactionData = {
         accountId: selectedAccount._id,
@@ -137,17 +161,16 @@ const Accounts = () => {
           data.description || `Manual ${data.transactionType} transaction`,
       };
 
-      createTransaction(transactionData);
+      await runMutation(createTransaction, transactionData);
       setShowTransactionModal(false);
       setSelectedAccount(null);
-      reset();
-      toast.success("تراکنش موفق بود");
-      // Refresh accounts data
+      setValue("transactionType", "Credit");
+      setValue("amount", "");
+      setValue("description", "");
     } catch (err) {
-      toast.error("تراکنش ناموفق بود");
-      console.log(err);
+      console.error(err);
     }
-  };
+  });
 
   return (
     <div className="space-y-6 w-full max-w-full overflow-x-hidden">
@@ -505,9 +528,16 @@ const Accounts = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-600 text-white rounded-sm cursor-pointer hover:bg-amber-700"
+                  disabled={isAccountActionPending}
+                  className={`px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 ${
+                    isAccountActionPending ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                  }`}
                 >
-                  {editingAccount ? "ذخیره تغییرات" : "ایجاد حساب"}
+                  {isAccountActionPending
+                    ? "در حال ذخیره..."
+                    : editingAccount
+                    ? "ذخیره تغییرات"
+                    : "ایجاد حساب"}
                 </button>
               </div>
             </form>
@@ -575,7 +605,7 @@ const Accounts = () => {
                       مثال‌های کاربردی:
                     </p>
                     <div className="text-xs text-gray-600 space-y-1">
-                      {watch("transactionType") === "Credit" && (
+                      {watchedTransactionType === "Credit" && (
                         <>
                           <p>
                             • مشتری پول پرداخت کرد → موجودی حساب مشتری افزایش
@@ -591,7 +621,7 @@ const Accounts = () => {
                           </p>
                         </>
                       )}
-                      {watch("transactionType") === "Debit" && (
+                      {watchedTransactionType === "Debit" && (
                         <>
                           <p>
                             • شما به مشتری پول پرداخت کردید → موجودی حساب مشتری
@@ -607,7 +637,7 @@ const Accounts = () => {
                           </p>
                         </>
                       )}
-                      {watch("transactionType") === "Expense" && (
+                      {watchedTransactionType === "Expense" && (
                         <>
                           <p>
                             • خرید ملزومات اداری → موجودی حساب صندوق کاهش
@@ -652,11 +682,11 @@ const Accounts = () => {
                 <div className="bg-yellow-50 p-3 rounded-lg">
                   <p className="text-sm text-yellow-800">
                     <strong>نکته:</strong>
-                    {watch("transactionType") === "Credit" &&
+                    {watchedTransactionType === "Credit" &&
                       " این تراکنش موجودی حساب را افزایش می‌دهد."}
-                    {watch("transactionType") === "Debit" &&
+                    {watchedTransactionType === "Debit" &&
                       " این تراکنش موجودی حساب را کاهش می‌دهد."}
-                    {watch("transactionType") === "Expense" &&
+                    {watchedTransactionType === "Expense" &&
                       " این تراکنش موجودی حساب را کاهش می‌دهد."}
                   </p>
                 </div>
@@ -674,9 +704,12 @@ const Accounts = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700"
+                    disabled={isTransactionActionPending}
+                    className={`px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 ${
+                      isTransactionActionPending ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                   >
-                    افزودن تراکنش
+                    {isTransactionActionPending ? "در حال افزودن..." : "افزودن تراکنش"}
                   </button>
                 </div>
               </form>

@@ -1,4 +1,4 @@
-import { PencilIcon, TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon, EyeIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { CalendarDays, ClipboardList, Info, Package, User } from "lucide-react";
 import { useState } from "react";
 import Button from "../components/Button";
@@ -11,7 +11,11 @@ import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import { useDeleteProdcut } from "../services/useApi";
+import { useDeleteProdcut, useCreateProdcut, useProduct } from "../services/useApi";
+import { formatNumber } from "../utilies/helper";
+import ProductForm from "../components/ProductForm";
+import { useForm } from "react-hook-form";
+
 const headers = [
   { title: "اسم جنس" },
   { title: "واحد پایه" },
@@ -19,11 +23,10 @@ const headers = [
   { title: "عملیات" },
 ];
 
-import { useProduct } from "../services/useApi";
-import { formatNumber } from "../utilies/helper";
-
 function Product() {
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProdcut();
+  const { mutate: createProduct, isPending: isCreating } = useCreateProdcut();
+  const { register, handleSubmit, formState, reset, control } = useForm();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -33,6 +36,7 @@ function Product() {
   const [showData, setShowData] = useState(false);
   const [show, setShow] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [openCreateProduct, setOpenCreateProduct] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
 
@@ -72,6 +76,24 @@ function Product() {
     setShowData(false);
     setSelectedPro(null);
   };
+
+  const handleOpenCreate = () => {
+    reset();
+    setOpenCreateProduct(true);
+  };
+
+  const handleCloseCreate = () => {
+    setOpenCreateProduct(false);
+  };
+
+  const onSubmit = (data) => {
+    createProduct(data, {
+      onSuccess: () => {
+        setOpenCreateProduct(false);
+        reset();
+      },
+    });
+  };
   // Show loading state if data is being fetched
   if (isLoading) {
     return (
@@ -82,15 +104,32 @@ function Product() {
   }
   return (
     <section className="w-full">
-      <div className=" w-full flex py-3 bg-white border-slate-200 rounded-md border my-1.5  justify-between ">
-        <div className=" w-[200px] md:w-[320px] pr-3">
-          <SearchInput
-            placeholder="جستجو بر اساس نام جنس..."
-            value={search}
-            onChange={(e) => setSearch(e?.target ? e.target.value : e)}
-          />
+      <div className="w-full flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-3 bg-white border-slate-200 rounded-md border my-1.5 px-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 w-full">
+            <SearchInput
+              placeholder="جستجو بر اساس نام جنس..."
+              value={search}
+              onChange={(e) => setSearch(e?.target ? e.target.value : e)}
+            />
+            <Button
+              onClick={handleOpenCreate}
+              icon={<PlusIcon className="h-5 w-5" />}
+              disabled={isCreating}
+              className="md:w-[200px] text-white bg-amber-600"
+            >
+              اضافه کردن جنس
+            </Button>
         </div>
       </div>
+      <GloableModal open={openCreateProduct} setOpen={handleCloseCreate}>
+        <ProductForm
+          register={register}
+          handleSubmit={handleSubmit(onSubmit)}
+          formState={formState}
+          control={control}
+          onClose={handleCloseCreate}
+        />
+      </GloableModal>
       <Table>
         <TableHeader headerData={headers} />
         <TableBody>

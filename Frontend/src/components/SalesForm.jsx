@@ -13,6 +13,7 @@ import TableBody from "./TableBody";
 import TableColumn from "./TableColumn";
 import TableHeader from "./TableHeader";
 import TableRow from "./TableRow";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 const productHeader = [
   { title: "محصول" },
   { title: "واحد" },
@@ -40,6 +41,7 @@ export default function SalesForm({
   const { data: units, isLoading: isLoadingUnits } = useUnits();
   const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
   const { data: employees, isLoading: isLoadingEmployees } = useEmployees();
+  const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   const getProductName = (id) => {
     return products?.data?.find((p) => p._id === id)?.name || id;
@@ -75,10 +77,10 @@ export default function SalesForm({
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const onSubmit = (data) => {
+  const onSubmit = wrapSubmit(async (data) => {
     const totals = summary();
-    console.log(data);
-    createSale({
+    await Promise.resolve(
+      createSale({
       ...data,
       saleDate: data.saleDate ? data.saleDate : Date.now(),
       items: [...items],
@@ -90,7 +92,8 @@ export default function SalesForm({
       paymentStatus: data.saleType === "cash" ? "paid" : "pending",
       createdBy: "Admin",
       lastUpdated: new Date().toISOString(),
-    });
+      })
+    );
     reset();
     setItems([]);
     setCurrentItem({
@@ -101,7 +104,7 @@ export default function SalesForm({
       unitPrice: 0,
     });
     close && close();
-  };
+  });
 
   if (
     isLoadingCustomers ||
@@ -481,9 +484,12 @@ export default function SalesForm({
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+          disabled={isSubmitting}
+          className={`px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 ${
+            isSubmitting ? "opacity-60 cursor-not-allowed" : ""
+          }`}
         >
-          Create Sale
+          {isSubmitting ? "Saving..." : "Create Sale"}
         </button>
       </div>
     </form>

@@ -102,9 +102,18 @@ export default function Expenses() {
 
   const createMutation = useMutation({
     mutationFn: createExpenseApi,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("هزینه ثبت شد");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      if (variables?.paidFromAccount) {
+        queryClient.invalidateQueries({
+          queryKey: ["accountLedger", variables.paidFromAccount],
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
+      }
       setIsModalOpen(false);
     },
     onError: (e) => toast.error(e.message || "ثبت هزینه ناموفق بود"),
@@ -112,9 +121,22 @@ export default function Expenses() {
 
   const updateMutation = useMutation({
     mutationFn: updateExpenseApi,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("هزینه ویرایش شد");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      const targetAccount =
+        variables?.payload?.paidFromAccount ||
+        editingExpense?.paidFromAccount?._id ||
+        editingExpense?.paidFromAccount;
+      if (targetAccount) {
+        queryClient.invalidateQueries({
+          queryKey: ["accountLedger", targetAccount],
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
+      }
       setIsModalOpen(false);
       setEditingExpense(null);
     },
@@ -126,6 +148,9 @@ export default function Expenses() {
     onSuccess: () => {
       toast.success("حذف شد");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["recentTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accountLedger"] });
     },
     onError: (e) => toast.error(e.message || "حذف ناموفق بود"),
   });

@@ -33,6 +33,7 @@ import {
 } from "../services/useApi";
 import { useForm } from "react-hook-form";
 import Button from "../components/Button";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 const AdminPanel = () => {
   const { isAuthenticated } = useAuth();
@@ -317,7 +318,6 @@ const CategoryManagement = () => {
               <option value="">همه انواع</option>
               <option value="expense">هزینه</option>
               <option value="income">درآمد</option>
-              <option value="product">محصول</option>
               <option value="both">هزینه و درآمد</option>
             </select>
           </div>
@@ -461,7 +461,6 @@ const CategoryManagement = () => {
                 >
                   <option value="expense">هزینه</option>
                   <option value="income">درآمد</option>
-                  <option value="product">محصول</option>
                   <option value="both">هزینه و درآمد</option>
                 </select>
               </div>
@@ -548,24 +547,42 @@ const ProfileManagement = () => {
     handleSubmit: emailtHandleSubmit,
     formState: { errors: editError },
   } = useForm();
+  const passwordSubmitLock = useSubmitLock();
+  const emailSubmitLock = useSubmitLock();
 
   const updateEmailMutation = useUpdateProfile();
 
-  const handlePassword = (data) => {
-    updatePassword(data, {
-      onSuccess: () => Navigate("/login"),
+  const runMutation = (mutateFn, payload, callbacks = {}) =>
+    new Promise((resolve, reject) => {
+      mutateFn(payload, {
+        onSuccess: (...args) => {
+          callbacks.onSuccess?.(...args);
+          resolve(...args);
+        },
+        onError: (error) => {
+          callbacks.onError?.(error);
+          reject(error);
+        },
+      });
     });
-  };
 
-  const handleEmail = async (data) => {
+  const handlePassword = passwordSubmitLock.wrapSubmit(async (data) => {
+    await runMutation(updatePassword, data);
+    Navigate("/login");
+  });
+
+  const handleEmail = emailSubmitLock.wrapSubmit(async (data) => {
     // Filter out empty fields - only send fields that have values
     const updateData = Object.keys(data).reduce((acc, key) => {
-      if (data[key]) {
-        // For text fields, trim and check if not empty
-        if (key !== 'image' && data[key].trim && data[key].trim() !== "") {
+      if (key === "image") {
+        const file = data[key]?.[0];
+        if (file) {
+          acc[key] = file;
+        }
+      } else if (data[key]) {
+        if (data[key].trim && data[key].trim() !== "") {
           acc[key] = data[key].trim();
-        } else if (key === 'image') {
-          // Include image file
+        } else if (!data[key].trim) {
           acc[key] = data[key];
         }
       }
@@ -578,7 +595,7 @@ const ProfileManagement = () => {
       return;
     }
 
-    updateEmailMutation.mutate(updateData, {
+    await runMutation(updateEmailMutation.mutate, updateData, {
       onSuccess: async () => {
         setChangeEmail(false);
         setImagePreview(null);
@@ -593,7 +610,7 @@ const ProfileManagement = () => {
         queryClient.invalidateQueries(["profile"]);
       },
     });
-  };
+  });
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -754,9 +771,14 @@ const ProfileManagement = () => {
                 </button>
             <button
                   type="submit"
-                  className="bg-amber-600 cursor-pointer text-white hover:bg-amber-600/90 duration-200 flex gap-2 justify-center items-center px-4 py-2 rounded-sm font-medium text-sm transition-all ease-in"
+              disabled={passwordSubmitLock.isSubmitting}
+              className={`text-white duration-200 flex gap-2 justify-center items-center px-4 py-2 rounded-sm font-medium text-sm transition-all ease-in ${
+                passwordSubmitLock.isSubmitting
+                  ? "bg-amber-600/70 cursor-not-allowed"
+                  : "bg-amber-600 hover:bg-amber-600/90 cursor-pointer"
+              }`}
             >
-                  تغییر رمز
+              {passwordSubmitLock.isSubmitting ? "در حال ذخیره..." : "تغییر رمز"}
             </button>
           </div>
             </form>
@@ -871,9 +893,16 @@ const ProfileManagement = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-amber-600 cursor-pointer text-white hover:bg-amber-600/90 duration-200 flex gap-2 justify-center items-center px-4 py-2 rounded-sm font-medium text-sm transition-all ease-in"
+                  disabled={emailSubmitLock.isSubmitting}
+                  className={`text-white duration-200 flex gap-2 justify-center items-center px-4 py-2 rounded-sm font-medium text-sm transition-all ease-in ${
+                    emailSubmitLock.isSubmitting
+                      ? "bg-amber-600/70 cursor-not-allowed"
+                      : "bg-amber-600 hover:bg-amber-600/90 cursor-pointer"
+                  }`}
                 >
-                  ذخیره تغییرات
+                  {emailSubmitLock.isSubmitting
+                    ? "در حال ذخیره..."
+                    : "ذخیره تغییرات"}
                 </button>
               </div>
             </form>

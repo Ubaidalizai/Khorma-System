@@ -17,6 +17,7 @@ import { inputStyle } from "./ProductForm";
 import { BiTransferAlt } from "react-icons/bi";
 import { CgEye } from "react-icons/cg";
 import Select from "../components/Select";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 // Headers in Dari
 const tableHeader = [
@@ -33,7 +34,7 @@ const Employee = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferDestination, setTransferDestination] = useState("warehouse");
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, watch, setValue } = useForm();
 
   const { data: employees } = useEmployees();
   const {
@@ -44,7 +45,11 @@ const Employee = () => {
     search,
     employeeId: selectedEmployee,
   });
-  const { mutate: createStockTransfer } = useCreateStockTransfer();
+  const { mutate: createStockTransfer, isPending: isCreatingTransfer } =
+    useCreateStockTransfer();
+  const { isSubmitting: isTransferSubmitting, wrapSubmit } = useSubmitLock();
+  const quantityValue = watch("quantity");
+  const quantityNumber = Number(quantityValue || 0);
 
   useEffect(() => {
     if (employees?.data?.length > 0 && !selectedEmployee) {
@@ -66,31 +71,35 @@ const Employee = () => {
   const handleTransfer = (item) => {
     setSelectedItem(item);
     setShowTransfer(true);
+  setValue("quantity", "");
   };
 
-  const onSubmitTransfer = (data) => {
+  const runMutation = (mutateFn, payload) =>
+    new Promise((resolve, reject) => {
+      mutateFn(payload, {
+        onSuccess: resolve,
+        onError: reject,
+      });
+    });
+
+  const onSubmitTransfer = wrapSubmit(async (data) => {
     if (
       !data.quantity ||
       data.quantity <= 0 ||
       data.quantity > selectedItem.quantity_in_hand
     )
       return;
-    createStockTransfer(
-      {
-        product: selectedItem.product._id,
-        fromLocation: "employee",
-        toLocation: transferDestination,
-        employee: selectedItem.employee._id,
-        quantity: Number(data.quantity),
-      },
-      {
-        onSuccess: () => {
-          setShowTransfer(false);
-          reset();
-        },
-      }
-    );
-  };
+    await runMutation(createStockTransfer, {
+      product: selectedItem.product._id,
+      fromLocation: "employee",
+      toLocation: transferDestination,
+      employee: selectedItem.employee._id,
+      quantity: Number(data.quantity),
+    });
+    setShowTransfer(false);
+    setValue("quantity", "");
+  });
+  const isTransferBusy = isTransferSubmitting || isCreatingTransfer;
 
   if (isLoading) {
     return (
@@ -284,6 +293,13 @@ const Employee = () => {
             <Button
               type="submit"
               className=" bg-primary-brown-light text-white px-4 py-2 rounded-md"
+              disabled={
+                isTransferBusy ||
+                !quantityValue ||
+                quantityNumber <= 0 ||
+                quantityNumber > (selectedItem?.quantity_in_hand || 0)
+              }
+              isLoading={isTransferBusy}
             >
               انتقال موجودی
             </Button>

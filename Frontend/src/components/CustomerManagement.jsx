@@ -19,6 +19,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { inputStyle } from "./ProductForm";
 import GloableModal from "./GloableModal";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 const CustomerManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,9 +40,13 @@ const CustomerManagement = () => {
   });
 
   const { data: customers, isLoading, error, refetch } = useCustomers();
-  const createCustomerMutation = useCreateCustomer();
-  const updateCustomerMutation = useUpdateCustomer();
-  const deleteCustomerMutation = useDeleteCustomer();
+  const { mutate: createCustomer, isPending: isCreatingCustomer } =
+    useCreateCustomer();
+  const { mutate: updateCustomer, isPending: isUpdatingCustomer } =
+    useUpdateCustomer();
+  const { mutate: deleteCustomer, isPending: isDeletingCustomer } =
+    useDeleteCustomer();
+  const submitLock = useSubmitLock();
 
   // Filter customers based on search term
   const filteredCustomers =
@@ -56,6 +61,8 @@ const CustomerManagement = () => {
           ?.toLowerCase()
           .includes(searchTerm.toLowerCase())
     ) || [];
+  const isSavingCustomer =
+    submitLock.isSubmitting || isCreatingCustomer || isUpdatingCustomer;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -76,15 +83,23 @@ const CustomerManagement = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const runMutation = (mutateFn, payload) =>
+    new Promise((resolve, reject) => {
+      mutateFn(payload, {
+        onSuccess: resolve,
+        onError: reject,
+      });
+    });
+
+  const handleSubmit = submitLock.wrapSubmit(async (e) => {
     e.preventDefault();
     if (editingCustomer) {
-      updateCustomerMutation.mutate({
+      await runMutation(updateCustomer, {
         id: editingCustomer._id,
         customerData: formData,
       });
     } else {
-      createCustomerMutation.mutate(formData);
+      await runMutation(createCustomer, formData);
     }
 
     setIsModalOpen(false);
@@ -100,7 +115,7 @@ const CustomerManagement = () => {
         zip_code: "",
       },
     });
-  };
+  });
 
   const handleEdit = (customer) => {
     setEditingCustomer(customer);
@@ -119,7 +134,7 @@ const CustomerManagement = () => {
   };
 
   const handleDelete = () => {
-    deleteCustomerMutation.mutate(currentId);
+    deleteCustomer(currentId);
   };
 
   const handleAddNew = () => {
@@ -459,15 +474,12 @@ const CustomerManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={
-                      createCustomerMutation.isPending ||
-                      updateCustomerMutation.isPending
-                    }
-                    className="btn-primary"
-                    className={`bg-amber-600 cursor-pointer group  text-white hover:bg-amber-600/90  duration-200   flex gap-2 justify-center items-center  px-4 py-2 rounded-sm font-medium text-sm  transition-all ease-in `}
+                  disabled={isSavingCustomer}
+                  className={`bg-amber-600 text-white duration-200 flex gap-2 justify-center items-center px-4 py-2 rounded-sm font-medium text-sm transition-all ease-in ${
+                    isSavingCustomer ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-amber-600/90"
+                  }`}
                   >
-                    {createCustomerMutation.isPending ||
-                    updateCustomerMutation.isPending
+                  {isSavingCustomer
                       ? "در حال ذخیره..."
                       : editingCustomer
                       ? "به‌روزرسانی"
@@ -508,10 +520,10 @@ const CustomerManagement = () => {
                   handleDelete();
                   setDeleteConfirm(false);
                 }}
-                disabled={deleteCustomerMutation.isPending}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                disabled={isDeletingCustomer}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {deleteCustomerMutation.isPending ? "در حال حذف..." : "حذف"}
+                {isDeletingCustomer ? "در حال حذف..." : "حذف"}
               </button>
             </div>
           </div>

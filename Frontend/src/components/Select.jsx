@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RiArrowDownSLine } from "react-icons/ri";
 import { useClickOutSide } from "../hooks/useClickOutSide";
 
@@ -15,7 +15,15 @@ function Select({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState(value || defaultSelected || "");
+  const [selected, setSelected] = useState(value || "");
+  useEffect(() => {
+    if (value) {
+      setSelected(value);
+    } else {
+      setSelected("");
+    }
+  }, [value]);
+
   const ref = useClickOutSide(() => setIsOpen(false));
   const filteredOptions = options?.filter((opt) =>
     (opt.label || opt.value).toLowerCase().includes(search.toLowerCase())

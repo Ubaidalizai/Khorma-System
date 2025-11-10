@@ -16,6 +16,7 @@ import TableBody from "./TableBody";
 import TableRow from "./TableRow";
 import TableColumn from "./TableColumn";
 import Select from "./Select";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 const productHeader = [
   { title: "محصول" },
@@ -49,6 +50,7 @@ function SaleForm({
   });
   const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
   const [loading, setLoading] = useState(false);
+  const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   // Get selected employee from form
   const selectedEmployee = watch("employee");
@@ -88,11 +90,6 @@ function SaleForm({
   const employeeAccounts =
     employeeAccResp?.accounts || employeeAccResp?.data || employeeAccResp || [];
 
-  console.log("SaleForm - Form state debug:");
-  console.log("- saleType:", saleType);
-  console.log("- selectedEmployee from watch:", selectedEmployee);
-  console.log("- employeeAccounts length:", employeeAccounts.length);
-
   // Get unique products from stock data or employee stock data
   const products = React.useMemo(() => {
     // Use employee stock if employee is selected
@@ -115,7 +112,6 @@ function SaleForm({
     });
 
     const result = Array.from(productMap.values());
-    console.log("- products result:", result);
     return result;
   }, [stockData, employeeStockData, selectedEmployee]);
 
@@ -173,7 +169,7 @@ function SaleForm({
 
   const handleAddItem = () => {
     if (currentItem.product && currentItem.quantity > 0) {
-      setItems([...items, currentItem]);
+      setItems([...items, { ...currentItem }]);
       setCurrentItem({
         product: "",
         unit: "",
@@ -197,7 +193,12 @@ function SaleForm({
     }, 0);
   };
 
-  const handleFormSubmit = async (data) => {
+  const rawPaidAmount = watch("paidAmount");
+  const paidAmountValue = Number(rawPaidAmount) || 0;
+  const totalAmountValue = calculateTotal();
+  const remainingAmount = Math.max(totalAmountValue - paidAmountValue, 0);
+
+  const handleFormSubmit = wrapSubmit(async (data) => {
     setLoading(true);
     try {
       const saleData = {
@@ -225,7 +226,9 @@ function SaleForm({
     } finally {
       setLoading(false);
     }
-  };
+  });
+
+  const isSaving = loading || isSubmitting;
 
   // Show loading state if data is being fetched
   if (
@@ -236,7 +239,7 @@ function SaleForm({
     unitsLoading
   ) {
     return (
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto flex justify-center items-center min-h-[400px]">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto flex justify-center items-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
           <p className="text-gray-600">در حال بارگذاری...</p>
@@ -259,7 +262,7 @@ function SaleForm({
           <CgClose className=" text-[20px]" onClick={onClose} />
         </div>
       </div>
-      <div className="p-4">
+      <div className="p-3">
         {/* Sale Type Selection */}
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -299,7 +302,7 @@ function SaleForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-3 mb-5">
           {/* Customer/Employee Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -400,14 +403,14 @@ function SaleForm({
         </div>
 
         {/* Items Section */}
-        <div className="border col-start-1 col-end-4 border-gray-100 rounded-lg p-4 mb-4">
+        <div className="border col-start-1 col-end-4 border-gray-100 rounded-lg p-3 mb-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">خرید اجناس</h3>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="px-3 py-2 bg-green-600 text-white rounded-sm text-sm hover:bg-green-700"
+                className="px-3 py-2 bg-amber-600 text-white rounded-sm text-sm hover:bg-amber-700"
               >
                 اضافه کردن
               </button>
@@ -552,20 +555,34 @@ function SaleForm({
         </div>
 
         {/* Sale Summary */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <div className="space-y-2">
-            <div className=" border-gray-300">
-              <div className="flex justify-between">
-                <span className="font-bold text-gray-900">مجموع نهایی:</span>
-                <span className="text-xl font-bold text-amber-600">
-                  {calculateTotal().toFixed(2)} افغانی
-                </span>
-              </div>
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">مجموع نهایی:</span>
+              <span className="text-lg font-bold text-amber-600">
+                {totalAmountValue.toFixed(2)} افغانی
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <span>مبلغ پرداخت شده:</span>
+              <span className="font-semibold text-blue-600">
+                {paidAmountValue.toFixed(2)} افغانی
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <span>مبلغ باقی مانده:</span>
+              <span
+                className={`font-semibold ${
+                  remainingAmount > 0 ? "text-orange-600" : "text-green-600"
+                }`}
+              >
+                {remainingAmount.toFixed(2)} افغانی
+              </span>
             </div>
           </div>
         </div>
       </div>
-      <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+      <div className="p-4 border-t border-gray-200 flex justify-end gap-4">
         <button
           type="button"
           onClick={onClose}
@@ -576,9 +593,9 @@ function SaleForm({
         <button
           type="submit"
           className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-          disabled={loading}
+          disabled={isSaving}
         >
-          {loading
+          {isSaving
             ? "در حال بارگذاری..."
             : editMode
             ? "ویرایش فروش"

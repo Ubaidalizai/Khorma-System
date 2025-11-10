@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { inputStyle } from "./ProductForm";
 import { toast } from "react-toastify";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 
 function SupplierForm({ handleSubmit, register, onSubmit, close }) {
   const [contactInfo, setContactInfo] = useState({
@@ -11,6 +12,7 @@ function SupplierForm({ handleSubmit, register, onSubmit, close }) {
     state: "",
     zip_code: "",
   });
+  const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   const generateId = () => Math.random().toString(36).substr(2, 4);
 
@@ -32,7 +34,7 @@ function SupplierForm({ handleSubmit, register, onSubmit, close }) {
     return `sup_${String(nextNum).padStart(3, "0")}`;
   };
 
-  const handleOnSubmit = (data) => {
+  const handleOnSubmit = async (data) => {
     if (!data.name || !contactInfo.phone) {
       toast.error("لطفا نام تماس و تلفن را وارد کنید");
       return;
@@ -43,14 +45,14 @@ function SupplierForm({ handleSubmit, register, onSubmit, close }) {
       contact_info: contactInfo,
       id: generateId(),
     };
-    onSubmit(supplierData);
+    await Promise.resolve(onSubmit(supplierData));
     close && close();
   };
 
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(handleOnSubmit)}
+      onSubmit={handleSubmit(wrapSubmit(handleOnSubmit))}
       className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -173,9 +175,12 @@ function SupplierForm({ handleSubmit, register, onSubmit, close }) {
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+          disabled={isSubmitting}
+          className={`px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 ${
+            isSubmitting ? "opacity-60 cursor-not-allowed" : ""
+          }`}
         >
-          اضافه کردن تهیه کننده
+          {isSubmitting ? "در حال ذخیره..." : "اضافه کردن تهیه کننده"}
         </button>
       </div>
     </form>

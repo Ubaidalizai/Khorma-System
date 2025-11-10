@@ -13,16 +13,12 @@ exports.getAllEmployeeStocks = asyncHandler(async (req, res) => {
   // Filter by employee if employeeId is provided
   if (req.query.employeeId) {
     query.employee = req.query.employeeId;
-    console.log('EmployeeStock Controller - Filtering by employeeId:', req.query.employeeId);
   }
-  
-  console.log('EmployeeStock Controller - Query:', query);
   
   const stocks = await EmployeeStock.find(query)
     .populate('employee', 'name')
     .populate('product', 'name');
 
-  console.log('EmployeeStock Controller - Found stocks:', stocks.length);
 
   res.status(200).json({
     success: true,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeftIcon,
@@ -10,6 +10,7 @@ import {
   FunnelIcon,
 } from "@heroicons/react/24/outline";
 import { useAccountLedger } from "../services/useApi";
+import Pagination from "../components/Pagination";
 
 const AccountDetails = () => {
   const { id } = useParams();
@@ -17,6 +18,8 @@ const AccountDetails = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [transactionType, setTransactionType] = useState("");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const { data: ledgerData, isLoading, error } = useAccountLedger(id, {
     startDate,
@@ -30,6 +33,16 @@ const AccountDetails = () => {
   const currentBalance = ledgerData?.currentBalance || 0;
   const totalTransactions = ledgerData?.totalTransactions || 0;
   const ledger = ledgerData?.ledger || [];
+
+  useEffect(() => {
+    setPage(1);
+  }, [startDate, endDate, transactionType, ledger.length]);
+
+  const paginatedLedger = useMemo(() => {
+    const startIndex = (page - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    return ledger.slice(startIndex, endIndex);
+  }, [ledger, page, rowsPerPage]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fa-IR').format(amount);
@@ -299,9 +312,9 @@ const AccountDetails = () => {
                   </td>
                 </tr>
               ) : (
-                ledger.map((transaction, index) => (
+                paginatedLedger.map((transaction, index) => (
                   <tr 
-                    key={index} 
+                    key={transaction.transactionId || index} 
                     className={`hover:bg-gray-50 ${
                       isClickable(transaction) ? 'cursor-pointer' : ''
                     }`}
@@ -335,6 +348,21 @@ const AccountDetails = () => {
             </tbody>
           </table>
         </div>
+        {ledger.length > 0 && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <Pagination
+              page={page}
+              limit={rowsPerPage}
+              total={ledger.length}
+              totalPages={Math.max(1, Math.ceil(ledger.length / rowsPerPage))}
+              onPageChange={setPage}
+              onRowsPerPageChange={(newLimit) => {
+                setRowsPerPage(newLimit);
+                setPage(1);
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

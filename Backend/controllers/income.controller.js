@@ -7,6 +7,21 @@ const AuditLog = require('../models/auditLog.model');
 const Account = require('../models/account.model');
 const AccountTransaction = require('../models/accountTransaction.model');
 
+const normalizeStringInput = (value) => {
+  if (typeof value !== 'string') return '';
+  return value.trim();
+};
+
+const resolveIncomeSource = (value) => {
+  const normalized = normalizeStringInput(value);
+  return normalized || 'درآمد عمومی';
+};
+
+const buildIncomeDescription = (providedDescription, fallback) => {
+  const normalized = normalizeStringInput(providedDescription);
+  return normalized || fallback;
+};
+
 // @desc    Get all income records with filtering and pagination
 // @route   GET /api/v1/income
 exports.getAllIncome = asyncHandler(async (req, res, next) => {
@@ -20,7 +35,7 @@ exports.getAllIncome = asyncHandler(async (req, res, next) => {
     maxAmount,
     source,
     createdBy,
-    sortBy = 'date',
+    sortBy = 'createdAt',
     sortOrder = 'desc',
   } = req.query;
 
@@ -50,7 +65,12 @@ exports.getAllIncome = asyncHandler(async (req, res, next) => {
 
   // Sort
   const sort = {};
-  sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+  const sortDirection = sortOrder === 'desc' ? -1 : 1;
+  sort[sortBy] = sortDirection;
+  if (sortBy !== 'createdAt') {
+    sort.createdAt = sortDirection;
+  }
+  sort._id = sortDirection;
 
   // Execute query
   const [incomeRecords, total] = await Promise.all([
@@ -300,20 +320,28 @@ exports.createIncome = asyncHandler(async (req, res, next) => {
       );
     }
 
-    // Create income
-    const income = await Income.create(
-      [
-        {
-          category,
-          placedInAccount,
-          amount,
-          date: date ? new Date(date) : new Date(),
-          description,
-          createdBy: req.user._id,
-        },
-      ],
-      { session }
+    const finalSource = resolveIncomeSource(source);
+    const normalizedDescription = normalizeStringInput(description);
+    const transactionDescription = buildIncomeDescription(
+      normalizedDescription,
+      `Income: ${categoryDoc.name} from ${finalSource}`
     );
+
+    const incomePayload = {
+      category,
+      placedInAccount,
+      amount,
+      date: date ? new Date(date) : new Date(),
+      source: finalSource,
+      createdBy: req.user._id,
+    };
+
+    if (normalizedDescription) {
+      incomePayload.description = normalizedDescription;
+    }
+
+    // Create income
+    const income = await Income.create([incomePayload], { session });
     const createdIncome = income[0];
 
     // Post account transaction (positive to increase balance)
@@ -326,7 +354,7 @@ exports.createIncome = asyncHandler(async (req, res, next) => {
           amount: Math.abs(amount),
           referenceType: 'income',
           referenceId: createdIncome._id,
-          description: description || `Income: ${categoryDoc.name} from ${finalSource}`,
+          description: transactionDescription,
           created_by: req.user._id,
         },
       ],
@@ -349,7 +377,7 @@ exports.createIncome = asyncHandler(async (req, res, next) => {
           operation: 'INSERT',
           oldData: null,
           newData: createdIncome.toObject(),
-          reason: `Income created: ${categoryDoc.name} - ${amount} from ${source}`,
+          reason: `Income created: ${categoryDoc.name} - ${amount} from ${finalSource}`,
           changedBy: req.user?.name || 'System',
           changedAt: new Date(),
         },
@@ -480,9 +508,16 @@ exports.updateIncome = asyncHandler(async (req, res, next) => {
     if (category !== undefined) income.category = category;
     if (amount !== undefined) income.amount = amount;
     if (date !== undefined) income.date = new Date(date);
-    if (description !== undefined) income.description = description;
+    if (description !== undefined) {
+      const normalizedDesc = normalizeStringInput(description);
+      income.description = normalizedDesc || undefined;
+    }
     // Source is optional - keep existing if not provided
-    if (source !== undefined) income.source = source || 'درآمد عمومی';
+    if (source !== undefined) {
+      income.source = resolveIncomeSource(source);
+    } else if (!income.source) {
+      income.source = 'درآمد عمومی';
+    }
     income.placedInAccount = newPlacedInAccount;
     await income.save({ session });
 
@@ -490,6 +525,10 @@ exports.updateIncome = asyncHandler(async (req, res, next) => {
     // Get category name for description
     const updatedCategoryDoc = await Category.findById(income.category, null, { session });
     const categoryName = updatedCategoryDoc ? updatedCategoryDoc.name : 'Income';
+    const txnDescription = buildIncomeDescription(
+      description,
+      `Income update: ${categoryName} from ${income.source}`
+    );
     
     const txn = await AccountTransaction.create(
       [
@@ -500,7 +539,7 @@ exports.updateIncome = asyncHandler(async (req, res, next) => {
           amount: Math.abs(income.amount),
           referenceType: 'income',
           referenceId: income._id,
-          description: description || `Income update`,
+          description: txnDescription,
           created_by: req.user._id,
         },
       ],
@@ -523,7 +562,7 @@ exports.updateIncome = asyncHandler(async (req, res, next) => {
           operation: 'UPDATE',
           oldData,
           newData: income.toObject(),
-          reason: `Income updated: ${income.amount}`,
+          reason: `Income updated: ${income.amount} from ${income.source}`,
           changedBy: req.user?.name || 'System',
           changedAt: new Date(),
         },
