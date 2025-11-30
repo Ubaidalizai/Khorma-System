@@ -19,11 +19,12 @@ import {
   useUpdateInventory,
   useWarehouseStocks,
 } from "../services/useApi";
-import { formatNumber } from "../utilies/helper";
+import { formatNumber, normalizeDateToIso } from "../utilies/helper";
 import { getStockStatus } from "../utilies/stockStatus";
 import { inputStyle } from "./../components/ProductForm";
 import { formatCurrency } from "../utilies/helper";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
+import JalaliDatePicker from "../components/JalaliDatePicker";
 
 // Headers aligned with Backend stock.model.js
 const tableHeader = [
@@ -44,6 +45,8 @@ function Warehouse() {
     handleSubmit,
     reset,
     formState: { errors },
+    setValue: editSetValue,
+    watch: editWatch,
   } = useForm();
   const { mutate: updateInventory, isPending: isUpdatingInventory } =
     useUpdateInventory();
@@ -130,16 +133,17 @@ function Warehouse() {
       reset({
         purchasePricePerBaseUnit: selectedPro?.purchasePricePerBaseUnit,
         minLevel: selectedPro?.minLevel,
-        expiry_date: selectedPro?.expiry_date,
+        expiry_date: normalizeDateToIso(selectedPro?.expiryDate || selectedPro?.expiry_date),
       });
     },
     [selectedPro, reset]
   );
+  const editExpiryValue = editWatch("expiry_date") || "";
   const onSubmitEdit = editSubmitLock.wrapSubmit(async (data) => {
     // Convert empty expiry_date to null (backend expects null, not empty string)
     const stockData = {
       ...data,
-      expiry_date: data.expiry_date || null,
+      expiry_date: normalizeDateToIso(data.expiry_date) || null,
     };
     await runMutation(updateInventory, { id: selectedPro._id, stockData });
     setShowEdit(false);
@@ -335,25 +339,39 @@ function Warehouse() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    تاریخ انقضا
-                  </label>
+                  <JalaliDatePicker
+                    label="تاریخ انقضا"
+                    name="expiry_date"
+                    value={editExpiryValue}
+                    onChange={(nextValue) =>
+                      editSetValue(
+                        "expiry_date",
+                        normalizeDateToIso(nextValue),
+                        {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        }
+                      )
+                    }
+                    placeholder="انتخاب تاریخ"
+                    clearable
+                    error={errors?.expiry_date?.message}
+                  />
                   <input
-                    type="date"
-                    className={inputStyle}
+                    type="hidden"
+                    value={editExpiryValue}
+                    readOnly
                     {...editRegister("expiry_date", {
                       validate: (value) => {
-                        // Only validate if a date is provided (optional field)
                         if (!value) return true;
+                        const normalized = normalizeDateToIso(value);
+                        if (!normalized) return "تاریخ معتبر نیست";
 
                         const today = new Date();
-                        const selected = new Date(value);
-
-                        // Normalize both to midnight for clean date comparison
+                        const selected = new Date(normalized);
                         today.setHours(0, 0, 0, 0);
                         selected.setHours(0, 0, 0, 0);
 
-                        // Calculate the difference in days
                         const diffInDays = Math.ceil(
                           (selected - today) / (1000 * 60 * 60 * 24)
                         );
@@ -365,11 +383,6 @@ function Warehouse() {
                       },
                     })}
                   />
-                  {errors.expiry_date && (
-                    <p className=" text-[9px] text-red-500">
-                      {errors.expiry_date.message}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>

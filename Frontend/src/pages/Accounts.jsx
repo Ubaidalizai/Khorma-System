@@ -28,7 +28,7 @@ import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
 import { formatNumber } from "../utilies/helper";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 
 const Accounts = () => {
   const navigate = useNavigate();

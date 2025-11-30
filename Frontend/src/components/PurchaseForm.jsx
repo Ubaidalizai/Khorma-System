@@ -1,13 +1,19 @@
 import React from "react";
 import { BiTrashAlt } from "react-icons/bi";
-import { useSuppliers, useUnits, useProduct, useSystemAccounts } from "../services/useApi";
-import { formatCurrency } from "../utilies/helper";
+import {
+  useSuppliers,
+  useUnits,
+  useProduct,
+  useSystemAccounts,
+} from "../services/useApi";
+import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
 import { inputStyle } from "./ProductForm";
 import Table from "./Table";
 import TableBody from "./TableBody";
 import TableColumn from "./TableColumn";
 import TableHeader from "./TableHeader";
 import TableRow from "./TableRow";
+import JalaliDatePicker from "./JalaliDatePicker";
 
 const productHeader = [
   { title: "محصول" },
@@ -23,7 +29,7 @@ function PurchaseForm({
   register,
   handleSubmit,
   watch,
-
+  setValue,
   calculatePurchaseTotals,
   currentItem,
   setCurrentItem,
@@ -36,6 +42,7 @@ function PurchaseForm({
   const { data: units } = useUnits();
   const { data: products } = useProduct();
   const { data: systemAccounts } = useSystemAccounts();
+  const purchaseDateValue = watch("purchaseDate") || "";
   const handleAddItem = () => {
     const quantity = Number(currentItem.quantity) || 0;
     const unitPrice = Number(currentItem.unitPrice) || 0;
@@ -46,7 +53,10 @@ function PurchaseForm({
         product: currentItem.product,
         unit: currentItem.unit,
         batchNumber: currentItem.batchNumber || "",
-        expiryDate: currentItem.expiryDate && currentItem.expiryDate !== '' ? currentItem.expiryDate : null,
+        expiryDate:
+          currentItem.expiryDate && currentItem.expiryDate !== ""
+            ? normalizeDateToIso(currentItem.expiryDate)
+            : null,
         quantity,
         unitPrice,
         totalPrice,
@@ -77,15 +87,26 @@ function PurchaseForm({
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              تاریخ خرید *
-            </label>
+            <JalaliDatePicker
+              label="تاریخ خرید *"
+              name="purchaseDate"
+              value={purchaseDateValue}
+              onChange={(nextValue) =>
+                setValue("purchaseDate", normalizeDateToIso(nextValue), {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
+              placeholder="انتخاب تاریخ خرید"
+              clearable={false}
+            />
             <input
-              type="date"
+              type="hidden"
+              value={purchaseDateValue}
               {...register("purchaseDate", {
                 required: "تاریخ خرید را انتخاب کنید",
               })}
-              className={inputStyle}
+              readOnly
             />
             {errors?.purchaseDate && (
               <p className="text-red-500 text-sm mt-1">
@@ -214,19 +235,18 @@ function PurchaseForm({
                 />
               </div>
               <div className="col-span-2 col-start-1">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  تاریخ انقضا
-                </label>
-                <input
-                  type="date"
+                <JalaliDatePicker
+                  label="تاریخ انقضا"
+                  name="expiryDate"
                   value={currentItem?.expiryDate || ""}
-                  onChange={(e) =>
+                  onChange={(nextValue) =>
                     setCurrentItem((s) => ({
                       ...s,
-                      expiryDate: e.target.value,
+                      expiryDate: normalizeDateToIso(nextValue),
                     }))
                   }
-                  className={inputStyle}
+                  placeholder="انتخاب تاریخ"
+                  clearable
                 />
               </div>
               <div className="col-span-2 row-start-3">

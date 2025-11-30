@@ -14,13 +14,14 @@ import {
   useSystemAccounts,
   useCreatePurchase,
 } from "../services/useApi";
-import { formatCurrency } from "../utilies/helper";
+import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
 import GloableModal from "./GloableModal";
 import { toast } from "react-toastify";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
+import JalaliDatePicker from "./JalaliDatePicker";
 
 const PurchaseModal = ({ isOpen, onClose }) => {
-  const { register, handleSubmit, watch, reset } = useForm();
+  const { register, handleSubmit, watch, reset, setValue } = useForm();
   const { data: suppliers } = useSuppliers();
   const { data: products } = useProducts();
   const { data: units } = useUnits();
@@ -30,6 +31,10 @@ const PurchaseModal = ({ isOpen, onClose }) => {
     isPending: isCreatingPurchase,
   } = useCreatePurchase();
   const { isSubmitting, wrapSubmit } = useSubmitLock();
+
+  useEffect(() => {
+    register("purchaseDate", { required: false });
+  }, [register]);
 
   const [items, setItems] = useState([]);
   const [currentItem, setCurrentItem] = useState({
@@ -120,7 +125,9 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
     const purchaseData = {
       supplier: data.supplier,
-      purchaseDate: data.purchaseDate || new Date().toISOString(),
+      purchaseDate:
+        normalizeDateToIso(data.purchaseDate) ||
+        new Date().toISOString().slice(0, 10),
       paidAmount: Number(data.paidAmount) || 0,
       paymentAccount: data.paymentAccount,
       items: items.map((item) => ({
@@ -130,7 +137,9 @@ const PurchaseModal = ({ isOpen, onClose }) => {
         unitPrice: Number(item.unitPrice),
         batchNumber: item.batchNumber || null,
         expiryDate:
-          item.expiryDate && item.expiryDate !== "" ? item.expiryDate : null,
+          item.expiryDate && item.expiryDate !== ""
+            ? normalizeDateToIso(item.expiryDate)
+            : null,
       })),
     };
 
@@ -187,13 +196,17 @@ const PurchaseModal = ({ isOpen, onClose }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                تاریخ خرید
-              </label>
-              <input
-                type="date"
-                {...register("purchaseDate")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              <JalaliDatePicker
+                label="تاریخ خرید"
+                name="purchaseDate"
+                value={watchedValues.purchaseDate || ""}
+                onChange={(nextValue) =>
+                  setValue("purchaseDate", nextValue, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                placeholder="انتخاب تاریخ"
               />
             </div>
 
@@ -331,19 +344,18 @@ const PurchaseModal = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  تاریخ انقضا
-                </label>
-                <input
-                  type="date"
+                <JalaliDatePicker
+                  label="تاریخ انقضا"
+                  name="expiryDate"
                   value={currentItem.expiryDate}
-                  onChange={(e) =>
-                    setCurrentItem({
-                      ...currentItem,
-                      expiryDate: e.target.value,
-                    })
+                  onChange={(nextValue) =>
+                    setCurrentItem((prev) => ({
+                      ...prev,
+                      expiryDate: nextValue,
+                    }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="انتخاب تاریخ"
+                  clearable
                 />
               </div>
 

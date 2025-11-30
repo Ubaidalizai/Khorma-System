@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { inputStyle } from "./ProductForm";
 import { toast } from "react-toastify";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 
 function SupplierForm({ handleSubmit, register, onSubmit, close }) {
   const [contactInfo, setContactInfo] = useState({

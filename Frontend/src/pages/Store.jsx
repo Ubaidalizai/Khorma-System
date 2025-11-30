@@ -19,7 +19,8 @@ import { IoMdClose } from "react-icons/io";
 import Button from "../components/Button";
 import { inputStyle } from "../components/ProductForm";
 import Pagination from "../components/Pagination";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
+import JalaliDatePicker from "../components/JalaliDatePicker";
 
 import {
   useCreateStockTransfer,
@@ -27,7 +28,7 @@ import {
   useStoreStocks,
   useUpdateInventory,
 } from "../services/useApi";
-import { formatNumber } from "../utilies/helper";
+import { formatNumber, normalizeDateToIso } from "../utilies/helper";
 // Headers aligned with Backend stock.model.js for store location
 const storeHeader = [
   { title: "نمبر بچ" },
@@ -64,6 +65,8 @@ function Store() {
     handleSubmit: editHandleSubmit,
     reset: editReset,
     formState: { errors },
+    watch: editWatch,
+    setValue: editSetValue,
   } = useForm();
   const { mutate: createStockTransfer, isPending: isCreatingTransfer } =
     useCreateStockTransfer();
@@ -84,13 +87,12 @@ function Store() {
       editReset({
         purchasePricePerBaseUnit: selectedData?.purchasePricePerBaseUnit,
         minLevel: selectedData?.minLevel,
-        expiry_date: selectedData?.expiryDate
-          ? new Date(selectedData.expiryDate).toISOString().split("T")[0]
-          : "",
+        expiry_date: normalizeDateToIso(selectedData?.expiryDate),
       });
     },
     [selectedData, editReset]
   );
+  const editExpiryValue = editWatch("expiry_date") || "";
   let fromLocation = selectedData?.location;
   let toLocation =
     transferType === "store-warehouse"
@@ -139,7 +141,7 @@ function Store() {
     // Convert empty expiry_date to null (backend expects null, not empty string)
     const stockData = {
       ...data,
-      expiry_date: data.expiry_date || null,
+      expiry_date: normalizeDateToIso(data.expiry_date) || null,
     };
     await runMutation(createUpdateStock, { id: selectedData._id, stockData });
     setShowEdit(false);
@@ -577,25 +579,39 @@ function Store() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    تاریخ انقضا
-                  </label>
+                  <JalaliDatePicker
+                    label="تاریخ انقضا"
+                    name="expiry_date"
+                    value={editExpiryValue}
+                    onChange={(nextValue) =>
+                      editSetValue(
+                        "expiry_date",
+                        normalizeDateToIso(nextValue),
+                        {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        }
+                      )
+                    }
+                    placeholder="انتخاب تاریخ انقضا"
+                    clearable
+                    error={errors?.expiry_date?.message}
+                  />
                   <input
-                    type="date"
-                    className={inputStyle}
+                    type="hidden"
+                    value={editExpiryValue}
+                    readOnly
                     {...editRegister("expiry_date", {
                       validate: (value) => {
-                        // Only validate if a date is provided (optional field)
                         if (!value) return true;
+                        const normalized = normalizeDateToIso(value);
+                        if (!normalized) return "تاریخ معتبر نیست";
 
                         const today = new Date();
-                        const selected = new Date(value);
-
-                        // Normalize both to midnight for clean date comparison
+                        const selected = new Date(normalized);
                         today.setHours(0, 0, 0, 0);
                         selected.setHours(0, 0, 0, 0);
 
-                        // Calculate the difference in days
                         const diffInDays = Math.ceil(
                           (selected - today) / (1000 * 60 * 60 * 24)
                         );
@@ -607,11 +623,6 @@ function Store() {
                       },
                     })}
                   />
-                  {errors.expiry_date && (
-                    <p className=" text-[9px] text-red-500">
-                      {errors?.expiry_date.message}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>

@@ -19,7 +19,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { inputStyle } from "./ProductForm";
 import GloableModal from "./GloableModal";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 
 const CustomerManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

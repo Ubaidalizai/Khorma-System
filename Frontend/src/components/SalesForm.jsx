@@ -1,5 +1,5 @@
 import { BiTrashAlt } from "react-icons/bi";
-import { formatCurrency } from "../utilies/helper";
+import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
 import {
   useCustomers,
   useEmployees,
@@ -13,7 +13,8 @@ import TableBody from "./TableBody";
 import TableColumn from "./TableColumn";
 import TableHeader from "./TableHeader";
 import TableRow from "./TableRow";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
+import JalaliDatePicker from "./JalaliDatePicker";
 const productHeader = [
   { title: "محصول" },
   { title: "واحد" },
@@ -33,6 +34,7 @@ export default function SalesForm({
   createSale,
   close,
   register,
+  setValue,
   handleSubmit,
   watch,
   errors,
@@ -42,6 +44,12 @@ export default function SalesForm({
   const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
   const { data: employees, isLoading: isLoadingEmployees } = useEmployees();
   const { isSubmitting, wrapSubmit } = useSubmitLock();
+  const saleDateValue = watch("saleDate") || "";
+  const formSetValue =
+    setValue ||
+    (() => {
+      /* no-op */
+    });
 
   const getProductName = (id) => {
     return products?.data?.find((p) => p._id === id)?.name || id;
@@ -82,7 +90,7 @@ export default function SalesForm({
     await Promise.resolve(
       createSale({
       ...data,
-      saleDate: data.saleDate ? data.saleDate : Date.now(),
+      saleDate: normalizeDateToIso(data.saleDate) || new Date().toISOString().slice(0, 10),
       items: [...items],
       subtotal: parseFloat(totals.subtotal),
       taxAmount: parseFloat(totals.taxAmount),
@@ -134,11 +142,36 @@ export default function SalesForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               تاریخ فروش *
             </label>
-            <input
-              type="date"
-              {...register("saleDate")}
-              className={inputStyle}
+            <JalaliDatePicker
+              name="saleDate"
+              value={saleDateValue}
+              onChange={(nextValue) =>
+                formSetValue(
+                  "saleDate",
+                  normalizeDateToIso(nextValue) ||
+                    new Date().toISOString().slice(0, 10),
+                  {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  }
+                )
+              }
+              placeholder="انتخاب تاریخ"
+              clearable={false}
             />
+            <input
+              type="hidden"
+              value={saleDateValue}
+              readOnly
+              {...register("saleDate", {
+                required: "تاریخ فروش را انتخاب کنید",
+              })}
+            />
+            {errors?.saleDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors?.saleDate.message}
+              </p>
+            )}
           </div>
 
           <div>

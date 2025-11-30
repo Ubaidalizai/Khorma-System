@@ -23,6 +23,8 @@ import {
 } from "@heroicons/react/24/outline";
 import GloableModal from "./GloableModal";
 import { inputStyle } from "./ProductForm";
+import JalaliDatePicker from "./JalaliDatePicker";
+import { normalizeDateToIso } from "../utilies/helper";
 
 const EmployeeManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,9 +126,7 @@ const EmployeeManagement = () => {
         email: employee.contact_info?.email || "",
         address: employee.contact_info?.address || "",
       },
-      hire_date: employee.hire_date
-        ? new Date(employee.hire_date).toISOString().split("T")[0]
-        : "",
+      hire_date: normalizeDateToIso(employee.hire_date),
       is_active: employee.is_active !== undefined ? employee.is_active : true,
     });
     setIsModalOpen(true);
@@ -459,15 +459,17 @@ const EmployeeManagement = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    تاریخ استخدام
-                  </label>
-                  <input
-                    type="date"
-                    name="hire_date"
+                  <JalaliDatePicker
+                    label="تاریخ استخدام"
                     value={formData.hire_date}
-                    onChange={handleInputChange}
-                    className={inputStyle}
+                    onChange={(nextValue) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        hire_date: normalizeDateToIso(nextValue) || "",
+                      }))
+                    }
+                    placeholder="انتخاب تاریخ"
+                    clearable
                   />
                 </div>
 

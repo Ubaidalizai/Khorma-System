@@ -3,6 +3,7 @@
 // ========================================
 
 import { apiRequest, API_ENDPOINTS, API_BASE_URL } from "./apiConfig";
+import { normalizeDateToIso } from "../utilies/helper";
 
 // Authentication functions
 export const loginUser = async (credentials) => {
@@ -356,8 +357,11 @@ export const deleteAccount = async (id) => {
 
 export const fetchAccountLedger = async (accountId, params = {}) => {
   const query = new URLSearchParams();
-  if (params.startDate) query.set("startDate", params.startDate);
-  if (params.endDate) query.set("endDate", params.endDate);
+  const startIso = normalizeDateToIso(params.startDate);
+  const endIso = normalizeDateToIso(params.endDate);
+
+  if (startIso) query.set("startDate", startIso);
+  if (endIso) query.set("endDate", endIso);
   if (params.type) query.set("type", params.type);
   query.set("sortOrder", params.sortOrder || "desc");
 

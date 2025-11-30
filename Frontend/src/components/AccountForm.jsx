@@ -4,7 +4,7 @@ import {
   fetchCustomers,
   fetchEmployees,
 } from "../services/apiUtiles";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 
 function AccountForm({ register, handleSubmit, watch, onClose }) {
   const [suppliers, setSuppliers] = useState([]);

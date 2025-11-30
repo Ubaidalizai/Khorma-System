@@ -17,7 +17,10 @@ import {
   useCashFlowReport,
   useStockReport,
 } from "../services/useApi";
-import { formatNumber, formatCurrency } from "../utilies/helper";
+import { formatNumber, formatCurrency, normalizeDateToIso } from "../utilies/helper";
+import DateObject from "react-date-object";
+import persianCalendar from "react-date-object/calendars/persian";
+import gregorianCalendar from "react-date-object/calendars/gregorian";
 import {
   BarChart,
   Bar,
@@ -29,19 +32,77 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import JalaliDatePicker from "../components/JalaliDatePicker";
+
+const dateEnabledReports = new Set([
+  "sales",
+  "purchases",
+  "expenses",
+  "profit",
+  "accounts",
+]);
+
+const getCurrentMonthValue = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const getCurrentJalaliYearNumber = () => {
+  const todayGregorian = new DateObject({ calendar: gregorianCalendar });
+  const todayJalali = todayGregorian.convert(persianCalendar);
+  return parseInt(todayJalali.format("YYYY"), 10);
+};
+
+const getCurrentYearValue = () => {
+  return getCurrentJalaliYearNumber().toString();
+};
+
+const createInitialFilter = () => ({
+  range: "monthly",
+  month: getCurrentMonthValue(),
+  year: getCurrentYearValue(),
+});
+
+const getJalaliYearIsoRange = (jalaliYearString) => {
+  const fallbackYear = new Date().getFullYear();
+  const y = parseInt(jalaliYearString, 10);
+  const jalaliYear = Number.isNaN(y) ? fallbackYear : y;
+
+  try {
+    // Start of Jalali year -> Gregorian ISO
+    const startJalali = new DateObject({
+      date: `${jalaliYear}/01/01`,
+      format: "YYYY/MM/DD",
+      calendar: persianCalendar,
+    });
+    const startIso = startJalali.convert(gregorianCalendar).format("YYYY-MM-DD");
+
+    // End of Jalali year: take first day of next Jalali year, subtract 1 day
+    const nextYearFirst = new DateObject({
+      date: `${jalaliYear + 1}/01/01`,
+      format: "YYYY/MM/DD",
+      calendar: persianCalendar,
+    });
+    const endJalali = nextYearFirst.subtract(1, "day");
+    const endIso = endJalali.convert(gregorianCalendar).format("YYYY-MM-DD");
+
+    return { startDate: startIso, endDate: endIso };
+  } catch (_e) {
+    // Fallback to Gregorian year if anything goes wrong
+    const startDate = new Date(fallbackYear, 0, 1).toISOString().split("T")[0];
+    const endDate = new Date(fallbackYear, 11, 31).toISOString().split("T")[0];
+    return { startDate, endDate };
+  }
+};
 
 const Reports = () => {
   const [selectedReport, setSelectedReport] = useState("sales");
-  const [dateRange, setDateRange] = useState("monthly"); // monthly (days) or yearly (months)
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}`;
-  });
-  const [selectedYear, setSelectedYear] = useState(() => {
-    return new Date().getFullYear().toString();
+  const [reportFilters, setReportFilters] = useState(() => {
+    const initial = {};
+    dateEnabledReports.forEach((report) => {
+      initial[report] = createInitialFilter();
+    });
+    return initial;
   });
   const [profitChartType, setProfitChartType] = useState("net"); // "net" or "gross"
   const [selectedExpenseCategory, setSelectedExpenseCategory] = useState(""); // Empty string means "all categories"
@@ -57,81 +118,75 @@ const Reports = () => {
     { id: "profit", name: "سود و زیان", icon: ChartBarIcon },
   ];
 
-  // Calculate date range based on selected period
-  const getDateRange = (range) => {
-    let startDate, endDate;
-    const now = new Date();
+  const updateReportFilter = (reportId, updater) => {
+    if (!dateEnabledReports.has(reportId)) {
+      return;
+    }
 
-    if (range === "monthly") {
-      // Monthly view: Show days of selected month
-      if (!selectedMonth || selectedMonth.trim() === "") {
-        // Default to current month if empty
-        const defaultMonth = `${now.getFullYear()}-${String(
-          now.getMonth() + 1
-        ).padStart(2, "0")}`;
-        setSelectedMonth(defaultMonth);
-        const [year, month] = defaultMonth.split("-").map(Number);
-        startDate = new Date(year, month - 1, 1);
-        endDate = new Date(year, month, 0);
-      } else {
-        const parts = selectedMonth.split("-");
-        if (parts.length === 2 && parts[0] && parts[1]) {
-          const [year, month] = parts.map(Number);
-          if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
-            startDate = new Date(year, month - 1, 1);
-            endDate = new Date(year, month, 0);
-          } else {
-            // Invalid date, use current month
-            const defaultMonth = `${now.getFullYear()}-${String(
-              now.getMonth() + 1
-            ).padStart(2, "0")}`;
-            setSelectedMonth(defaultMonth);
-            const [y, m] = defaultMonth.split("-").map(Number);
-            startDate = new Date(y, m - 1, 1);
-            endDate = new Date(y, m, 0);
-          }
-        } else {
-          // Invalid format, use current month
-          const defaultMonth = `${now.getFullYear()}-${String(
-            now.getMonth() + 1
-          ).padStart(2, "0")}`;
-          setSelectedMonth(defaultMonth);
-          const [y, m] = defaultMonth.split("-").map(Number);
-          startDate = new Date(y, m - 1, 1);
-          endDate = new Date(y, m, 0);
-        }
-      }
-    } else if (range === "yearly") {
-      // Yearly view: Show 12 months of selected year
-      const year = parseInt(selectedYear);
-      if (
-        !selectedYear ||
-        isNaN(year) ||
-        year < 2020 ||
-        year > now.getFullYear() + 1
-      ) {
-        // Invalid year, use current year
-        const defaultYear = now.getFullYear().toString();
-        setSelectedYear(defaultYear);
-        startDate = new Date(now.getFullYear(), 0, 1);
-        endDate = new Date(now.getFullYear(), 11, 31);
-      } else {
-        startDate = new Date(year, 0, 1);
-        endDate = new Date(year, 11, 31);
-      }
+    setReportFilters((prev) => {
+      const current = prev[reportId] || createInitialFilter();
+      const nextFilters =
+        typeof updater === "function"
+          ? updater(current)
+          : { ...current, ...updater };
+      return {
+        ...prev,
+        [reportId]: { ...current, ...nextFilters },
+      };
+    });
+  };
+
+  const activeFilter = useMemo(() => {
+    if (!dateEnabledReports.has(selectedReport)) {
+      return null;
+    }
+    return reportFilters[selectedReport] || createInitialFilter();
+  }, [reportFilters, selectedReport]);
+
+  const hasDateControls = Boolean(activeFilter);
+  const activeRange = activeFilter?.range || "monthly";
+
+  // Calculate date range based on selected period
+  const getDateRange = (filter) => {
+    const now = new Date();
+    const safeFilter = filter || createInitialFilter();
+    const { range, month, year } = safeFilter;
+
+    const formatDate = (date) => date.toISOString().split("T")[0];
+    let startDate;
+    let endDate;
+
+    if (range === "yearly") {
+      // Treat 'year' as Jalali year; convert to Gregorian ISO start/end for backend
+      const rangeIso = getJalaliYearIsoRange(year);
+      return rangeIso;
     } else {
-      // Default to current month
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const monthValue = month && month.includes("-") ? month : getCurrentMonthValue();
+      const [yearPart, monthPart] = monthValue.split("-").map(Number);
+
+      if (
+        !Number.isNaN(yearPart) &&
+        !Number.isNaN(monthPart) &&
+        monthPart >= 1 &&
+        monthPart <= 12
+      ) {
+        startDate = new Date(yearPart, monthPart - 1, 1);
+        endDate = new Date(yearPart, monthPart, 0);
+      } else {
+        const fallbackMonth = getCurrentMonthValue();
+        const [fallbackYear, fallbackMonthNumber] = fallbackMonth
+          .split("-")
+          .map(Number);
+        startDate = new Date(fallbackYear, fallbackMonthNumber - 1, 1);
+        endDate = new Date(fallbackYear, fallbackMonthNumber, 0);
+      }
     }
 
     return {
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
     };
   };
-
-  const dateParams = getDateRange(dateRange);
 
   // Map UI range to backend groupBy values
   const groupByMap = {
@@ -139,20 +194,53 @@ const Reports = () => {
     yearly: "month", // Yearly view shows months
   };
 
+  const salesFilter = reportFilters.sales;
+  const purchaseFilter = reportFilters.purchases;
+  const expenseFilter = reportFilters.expenses;
+  const profitFilter = reportFilters.profit;
+  const accountsFilter = reportFilters.accounts;
+
+  const salesDateParams = useMemo(
+    () => getDateRange(salesFilter),
+    [salesFilter]
+  );
+  const purchaseDateParams = useMemo(
+    () => getDateRange(purchaseFilter),
+    [purchaseFilter]
+  );
+  const expenseDateParams = useMemo(
+    () => getDateRange(expenseFilter),
+    [expenseFilter]
+  );
+  const profitDateParams = useMemo(
+    () => getDateRange(profitFilter),
+    [profitFilter]
+  );
+  const accountsDateParams = useMemo(
+    () => getDateRange(accountsFilter),
+    [accountsFilter]
+  );
+
+  const salesGroupBy = groupByMap[salesFilter?.range] || "day";
+  const purchasesGroupBy = groupByMap[purchaseFilter?.range] || "day";
+  const expensesGroupBy = groupByMap[expenseFilter?.range] || "day";
+  const profitGroupBy = groupByMap[profitFilter?.range] || "day";
+  const accountsGroupBy = groupByMap[accountsFilter?.range] || "day";
+
   // Fetch sales reports data
   const { data: salesReportsData, isLoading: salesReportsLoading } =
     useSalesReports({
-      startDate: dateParams.startDate,
-      endDate: dateParams.endDate,
-      groupBy: groupByMap[dateRange] || "day",
+      startDate: salesDateParams.startDate,
+      endDate: salesDateParams.endDate,
+      groupBy: salesGroupBy,
     });
 
   // Fetch purchase reports data
   const { data: purchaseReportsData, isLoading: purchaseReportsLoading } =
     usePurchaseReports({
-      startDate: dateParams.startDate,
-      endDate: dateParams.endDate,
-      groupBy: groupByMap[dateRange] || "day",
+      startDate: purchaseDateParams.startDate,
+      endDate: purchaseDateParams.endDate,
+      groupBy: purchasesGroupBy,
     });
 
   // Fetch expense categories (for filter dropdown)
@@ -163,9 +251,9 @@ const Reports = () => {
 
   // Fetch cash flow report data
   const { data: cashFlowData, isLoading: cashFlowLoading } = useCashFlowReport({
-    startDate: dateParams.startDate,
-    endDate: dateParams.endDate,
-    groupBy: groupByMap[dateRange] || "day",
+    startDate: accountsDateParams.startDate,
+    endDate: accountsDateParams.endDate,
+    groupBy: accountsGroupBy,
   });
 
   // Fetch stock report data
@@ -179,28 +267,28 @@ const Reports = () => {
   // Fetch expense summary data
   const { data: expenseSummaryData, isLoading: expenseSummaryLoading } =
     useExpenseSummary({
-      startDate: dateParams.startDate,
-      endDate: dateParams.endDate,
-      groupBy: groupByMap[dateRange] || "day",
+      startDate: expenseDateParams.startDate,
+      endDate: expenseDateParams.endDate,
+      groupBy: expensesGroupBy,
       category: selectedExpenseCategory || undefined, // Only include if category is selected
     });
 
   // Fetch profit data
   const { data: netProfitData, isLoading: netProfitLoading } = useNetProfit({
-    startDate: dateParams.startDate,
-    endDate: dateParams.endDate,
+    startDate: profitDateParams.startDate,
+    endDate: profitDateParams.endDate,
   });
 
   const { isLoading: profitStatsLoading } = useProfitStats({
-    startDate: dateParams.startDate,
-    endDate: dateParams.endDate,
+    startDate: profitDateParams.startDate,
+    endDate: profitDateParams.endDate,
   });
 
   const { data: profitSummaryData, isLoading: profitSummaryLoading } =
     useProfitSummary({
-      startDate: dateParams.startDate,
-      endDate: dateParams.endDate,
-      groupBy: groupByMap[dateRange] || "day",
+      startDate: profitDateParams.startDate,
+      endDate: profitDateParams.endDate,
+      groupBy: profitGroupBy,
     });
 
   // Note: inventoryData will be fetched from API in future
@@ -209,9 +297,10 @@ const Reports = () => {
   const chartData = useMemo(() => {
     if (selectedReport !== "sales" || !salesReportsData?.data) return [];
 
-    const { startDate, endDate } = dateParams;
+    const { startDate, endDate } = salesDateParams;
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const range = salesFilter?.range || "monthly";
 
     // Get API data
     const apiData = salesReportsData.data.summary || [];
@@ -232,7 +321,7 @@ const Reports = () => {
     // Generate all periods in range
     const allPeriods = [];
 
-    if (dateRange === "monthly") {
+    if (range === "monthly") {
       // Monthly view: Generate all days of the selected month
       let current = new Date(start);
       while (current <= end) {
@@ -249,7 +338,7 @@ const Reports = () => {
         });
         current.setDate(current.getDate() + 1);
       }
-    } else if (dateRange === "yearly") {
+    } else if (range === "yearly") {
       // Yearly view: Generate all 12 months
       const monthNames = [
         "January",
@@ -280,8 +369,13 @@ const Reports = () => {
         "دسمبر",
       ];
 
+      const parsedYear = parseInt(salesFilter?.year, 10);
+      const yearForGrouping = Number.isNaN(parsedYear)
+        ? new Date().getFullYear()
+        : parsedYear;
+
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${parseInt(selectedYear)}`;
+        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -295,15 +389,16 @@ const Reports = () => {
     }
 
     return allPeriods;
-  }, [salesReportsData, selectedReport, dateRange, dateParams, selectedYear]);
+  }, [salesReportsData, selectedReport, salesDateParams, salesFilter]);
 
   // Chart data for profit reports - generate all periods like sales
   const profitChartData = useMemo(() => {
     if (selectedReport !== "profit" || !profitSummaryData?.data) return [];
 
-    const { startDate, endDate } = dateParams;
+    const { startDate, endDate } = profitDateParams;
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const range = profitFilter?.range || "monthly";
 
     // Get API data
     const apiData = profitSummaryData.data.summary || [];
@@ -324,7 +419,7 @@ const Reports = () => {
     // Generate all periods in range
     const allPeriods = [];
 
-    if (dateRange === "monthly") {
+    if (range === "monthly") {
       // Monthly view: Generate all days of the selected month
       let current = new Date(start);
       while (current <= end) {
@@ -342,7 +437,7 @@ const Reports = () => {
         });
         current.setDate(current.getDate() + 1);
       }
-    } else if (dateRange === "yearly") {
+    } else if (range === "yearly") {
       // Yearly view: Generate all 12 months
       // Profit API uses YYYY-MM format for monthly grouping
       const monthNamesPersian = [
@@ -360,7 +455,7 @@ const Reports = () => {
         "دسمبر",
       ];
 
-      const year = parseInt(selectedYear);
+      const year = parseInt(profitFilter?.year, 10) || new Date().getFullYear();
       for (let month = 1; month <= 12; month++) {
         const monthKey = `${year}-${String(month).padStart(2, "0")}`; // Format: YYYY-MM
         const apiItem = apiMap.get(monthKey);
@@ -376,15 +471,17 @@ const Reports = () => {
     }
 
     return allPeriods;
-  }, [profitSummaryData, selectedReport, dateRange, dateParams, selectedYear]);
+  }, [profitSummaryData, selectedReport, profitDateParams, profitFilter]);
 
   // Chart data for purchase reports - generate all periods like sales
   const purchaseChartData = useMemo(() => {
-    if (selectedReport !== "purchases" || !purchaseReportsData?.data) return [];
+    if (selectedReport !== "purchases" || !purchaseReportsData?.data)
+      return [];
 
-    const { startDate, endDate } = dateParams;
+    const { startDate, endDate } = purchaseDateParams;
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const range = purchaseFilter?.range || "monthly";
 
     // Get API data
     const apiData = purchaseReportsData.data.summary || [];
@@ -405,7 +502,7 @@ const Reports = () => {
     // Generate all periods in range
     const allPeriods = [];
 
-    if (dateRange === "monthly") {
+    if (range === "monthly") {
       // Monthly view: Generate all days of the selected month
       let current = new Date(start);
       while (current <= end) {
@@ -422,7 +519,7 @@ const Reports = () => {
         });
         current.setDate(current.getDate() + 1);
       }
-    } else if (dateRange === "yearly") {
+    } else if (range === "yearly") {
       // Yearly view: Generate all 12 months
       const monthNames = [
         "January",
@@ -453,8 +550,13 @@ const Reports = () => {
         "دسمبر",
       ];
 
+      const parsedYear = parseInt(purchaseFilter?.year, 10);
+      const yearForGrouping = Number.isNaN(parsedYear)
+        ? new Date().getFullYear()
+        : parsedYear;
+
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${parseInt(selectedYear)}`;
+        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -471,18 +573,18 @@ const Reports = () => {
   }, [
     purchaseReportsData,
     selectedReport,
-    dateRange,
-    dateParams,
-    selectedYear,
+    purchaseDateParams,
+    purchaseFilter,
   ]);
 
   // Chart data for expense reports - generate all periods like sales
   const expenseChartData = useMemo(() => {
     if (selectedReport !== "expenses" || !expenseSummaryData?.data) return [];
 
-    const { startDate, endDate } = dateParams;
+    const { startDate, endDate } = expenseDateParams;
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const range = expenseFilter?.range || "monthly";
 
     // Get API data
     const apiData = expenseSummaryData.data.summary || [];
@@ -501,7 +603,7 @@ const Reports = () => {
     // Generate all periods in range
     const allPeriods = [];
 
-    if (dateRange === "monthly") {
+    if (range === "monthly") {
       // Monthly view: Generate all days of the selected month
       let current = new Date(start);
       while (current <= end) {
@@ -516,7 +618,7 @@ const Reports = () => {
         });
         current.setDate(current.getDate() + 1);
       }
-    } else if (dateRange === "yearly") {
+    } else if (range === "yearly") {
       // Yearly view: Generate all 12 months
       const monthNames = [
         "January",
@@ -547,8 +649,13 @@ const Reports = () => {
         "دسمبر",
       ];
 
+      const parsedYear = parseInt(expenseFilter?.year, 10);
+      const yearForGrouping = Number.isNaN(parsedYear)
+        ? new Date().getFullYear()
+        : parsedYear;
+
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${parseInt(selectedYear)}`;
+        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -560,15 +667,16 @@ const Reports = () => {
     }
 
     return allPeriods;
-  }, [expenseSummaryData, selectedReport, dateRange, dateParams, selectedYear]);
+  }, [expenseSummaryData, selectedReport, expenseDateParams, expenseFilter]);
 
   // Chart data for cash flow reports - generate all periods like sales
   const cashFlowChartData = useMemo(() => {
     if (selectedReport !== "accounts" || !cashFlowData?.data) return [];
 
-    const { startDate, endDate } = dateParams;
+    const { startDate, endDate } = accountsDateParams;
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const range = accountsFilter?.range || "monthly";
 
     // Get API data
     const apiData = cashFlowData.data.summary || [];
@@ -589,7 +697,7 @@ const Reports = () => {
     // Generate all periods in range
     const allPeriods = [];
 
-    if (dateRange === "monthly") {
+    if (range === "monthly") {
       // Monthly view: Generate all days of the selected month
       let current = new Date(start);
       while (current <= end) {
@@ -606,7 +714,7 @@ const Reports = () => {
         });
         current.setDate(current.getDate() + 1);
       }
-    } else if (dateRange === "yearly") {
+    } else if (range === "yearly") {
       // Yearly view: Generate all 12 months
       const monthNames = [
         "January",
@@ -637,8 +745,13 @@ const Reports = () => {
         "دسمبر",
       ];
 
+      const parsedYear = parseInt(accountsFilter?.year, 10);
+      const yearForGrouping = Number.isNaN(parsedYear)
+        ? new Date().getFullYear()
+        : parsedYear;
+
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${parseInt(selectedYear)}`;
+        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -652,7 +765,7 @@ const Reports = () => {
     }
 
     return allPeriods;
-  }, [cashFlowData, selectedReport, dateRange, dateParams, selectedYear]);
+  }, [cashFlowData, selectedReport, accountsDateParams, accountsFilter]);
 
   // System colors for charts
   const chartColors = {
@@ -1020,8 +1133,8 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Date range selector - Hide for inventory report */}
-      {selectedReport !== "inventory" && (
+      {/* Date range selector */}
+      {hasDateControls && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             نوع گزارش و تاریخ را انتخاب کنید
@@ -1030,9 +1143,14 @@ const Reports = () => {
             <div className="flex flex-wrap items-end gap-4">
               <div className="flex space-x-4">
                 <button
-                  onClick={() => setDateRange("monthly")}
+                  onClick={() =>
+                    updateReportFilter(selectedReport, (current) => ({
+                      ...current,
+                      range: "monthly",
+                    }))
+                  }
                   className={`px-4 py-2 rounded-lg border ${
-                    dateRange === "monthly"
+                    activeRange === "monthly"
                       ? "border-amber-500 bg-amber-50 text-amber-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
@@ -1040,9 +1158,14 @@ const Reports = () => {
                   ماهانه (روزها)
                 </button>
                 <button
-                  onClick={() => setDateRange("yearly")}
+                  onClick={() =>
+                    updateReportFilter(selectedReport, (current) => ({
+                      ...current,
+                      range: "yearly",
+                    }))
+                  }
                   className={`px-4 py-2 rounded-lg border ${
-                    dateRange === "yearly"
+                    activeRange === "yearly"
                       ? "border-amber-500 bg-amber-50 text-amber-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
@@ -1051,68 +1174,75 @@ const Reports = () => {
                 </button>
               </div>
 
-              {dateRange === "monthly" && (
+              {activeRange === "monthly" && (
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700">
                     انتخاب ماه
                   </label>
-                  <input
-                    type="month"
-                    value={selectedMonth || ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value) {
-                        setSelectedMonth(value);
-                      } else {
-                        // If cleared, reset to current month
-                        const now = new Date();
-                        setSelectedMonth(
-                          `${now.getFullYear()}-${String(
-                            now.getMonth() + 1
-                          ).padStart(2, "0")}`
-                        );
-                      }
+                  <JalaliDatePicker
+                    value={
+                      activeFilter?.month ? `${activeFilter.month}-01` : ""
+                    }
+                    onChange={(nextValue) => {
+                      const iso = normalizeDateToIso(nextValue);
+                      updateReportFilter(selectedReport, (current) => {
+                        if (iso) {
+                          const [year, month] = iso.split("-");
+                          return {
+                            ...current,
+                            month: `${year}-${month}`,
+                            range: "monthly",
+                          };
+                        }
+                        const fallbackMonth = getCurrentMonthValue();
+                        return {
+                          ...current,
+                          month: fallbackMonth,
+                          range: "monthly",
+                        };
+                      });
                     }}
-                    onBlur={(e) => {
-                      if (!e.target.value) {
-                        const now = new Date();
-                        setSelectedMonth(
-                          `${now.getFullYear()}-${String(
-                            now.getMonth() + 1
-                          ).padStart(2, "0")}`
-                        );
-                      }
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    required
+                    placeholder="انتخاب تاریخ"
+                    clearable
                   />
                 </div>
               )}
 
-              {dateRange === "yearly" && (
+              {activeRange === "yearly" && (
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700">
                     انتخاب سال
                   </label>
                   <input
                     type="number"
-                    min="2020"
-                    max={new Date().getFullYear() + 1}
-                    value={selectedYear || ""}
+                    min="1390"
+                    max={getCurrentJalaliYearNumber() + 1}
+                    value={activeFilter?.year || ""}
                     onChange={(e) => {
                       const value = e.target.value;
-                      if (value && !isNaN(parseInt(value))) {
-                        setSelectedYear(value);
-                      } else {
-                        // If cleared or invalid, reset to current year
-                        setSelectedYear(new Date().getFullYear().toString());
-                      }
+                      updateReportFilter(selectedReport, (current) => {
+                        if (value && !Number.isNaN(parseInt(value, 10))) {
+                          return { ...current, year: value, range: "yearly" };
+                        }
+                        return {
+                          ...current,
+                          year: getCurrentYearValue(),
+                          range: "yearly",
+                        };
+                      });
                     }}
                     onBlur={(e) => {
                       const value = e.target.value;
-                      if (!value || isNaN(parseInt(value))) {
-                        setSelectedYear(new Date().getFullYear().toString());
-                      }
+                      updateReportFilter(selectedReport, (current) => {
+                        if (value && !Number.isNaN(parseInt(value, 10))) {
+                          return current;
+                        }
+                        return {
+                          ...current,
+                          year: getCurrentYearValue(),
+                          range: "yearly",
+                        };
+                      });
                     }}
                     className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 w-32"
                     placeholder="سال"
@@ -1151,17 +1281,23 @@ const Reports = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
             {reportTypes.find((r) => r.id === selectedReport)?.name}
-            {selectedReport !== "inventory" && (
+            {hasDateControls && activeFilter && (
               <>
                 {" - "}
-                {dateRange === "monthly"
-                  ? `ماهانه (${new Date(
-                      selectedMonth + "-01"
-                    ).toLocaleDateString("fa-IR", {
-                      year: "numeric",
-                      month: "long",
-                    })})`
-                  : `سالانه (${selectedYear})`}
+                {activeFilter.range === "monthly"
+                  ? (() => {
+                      const monthValue =
+                        activeFilter.month || getCurrentMonthValue();
+                      const displayDate = new Date(`${monthValue}-01`);
+                      return `ماهانه (${displayDate.toLocaleDateString(
+                        "fa-IR",
+                        {
+                          year: "numeric",
+                          month: "long",
+                        }
+                      )})`;
+                    })()
+                  : `سالانه (${activeFilter.year || getCurrentYearValue()})`}
               </>
             )}
           </h3>

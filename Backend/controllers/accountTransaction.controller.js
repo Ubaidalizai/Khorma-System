@@ -277,15 +277,28 @@ exports.getAllTransactions = asyncHandler(async (req, res, next) => {
 exports.getAccountLedger = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { startDate, endDate, type, sortOrder = 'desc' } = req.query;
-
+  console.log(startDate, endDate);
   const account = await Account.findById(id);
   if (!account || account.isDeleted)
     throw new AppError('Account not found', 404);
 
   const query = { account: id, isDeleted: false };
 
-  if (startDate && endDate) {
-    query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+  const hasValidStart = startDate && !Number.isNaN(new Date(startDate).getTime());
+  const hasValidEnd = endDate && !Number.isNaN(new Date(endDate).getTime());
+
+  if (hasValidStart || hasValidEnd) {
+    query.date = {};
+
+    if (hasValidStart) {
+      query.date.$gte = new Date(startDate);
+    }
+
+    if (hasValidEnd) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query.date.$lte = end;
+    }
   }
 
   if (type) query.transactionType = type;

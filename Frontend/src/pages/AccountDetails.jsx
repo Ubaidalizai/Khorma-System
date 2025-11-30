@@ -11,6 +11,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAccountLedger } from "../services/useApi";
 import Pagination from "../components/Pagination";
+import JalaliDatePicker from "../components/JalaliDatePicker";
+import { normalizeDateToIso } from "../utilies/helper";
+
+const EMPTY_LEDGER = [];
 
 const AccountDetails = () => {
   const { id } = useParams();
@@ -21,22 +25,31 @@ const AccountDetails = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const { data: ledgerData, isLoading, error } = useAccountLedger(id, {
-    startDate,
-    endDate,
-    type: transactionType,
-  });
+  const ledgerFilters = useMemo(() => {
+    const filters = {};
+    if (startDate) filters.startDate = startDate;
+    if (endDate) filters.endDate = endDate;
+    if (transactionType) filters.type = transactionType;
+    return filters;
+  }, [startDate, endDate, transactionType]);
+
+  const {
+    data: ledgerData,
+    isLoading,
+    isFetching,
+    error,
+  } = useAccountLedger(id, ledgerFilters);
 
   const account = ledgerData?.account || "حساب";
   const accountType = ledgerData?.accountType || "unknown";
   const openingBalance = ledgerData?.openingBalance || 0;
   const currentBalance = ledgerData?.currentBalance || 0;
   const totalTransactions = ledgerData?.totalTransactions || 0;
-  const ledger = ledgerData?.ledger || [];
+  const ledger = ledgerData?.ledger ?? EMPTY_LEDGER;
 
   useEffect(() => {
     setPage(1);
-  }, [startDate, endDate, transactionType, ledger.length]);
+  }, [startDate, endDate, transactionType]);
 
   const paginatedLedger = useMemo(() => {
     const startIndex = (page - 1) * rowsPerPage;
@@ -155,7 +168,19 @@ const AccountDetails = () => {
     return transaction.referenceType && transaction.referenceId;
   };
 
-  if (isLoading) {
+  const handleStartDateChange = (nextValue) => {
+    const iso = normalizeDateToIso(nextValue);
+    setStartDate(iso || "");
+  };
+
+  const handleEndDateChange = (nextValue) => {
+    const iso = normalizeDateToIso(nextValue);
+    setEndDate(iso || "");
+  };
+
+  const isInitialLoading = isLoading && !ledgerData;
+
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -252,22 +277,22 @@ const AccountDetails = () => {
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-gray-500" />
-              <input
-                type="date"
+              <JalaliDatePicker
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                onChange={handleStartDateChange}
                 placeholder="از تاریخ"
+                clearable
+                inputClassName="!px-3 !py-2"
               />
             </div>
             <div className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-gray-500" />
-              <input
-                type="date"
+              <JalaliDatePicker
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                onChange={handleEndDateChange}
                 placeholder="تا تاریخ"
+                clearable
+                inputClassName="!px-3 !py-2"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -293,7 +318,15 @@ const AccountDetails = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">تراکنش ها</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
+          {isFetching && ledgerData && (
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10">
+              <div className="flex items-center gap-3 text-gray-600 text-sm">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-600"></div>
+                <span>در حال بروزرسانی تراکنش‌ها...</span>
+              </div>
+            </div>
+          )}
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>

@@ -22,12 +22,13 @@ import {
   useSystemAccounts,
   usePaymentProcess,
 } from "../services/useApi";
-import { formatCurrency } from "../utilies/helper";
+import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
 import PurchaseModal from "../components/PurchaseModal";
 import { XCircleIcon } from "lucide-react";
 import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
+import JalaliDatePicker from "../components/JalaliDatePicker";
 
 const Purchases = () => {
   // Function to convert numbers to Persian numerals
@@ -116,7 +117,7 @@ const Purchases = () => {
     // Populate form with existing purchase data
     setEditFormData({
       supplier: purchase.supplier?._id || purchase.supplier || "",
-      purchaseDate: new Date(purchase.purchaseDate).toISOString().split("T")[0],
+      purchaseDate: normalizeDateToIso(purchase.purchaseDate),
       paidAmount: purchase.paidAmount || 0,
       paymentAccount: "", // Will need to fetch from transaction
       stockLocation: "warehouse", // Default
@@ -286,7 +287,7 @@ const Purchases = () => {
         supplier:
           purchaseData.supplier?._id || purchaseData.supplier || prev.supplier,
         purchaseDate: purchaseData.purchaseDate
-          ? new Date(purchaseData.purchaseDate).toISOString().split("T")[0]
+          ? normalizeDateToIso(purchaseData.purchaseDate)
           : prev.purchaseDate,
         paidAmount: purchaseData.paidAmount || prev.paidAmount,
         items: purchaseData.items || prev.items,
@@ -1008,19 +1009,17 @@ const Purchases = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  تاریخ خرید
-                </label>
-                <input
-                  type="date"
+                <JalaliDatePicker
+                  label="تاریخ خرید"
                   value={editFormData.purchaseDate}
-                  onChange={(e) =>
+                  onChange={(nextValue) =>
                     setEditFormData((prev) => ({
                       ...prev,
-                      purchaseDate: e.target.value,
+                      purchaseDate: normalizeDateToIso(nextValue),
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="انتخاب تاریخ"
+                  clearable
                 />
               </div>
               <div>
@@ -1302,7 +1301,9 @@ const Purchases = () => {
                   const updateData = {
                     id: editingPurchase._id,
                     supplier: editFormData.supplier,
-                    purchaseDate: editFormData.purchaseDate,
+                    purchaseDate:
+                      normalizeDateToIso(editFormData.purchaseDate) ||
+                      new Date().toISOString().slice(0, 10),
                     paidAmount: editFormData.paidAmount,
                     stockLocation: editFormData.stockLocation,
                     items: editFormData.items,

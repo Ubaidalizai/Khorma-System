@@ -33,7 +33,7 @@ import {
 } from "../services/useApi";
 import { useForm } from "react-hook-form";
 import Button from "../components/Button";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 
 const AdminPanel = () => {
   const { isAuthenticated } = useAuth();

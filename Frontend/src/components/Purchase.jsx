@@ -53,7 +53,7 @@ function Purchase({ getPaymentStatusColor }) {
   const { mutate: createPurchase } = useCreatePurchase();
   const { data: products } = useProduct();
   const { data: suppliers } = useSuppliers();
-  const { register, handleSubmit, reset, watch, formState } = useForm();
+  const { register, handleSubmit, reset, watch, formState, setValue } = useForm();
   const { mutate: createSupplier } = useCreateSupplier();
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -66,6 +66,7 @@ function Purchase({ getPaymentStatusColor }) {
     batchNumber: "",
     quantity: 0,
     unitPrice: 0,
+    expiryDate: "",
   });
   const calculatePurchaseTotals = () => {
     const subtotal = items.reduce((sum, it) => sum + (Number(it.totalPrice) || 0), 0);
@@ -248,6 +249,7 @@ function Purchase({ getPaymentStatusColor }) {
           register={register}
           handleSubmit={handleSubmit}
           watch={watch}
+          setValue={setValue}
           reset={reset}
           createPurchase={createPurchase}
           calculatePurchaseTotals={calculatePurchaseTotals}

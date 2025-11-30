@@ -17,7 +17,7 @@ import { inputStyle } from "./ProductForm";
 import { BiTransferAlt } from "react-icons/bi";
 import { CgEye } from "react-icons/cg";
 import Select from "../components/Select";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 
 // Headers in Dari
 const tableHeader = [

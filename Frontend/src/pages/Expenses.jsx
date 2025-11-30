@@ -3,7 +3,7 @@ import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
-import { formatNumber } from "../utilies/helper";
+import { formatNumber, normalizeDateToIso } from "../utilies/helper";
 import { inputStyle } from "../components/ProductForm";
 import Button from "../components/Button";
 import Table from "../components/Table";
@@ -12,6 +12,7 @@ import TableBody from "../components/TableBody";
 import TableRow from "../components/TableRow";
 import TableColumn from "../components/TableColumn";
 import Pagination from "../components/Pagination";
+import JalaliDatePicker from "../components/JalaliDatePicker";
 
 const fetchExpenses = async ({
   page,
@@ -222,35 +223,31 @@ export default function Expenses() {
             </select>
           </div>
           <div>
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
-            >
-              از تاریخ
-            </label>
-            <input
-              type="date"
-              className={inputStyle}
+            <JalaliDatePicker
+              label="از تاریخ"
               value={dateRange.start}
-              onChange={(e) =>
-                setDateRange((d) => ({ ...d, start: e.target.value }))
+              onChange={(nextValue) =>
+                setDateRange((d) => ({
+                  ...d,
+                  start: normalizeDateToIso(nextValue),
+                }))
               }
+              placeholder="انتخاب تاریخ شروع"
+              clearable
             />
           </div>
           <div>
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
-            >
-              تا تاریخ
-            </label>
-            <input
-              type="date"
-              className={inputStyle}
+            <JalaliDatePicker
+              label="تا تاریخ"
               value={dateRange.end}
-              onChange={(e) =>
-                setDateRange((d) => ({ ...d, end: e.target.value }))
+              onChange={(nextValue) =>
+                setDateRange((d) => ({
+                  ...d,
+                  end: normalizeDateToIso(nextValue),
+                }))
               }
+              placeholder="انتخاب تاریخ پایان"
+              clearable
             />
           </div>
           <div>
@@ -367,9 +364,9 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
     amount: initial?.amount || "",
     paidFromAccount:
       initial?.paidFromAccount?._id || initial?.paidFromAccount || "",
-    date: initial?.date
-      ? new Date(initial.date).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10),
+    date:
+      normalizeDateToIso(initial?.date) ||
+      new Date().toISOString().slice(0, 10),
     description: initial?.description || "",
   });
 
@@ -377,6 +374,13 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "date") {
+      setForm((f) => ({
+        ...f,
+        date: normalizeDateToIso(value) || "",
+      }));
+      return;
+    }
     setForm((f) => ({ ...f, [name]: value }));
   };
 
@@ -454,18 +458,20 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
             </select>
           </div>
           <div>
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
-            >
-              تاریخ
-            </label>
-            <input
-              className={inputStyle}
+            <JalaliDatePicker
+              label="تاریخ"
               name="date"
-              type="date"
               value={form.date}
-              onChange={handleChange}
+              onChange={(nextValue) =>
+                setForm((f) => ({
+                  ...f,
+                  date:
+                    normalizeDateToIso(nextValue) ||
+                    new Date().toISOString().slice(0, 10),
+                }))
+              }
+              placeholder="انتخاب تاریخ"
+              clearable={false}
             />
           </div>
           <div className=" col-span-2">
@@ -499,7 +505,9 @@ function ExpenseModal({ onClose, onSubmit, categories, accounts, initial }) {
                   category: form.category,
                   amount: Number(form.amount),
                   paidFromAccount: form.paidFromAccount,
-                  date: form.date,
+                    date:
+                      normalizeDateToIso(form.date) ||
+                      new Date().toISOString().slice(0, 10),
                   description: form.description,
                 })
               }

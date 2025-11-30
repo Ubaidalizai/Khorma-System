@@ -2,7 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { inputStyle } from "./ProductForm";
 import Button from "./Button";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 
 function CustomerForm({ onClose = () => {}, onSave, close }) {
   const {

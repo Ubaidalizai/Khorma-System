@@ -899,10 +899,32 @@ export const useDeleteAccount = () => {
 };
 
 export const useAccountLedger = (accountId, params = {}) => {
+  const { startDate, endDate, type, sortOrder = "desc" } = params;
   return useQuery({
-    queryKey: ["accountLedger", accountId, params],
-    queryFn: () => fetchAccountLedger(accountId, params),
+    queryKey: [
+      "accountLedger",
+      accountId,
+      startDate || null,
+      endDate || null,
+      type || "",
+      sortOrder,
+    ],
+    queryFn: () =>
+      fetchAccountLedger(accountId, {
+        startDate,
+        endDate,
+        type,
+        sortOrder,
+      }),
     enabled: !!accountId,
+    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
+    onError: (error) => {
+      toast.error(
+        error.message ||
+          "در بارگذاری تراکنش‌های حساب مشکلی پیش آمده است. لطفاً دوباره تلاش کنید."
+      );
+    },
   });
 };
 // USE THE employee

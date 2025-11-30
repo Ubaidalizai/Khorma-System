@@ -3,7 +3,7 @@ import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, API_ENDPOINTS } from "../services/apiConfig";
 import { toast } from "react-toastify";
-import { formatNumber } from "../utilies/helper";
+import { formatNumber, normalizeDateToIso } from "../utilies/helper";
 import Table from "../components/Table";
 import TableHeader from "../components/TableHeader";
 import TableBody from "../components/TableBody";
@@ -11,7 +11,8 @@ import TableRow from "../components/TableRow";
 import TableColumn from "../components/TableColumn";
 import Pagination from "../components/Pagination";
 import GloableModal from "../components/GloableModal";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
+import JalaliDatePicker from "../components/JalaliDatePicker";
 
 const fetchIncome = async ({
   page,
@@ -222,41 +223,31 @@ export default function Income() {
             </select>
           </div>
           <div>
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
-            >
-              از تاریخ
-            </label>
-            <input
-              type="date"
-              className="form-input"
-              className={
-                "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
-              }
+            <JalaliDatePicker
+              label="از تاریخ"
               value={dateRange.start}
-              onChange={(e) =>
-                setDateRange((d) => ({ ...d, start: e.target.value }))
+              onChange={(nextValue) =>
+                setDateRange((d) => ({
+                  ...d,
+                  start: normalizeDateToIso(nextValue),
+                }))
               }
+              placeholder="انتخاب تاریخ شروع"
+              clearable
             />
           </div>
           <div>
-            <label
-              className="block mb-2"
-              style={{ color: "var(--text-medium)" }}
-            >
-              تا تاریخ
-            </label>
-            <input
-              type="date"
-              className="form-input"
-              className={
-                "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
-              }
+            <JalaliDatePicker
+              label="تا تاریخ"
               value={dateRange.end}
-              onChange={(e) =>
-                setDateRange((d) => ({ ...d, end: e.target.value }))
+              onChange={(nextValue) =>
+                setDateRange((d) => ({
+                  ...d,
+                  end: normalizeDateToIso(nextValue),
+                }))
               }
+              placeholder="انتخاب تاریخ پایان"
+              clearable
             />
           </div>
           <div>
@@ -377,9 +368,9 @@ function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
     amount: initial?.amount || "",
     placedInAccount:
       initial?.placedInAccount?._id || initial?.placedInAccount || "",
-    date: initial?.date
-      ? new Date(initial.date).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10),
+    date:
+      normalizeDateToIso(initial?.date) ||
+      new Date().toISOString().slice(0, 10),
     description: initial?.description || "",
   });
   const { isSubmitting, wrapSubmit } = useSubmitLock();
@@ -388,6 +379,13 @@ function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "date") {
+      setForm((f) => ({
+        ...f,
+        date: normalizeDateToIso(value) || "",
+      }));
+      return;
+    }
     setForm((f) => ({ ...f, [name]: value }));
   };
 
@@ -397,7 +395,9 @@ function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
       category: form.category,
       amount: Number(form.amount),
       placedInAccount: form.placedInAccount,
-      date: form.date,
+      date:
+        normalizeDateToIso(form.date) ||
+        new Date().toISOString().slice(0, 10),
       description: form.description,
     });
   });
@@ -468,17 +468,20 @@ function IncomeModal({ onClose, onSubmit, categories, accounts, initial }) {
           </select>
         </div>
         <div>
-          <label className="block mb-2" style={{ color: "var(--text-medium)" }}>
-            تاریخ
-          </label>
-          <input
-            className={
-              "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
-            }
+          <JalaliDatePicker
+            label="تاریخ"
             name="date"
-            type="date"
             value={form.date}
-            onChange={handleChange}
+            onChange={(nextValue) =>
+              setForm((f) => ({
+                ...f,
+                date:
+                  normalizeDateToIso(nextValue) ||
+                  new Date().toISOString().slice(0, 10),
+              }))
+            }
+            placeholder="انتخاب تاریخ"
+            clearable={false}
           />
         </div>
         <div className=" col-span-2">

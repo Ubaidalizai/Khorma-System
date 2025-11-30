@@ -10,13 +10,14 @@ import {
   useEmployeeStocks,
 } from "../services/useApi";
 import Table from "./Table";
-import { formatCurrency } from "../utilies/helper";
+import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
 import TableHeader from "./TableHeader";
 import TableBody from "./TableBody";
 import TableRow from "./TableRow";
 import TableColumn from "./TableColumn";
 import Select from "./Select";
-import { useSubmitLock } from "../hooks/useSubmitLock";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
+import JalaliDatePicker from "./JalaliDatePicker";
 
 const productHeader = [
   { title: "محصول" },
@@ -51,6 +52,7 @@ function SaleForm({
   const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
   const [loading, setLoading] = useState(false);
   const { isSubmitting, wrapSubmit } = useSubmitLock();
+  const saleDateValue = watch("saleDate") || "";
 
   // Get selected employee from form
   const selectedEmployee = watch("employee");
@@ -160,6 +162,13 @@ function SaleForm({
       if (saleToEdit.paidAmount !== undefined) {
         setValue("paidAmount", saleToEdit.paidAmount);
       }
+      if (saleToEdit.saleDate) {
+        setValue(
+          "saleDate",
+          normalizeDateToIso(saleToEdit.saleDate) ||
+            new Date().toISOString().slice(0, 10)
+        );
+      }
     }
   }, [editMode, saleToEdit, setValue]);
 
@@ -204,7 +213,9 @@ function SaleForm({
       const saleData = {
         customer: saleType === "customer" ? data.customer : null,
         employee: saleType === "employee" ? data.employee : null,
-        saleDate: new Date().toISOString(),
+        saleDate:
+          normalizeDateToIso(data.saleDate) ||
+          new Date().toISOString().slice(0, 10),
         items: items
           .filter((item) => item.product && item.quantity > 0)
           .map((item) => ({
@@ -302,7 +313,7 @@ function SaleForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
           {/* Customer/Employee Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -367,6 +378,35 @@ function SaleForm({
               <option value="small">کوچک</option>
               <option value="large">بزرگ</option>
             </select>
+          </div>
+
+          {/* Sale Date */}
+          <div>
+            <JalaliDatePicker
+              label="تاریخ فروش"
+              value={saleDateValue}
+              onChange={(nextValue) =>
+                setValue(
+                  "saleDate",
+                  normalizeDateToIso(nextValue) ||
+                    new Date().toISOString().slice(0, 10),
+                  {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  }
+                )
+              }
+              placeholder="انتخاب تاریخ"
+              clearable={false}
+            />
+            <input
+              type="hidden"
+              value={saleDateValue}
+              readOnly
+              {...register("saleDate", {
+                required: "تاریخ فروش الزامی است",
+              })}
+            />
           </div>
 
           {/* Account Selection */}
@@ -464,19 +504,17 @@ function SaleForm({
               />
             </div>
             <div className=" col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                تاریخ انقضا
-              </label>
-              <input
-                type="date"
+              <JalaliDatePicker
+                label="تاریخ انقضا"
                 value={currentItem?.expiryDate || ""}
-                onChange={(e) =>
+                onChange={(nextValue) =>
                   setCurrentItem((s) => ({
                     ...s,
-                    expiryDate: e.target.value,
+                    expiryDate: normalizeDateToIso(nextValue) || "",
                   }))
                 }
-                className={`w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm`}
+                placeholder="انتخاب تاریخ"
+                clearable
               />
             </div>
             <div className="col-span-1">
