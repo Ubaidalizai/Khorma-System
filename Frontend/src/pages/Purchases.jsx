@@ -86,8 +86,11 @@ const Purchases = () => {
     page,
     limit,
   });
-  const { data: selectedPurchase, isLoading: isLoadingDetails, error: errorDetails } =
-    usePurchase(selectedPurchaseId);
+  const {
+    data: selectedPurchase,
+    isLoading: isLoadingDetails,
+    error: errorDetails,
+  } = usePurchase(selectedPurchaseId);
   const updatePurchaseMutation = useUpdatePurchase();
   const deletePurchaseMutation = useDeletePurchase();
 
@@ -173,9 +176,7 @@ const Purchases = () => {
     selectedPurchase ||
     {};
   const detailItems =
-    selectedPurchase?.purchase?.items ||
-    selectedPurchaseSummary?.items ||
-    [];
+    selectedPurchase?.purchase?.items || selectedPurchaseSummary?.items || [];
 
   useEffect(() => {
     if (selectedPurchase?.purchase) {
@@ -417,7 +418,7 @@ const Purchases = () => {
       {/* Filters */}
       <div className="bg-white rounded-lg  border border-gray-200 p-6">
         <div className="flex flex-row gap-4 items-center justify-between">
-          <div className="flex w-full md:w-[60%] gap-4">
+          <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 flex-2 w-full  gap-4">
             <select
               value={supplierFilter}
               onChange={(e) => {
@@ -634,7 +635,9 @@ const Purchases = () => {
               </div>
             ) : errorDetails ? (
               <div className="p-8 text-center">
-                <p className="text-red-600">{errorDetails.message || "خطا در بارگذاری اطلاعات خرید"}</p>
+                <p className="text-red-600">
+                  {errorDetails.message || "خطا در بارگذاری اطلاعات خرید"}
+                </p>
               </div>
             ) : selectedPurchase && selectedPurchaseId ? (
               <div className="p-4 space-y-4">
@@ -694,8 +697,7 @@ const Purchases = () => {
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
                         {detailPurchase?.supplier?.name ||
-                          findSupplier(detailPurchase?.supplier)
-                            ?.name ||
+                          findSupplier(detailPurchase?.supplier)?.name ||
                           "نامشخص"}
                       </p>
                     </div>
@@ -758,25 +760,24 @@ const Purchases = () => {
                           </tr>
                         ) : (
                           detailItems.map((item, index) => (
-                              <tr key={index} className="hover:bg-gray-50">
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {item.product?.name || "نامشخص"}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {item.unit?.name || "-"}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {item.quantity || 0}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {formatCurrency(item.unitPrice?.toFixed(2))}
-                                </td>
-                                <td className="px-3 py-2 text-sm font-medium text-purple-600">
-                                  {formatCurrency(item.totalPrice?.toFixed(2))}
-                                </td>
-                              </tr>
-                            )
-                          )
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {item.product?.name || "نامشخص"}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {item.unit?.name || "-"}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {item.quantity || 0}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {formatCurrency(item.unitPrice?.toFixed(2))}
+                              </td>
+                              <td className="px-3 py-2 text-sm font-medium text-purple-600">
+                                {formatCurrency(item.totalPrice?.toFixed(2))}
+                              </td>
+                            </tr>
+                          ))
                         )}
                       </tbody>
                     </table>
@@ -803,7 +804,9 @@ const Purchases = () => {
                       <div className="text-right">
                         <div className="text-sm font-semibold text-gray-900">
                           مجموع کل:{" "}
-                          {formatCurrency(Number(detailPurchase?.totalAmount || 0))}
+                          {formatCurrency(
+                            Number(detailPurchase?.totalAmount || 0)
+                          )}
                         </div>
                       </div>
                     </div>
@@ -885,7 +888,8 @@ const Purchases = () => {
                 <div className="bg-blue-50 p-4 rounded-lg col-span-2">
                   <p className="text-sm text-blue-900">
                     مبلغ باقی‌مانده:{" "}
-                    {formatCurrency(Number(paymentPurchase?.dueAmount || 0))} AFN
+                    {formatCurrency(Number(paymentPurchase?.dueAmount || 0))}{" "}
+                    AFN
                   </p>
                 </div>
 
@@ -1220,10 +1224,6 @@ const Purchases = () => {
                     <span>عملیات</span>
                   </div>
                   {editFormData.items.map((item, index) => {
-                    console.log("Item data:", item);
-                    console.log("Products data:", products?.data);
-                    console.log("Units data:", units?.data);
-
                     // Get product and unit names
                     const productName =
                       item.product?.name ||

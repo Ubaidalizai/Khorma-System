@@ -19,8 +19,26 @@ import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
 import { useSidebar } from "../contexts/SidebarContext";
 import { BACKEND_BASE_URL } from "../services/apiConfig";
+import { useClickOutSide } from "../hooks/useClickOutSide";
 
-const othersItems = [
+const navItem = [
+  { name: "داشبورد", path: "/", icon: <AiOutlineHome /> },
+  {
+    name: "موجودی",
+    path: "/inventory",
+    icon: <CubeIcon className=" text-[20px]" />,
+  },
+  {
+    name: "خریدها",
+    path: "/purchases",
+    icon: <ShoppingCartIcon className=" text-[20px]" />,
+  },
+  {
+    name: "فروش‌ها",
+    path: "/sales",
+    icon: <CurrencyDollarIcon className=" text-[20px]" />,
+  },
+  // Finance group items will be rendered together below
   {
     name: "مالی",
     icon: <MdAccountBalanceWallet className=" text-sm" />,
@@ -42,26 +60,6 @@ const othersItems = [
       },
     ],
   },
-];
-const navItem = [
-  { name: "داشبورد", path: "/", icon: <AiOutlineHome /> },
-  {
-    name: "موجودی",
-    path: "/inventory",
-    icon: <CubeIcon className=" text-[20px]" />,
-  },
-  {
-    name: "خریدها",
-    path: "/purchases",
-    icon: <ShoppingCartIcon className=" text-[20px]" />,
-  },
-  {
-    name: "فروش‌ها",
-    path: "/sales",
-    icon: <CurrencyDollarIcon className=" text-[20px]" />,
-  },
-  // Finance group items will be rendered together below
-
   {
     name: "گزارش‌ها",
     path: "/reports",
@@ -81,7 +79,7 @@ function AppSidebar() {
   const subMenuRefs = useRef({});
   const { logout, user } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
-
+  const ref = useClickOutSide(() => setShowUserMenu(false));
   const navigate = useNavigate();
   const handleLogout = async () => {
     try {
@@ -102,7 +100,7 @@ function AppSidebar() {
   useEffect(() => {
     let subMenuMatched = false;
     ["main", "other"].forEach((menuType) => {
-      const items = menuType === "main" ? navItem : othersItems;
+      const items = menuType === "main" ? navItem : [];
 
       items.forEach((nav, index) => {
         if (nav.subItems) {
@@ -319,93 +317,73 @@ function AppSidebar() {
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>{renderMenuItems(navItem, "main")}</div>
-            <div className="">{renderMenuItems(othersItems, "others")}</div>
           </div>
         </nav>
-        <div className="h-auto border-t border-slate-200/20 py-3 px-2">
-          {isHoverd || isExpanded ? (
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
-              >
-                {user?.image && user.image !== "default-user.jpg" ? (
-                  <img
-                    src={`${BACKEND_BASE_URL}/public/images/users/${user.image}`}
-                    alt={user.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
-                  </div>
-                )}
-                <div className="flex-1 text-right">
-                  <p className="text-sm font-medium text-white">
-                    {user?.name || "کاربر مدیر"}
-                  </p>
-                  <p className="text-xs text-white/70 truncate">
-                    {user?.email || ""}
-                  </p>
-                </div>
-              </button>
-
-              {/* User dropdown menu */}
-              {showUserMenu && (
-                <div
-                  className="absolute bottom-full left-0 mb-2 w-48 rounded-md shadow-lg z-50"
-                  style={{
-                    backgroundColor: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  }}
-                >
-                  <div className="py-1">
-                    <div
-                      className="px-4 py-2 border-b"
-                      style={{ borderColor: "var(--border)" }}
-                    >
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: "var(--text-dark)" }}
-                      >
-                        {user?.name || user?.email || "کاربر"}
-                      </p>
-                      <p
-                        className="text-xs"
-                        style={{ color: "var(--text-medium)" }}
-                      >
-                        {user?.email}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-4 hover:bg-slate-100 py-2 text-sm transition-colors duration-200"
-                    >
-                      <RiLogoutBoxLine className="text-[18px] text-black" />
-                      خروج از سیستم
-                    </button>
-                  </div>
-                </div>
-              )}
+      </div>
+      <div className="h-auto border-t border-slate-200/20 py-3 px-2">
+        <div className="relative">
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            {user?.image && user.image !== "default-user.jpg" ? (
+              <img
+                src={`${BACKEND_BASE_URL}/public/images/users/${user.image}`}
+                alt={user.name}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold">
+                {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </div>
+            )}
+            <div className="flex-1 text-right min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                {user?.name || "کاربر مدیر"}
+              </p>
+              <p className="text-xs text-white/70 truncate">
+                {user?.email || ""}
+              </p>
             </div>
-          ) : (
-            <div className="flex justify-center">
-              {user?.image && user.image !== "default-user.jpg" ? (
-                <img
-                  src={`${BACKEND_BASE_URL}/public/images/users/${user.image}`}
-                  alt={user.name}
-                  className="w-10 h-10 rounded-full object-cover cursor-pointer"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                />
-              ) : (
+          </button>
+
+          {/* User dropdown menu */}
+          {showUserMenu && (
+            <div
+              ref={ref}
+              className="absolute bottom-full left-0 mb-2 w-48 rounded-md shadow-lg z-50"
+              style={{
+                backgroundColor: "var(--surface)",
+                border: "1px solid var(--border)",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <div className="py-1">
                 <div
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold cursor-pointer"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="px-4 py-2 border-b"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                  <p
+                    className="text-sm font-medium truncate"
+                    style={{ color: "var(--text-dark)" }}
+                  >
+                    {user?.name || user?.email || "کاربر"}
+                  </p>
+                  <p
+                    className="text-xs truncate"
+                    style={{ color: "var(--text-medium)" }}
+                  >
+                    {user?.email}
+                  </p>
                 </div>
-              )}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center w-full px-4 hover:bg-slate-100 py-2 text-sm transition-colors duration-200"
+                >
+                  <RiLogoutBoxLine className="text-[18px] text-black" />
+                  خروج از سیستم
+                </button>
+              </div>
             </div>
           )}
         </div>

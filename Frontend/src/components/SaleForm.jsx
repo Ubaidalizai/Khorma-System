@@ -1,23 +1,24 @@
-import { CgClose } from "react-icons/cg";
+import React, { useEffect, useState } from "react";
 import { BiTrashAlt } from "react-icons/bi";
-import React, { useState, useEffect } from "react";
+import { CgClose } from "react-icons/cg";
+import { useSubmitLock } from "../hooks/useSubmitLock.js";
 import {
-  useProductsFromStock,
   useAccounts,
-  useSystemAccounts,
-  useUnits,
   useBatchesByProduct,
   useEmployeeStocks,
+  useProducts,
+  useProductsFromStock,
+  useSystemAccounts,
+  useUnits,
 } from "../services/useApi";
-import Table from "./Table";
 import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
-import TableHeader from "./TableHeader";
-import TableBody from "./TableBody";
-import TableRow from "./TableRow";
-import TableColumn from "./TableColumn";
-import Select from "./Select";
-import { useSubmitLock } from "../hooks/useSubmitLock.js";
 import JalaliDatePicker from "./JalaliDatePicker";
+import Select from "./Select";
+import Table from "./Table";
+import TableBody from "./TableBody";
+import TableColumn from "./TableColumn";
+import TableHeader from "./TableHeader";
+import TableRow from "./TableRow";
 
 const productHeader = [
   { title: "محصول" },
@@ -40,13 +41,17 @@ function SaleForm({
   editMode = false,
   saleToEdit = null,
 }) {
+  // Default values for Select components
+  const DEFAULT_CUSTOMER_SELECTED = "انتخاب مشتری (حساب)";
+  const DEFAULT_EMPLOYEE_SELECTED = "انتخاب کارمند (حساب)";
+  const DEFAULT_ACCOUNT_SELECTED = "انتخاب حساب";
   const [items, setItems] = useState([]);
   const [currentItem, setCurrentItem] = useState({
     product: "",
     unit: "",
     batchNumber: "",
-    quantity: 0,
-    unitPrice: 0,
+    quantity: null,
+    unitPrice: null,
     expiryDate: "",
   });
   const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
@@ -82,6 +87,7 @@ function SaleForm({
   const { data: accountsData, isLoading: accountsLoading } =
     useSystemAccounts();
   const { data: units, isLoading: unitsLoading } = useUnits();
+  const { data: productsData } = useProducts();
 
   // Extract accounts array from the response
   const accounts = accountsData?.accounts || accountsData || [];
@@ -183,8 +189,8 @@ function SaleForm({
         product: "",
         unit: "",
         batchNumber: "",
-        quantity: 0,
-        unitPrice: 0,
+        quantity: null,
+        unitPrice: null,
         expiryDate: "",
       });
     }
@@ -313,7 +319,7 @@ function SaleForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-5">
           {/* Customer/Employee Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -366,46 +372,17 @@ function SaleForm({
 
           {/* Invoice Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              نوع فاکتور
-            </label>
-            <select
-              {...register("invoiceType")}
-              className={
-                "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
-              }
-            >
-              <option value="small">کوچک</option>
-              <option value="large">بزرگ</option>
-            </select>
-          </div>
-
-          {/* Sale Date */}
-          <div>
-            <JalaliDatePicker
-              label="تاریخ فروش"
-              value={saleDateValue}
-              onChange={(nextValue) =>
-                setValue(
-                  "saleDate",
-                  normalizeDateToIso(nextValue) ||
-                    new Date().toISOString().slice(0, 10),
-                  {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  }
-                )
-              }
-              placeholder="انتخاب تاریخ"
-              clearable={false}
-            />
-            <input
-              type="hidden"
-              value={saleDateValue}
-              readOnly
-              {...register("saleDate", {
-                required: "تاریخ فروش الزامی است",
-              })}
+            <Select
+              label="نوعیت فاکتور"
+              options={[
+                { value: "small", label: "کوچک" },
+                { value: "large", label: "بزرگ" },
+              ]}
+              value={watch("invoiceType")}
+              onChange={(value) => setValue("invoiceType", value)}
+              register={register}
+              name="invoiceType"
+              defaultSelected="انتخاب نوع فاکتور"
             />
           </div>
 
@@ -435,9 +412,37 @@ function SaleForm({
               type="number"
               step="0.01"
               {...register("paidAmount", { valueAsNumber: true })}
-              className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+              className="w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200  pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow rounded-sm"
               placeholder="0.00"
               min="0"
+            />
+          </div>
+          {/* Sale Date */}
+          <div>
+            <JalaliDatePicker
+              label="تاریخ فروش"
+              value={saleDateValue}
+              onChange={(nextValue) =>
+                setValue(
+                  "saleDate",
+                  normalizeDateToIso(nextValue) ||
+                    new Date().toISOString().slice(0, 10),
+                  {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  }
+                )
+              }
+              placeholder="انتخاب تاریخ"
+              clearable={false}
+            />
+            <input
+              type="hidden"
+              value={saleDateValue}
+              readOnly
+              {...register("saleDate", {
+                required: "تاریخ فروش الزامی است",
+              })}
             />
           </div>
         </div>
@@ -457,15 +462,22 @@ function SaleForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 md:grid-cols-6  gap-4 w-full rounded-lg ">
+          <div className="grid grid-cols-2  md:grid-cols-3 lg:grid-cols-6  gap-4 w-full rounded-lg ">
             <div className="col-span-1">
               <Select
                 id={"product"}
                 label={" اسم محصول "}
                 value={currentItem?.product}
-                onChange={(value) =>
-                  setCurrentItem((s) => ({ ...s, product: value }))
-                }
+                onChange={(value) => {
+                  const selectedProduct = productsData?.data?.find(
+                    (p) => p._id === value
+                  );
+                  setCurrentItem({
+                    ...currentItem,
+                    product: value,
+                    unit: selectedProduct?.baseUnit?._id || "",
+                  });
+                }}
                 options={products}
               ></Select>
             </div>
@@ -503,49 +515,45 @@ function SaleForm({
                 placeholder="اختیاری"
               />
             </div>
-            <div className=" col-span-1">
-              <JalaliDatePicker
-                label="تاریخ انقضا"
-                value={currentItem?.expiryDate || ""}
-                onChange={(nextValue) =>
-                  setCurrentItem((s) => ({
-                    ...s,
-                    expiryDate: normalizeDateToIso(nextValue) || "",
-                  }))
-                }
-                placeholder="انتخاب تاریخ"
-                clearable
-              />
-            </div>
+
             <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-[12px] font-medium text-gray-700 mb-2">
                 تعداد
               </label>
               <input
                 type="number"
+                placeholder="0.00"
                 value={currentItem?.quantity}
                 onChange={(e) =>
                   setCurrentItem((s) => ({ ...s, quantity: e.target.value }))
                 }
-                className={
-                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
-                }
+                className="w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow"
               />
             </div>
             <div className="-col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-[12px] font-medium text-gray-700 mb-2">
                 قیمت یک
               </label>
               <input
+                placeholder="0.00"
                 type="number"
                 step="0.01"
                 value={currentItem?.unitPrice}
                 onChange={(e) =>
                   setCurrentItem((s) => ({ ...s, unitPrice: e.target.value }))
                 }
-                className={
-                  "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+                className="w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow"
+              />
+            </div>
+            <div className="col-span-1">
+              <JalaliDatePicker
+                label="تاریخ انقضا"
+                value={currentItem?.expiryDate}
+                onChange={(date) =>
+                  setCurrentItem((s) => ({ ...s, expiryDate: date }))
                 }
+                placeholder="انتخاب تاریخ"
+                clearable={true}
               />
             </div>
           </div>

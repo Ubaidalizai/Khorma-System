@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { BiX } from "react-icons/bi";
+import { useEffect, useState } from "react";
 import DatePicker from "react-multi-date-picker";
 import DateObject from "react-date-object";
 import persianCalendar from "react-date-object/calendars/persian";
@@ -39,7 +40,7 @@ const DARI_LOCALE = {
 };
 
 const DATE_INPUT_CLASS =
-  "w-full bg-white border rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors";
+  "w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md pr-3 pl-3 py-[14px] transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow";
 
 const toPersianDateObject = (isoString) => {
   if (!isoString) return null;
@@ -50,7 +51,7 @@ const toPersianDateObject = (isoString) => {
       calendar: gregorianCalendar,
     });
     return gregorianDate.convert(persianCalendar, DARI_LOCALE);
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -69,28 +70,21 @@ const JalaliDatePicker = ({
   label,
   value,
   onChange,
-  placeholder = "انتخاب تاریخ",
+  placeholder = "YYYY/MM/DD",
   className = "",
-  inputClassName = "",
   error: errorMessage,
+  position,
   disabled,
   clearable = true,
   name,
 }) => {
-  const [selectedDate, setSelectedDate] = useState(() => toPersianDateObject(value));
-  const hasError = Boolean(errorMessage);
+  const [selectedDate, setSelectedDate] = useState(() =>
+    toPersianDateObject(value)
+  );
 
   useEffect(() => {
     setSelectedDate(toPersianDateObject(value));
   }, [value]);
-
-  const inputClasses = useMemo(() => {
-    const base = DATE_INPUT_CLASS;
-    const stateClass = hasError
-      ? "border-red-400 focus:ring-red-400 focus:border-red-400"
-      : "border-gray-300 hover:border-gray-400";
-    return `${base} ${stateClass} ${inputClassName}`.trim();
-  }, [hasError, inputClassName]);
 
   const handleChange = (value) => {
     if (Array.isArray(value)) {
@@ -117,7 +111,7 @@ const JalaliDatePicker = ({
           calendar: persianCalendar,
           locale: DARI_LOCALE,
         });
-      } catch (error) {
+      } catch {
         dateObject = null;
       }
     } else {
@@ -143,7 +137,10 @@ const JalaliDatePicker = ({
   return (
     <div className={`flex flex-col gap-1 w-full ${className}`}>
       {label && (
-        <label className="text-sm font-medium text-gray-700" htmlFor={name}>
+        <label
+          className="text-[12px] mb-[6px] font-medium text-gray-700"
+          htmlFor={name}
+        >
           {label}
         </label>
       )}
@@ -153,10 +150,12 @@ const JalaliDatePicker = ({
           onChange={handleChange}
           calendar={persianCalendar}
           locale={DARI_LOCALE}
-          inputClass={inputClasses}
+          inputClass={
+            "w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm  px-3 py-2.5 transition duration-300 ease focus:outline-none  hover:border-slate-300 focus:border-slate-300  shadow-sm"
+          }
           placeholder={placeholder}
           format="YYYY/MM/DD"
-          calendarPosition="bottom-center"
+          calendarPosition={position || "bottom-center"}
           fixMainPosition
           disabled={disabled}
           name={name}
@@ -165,10 +164,10 @@ const JalaliDatePicker = ({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 left-2 flex items-center text-gray-400 hover:text-gray-600"
+            className="absolute top-2/4 -translate-y-2/4 left-0  flex items-center text-gray-400 hover:text-gray-600"
             aria-label="پاک کردن تاریخ"
           >
-            ×
+            <BiX />
           </button>
         )}
       </div>
