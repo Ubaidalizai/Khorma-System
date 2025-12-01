@@ -19,7 +19,6 @@ import GloableModal from "./GloableModal";
 import { toast } from "react-toastify";
 import { useSubmitLock } from "../hooks/useSubmitLock.js";
 import JalaliDatePicker from "./JalaliDatePicker";
-import AfghanCalendar from "./AfghanCalendar";
 import Select from "./Select";
 import { inputStyle } from "./ProductForm.jsx";
 
