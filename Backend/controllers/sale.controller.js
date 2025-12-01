@@ -16,6 +16,8 @@ const Account = require('../models/account.model');
 const AccountTransaction = require('../models/accountTransaction.model');
 const AuditLog = require('../models/auditLog.model');
 const EmployeeStock = require('../models/employeeStock.model');
+const Customer = require('../models/customer.model');
+const { getOrCreateAccount } = require('../utils/accountHelper');
 
 // Helper function to validate account balance
 const validateAccountBalance = async (accountId, requiredAmount, session) => {
@@ -63,11 +65,28 @@ exports.createSale = asyncHandler(async (req, res, next) => {
     if (!account)
       throw new AppError('Invalid account for money placement (placedIn)', 400);
 
+    // Prepare customer account (if provided) before creating sale so it participates in the transaction
+    let customerAccount = null;
+    let customerNameSnapshot = '';
+    if (customer) {
+      const customerDoc = await Customer.findById(customer).session(session);
+      if (!customerDoc) throw new AppError('Invalid customer ID', 400);
+      customerNameSnapshot = customerDoc.name;
+      customerAccount = await getOrCreateAccount({
+        refId: customer,
+        type: 'customer',
+        name: customerDoc.name,
+        session,
+      });
+    }
+
     // create skeleton sale first so SaleItem can reference sale._id
     const saleDocs = await Sale.create(
       [
         {
           customer: customer || null,
+          customerAccount: customerAccount?._id,
+          customerName: customerNameSnapshot || undefined,
           employee: employee || null,
           saleDate: saleDate || Date.now(),
           totalAmount: 0, // will update later
@@ -290,14 +309,14 @@ exports.createSale = asyncHandler(async (req, res, next) => {
     // 3️⃣ ACCOUNT TRANSACTIONS
     // Prepare references for accounts to reuse in payment section
     // Customer debit (if customer provided) — customer owes totalAmount
-    let customerAccount = null;
     if (customer) {
-      customerAccount = await Account.findOne({
-        refId: customer,
-        type: 'customer',
-      }).session(session);
-      if (!customerAccount)
-        throw new AppError('Customer account not found', 404);
+      // we already ensured customerAccount via getOrCreateAccount earlier and stored it on saleDoc
+      if (!customerAccount) {
+        // As a fallback, try to find or create now
+        const customerDoc = await Customer.findById(customer).session(session);
+        const tmpName = customerDoc ? customerDoc.name : '';
+        customerAccount = await getOrCreateAccount({ refId: customer, type: 'customer', name: tmpName, session });
+      }
 
       await AccountTransaction.create(
         [
@@ -607,7 +626,21 @@ exports.updateSale = asyncHandler(async (req, res, next) => {
     if (saleDate) sale.saleDate = saleDate;
     if (invoiceType) sale.invoiceType = invoiceType;
     if (paidAmount !== undefined) sale.paidAmount = paidAmount;
-    if (customer) sale.customer = customer;
+    if (customer) {
+      const customerExists = await Customer.findById(customer).session(session);
+      if (!customerExists) throw new AppError('Invalid customer ID', 400);
+      sale.customer = customer;
+
+      // Ensure account exists for this customer and store reference
+      const newCustomerAcc = await getOrCreateAccount({
+        refId: customer,
+        type: 'customer',
+        name: customerExists.name,
+        session,
+      });
+      sale.customerAccount = newCustomerAcc._id;
+      sale.customerName = customerExists.name;
+    }
     if (employee) sale.employee = employee;
 
     // 3️⃣ Reverse stock from old sale items
@@ -683,10 +716,9 @@ exports.updateSale = asyncHandler(async (req, res, next) => {
     // 6️⃣ Update accounts
     // Customer account (if exists)
     if (sale.customer) {
-      const customerAcc = await Account.findOne({
-        refId: sale.customer,
-        type: 'customer',
-      }).session(session);
+      const customerAcc = sale.customerAccount
+        ? await Account.findById(sale.customerAccount).session(session)
+        : await getOrCreateAccount({ refId: sale.customer, type: 'customer', name: sale.customerName || '', session });
       if (!customerAcc) throw new AppError('Customer account not found', 404);
 
       const saleTxn = await AccountTransaction.findOne({
@@ -903,11 +935,10 @@ exports.restoreSale = asyncHandler(async (req, res, next) => {
     }
 
     // 2️⃣ Recreate account transactions
-    const saleAcc = sale.customer
-      ? await Account.findOne({
-          refId: sale.customer,
-          type: 'customer',
-        }).session(session)
+    const saleAcc = sale.customerAccount
+      ? await Account.findById(sale.customerAccount).session(session)
+      : sale.customer
+      ? await Account.findOne({ refId: sale.customer, type: 'customer' }).session(session)
       : null;
 
     if (saleAcc) {
@@ -1678,15 +1709,13 @@ exports.recordSalePayment = asyncHandler(async (req, res, next) => {
       );
     }
 
-    // 3️⃣ Find customer account (if sale has customer)
+    // 3️⃣ Find customer account (if sale has customer) - prefer explicit `customerAccount` on sale
     let customerAccount = null;
     if (sale.customer) {
-      customerAccount = await Account.findOne({
-        refId: sale.customer,
-        type: 'customer',
-        isDeleted: false
-      }).session(session);
-      
+      customerAccount = sale.customerAccount
+        ? await Account.findById(sale.customerAccount).session(session)
+        : await Account.findOne({ refId: sale.customer, type: 'customer', isDeleted: false }).session(session);
+
       if (!customerAccount) {
         throw new AppError('Customer account not found', 404);
       }

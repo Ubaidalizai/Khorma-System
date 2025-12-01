@@ -101,21 +101,7 @@ const Employee = () => {
   });
   const isTransferBusy = isTransferSubmitting || isCreatingTransfer;
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center text-red-500 p-4">
-        Error loading employee stocks: {error.message}
-      </div>
-    );
-  }
+  // Keep the search and employee select mounted while loading/error so focus is preserved.
 
   return (
     <section>
@@ -145,29 +131,45 @@ const Employee = () => {
       <Table>
         <TableHeader headerData={tableHeader} />
         <TableBody>
-          {filteredStocks?.map((item) => (
-            <TableRow key={item._id}>
-              <TableColumn>{item.product?.name || "N/A"}</TableColumn>
-              <TableColumn className="font-semibold">
-                {item.quantity_in_hand}
-              </TableColumn>
-              <TableColumn>
-                {new Date(item.createdAt).toLocaleDateString("fa-IR")}
-              </TableColumn>
-              <TableColumn>
-                <div className={`flex items-center gap-x-3`}>
-                  <CgEye
-                    className=" text-[18px] hover:bg-slate-200 text-yellow-400 rounded-full"
-                    onClick={() => handleShowDetails(item)}
-                  />
-                  <BiTransferAlt
-                    className=" text-[18px] hover:bg-slate-200 text-red-400 rounded-full"
-                    onClick={() => handleTransfer(item)}
-                  />
+          {isLoading ? (
+            <TableRow key="loading">
+              <TableColumn colSpan={4} className="text-center">
+                <div className=" w-full h-[120px] flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 </div>
               </TableColumn>
             </TableRow>
-          ))}
+          ) : error ? (
+            <TableRow key="error">
+              <TableColumn colSpan={4} className="text-center text-red-500">
+                Error loading employee stocks: {error?.message || "خطا در بارگذاری"}
+              </TableColumn>
+            </TableRow>
+          ) : (
+            filteredStocks?.map((item) => (
+              <TableRow key={item._id}>
+                <TableColumn>{item.product?.name || "N/A"}</TableColumn>
+                <TableColumn className="font-semibold">
+                  {item.quantity_in_hand}
+                </TableColumn>
+                <TableColumn>
+                  {new Date(item.createdAt).toLocaleDateString("fa-IR")}
+                </TableColumn>
+                <TableColumn>
+                  <div className={`flex items-center gap-x-3`}>
+                    <CgEye
+                      className=" text-[18px] hover:bg-slate-200 text-yellow-400 rounded-full"
+                      onClick={() => handleShowDetails(item)}
+                    />
+                    <BiTransferAlt
+                      className=" text-[18px] hover:bg-slate-200 text-red-400 rounded-full"
+                      onClick={() => handleTransfer(item)}
+                    />
+                  </div>
+                </TableColumn>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
       {/* Edit */}
