@@ -60,7 +60,7 @@ function Warehouse() {
   const [show, setShow] = useState(false);
   const [selectedPro, setSelectedPro] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
-  const [search] = useState("");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { mutate: createStockTransfer, isPending: isCreatingTransfer } =
@@ -99,8 +99,8 @@ function Warehouse() {
   const needsEmployee = [
     "warehouse-employee",
     "employee-warehouse",
-    "store-employee",
     "employee-store",
+    "store-employee",
   ].includes(transferType);
   const runMutation = (mutateFn, payload) =>
     new Promise((resolve, reject) => {
@@ -148,81 +148,91 @@ function Warehouse() {
     await runMutation(updateInventory, { id: selectedPro._id, stockData });
     setShowEdit(false);
   });
-  if (isLoading)
-    return (
-      <div className=" w-full h-[250px] flex justify-center items-center">
-        <BiLoaderAlt className=" text-2xl animate-spin" />
-      </div>
-    );
+  // keep the page mounted while loading so inputs don't lose focus
+  // show an inline loader in the table area instead of unmounting whole page
   return (
     <section>
       <div className="w-full flex bg-white border border-slate-200 rounded-md py-3  my-1.5 ">
-        <div className=" flex-1  flex justify-start items-end pr-3">
-          <SearchInput placeholder="جستجو کنید" />
+          <div className=" flex-1  flex justify-start items-end pr-3">
+          <SearchInput
+            placeholder="جستجو بر اساس نام محصول..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
       <Table>
         <TableHeader headerData={tableHeader} />
         <TableBody>
-          {warehouses?.map((row) => (
-            <TableRow key={row?._id}>
-              <TableColumn>{row?.product?.name || row?.product}</TableColumn>
-              <TableColumn>{row?.batchNumber || "DEFAULT"}</TableColumn>
-              <TableColumn>{row?.unit?.name || row?.unit}</TableColumn>
-              <TableColumn>
-                {row?.location === "warehouse" ? "گدام" : row?.location}
-              </TableColumn>
-              <TableColumn>
-                {row?.expiryDate
-                  ? new Date(row.expiryDate).toLocaleDateString("fa-IR")
-                  : "—"}
-              </TableColumn>
-              <TableColumn>
-                {formatNumber(row?.purchasePricePerBaseUnit ?? 0)}
-              </TableColumn>
-              <TableColumn className="font-semibold">
-                {row?.quantity}
-              </TableColumn>
-              <TableColumn>{row.minLevel || "_"}</TableColumn>
-              <TableColumn>
-                <span
-                  className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    getStockStatus(row?.quantity, row?.minLevel || 0).color
-                  }`}
-                >
-                  {getStockStatus(row?.quantity, row?.minLevel || 0).label}
-                </span>
-              </TableColumn>
-              <TableColumn>
-                <div className=" flex items-center gap-2">
-                  <CgEye
-                    className=" text-[18px] hover:bg-slate-200 text-yellow-400 rounded-full"
-                    onClick={() => {
-                      setSelectedPro(row);
-                      setShow(true);
-                    }}
-                  />
-                  <BiTransferAlt
-                    className=" text-[18px] hover:bg-slate-200 text-red-400 rounded-full"
-                    onClick={() => {
-                      setSelectedPro(row);
-                      setShowTransfer(true);
-                    }}
-                  />
-                  <button
-                    className="text-indigo-600 hover:text-indigo-900"
-                    onClick={() => {
-                      setSelectedPro(row);
-                      setShowEdit(true);
-                    }}
-                    title="ویرایش"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </button>
+          {isLoading ? (
+            <TableRow key="loading">
+              <TableColumn colSpan={tableHeader.length} className="text-center">
+                <div className=" w-full h-[120px] flex justify-center items-center">
+                  <BiLoaderAlt className=" text-2xl animate-spin" />
                 </div>
               </TableColumn>
             </TableRow>
-          ))}
+          ) : (
+            warehouses?.map((row) => (
+              <TableRow key={row?._id}>
+                <TableColumn>{row?.product?.name || row?.product}</TableColumn>
+                <TableColumn>{row?.batchNumber || "DEFAULT"}</TableColumn>
+                <TableColumn>{row?.unit?.name || row?.unit}</TableColumn>
+                <TableColumn>
+                  {row?.location === "warehouse" ? "گدام" : row?.location}
+                </TableColumn>
+                <TableColumn>
+                  {row?.expiryDate
+                    ? new Date(row.expiryDate).toLocaleDateString("fa-IR")
+                    : "—"}
+                </TableColumn>
+                <TableColumn>
+                  {formatNumber(row?.purchasePricePerBaseUnit ?? 0)}
+                </TableColumn>
+                <TableColumn className="font-semibold">
+                  {row?.quantity}
+                </TableColumn>
+                <TableColumn>{row.minLevel || "_"}</TableColumn>
+                <TableColumn>
+                  <span
+                    className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      getStockStatus(row?.quantity, row?.minLevel || 0).color
+                    }`}
+                  >
+                    {getStockStatus(row?.quantity, row?.minLevel || 0).label}
+                  </span>
+                </TableColumn>
+                <TableColumn>
+                  <div className=" flex items-center gap-2">
+                    <CgEye
+                      className=" text-[18px] hover:bg-slate-200 text-yellow-400 rounded-full"
+                      onClick={() => {
+                        setSelectedPro(row);
+                        setShow(true);
+                      }}
+                    />
+                    <BiTransferAlt
+                      className=" text-[18px] hover:bg-slate-200 text-red-400 rounded-full"
+                      onClick={() => {
+                        setSelectedPro(row);
+                        setShowTransfer(true);
+                      }}
+                    />
+                    <button
+                      className="text-indigo-600 hover:text-indigo-900"
+                      onClick={() => {
+                        setSelectedPro(row);
+                        setShowEdit(true);
+                      }}
+                      title="ویرایش"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </TableColumn>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
       <GloableModal open={show} setOpen={setShow}>

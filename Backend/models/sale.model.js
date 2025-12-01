@@ -12,6 +12,17 @@ const saleSchema = new mongoose.Schema(
       ref: 'Customer',
       required: false, // nullable for walk-in cash sales
     },
+    // explicit reference to the customer's accounting account
+    customerAccount: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account',
+      required: false,
+    },
+    // snapshot of customer name for audit and display
+    customerName: {
+      type: String,
+      required: false,
+    },
     employee: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee',

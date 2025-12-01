@@ -12,6 +12,17 @@ const purchaseSchema = new mongoose.Schema(
       ref: 'Supplier',
       required: true,
     },
+    // explicit reference to the supplier's accounting account
+    supplierAccount: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account',
+      required: false,
+    },
+    // snapshot of supplier name for audit and display
+    supplierName: {
+      type: String,
+      required: false,
+    },
     purchaseDate: {
       type: Date,
       default: Date.now,

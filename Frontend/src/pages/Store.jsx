@@ -46,7 +46,9 @@ const storeHeader = [
 function Store() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
   const { data: stocks } = useStoreStocks({
+    search,
     includeZeroQuantity: true,
     page,
     limit,
@@ -75,7 +77,6 @@ function Store() {
   const transferType = watch("transferType") || "store-warehouse";
   const quantity = watch("quantity");
   const employee = watch("employee");
-  const [search, setSearch] = useState("");
 
   // Example fromLocation/toLocation logic
   const [selectedData, setSelectedData] = useState(null);

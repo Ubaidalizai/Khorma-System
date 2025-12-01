@@ -94,14 +94,7 @@ function Product() {
       },
     });
   };
-  // Show loading state if data is being fetched
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-500">در حال بارگذاری...</div>
-      </div>
-    );
-  }
+  // keep search input mounted while loading to preserve focus
   return (
     <section className="w-full">
       <div className="w-full flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-3 bg-white border-slate-200 rounded-md border my-1.5 px-3">
@@ -133,7 +126,15 @@ function Product() {
       <Table>
         <TableHeader headerData={headers} />
         <TableBody>
-          {productList?.data?.length > 0 ? (
+          {isLoading ? (
+            <TableRow key="loading">
+              <TableColumn colSpan={headers.length} className="text-center">
+                <div className=" w-full h-[120px] flex justify-center items-center">
+                  <div className="text-gray-500">در حال بارگذاری...</div>
+                </div>
+              </TableColumn>
+            </TableRow>
+          ) : productList?.data?.length > 0 ? (
             productList?.data?.map((el) => (
               <TableRow key={el._id}>
                 <TableColumn>{el?.name}</TableColumn>
@@ -180,7 +181,7 @@ function Product() {
           ) : (
             <TableRow>
               <TableColumn
-                colSpan={7}
+                colSpan={headers.length}
                 className="text-center py-8 text-gray-500"
               >
                 هیچ محصولی یافت نشد

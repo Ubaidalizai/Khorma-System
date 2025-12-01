@@ -15,6 +15,7 @@ const AuditLog = require('../models/auditLog.model');
 const Stock = require('../models/stock.model');
 const Account = require('../models/account.model');
 const AccountTransaction = require('../models/accountTransaction.model');
+const { getOrCreateAccount } = require('../utils/accountHelper');
 
 // Helper function to validate account balance
 const validateAccountBalance = async (accountId, requiredAmount, session) => {
@@ -51,13 +52,16 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
   session.startTransaction();
 
   try {
-    // 2️⃣ Validate supplier
-    const supplierAccount = await Account.findOne({
+    // 2️⃣ Validate supplier and ensure supplier account exists (create if missing)
+    const supplierDoc = await Supplier.findById(supplier).session(session);
+    if (!supplierDoc) throw new AppError('Invalid supplier ID', 400);
+
+    const supplierAccount = await getOrCreateAccount({
       refId: supplier,
       type: 'supplier',
-      isDeleted: false
+      name: supplierDoc.name,
+      session,
     });
-    if (!supplierAccount) throw new AppError('Supplier account not found', 404);
 
     // 3️⃣ Validate payment account and check balance
     const payAccount = await validateAccountBalance(paymentAccount, paidAmount, session);
@@ -73,7 +77,17 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
 
     // 5️⃣ Create main purchase
     const purchase = await Purchase.create(
-      [{ supplier, purchaseDate, totalAmount, paidAmount, dueAmount }],
+      [
+        {
+          supplier,
+          supplierAccount: supplierAccount._id,
+          supplierName: supplierDoc.name,
+          purchaseDate,
+          totalAmount,
+          paidAmount,
+          dueAmount,
+        },
+      ],
       { session }
     );
 
@@ -359,9 +373,19 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
 
     // 2️⃣ Update purchase core fields
     if (supplier) {
-      const supplierExists = await Supplier.findById(supplier);
+      const supplierExists = await Supplier.findById(supplier).session(session);
       if (!supplierExists) throw new AppError('Invalid supplier ID', 400);
       purchase.supplier = supplier;
+
+      // Ensure an account exists for new supplier and store a reference snapshot
+      const newSupplierAccount = await getOrCreateAccount({
+        refId: supplier,
+        type: 'supplier',
+        name: supplierExists.name,
+        session,
+      });
+      purchase.supplierAccount = newSupplierAccount._id;
+      purchase.supplierName = supplierExists.name;
     }
 
     if (purchaseDate) purchase.purchaseDate = purchaseDate;
@@ -471,10 +495,10 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
     await purchase.save({ session });
 
     // 4️⃣ Update Account Balances
-    const supplierAccount = await Account.findOne({
-      refId: purchase.supplier,
-      type: 'supplier',
-    }).session(session);
+    // Ensure we have the supplier account; prefer explicit `supplierAccount` on purchase when available
+    const supplierAccount = purchase.supplierAccount
+      ? await Account.findById(purchase.supplierAccount).session(session)
+      : await getOrCreateAccount({ refId: purchase.supplier, type: 'supplier', name: purchase.supplierName || '', session });
     if (!supplierAccount) throw new AppError('Supplier account not found', 404);
 
     const supplierTxn = await AccountTransaction.findOne({
@@ -589,10 +613,9 @@ exports.softDeletePurchase = asyncHandler(async (req, res, next) => {
     const items = await PurchaseItem.find({ purchase: purchase._id }).session(
       session
     );
-    const supplierAccount = await Account.findOne({
-      refId: purchase.supplier,
-      type: 'supplier',
-    }).session(session);
+    const supplierAccount = purchase.supplierAccount
+      ? await Account.findById(purchase.supplierAccount).session(session)
+      : await Account.findOne({ refId: purchase.supplier, type: 'supplier' }).session(session);
 
     if (!supplierAccount) throw new AppError('Supplier account not found', 404);
 
@@ -670,10 +693,9 @@ exports.restorePurchase = asyncHandler(async (req, res, next) => {
     const items = await PurchaseItem.find({ purchase: purchase._id }).session(
       session
     );
-    const supplierAccount = await Account.findOne({
-      refId: purchase.supplier,
-      type: 'supplier',
-    }).session(session);
+    const supplierAccount = purchase.supplierAccount
+      ? await Account.findById(purchase.supplierAccount).session(session)
+      : await Account.findOne({ refId: purchase.supplier, type: 'supplier' }).session(session);
 
     if (!supplierAccount) throw new AppError('Supplier account not found', 404);
 
@@ -778,13 +800,11 @@ exports.recordPurchasePayment = asyncHandler(async (req, res, next) => {
       );
     }
 
-    // 3️⃣ Find supplier account
-    const supplierAccount = await Account.findOne({
-      refId: purchase.supplier,
-      type: 'supplier',
-      isDeleted: false
-    }).session(session);
-    
+    // 3️⃣ Find supplier account (prefer explicit reference on purchase)
+    const supplierAccount = purchase.supplierAccount
+      ? await Account.findById(purchase.supplierAccount).session(session)
+      : await Account.findOne({ refId: purchase.supplier, type: 'supplier', isDeleted: false }).session(session);
+
     if (!supplierAccount) {
       throw new AppError('Supplier account not found', 404);
     }
