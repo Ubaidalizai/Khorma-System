@@ -44,8 +44,8 @@ function PurchaseForm({
   const { data: systemAccounts } = useSystemAccounts();
   const purchaseDateValue = watch("purchaseDate") || "";
   const handleAddItem = () => {
-    const quantity = Number(currentItem.quantity) || 0;
-    const unitPrice = Number(currentItem.unitPrice) || 0;
+    const quantity = Number(currentItem.quantity) || null;
+    const unitPrice = Number(currentItem.unitPrice) || null;
     const totalPrice = quantity * unitPrice;
     setItems([
       ...items,
@@ -66,15 +66,15 @@ function PurchaseForm({
       product: "",
       unit: "",
       batchNumber: "",
-      quantity: 0,
-      unitPrice: 0,
+      quantity: null,
+      unitPrice: null,
       expiryDate: "",
     });
   };
   const handleRemove = (index) => {
     setItems(items.filter((_, i) => i !== index));
   };
-  
+
   return (
     <form
       noValidate
@@ -139,8 +139,7 @@ function PurchaseForm({
             )}
           </div>
           <div>
-
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               حساب پرداخت کننده*
             </label>
             <select
@@ -149,22 +148,20 @@ function PurchaseForm({
               })}
               className={inputStyle}
             >
-              <option value="">
-                حساب پرداخت کننده را انتخاب کنید
-              </option>
+              <option value="">حساب پرداخت کننده را انتخاب کنید</option>
               {systemAccounts?.accounts?.map((payment) => (
                 <option key={payment._id} value={payment._id}>
                   {payment.name} ({payment.type})
                 </option>
               ))}
             </select>
-            {errors?.paymentAccount  && (
+            {errors?.paymentAccount && (
               <p className="text-red-500 text-sm mt-1">
                 {errors?.paymentAccount.message}
               </p>
             )}
-            </div>
-          
+          </div>
+
           <div className="border col-start-1 col-end-4 border-gray-300 rounded-lg p-4 mb-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -213,7 +210,9 @@ function PurchaseForm({
                 >
                   <option value="">Unit</option>
                   {units?.data?.map((u) => (
-                    <option key={u._id} value={u._id}>{u.name}</option>
+                    <option key={u._id} value={u._id}>
+                      {u.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -255,7 +254,7 @@ function PurchaseForm({
                 </label>
                 <input
                   type="number"
-                  value={currentItem?.quantity}
+                  value={currentItem?.quantity || ""}
                   onChange={(e) =>
                     setCurrentItem((s) => ({ ...s, quantity: e.target.value }))
                   }
@@ -269,7 +268,7 @@ function PurchaseForm({
                 <input
                   type="number"
                   step="0.01"
-                  value={currentItem?.unitPrice}
+                  value={currentItem?.unitPrice || ""}
                   onChange={(e) =>
                     setCurrentItem((s) => ({ ...s, unitPrice: e.target.value }))
                   }
@@ -284,12 +283,22 @@ function PurchaseForm({
                   <TableBody>
                     {items?.map((item, index) => (
                       <TableRow key={index}>
-                        <TableColumn>{products?.data?.find((p) => p._id === item.product)?.name || item.product}</TableColumn>
-                        <TableColumn>{units?.data?.find((u) => u._id === item.unit)?.name || item.unit}</TableColumn>
+                        <TableColumn>
+                          {products?.data?.find((p) => p._id === item.product)
+                            ?.name || item.product}
+                        </TableColumn>
+                        <TableColumn>
+                          {units?.data?.find((u) => u._id === item.unit)
+                            ?.name || item.unit}
+                        </TableColumn>
                         <TableColumn>{item.batchNumber}</TableColumn>
                         <TableColumn>{item.quantity}</TableColumn>
-                        <TableColumn>{formatCurrency(item.unitPrice)}</TableColumn>
-                        <TableColumn>{formatCurrency(item.totalPrice)}</TableColumn>
+                        <TableColumn>
+                          {formatCurrency(item.unitPrice)}
+                        </TableColumn>
+                        <TableColumn>
+                          {formatCurrency(item.totalPrice)}
+                        </TableColumn>
                         <TableColumn>
                           <button
                             onClick={() => handleRemove(index)}
@@ -331,24 +340,35 @@ function PurchaseForm({
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">قیمت مجموعی خرید:</span>
               <span className="font-semibold text-gray-900">
-                {formatCurrency(items.reduce((s, it) => s + (Number(it.totalPrice)||0), 0))}
+                {formatCurrency(
+                  items.reduce((s, it) => s + (Number(it.totalPrice) || 0), 0)
+                )}
               </span>
             </div>
             <div className="pt-2 border-t border-gray-300">
               <div className="flex justify-between">
                 <span className="font-bold text-gray-900">مجموعه:</span>
                 <span className="text-xl font-bold text-amber-600">
-                  {formatCurrency(items.reduce((s, it) => s + (Number(it.totalPrice)||0), 0))}
+                  {formatCurrency(
+                    items.reduce((s, it) => s + (Number(it.totalPrice) || 0), 0)
+                  )}
                 </span>
               </div>
               <div className="flex justify-between mt-2 text-sm">
                 <span className="text-gray-600">پرداخت شده:</span>
-                <span className="font-semibold text-gray-900">{formatCurrency(watch("paidAmount") || 0)}</span>
+                <span className="font-semibold text-gray-900">
+                  {formatCurrency(watch("paidAmount") || 0)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">باقی مانده:</span>
                 <span className="font-semibold text-gray-900">
-                  {formatCurrency((items.reduce((s, it) => s + (Number(it.totalPrice)||0), 0) - (Number(watch("paidAmount"))||0)))}
+                  {formatCurrency(
+                    items.reduce(
+                      (s, it) => s + (Number(it.totalPrice) || 0),
+                      0
+                    ) - (Number(watch("paidAmount")) || 0)
+                  )}
                 </span>
               </div>
             </div>

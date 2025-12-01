@@ -1,11 +1,18 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { useClickOutSide } from "../hooks/useClickOutSide";
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "framer-motion";
 import { AiOutlineClose } from "react-icons/ai";
 
-function GloableModal({ open, setOpen, children, isClose }) {
-  const ref = useClickOutSide(() => setOpen(false));
+function GloableModal({
+  open,
+  setOpen,
+  children,
+  isClose,
+  isClosableByDefault = true,
+}) {
+  const ref = useClickOutSide(() => setOpen(isClosableByDefault));
   return createPortal(
     <AnimatePresence>
       {open && (

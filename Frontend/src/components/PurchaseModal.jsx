@@ -19,6 +19,9 @@ import GloableModal from "./GloableModal";
 import { toast } from "react-toastify";
 import { useSubmitLock } from "../hooks/useSubmitLock.js";
 import JalaliDatePicker from "./JalaliDatePicker";
+import AfghanCalendar from "./AfghanCalendar";
+import Select from "./Select";
+import { inputStyle } from "./ProductForm.jsx";
 
 const PurchaseModal = ({ isOpen, onClose }) => {
   const { register, handleSubmit, watch, reset, setValue } = useForm();
@@ -26,10 +29,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   const { data: products } = useProducts();
   const { data: units } = useUnits();
   const { data: systemAccounts } = useSystemAccounts();
-  const {
-    mutate: createPurchase,
-    isPending: isCreatingPurchase,
-  } = useCreatePurchase();
+  const { mutate: createPurchase, isPending: isCreatingPurchase } =
+    useCreatePurchase();
   const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   useEffect(() => {
@@ -40,8 +41,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   const [currentItem, setCurrentItem] = useState({
     product: "",
     unit: "",
-    quantity: 0,
-    unitPrice: 0,
+    quantity: null,
+    unitPrice: null,
     batchNumber: "",
     expiryDate: "",
   });
@@ -64,8 +65,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
       setCurrentItem({
         product: "",
         unit: "",
-        quantity: 0,
-        unitPrice: 0,
+        quantity: null,
+        unitPrice: null,
         batchNumber: "",
         expiryDate: "",
       });
@@ -92,8 +93,8 @@ const PurchaseModal = ({ isOpen, onClose }) => {
     setCurrentItem({
       product: "",
       unit: "",
-      quantity: 0,
-      unitPrice: 0,
+      quantity: null,
+      unitPrice: null,
       batchNumber: "",
       expiryDate: "",
     });
@@ -145,6 +146,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
     await runMutation(createPurchase, purchaseData, {
       onSuccess: () => {
+        console.log(purchaseData);
         onClose();
         reset();
         setItems([]);
@@ -159,7 +161,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
   return (
     <GloableModal isClose={true} open={isOpen}>
-      <div className="bg-white rounded-lg shadow-xl w-[750px]  lg:w-[900px] max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-md shadow-xl w-md  md:w-3xl  lg:w-6xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-3 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="bg-amber-100 p-2 rounded-lg">
@@ -177,22 +179,22 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           {/* Purchase Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                تهیه کننده *
-              </label>
-              <select
-                {...register("supplier", { required: true })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              >
-                <option value="">انتخاب تهیه کننده</option>
-                {suppliers?.data?.map((supplier) => (
-                  <option key={supplier._id} value={supplier._id}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                label="تهیه کننده *"
+                options={
+                  suppliers?.data?.map((supplier) => ({
+                    value: supplier._id,
+                    label: supplier.name,
+                  })) || []
+                }
+                value={watchedValues.supplier}
+                onChange={(value) => setValue("supplier", value)}
+                register={register}
+                name="supplier"
+                defaultSelected="انتخاب تهیه کننده"
+              />
             </div>
 
             <div>
@@ -206,25 +208,24 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                     shouldDirty: true,
                   })
                 }
-                placeholder="انتخاب تاریخ"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                حساب پرداخت *
-              </label>
-              <select
-                {...register("paymentAccount", { required: true })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              >
-                <option value="">انتخاب حساب</option>
-                {systemAccounts?.accounts?.map((account) => (
-                  <option key={account._id} value={account._id}>
-                    {account.name} ({account.type})
-                  </option>
-                ))}
-              </select>
+              <Select
+                label="حساب پرداخت *"
+                options={
+                  systemAccounts?.accounts?.map((account) => ({
+                    value: account._id,
+                    label: `${account.name} (${account.type})`,
+                  })) || []
+                }
+                value={watchedValues.paymentAccount}
+                onChange={(value) => setValue("paymentAccount", value)}
+                register={register}
+                name="paymentAccount"
+                defaultSelected="انتخاب حساب"
+              />
             </div>
 
             <div>
@@ -235,7 +236,7 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                 type="number"
                 step="0.01"
                 {...register("paidAmount")}
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className={inputStyle}
                 placeholder="0"
               />
             </div>
@@ -243,90 +244,100 @@ const PurchaseModal = ({ isOpen, onClose }) => {
 
           {/* Add Item Form */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              اضافه کردن جنس
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+            <div className=" flex  justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                اضافه کردن جنس
+              </h3>
+              <button
+                type="button"
+                onClick={addItem}
+                className=" flex text-[12px] items-center justify-center gap-2 px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+              >
+                اضافه کردن
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  محصول *
-                </label>
-                <select
+                <Select
+                  label=" محصول *"
+                  options={
+                    products?.data?.map((product) => ({
+                      value: product._id,
+                      label: product.name,
+                    })) || []
+                  }
                   value={currentItem.product}
-                  onChange={(e) =>
-                    setCurrentItem({ ...currentItem, product: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                >
-                  <option value="">انتخاب محصول</option>
-                  {products?.data?.map((product) => (
-                    <option key={product._id} value={product._id}>
-                      {product.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => {
+                    const selectedProduct = products?.data?.find(
+                      (p) => p._id === value
+                    );
+                    setCurrentItem({
+                      ...currentItem,
+                      product: value,
+                      unit: selectedProduct?.baseUnit?._id || "",
+                    });
+                  }}
+                  defaultSelected="انتخاب محصول"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  واحد *
-                </label>
-                <select
+                <Select
+                  label=" واحد *"
+                  options={
+                    units?.data?.map((unit) => ({
+                      value: unit._id,
+                      label: unit.name,
+                    })) || []
+                  }
                   value={currentItem.unit}
-                  onChange={(e) =>
-                    setCurrentItem({ ...currentItem, unit: e.target.value })
+                  onChange={(value) =>
+                    setCurrentItem({ ...currentItem, unit: value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                >
-                  <option value="">انتخاب واحد</option>
-                  {units?.data?.map((unit) => (
-                    <option key={unit._id} value={unit._id}>
-                      {unit.name}
-                    </option>
-                  ))}
-                </select>
+                  defaultSelected="انتخاب واحد"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block mb-[7px] text-[12px] font-medium text-gray-700 ">
                   تعداد *
                 </label>
                 <input
                   type="number"
                   step="0.01"
-                  value={currentItem.quantity}
+                  value={currentItem.quantity || ""}
                   onChange={(e) =>
                     setCurrentItem({
                       ...currentItem,
                       quantity: Number(e.target.value),
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className={inputStyle}
                   placeholder="0"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block mb-[7px] text-[12px] font-medium text-gray-700 ">
                   قیمت واحد *
                 </label>
                 <input
                   type="number"
                   step="0.01"
-                  value={currentItem.unitPrice}
+                  value={currentItem.unitPrice || ""}
                   onChange={(e) =>
                     setCurrentItem({
                       ...currentItem,
                       unitPrice: Number(e.target.value),
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="0"
+                  className={inputStyle}
+                  placeholder="0.00"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[12px] font-medium text-gray-700 mb-[7px]">
                   شماره بچ
                 </label>
                 <input
@@ -338,35 +349,20 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                       batchNumber: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className={inputStyle}
                   placeholder="اختیاری"
                 />
               </div>
-
               <div>
                 <JalaliDatePicker
                   label="تاریخ انقضا"
-                  name="expiryDate"
                   value={currentItem.expiryDate}
-                  onChange={(nextValue) =>
-                    setCurrentItem((prev) => ({
-                      ...prev,
-                      expiryDate: nextValue,
-                    }))
+                  onChange={(date) =>
+                    setCurrentItem({ ...currentItem, expiryDate: date })
                   }
                   placeholder="انتخاب تاریخ"
-                  clearable
+                  clearable={true}
                 />
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={addItem}
-                  className="w-full flex text-[12px] items-center justify-center gap-2 px-3 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-                >
-                  اضافه کردن
-                </button>
               </div>
             </div>
           </div>
@@ -392,6 +388,9 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         قیمت واحد
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        تاریخ انقضا
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         مجموع
@@ -424,6 +423,9 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900">
                             {formatCurrency(item.unitPrice)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {item.expiryDate || "-"}
                           </td>
                           <td className="px-4 py-3 text-sm font-semibold text-purple-600">
                             {formatCurrency(total)}
@@ -481,9 +483,6 @@ const PurchaseModal = ({ isOpen, onClose }) => {
         </form>
       </div>
     </GloableModal>
-    // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-
-    // </div>
   );
 };
 

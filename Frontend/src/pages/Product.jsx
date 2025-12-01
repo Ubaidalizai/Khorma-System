@@ -1,4 +1,9 @@
-import { PencilIcon, TrashIcon, EyeIcon, PlusIcon } from "@heroicons/react/24/outline";
+import {
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 import { CalendarDays, ClipboardList, Info, Package, User } from "lucide-react";
 import { useState } from "react";
 import Button from "../components/Button";
@@ -11,7 +16,11 @@ import TableBody from "../components/TableBody";
 import TableColumn from "../components/TableColumn";
 import TableHeader from "../components/TableHeader";
 import TableRow from "../components/TableRow";
-import { useDeleteProdcut, useCreateProdcut, useProduct } from "../services/useApi";
+import {
+  useDeleteProdcut,
+  useCreateProdcut,
+  useProduct,
+} from "../services/useApi";
 import { formatNumber } from "../utilies/helper";
 import ProductForm from "../components/ProductForm";
 import { useForm } from "react-hook-form";
@@ -82,10 +91,6 @@ function Product() {
     setOpenCreateProduct(true);
   };
 
-  const handleCloseCreate = () => {
-    setOpenCreateProduct(false);
-  };
-
   const onSubmit = (data) => {
     createProduct(data, {
       onSuccess: () => {
@@ -106,28 +111,28 @@ function Product() {
     <section className="w-full">
       <div className="w-full flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-3 bg-white border-slate-200 rounded-md border my-1.5 px-3">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 w-full">
-            <SearchInput
-              placeholder="جستجو بر اساس نام جنس..."
-              value={search}
-              onChange={(e) => setSearch(e?.target ? e.target.value : e)}
-            />
-            <Button
-              onClick={handleOpenCreate}
-              icon={<PlusIcon className="h-5 w-5" />}
-              disabled={isCreating}
-              className="md:w-[200px] text-white bg-amber-600"
-            >
-              اضافه کردن جنس
-            </Button>
+          <SearchInput
+            placeholder="جستجو بر اساس نام جنس..."
+            value={search}
+            onChange={(e) => setSearch(e?.target ? e.target.value : e)}
+          />
+          <Button
+            onClick={handleOpenCreate}
+            icon={<PlusIcon className="h-5 w-5" />}
+            disabled={isCreating}
+            className="md:w-[200px] text-white bg-amber-600"
+          >
+            اضافه کردن جنس
+          </Button>
         </div>
       </div>
-      <GloableModal open={openCreateProduct} setOpen={handleCloseCreate}>
+      <GloableModal open={openCreateProduct} setOpen={setOpenCreateProduct}>
         <ProductForm
           register={register}
           handleSubmit={handleSubmit(onSubmit)}
           formState={formState}
           control={control}
-          onClose={handleCloseCreate}
+          onClose={() => setOpenCreateProduct(false)}
         />
       </GloableModal>
       <Table>
