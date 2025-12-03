@@ -176,6 +176,10 @@ export default function Income() {
     }
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("fa-IR");
+  };
+
   return (
     <div className="p-4" style={{ color: "var(--text-dark)" }}>
       <div className="flex items-center justify-between mb-4">
@@ -300,7 +304,7 @@ export default function Income() {
             income.map((i) => (
               <TableRow key={i._id}>
                 <TableColumn>
-                  {new Date(i.date).toLocaleDateString()}
+                  {formatDate(i.date)}
                 </TableColumn>
                 <TableColumn>{i.category?.name || "-"}</TableColumn>
                 <TableColumn>{formatNumber(i.amount || 0)} افغانی</TableColumn>

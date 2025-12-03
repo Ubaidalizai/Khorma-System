@@ -98,6 +98,7 @@ const Purchases = () => {
     () => purchasesResp?.purchases || purchasesResp?.data || [],
     [purchasesResp?.purchases, purchasesResp?.data]
   );
+  
   const total = purchasesResp?.total || purchases.length || 0;
   const totalPages =
     purchasesResp?.pages || Math.max(1, Math.ceil(total / limit));
@@ -515,9 +516,9 @@ const Purchases = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {purchase.supplier?.name ||
-                        findSupplier(purchase.supplier)?.name ||
-                        "نامشخص"}
+                      {purchase.supplierAccount?.name ||
+                        purchase.supplierName ||
+                        "-"}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-purple-600">
                       {formatCurrency(purchase.totalAmount?.toFixed(2))}
@@ -680,7 +681,7 @@ const Purchases = () => {
                         نمبر فاکتور
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {detailPurchase?.batchNumber || "نامشخص"}
+                        {detailPurchase?.batchNumber || "''"}
                       </p>
                     </div>
                     <div>
@@ -696,9 +697,9 @@ const Purchases = () => {
                         تهیه کننده
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {detailPurchase?.supplier?.name ||
-                          findSupplier(detailPurchase?.supplier)?.name ||
-                          "نامشخص"}
+                        {detailPurchase?.supplierAccount?.name ||
+                         
+                          "-"}
                       </p>
                     </div>
                     <div>
@@ -762,7 +763,7 @@ const Purchases = () => {
                           detailItems.map((item, index) => (
                             <tr key={index} className="hover:bg-gray-50">
                               <td className="px-3 py-2 text-sm text-gray-900">
-                                {item.product?.name || "نامشخص"}
+                                {item.product?.name || "''"}
                               </td>
                               <td className="px-3 py-2 text-sm text-gray-900">
                                 {item.unit?.name || "-"}
@@ -1229,11 +1230,11 @@ const Purchases = () => {
                       item.product?.name ||
                       products?.data?.find((p) => p._id === item.product)
                         ?.name ||
-                      "نامشخص";
+                      "-";
                     const unitName =
                       item.unit?.name ||
                       units?.data?.find((u) => u._id === item.unit)?.name ||
-                      "نامشخص";
+                      "-";
 
                     return (
                       <div

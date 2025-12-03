@@ -32,10 +32,10 @@ const AppHeader = () => {
   }, []);
 
   return (
-    <header className="sticky  top-0 flex w-full bg-white border-gray-200 z-20 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
+    <header className="sticky  top-0 flex w-full bg-white border-gray-200 z-20 lg:border-b">
       <div className="flex  items-center justify-between w-full gap-2 px-3  border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-2">
         <button
-          className="items-center justify-center w-8 mx-3 h-8 text-gray-500 border-gray-200 rounded-lg z-99999 dark:border-gray-800 lg:flex dark:text-gray-400 lg:8 lg:w-8 lg:border"
+          className="items-center justify-center w-8 mx-3 h-8 text-gray-500 border-gray-200 rounded-lg z-99999 lg:flex lg:8 lg:w-8 lg:border cursor-pointer"
           onClick={handleToggle}
           aria-label="Toggle Sidebar"
         >

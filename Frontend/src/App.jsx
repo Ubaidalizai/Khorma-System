@@ -18,7 +18,6 @@ import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
 import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
-import PurchaseDetails from "./pages/PurchaseDetails";
 import Purchases from "./pages/Purchases";
 import Reports from "./pages/Reports";
 import Sales from "./pages/Sales";
@@ -52,7 +51,6 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/purchases" element={<Purchases />} />
-              <Route path="/purchases/:id" element={<PurchaseDetails />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/income" element={<Income />} />

@@ -656,13 +656,13 @@ const ProfileManagement = () => {
             <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-medium)" }}>
               نام کامل
             </label>
-            <p className="text-sm text-gray-700">{displayData?.name || "نامشخص"}</p>
+            <p className="text-sm text-gray-700">{displayData?.name || "-"}</p>
           </div>
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-medium)" }}>
               ایمیل
             </label>
-            <p className="text-sm text-gray-700">{displayData?.email || "نامشخص"}</p>
+            <p className="text-sm text-gray-700">{displayData?.email || "-"}</p>
           </div>
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-medium)" }}>
@@ -674,7 +674,7 @@ const ProfileManagement = () => {
             <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-medium)" }}>
               شماره تلفن
             </label>
-            <p className="text-sm text-gray-700">{displayData?.phone || "نامشخص"}</p>
+            <p className="text-sm text-gray-700">{displayData?.phone || "-"}</p>
           </div>
         </div>
       </div>

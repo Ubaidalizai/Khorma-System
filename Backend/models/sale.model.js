@@ -23,10 +23,11 @@ const saleSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    employee: {
+    // Reference the employee's accounting Account
+    employeeAccount: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee',
-      required: false, // riding man or delivery person
+      ref: 'Account',
+      required: false, // reference to employee's Account (ledger)
     },
     saleDate: {
       type: Date,

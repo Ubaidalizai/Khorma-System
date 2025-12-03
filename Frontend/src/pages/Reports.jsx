@@ -1731,7 +1731,7 @@ const Reports = () => {
                           <tr key={stock._id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-medium text-gray-900">
-                                {stock.product?.name || "نامشخص"}
+                                {stock.product?.name || "-"}
                               </div>
                               {stock.batchNumber &&
                                 stock.batchNumber !== "DEFAULT" && (

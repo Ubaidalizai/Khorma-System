@@ -78,7 +78,7 @@ const SaleBill = forwardRef(({ sale, customer, customerAccount }, ref) => {
           <tbody>
             {sale.items?.map((item, index) => (
               <tr key={index} className="border-b border-gray-300">
-                <td className="py-1">{item.product?.name || 'نامشخص'}</td>
+                <td className="py-1">{item.product?.name || '-'}</td>
                 <td className="py-1 text-center">{item.quantity}</td>
                 <td className="py-1 text-left">{formatCurrency(item.unitPrice)}</td>
                 <td className="py-1 text-left">{formatCurrency(item.totalPrice)}</td>

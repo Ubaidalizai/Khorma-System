@@ -554,14 +554,13 @@ const Sales = () => {
                       {formatDate(sale.saleDate)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {sale.customer?.name ||
-                        findCustomer(sale.customer)?.name ||
-                        "نامشخص"}
+                      {sale.customerAccount?.name ||
+                        sale.customerName?.name ||
+                        "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {sale.employee?.name ||
-                        findEmployee(sale.employee)?.name ||
-                        "نامشخص"}
+                      {sale.employeeAccount?.name ||
+                        "-"}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-purple-600">
                       {formatCurrency(sale.totalAmount || 0)}
@@ -756,7 +755,7 @@ const Sales = () => {
                         نمبر بیل
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedSale.billNumber || "نامشخص"}
+                        {selectedSale.billNumber || "-"}
                       </p>
                     </div>
                     <div>
@@ -772,9 +771,9 @@ const Sales = () => {
                         مشتری
                       </h4>
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedSale.customer?.name ||
-                          findCustomer(selectedSale.customer)?.name ||
-                          "نامشخص"}
+                        {selectedSale.customerAccount?.name ||
+                          findCustomer(selectedSale.customerAccount)?.name ||
+                          "-"}
                       </p>
                     </div>
                     <div>
@@ -836,7 +835,7 @@ const Sales = () => {
                           selectedSale.items?.map((item, index) => (
                             <tr key={index} className="hover:bg-gray-50">
                               <td className="px-3 py-2 text-sm text-gray-900">
-                                {item.product?.name || "نامشخص"}
+                                {item.product?.name || "-"}
                               </td>
                               <td className="px-3 py-2 text-sm text-gray-900">
                                 {item.unit?.name || "-"}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import {
@@ -8,8 +9,10 @@ import {
   useProduct,
   usePurchases,
   useSuppliers,
+  useAccounts,
   useUpdatePurchase,
 } from "../services/useApi";
+import { fetchAccount } from "../services/apiUtiles";
 import Button from "./Button";
 import Confirmation from "./Confirmation";
 import GloableModal from "./GloableModal";
@@ -49,10 +52,13 @@ const productHeader = [
 function Purchase({ getPaymentStatusColor }) {
   const { data: filteredPurchases, isLoading } = usePurchases();
   const { mutate: deletePurchase } = useDeletePurchase();
-  const { mutate: updatePurchase } = useUpdatePurchase();
+  const { mutate: _updatePurchase } = useUpdatePurchase();
   const { mutate: createPurchase } = useCreatePurchase();
-  const { data: products } = useProduct();
+  const { data: _products } = useProduct();
   const { data: suppliers } = useSuppliers();
+  // Load supplier-type accounts so we can display supplier account names
+  const { data: accounts } = useAccounts({ type: 'supplier' });
+  const accountsList = accounts?.accounts || accounts?.data || accounts || [];
   const { register, handleSubmit, reset, watch, formState, setValue } = useForm();
   const { mutate: createSupplier } = useCreateSupplier();
   const [selectedPurchase, setSelectedPurchase] = useState(null);
@@ -72,12 +78,69 @@ function Purchase({ getPaymentStatusColor }) {
     const subtotal = items.reduce((sum, it) => sum + (Number(it.totalPrice) || 0), 0);
     return { subtotal, taxAmount: 0, total: subtotal };
   };
-  const onSubmit = (data) => {
-    console.log(data);
+  const _onSubmit = (data) => {
     createSupplier({ ...data });
   };
   const findSuppliers = (supId) => {
-    return suppliers.filter((supp) => supp._id === supId)[0];
+    return suppliers?.data?.find((supp) => String(supp._id) === String(supId));
+  };
+
+  const findAccount = (accId) => {
+    if (!accId) return undefined;
+    return (
+      accountsList.find(
+        (acc) => acc._id === accId || String(acc._id) === String(accId)
+      ) || undefined
+    );
+  };
+
+  // Fetch a single account when the details modal is open and the selected
+  // purchase has a non-populated `supplierAccount` id. This avoids fetching
+  // all accounts just to resolve a single name and keeps the list rendering
+  // fast.
+  const selectedSupplierAccountId =
+    selectedPurchase && typeof selectedPurchase.supplierAccount === "string"
+      ? selectedPurchase.supplierAccount
+      : null;
+
+  const { data: fetchedAccount } = useQuery(
+    ["account", selectedSupplierAccountId],
+    () => fetchAccount(selectedSupplierAccountId),
+    {
+      enabled: !!selectedSupplierAccountId && !!selectedPurchase,
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+
+  const getSupplierDisplayName = (purchase) => {
+    if (!purchase) return "";
+
+    // 1) If supplierAccount is populated object, prefer its name
+    const supplierAccount = purchase.supplierAccount;
+    if (supplierAccount) {
+      if (typeof supplierAccount === "object") {
+        return supplierAccount.name || supplierAccount.accountName || String(supplierAccount._id);
+      }
+      // supplierAccount is id -> try to resolve from accounts list
+      const acc = findAccount(supplierAccount);
+      if (acc) return acc.name;
+
+      // If this purchase is the currently selected one for the modal,
+      // use the fetched single-account result (api shape may be { data } or raw)
+      if (selectedPurchase && selectedPurchase._id === purchase._id && fetchedAccount) {
+        const accObj = fetchedAccount.data || fetchedAccount.account || fetchedAccount;
+        return accObj?.name || String(accObj?._id || supplierAccount);
+      }
+    }
+
+    // 2) If purchase has supplierName snapshot, use it
+    if (purchase.supplierName) return purchase.supplierName;
+
+    // 3) Fallback to supplier lookup
+    const sup = findSuppliers(purchase.supplier);
+    if (sup) return sup.name;
+
+    return "";
   };
   // const findProduct = (proID) => {
   //   return products?.filter((pr) => pr.id === proID)[0];
@@ -118,22 +181,6 @@ function Purchase({ getPaymentStatusColor }) {
                 ایجاد خرید جدید
               </Button>
             </div>
-            {/* <div className="flex-1 flex items-center">
-              <Modal>
-                <Modal.Toggle>
-                  <Button className="py-[14px] bg-success-green">
-                    اضافه کردن تهیه کننده
-                  </Button>
-                </Modal.Toggle>
-                <Modal.Window>
-                  <SupplierForm
-                    register={register}
-                    handleSubmit={handleSubmit}
-                    onSubmit={onSubmit}
-                  />
-                </Modal.Window>
-              </Modal>
-            </div> */}
           </div>
         }
       >
@@ -159,7 +206,7 @@ function Purchase({ getPaymentStatusColor }) {
                   {new Date(purchase.purchaseDate).toLocaleDateString()}
                 </TableColumn>
                 <TableColumn>
-                  {findSuppliers(purchase.supplier)?.name}
+                  {getSupplierDisplayName(purchase)}
                 </TableColumn>
                 <TableColumn>{purchase?.items?.length}</TableColumn>
                 <TableColumn className=" text-purple-500">
@@ -292,7 +339,7 @@ function Purchase({ getPaymentStatusColor }) {
                     تهیه کننده
                   </h3>
                   <p className="text-lg font-semibold text-gray-900">
-                    {findSuppliers(selectedPurchase.supplier)?.name}
+                    {getSupplierDisplayName(selectedPurchase)}
                   </p>
                 </div>
                 <div className="mb-6"></div>

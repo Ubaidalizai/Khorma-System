@@ -143,7 +143,7 @@ function Product() {
             productList?.data?.map((el) => (
               <TableRow key={el._id}>
                 <TableColumn>{el?.name}</TableColumn>
-                <TableColumn>{el?.baseUnit?.name || "نامشخص"}</TableColumn>
+                <TableColumn>{el?.baseUnit?.name || "-"}</TableColumn>
 
                 <TableColumn>
                   <span
@@ -248,7 +248,7 @@ function Product() {
                     <span className="text-lg text-palm-500">واحد پایه</span>
                   </h3>
                   <p className="text-lg font-semibold text-palm-400">
-                    {selectedPro.baseUnit?.name || "نامشخص"}
+                    {selectedPro.baseUnit?.name || "-"}
                   </p>
                 </div>
 
@@ -276,7 +276,7 @@ function Product() {
                       ? `${formatNumber(
                           selectedPro.latestPurchasePrice
                         )} افغانی`
-                      : "نامشخص"}
+                      : "-"}
                   </p>
                 </div>
 

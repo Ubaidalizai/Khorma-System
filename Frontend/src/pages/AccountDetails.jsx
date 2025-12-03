@@ -6,7 +6,6 @@ import {
   BanknotesIcon,
   ChartBarIcon,
   CalendarIcon,
-  MagnifyingGlassIcon,
   FunnelIcon,
 } from "@heroicons/react/24/outline";
 import { useAccountLedger } from "../services/useApi";

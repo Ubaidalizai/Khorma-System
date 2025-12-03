@@ -510,8 +510,8 @@ exports.getAllSales = asyncHandler(async (req, res, next) => {
 
   const [sales, total, profitAgg] = await Promise.all([
     Sale.find(query)
-      .populate('customer', 'name')
-      .populate('employee', 'name')
+      .populate('customerAccount', 'name')
+      .populate('employeeAccount', 'name')
       .populate('soldBy', 'name')
       .populate('placedIn', 'name type')
       .skip(skip)
@@ -561,8 +561,8 @@ exports.getSale = asyncHandler(async (req, res) => {
     _id: req.params.id,
     isDeleted: false,
   })
-    .populate('customer', 'name')
-    .populate('employee', 'name')
+    .populate('customerAccount', 'name')
+    .populate('employeeAccount', 'name')
     .populate('soldBy', 'name email')
     .populate('placedIn', 'name type');
   

@@ -1,8 +1,15 @@
 const Joi = require('joi');
 const mongoose = require('mongoose');
+const objectId = (value, helpers) => {
+  if (!mongoose.Types.ObjectId.isValid(value)) {
+    return helpers.message('Invalid ObjectId format');
+  }
+  return value;
+};
 
 exports.createPurchaseSchema = Joi.object({
-  supplier: Joi.string().required(),
+  supplier: Joi.string().custom(objectId).optional(),
+  supplierAccount: Joi.string().custom(objectId).optional(),
   purchaseDate: Joi.date().optional(),
   items: Joi.array()
     .items(
@@ -22,16 +29,13 @@ exports.createPurchaseSchema = Joi.object({
   stockLocation: Joi.string().valid('warehouse', 'store').default('warehouse'), // Where to add stock
 });
 
-const objectId = (value, helpers) => {
-  if (!mongoose.Types.ObjectId.isValid(value)) {
-    return helpers.message('Invalid ObjectId format');
-  }
-  return value;
-};
+// Require at least one of supplier or supplierAccount
+exports.createPurchaseSchema = exports.createPurchaseSchema.or('supplier', 'supplierAccount');
 
 // ✅ Validation for updating purchase
 exports.updatePurchaseSchema = Joi.object({
   supplier: Joi.string().custom(objectId).optional(),
+  supplierAccount: Joi.string().custom(objectId).optional(),
   purchaseDate: Joi.date().optional(),
   paidAmount: Joi.number().min(0).optional(),
   paymentAccount: Joi.string().custom(objectId).optional(), // Allow updating payment account

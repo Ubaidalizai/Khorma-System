@@ -52,16 +52,39 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
   session.startTransaction();
 
   try {
-    // 2️⃣ Validate supplier and ensure supplier account exists (create if missing)
-    const supplierDoc = await Supplier.findById(supplier).session(session);
-    if (!supplierDoc) throw new AppError('Invalid supplier ID', 400);
+    // 2️⃣ Resolve supplier and supplier account
+    let supplierDoc = null;
+    let supplierRefId = supplier; // may be undefined if caller provided supplierAccount only
 
-    const supplierAccount = await getOrCreateAccount({
-      refId: supplier,
-      type: 'supplier',
-      name: supplierDoc.name,
-      session,
-    });
+    // If frontend provided an explicit supplierAccount id, prefer it
+    let supplierAccount = null;
+    if (req.body.supplierAccount) {
+      supplierAccount = await Account.findById(req.body.supplierAccount).session(session);
+      if (!supplierAccount) throw new AppError('Invalid supplier account ID', 400);
+
+      // If the account has a refId pointing to a Supplier, use it
+      if (supplierAccount.refId) {
+        supplierRefId = supplierAccount.refId;
+      }
+    }
+
+    // If we have a supplier reference id, try to fetch the Supplier doc
+    if (supplierRefId) {
+      supplierDoc = await Supplier.findById(supplierRefId).session(session);
+      if (!supplierDoc && supplier) throw new AppError('Invalid supplier ID', 400);
+    }
+
+    // Ensure we have a supplier account object (create or use existing)
+    if (!supplierAccount) {
+      // Use supplierDoc.name when available, otherwise fall back to undefined
+      const nameForAccount = supplierDoc ? supplierDoc.name : undefined;
+      supplierAccount = await getOrCreateAccount({
+        refId: supplierRefId,
+        type: 'supplier',
+        name: nameForAccount,
+        session,
+      });
+    }
 
     // 3️⃣ Validate payment account and check balance
     const payAccount = await validateAccountBalance(paymentAccount, paidAmount, session);
@@ -79,9 +102,9 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
     const purchase = await Purchase.create(
       [
         {
-          supplier,
+          supplier: supplierRefId || supplier,
           supplierAccount: supplierAccount._id,
-          supplierName: supplierDoc.name,
+          supplierName: supplierDoc ? supplierDoc.name : supplierAccount.name,
           purchaseDate,
           totalAmount,
           paidAmount,
@@ -302,11 +325,11 @@ exports.getAllPurchases = asyncHandler(async (req, res, next) => {
   const total = await Purchase.countDocuments(finalFilter);
 
   const purchases = await Purchase.find(finalFilter)
-    .populate('supplier', 'name contactInfo')
+    .populate('supplierAccount', 'name')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
-
+  // console.log('purchases fetched:', purchases);
   res.status(200).json({
     success: true,
     total,
@@ -323,7 +346,7 @@ exports.getPurchaseById = asyncHandler(async (req, res, next) => {
   const purchase = await Purchase.findById(req.params.id).populate(
     'supplier',
     'name contactInfo'
-  );
+  ).populate('supplierAccount', 'name');
 
   if (!purchase || purchase.isDeleted)
     throw new AppError('Purchase not found', 404);

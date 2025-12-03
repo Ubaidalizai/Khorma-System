@@ -179,6 +179,10 @@ export default function Expenses() {
     }
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("fa-IR");
+  };
+
   return (
     <div className="p-4" style={{ color: "var(--text-dark)" }}>
       <div className="flex items-center justify-between mb-4">
@@ -297,7 +301,7 @@ export default function Expenses() {
             expenses.map((e) => (
               <TableRow key={e._id}>
                 <TableColumn>
-                  {new Date(e.date).toLocaleDateString()}
+                  {formatDate(e.date)}
                 </TableColumn>
                 <TableColumn>{e.category?.name || "-"}</TableColumn>
                 <TableColumn>{formatNumber(e.amount || 0)} افغانی</TableColumn>

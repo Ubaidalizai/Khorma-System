@@ -13,6 +13,7 @@ import {
   useUnits,
   useSystemAccounts,
   useCreatePurchase,
+  useAccounts,
 } from "../services/useApi";
 import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
 import GloableModal from "./GloableModal";
@@ -28,12 +29,16 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   const { data: products } = useProducts();
   const { data: units } = useUnits();
   const { data: systemAccounts } = useSystemAccounts();
+  // Load supplier-type accounts so we can submit supplierAccount directly (Option B)
+  const { data: supplierAccountsData } = useAccounts({ type: "supplier" });
+  const supplierAccounts = supplierAccountsData?.accounts || [];
   const { mutate: createPurchase, isPending: isCreatingPurchase } =
     useCreatePurchase();
   const { isSubmitting, wrapSubmit } = useSubmitLock();
 
   useEffect(() => {
     register("purchaseDate", { required: false });
+    register("supplierAccount", { required: false });
   }, [register]);
 
   const [items, setItems] = useState([]);
@@ -123,8 +128,14 @@ const PurchaseModal = ({ isOpen, onClose }) => {
       return;
     }
 
+    // find selected account to get refId (supplier id) if needed
+    const selectedAccount = supplierAccounts.find(
+      (a) => a._id === data.supplierAccount
+    );
+
     const purchaseData = {
-      supplier: data.supplier,
+      supplier: data.supplier || selectedAccount?.refId || undefined,
+      supplierAccount: data.supplierAccount || undefined,
       purchaseDate:
         normalizeDateToIso(data.purchaseDate) ||
         new Date().toISOString().slice(0, 10),
@@ -180,20 +191,31 @@ const PurchaseModal = ({ isOpen, onClose }) => {
           {/* Purchase Info */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div>
-              <Select
-                label="تهیه کننده *"
-                options={
-                  suppliers?.data?.map((supplier) => ({
-                    value: supplier._id,
-                    label: supplier.name,
-                  })) || []
-                }
-                value={watchedValues.supplier}
-                onChange={(value) => setValue("supplier", value)}
-                register={register}
-                name="supplier"
-                defaultSelected="انتخاب تهیه کننده"
-              />
+                      <Select
+                        label="تهیه کننده (حساب) *"
+                        options={
+                          supplierAccounts?.map((acc) => {
+                            const supName = suppliers?.data?.find(
+                              (s) => s._id === acc.refId
+                            )?.name;
+                            return {
+                              value: acc._id,
+                              label: supName ? `${acc.name} — ${supName}` : acc.name,
+                            };
+                          }) || []
+                        }
+                        value={watchedValues.supplierAccount}
+                        onChange={(value) => {
+                          // set selected account id
+                          setValue("supplierAccount", value);
+                          // also set supplier id if the account has refId
+                          const acc = supplierAccounts.find((a) => a._id === value);
+                          if (acc && acc.refId) setValue("supplier", acc.refId);
+                        }}
+                        register={register}
+                        name="supplierAccount"
+                        defaultSelected="انتخاب حساب تهیه کننده"
+                      />
             </div>
 
             <div>
@@ -412,10 +434,10 @@ const PurchaseModal = ({ isOpen, onClose }) => {
                       return (
                         <tr key={item.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-900">
-                            {product?.name || "نامشخص"}
+                            {product?.name || "-"}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900">
-                            {unit?.name || "نامشخص"}
+                            {unit?.name || "-"}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900">
                             {item.quantity}

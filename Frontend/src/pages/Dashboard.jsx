@@ -569,13 +569,13 @@ const Dashboard = () => {
                         {formatTimeAgo(log.changedAt)}
                       </TableColumn>
                       <TableColumn className="px-4">
-                        {log.tableName || "نامشخص"}
+                        {log.tableName || "-"}
                       </TableColumn>
                       <TableColumn className="px-4">
                         {log.reason || "بدون دلیل"}
                       </TableColumn>
                       <TableColumn className="px-4">
-                        {log.changedBy || "نامشخص"}
+                        {log.changedBy || "-"}
                       </TableColumn>
                       <TableColumn
                         className={`px-4 font-semibold ${getOperationColor(
@@ -669,7 +669,7 @@ const Dashboard = () => {
                       جدول
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {selectedLog.tableName || "نامشخص"}
+                      {selectedLog.tableName || "-"}
                     </p>
                   </div>
                   <div>
@@ -689,7 +689,7 @@ const Dashboard = () => {
                       تغییر دهنده
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {selectedLog.changedBy || "نامشخص"}
+                      {selectedLog.changedBy || "-"}
                     </p>
                   </div>
                   <div>
