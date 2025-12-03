@@ -1,3 +1,4 @@
+import { BiMoneyWithdraw } from "react-icons/bi";
 import { AiOutlineHome } from "react-icons/ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HiChevronDown } from "react-icons/hi";
@@ -46,7 +47,7 @@ const navItem = [
       {
         name: "هزینه‌ها",
         path: "/expenses",
-        icon: <BanknotesIcon className=" text-sm" />,
+        icon: <BiMoneyWithdraw className=" text-sm" />,
       },
       {
         name: "حساب ها",
@@ -56,7 +57,26 @@ const navItem = [
       {
         name: "درآمد ",
         path: "/income",
-        icon: <GiProfit className=" text-sm" />,
+        icon: (
+          <svg
+            className="w-[14px]"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6v12a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2z" />
+            <path d="M10 16h6" />
+            <path d="M13 11m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+            <path d="M4 8h3" />
+            <path d="M4 12h3" />
+            <path d="M4 16h3" />
+          </svg>
+        ),
       },
     ],
   },
@@ -313,7 +333,7 @@ function AppSidebar() {
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex flex-col flex-grow overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>{renderMenuItems(navItem, "main")}</div>
