@@ -350,7 +350,7 @@ html {
 
 @layer utilities {
   .menu-item {
-    @apply relative text-[var(--amber-light)] hover:text-white flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg;
+    @apply relative text-[14px] text-[var(--amber-light)] hover:text-white flex items-center w-full gap-3 px-2.5 py-1.5 font-medium rounded-lg;
   }
 
   .menu-item-active {
@@ -390,7 +390,7 @@ html {
   }
 
   .menu-dropdown-item {
-    @apply relative flex items-center mr-5 gap-3 rounded-lg px-3 py-2.5 font-medium text-[var(--amber-light)] hover:bg-primary-brown-light hover:text-white;
+    @apply relative flex items-center mr-5 gap-3 rounded-lg px-1.5 text-[12px] py-2.5 font-medium text-[var(--amber-light)] hover:bg-primary-brown-light hover:text-white;
   }
 
   .menu-dropdown-item-active {
