@@ -12,9 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import Button from "../components/Button";
 import { formatCurrency, formatNumber } from "../utilies/helper";
-import Modal from "./../components/Modal";
 import { useForm } from "react-hook-form";
 import {
   useSales,
@@ -29,11 +27,12 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import SaleForm from "../components/SaleForm";
 import { XCircleIcon } from "lucide-react";
-import { recordSalePayment, fetchAccounts } from "../services/apiUtiles";
+import { recordSalePayment, fetchAccounts, fetchSale } from "../services/apiUtiles";
 import SaleBillPrint from "../components/SaleBillPrint";
 import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
+import Pagination from "../components/Pagination";
 
 const Sales = () => {
   // URL parameters for payment flow
@@ -46,7 +45,7 @@ const Sales = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [selectedSaleId, setSelectedSaleId] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -157,6 +156,7 @@ const Sales = () => {
 
   const handleDeleteSale = (saleId) => {
     setDeleteConfirmId(saleId);
+    setShowDeleteConfirm(true);
   };
 
   const confirmDelete = () => {
@@ -239,31 +239,44 @@ const Sales = () => {
   };
 
   const handlePrintSale = async (sale) => {
+    // Ensure we have the full sale detail (including items) before printing
+    let fullSale = sale;
+    try {
+      const detail = await fetchSale(sale._id || sale.id || sale);
+      // fetchSale returns an object matching the backend shape or null
+      if (detail) {
+        // backend may return { sale: {...} } or the sale object directly
+        fullSale = detail.sale || detail;
+      }
+    } catch (err) {
+      console.error("Failed to fetch full sale detail for print:", err);
+      // fallback to provided sale object
+    }
+
     // Get customer ID (either from nested object or direct value)
-    const customerId = sale.customer?._id || sale.customer;
+    const customerId = fullSale.customer?._id || fullSale.customer;
     const customer = customers?.data?.find((c) => c._id === customerId);
 
     // Fetch customer account if exists
     if (customerId) {
       try {
         const accountsData = await fetchAccounts({ type: "customer" });
-        console.log("Fetched accounts data:", accountsData);
         const customerAccount = accountsData?.accounts?.find(
           (acc) => acc.refId === customerId
         );
 
-        setSaleToPrint(sale);
+        setSaleToPrint(fullSale);
         setCustomerToPrint(customer);
         setCustomerAccountToPrint(customerAccount || null);
         setShowPrintModal(true);
       } catch {
-        setSaleToPrint(sale);
+        setSaleToPrint(fullSale);
         setCustomerToPrint(customer);
         setCustomerAccountToPrint(null);
         setShowPrintModal(true);
       }
     } else {
-      setSaleToPrint(sale);
+      setSaleToPrint(fullSale);
       setCustomerToPrint(null);
       setCustomerAccountToPrint(null);
       setShowPrintModal(true);
@@ -640,26 +653,18 @@ const Sales = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              صفحه {page} از {totalPages} (مجموع {total} فروش)
-            </div>
-            <div className="flex gap-2">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                قبلی
-              </button>
-              <button
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                بعدی
-              </button>
-            </div>
+          <div className="px-6 py-4 border-t border-gray-200">
+            <Pagination
+              page={page}
+              limit={limit}
+              total={total}
+              totalPages={totalPages}
+              onPageChange={(p) => setPage(p)}
+              onRowsPerPageChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+            />
           </div>
         )}
       </div>

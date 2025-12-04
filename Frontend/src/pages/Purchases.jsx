@@ -9,7 +9,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import {
   usePurchases,
@@ -162,6 +162,35 @@ const Purchases = () => {
       }
     }
   }, [openId, action, purchases]);
+
+  // Clear openId/action from URL (used when closing modals opened via link)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const clearOpenQuery = () => {
+    try {
+      const params = new URLSearchParams(location.search || "");
+      let modified = false;
+      ["openId", "action"].forEach((k) => {
+        if (params.has(k)) {
+          params.delete(k);
+          modified = true;
+        }
+      });
+      if (modified) {
+        const search = params.toString();
+        navigate(`${location.pathname}${search ? `?${search}` : ""}`, { replace: true });
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedPurchaseSummary(null);
+    setSelectedPurchaseId(null);
+    clearOpenQuery();
+  };
 
   // Payment handler
   const resolvePurchaseData = () => {
@@ -620,8 +649,7 @@ const Purchases = () => {
               <h2 className="text-2xl font-bold text-gray-900">جزئیات خرید</h2>
               <button
                 onClick={() => {
-                  setShowDetailsModal(false);
-                  setSelectedPurchaseSummary(null);
+                  handleCloseDetailsModal();
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -791,9 +819,9 @@ const Purchases = () => {
                         {(detailPurchase?.dueAmount ?? 0) > 0 && (
                           <button
                             onClick={() => {
+                              handleCloseDetailsModal();
                               setSelectedPurchaseSummary(detailPurchase);
                               setShowPaymentModal(true);
-                              setShowDetailsModal(false);
                             }}
                             className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
                           >

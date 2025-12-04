@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import {
@@ -63,6 +64,37 @@ function Purchase({ getPaymentStatusColor }) {
   const { mutate: createSupplier } = useCreateSupplier();
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const clearOpenQuery = () => {
+    try {
+      const params = new URLSearchParams(location.search || "");
+      let modified = false;
+      ["openId", "action"].forEach((k) => {
+        if (params.has(k)) {
+          params.delete(k);
+          modified = true;
+        }
+      });
+      if (modified) {
+        const search = params.toString();
+        navigate(`${location.pathname}${search ? `?${search}` : ""}`, { replace: true });
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSetModalOpen = (val) => {
+    if (!val) {
+      setShowModal(false);
+      setSelectedPurchase(null);
+      clearOpenQuery();
+    } else {
+      setShowModal(true);
+    }
+  };
   const [openEdit, setOpenEdit] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [items, setItems] = useState([]);
@@ -254,7 +286,7 @@ function Purchase({ getPaymentStatusColor }) {
                             icon={<HiSquare2Stack />}
                             onClick={() => {
                               setSelectedPurchase(purchase);
-                              setShowModal(true);
+                              handleSetModalOpen(true);
                             }}
                           >
                             نمایش
@@ -308,7 +340,7 @@ function Purchase({ getPaymentStatusColor }) {
           errors={formState?.errors}
         />
       </GloableModal>
-      <GloableModal open={showModal} setOpen={setShowModal}>
+    <GloableModal open={showModal} setOpen={handleSetModalOpen}>
         {selectedPurchase && (
           <div className="bg-white rounded-lg shadow-xl  w-[700px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -452,9 +484,9 @@ function Purchase({ getPaymentStatusColor }) {
                 ))}
               </TableBody>
             </Table>
-            <div className="p-6 border-t border-gray-200 flex justify-end">
+              <div className="p-6 border-t border-gray-200 flex justify-end">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => handleSetModalOpen(false)}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
               >
                 Close
