@@ -198,8 +198,22 @@ const Sales = () => {
         setShowAddSaleModal(false);
 
         // Find customer info
-        const sale = createdSale.sale || createdSale;
-        const customerId = sale.customer?._id || sale.customer;
+        const saleResponse = createdSale.sale || createdSale;
+        const saleId = saleResponse._id || saleResponse.id;
+        const customerId = saleResponse.customer?._id || saleResponse.customer;
+        
+        // Fetch full sale with items before printing
+        let fullSale = saleResponse;
+        try {
+          const detail = await fetchSale(saleId);
+          if (detail) {
+            fullSale = detail.sale || detail;
+          }
+        } catch (err) {
+          console.error("Error fetching sale details:", err);
+          // Continue with saleResponse if fetch fails
+        }
+
         const customer = customers?.data?.find((c) => c._id === customerId);
 
         // Find customer account if exists
@@ -213,20 +227,20 @@ const Sales = () => {
               (acc) => acc.refId === customerId
             );
 
-            setSaleToPrint(sale);
+            setSaleToPrint(fullSale);
             setCustomerToPrint(customer);
             setCustomerAccountToPrint(customerAccount || null);
             setShowPrintModal(true);
           } catch (error) {
             console.error("Error fetching customer account:", error);
-            setSaleToPrint(sale);
+            setSaleToPrint(fullSale);
             setCustomerToPrint(customer);
             setCustomerAccountToPrint(null);
             setShowPrintModal(true);
           }
         } else {
           // No customer, just show sale
-          setSaleToPrint(sale);
+          setSaleToPrint(fullSale);
           setCustomerToPrint(null);
           setCustomerAccountToPrint(null);
           setShowPrintModal(true);

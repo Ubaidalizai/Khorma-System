@@ -125,7 +125,25 @@ const SaleBill = forwardRef(({ sale, customer, customerAccount }, ref) => {
                 <span className="font-semibold">حساب:</span> {customerAccount.name || '-'}
               </div>
               <div>
-                <span className="font-semibold">موجودی حساب:</span> {customerAccount.currentBalance !== undefined ? formatCurrency(customerAccount.currentBalance) : '-'}
+                {customerAccount.currentBalance !== undefined && customerAccount.currentBalance !== null ? (
+                  customerAccount.currentBalance > 0 ? (
+                    <div className="text-red-600">
+                      <span className="font-semibold">بدهکار:</span> {formatCurrency(customerAccount.currentBalance)}
+                    </div>
+                  ) : customerAccount.currentBalance < 0 ? (
+                    <div className="text-green-600">
+                      <span className="font-semibold">موجودی:</span> {formatCurrency(Math.abs(customerAccount.currentBalance))}
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="font-semibold">موجودی حساب:</span> {formatCurrency(0)}
+                    </div>
+                  )
+                ) : (
+                  <div>
+                    <span className="font-semibold">موجودی حساب:</span> -
+                  </div>
+                )}
               </div>
             </div>
           </div>
