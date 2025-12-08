@@ -516,7 +516,7 @@ exports.getAllSales = asyncHandler(async (req, res, next) => {
       .populate('placedIn', 'name type')
       .skip(skip)
       .limit(limit)
-      .sort({ saleDate: -1 })
+      .sort({ saleDate: -1, createdAt: -1 })
       .lean(),
     Sale.countDocuments(query),
     // 📊 Profit summary for visible page

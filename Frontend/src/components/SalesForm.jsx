@@ -303,9 +303,14 @@ export default function SalesForm({
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                disabled={isSubmitting}
+                className={`px-3 py-2 rounded-lg text-sm ${
+                  isSubmitting
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
               >
-                اضافه کردن
+                {isSubmitting ? "در حال اضافه..." : "اضافه کردن"}
               </button>
             </div>
           </div>

@@ -452,13 +452,18 @@ function SaleForm({
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">خرید اجناس</h3>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleAddItem}
-                className="px-3 py-2 bg-amber-600 text-white rounded-sm text-sm hover:bg-amber-700"
-              >
-                اضافه کردن
-              </button>
+                <button
+                  type="button"
+                  onClick={handleAddItem}
+                  disabled={isSaving}
+                  className={`px-3 py-2 rounded-sm text-sm ${
+                    isSaving
+                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                      : "bg-amber-600 text-white hover:bg-amber-700"
+                  }`}
+                >
+                  {isSaving ? "در حال اضافه..." : "اضافه کردن"}
+                </button>
             </div>
           </div>
 

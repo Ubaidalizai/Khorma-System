@@ -1,121 +1,205 @@
 import React, { forwardRef } from 'react';
-import { formatCurrency } from '../utilies/helper';
+import { formatNumberWithPersianDigits, formatCurrency } from '../utilies/helper';
+import DateObject from "react-date-object";
+import persianCalendar from "react-date-object/calendars/persian";
+import persianLocale from "react-date-object/locales/persian_fa";
 
 const SaleBill = forwardRef(({ sale, customer, customerAccount }, ref) => {
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fa-IR');
+  const formatPersianDate = (dateString) => {
+    try {
+      const date = new DateObject({
+        date: new Date(dateString),
+        calendar: persianCalendar,
+        locale: persianLocale,
+      });
+      return date.format('YYYY/MM/DD');
+    } catch {
+      return new Date(dateString).toLocaleDateString('fa-IR');
+    }
   };
 
-  const isSmallBill = sale.invoiceType === 'small';
+  const formatPersianDateTime = (dateString) => {
+    try {
+      const date = new DateObject({
+        date: new Date(dateString),
+        calendar: persianCalendar,
+        locale: persianLocale,
+      });
+      const dayName = date.format('dddd');
+      const dateStr = date.format('YYYY/MM/DD');
+      const time = new Date(dateString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      return { dayName, dateStr, time };
+    } catch {
+      const date = new Date(dateString);
+      return {
+        dayName: date.toLocaleDateString('fa-IR', { weekday: 'long' }),
+        dateStr: date.toLocaleDateString('fa-IR'),
+        time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+      };
+    }
+  };
+
+  // Calculate weight and carton from quantity and unit conversion
+  const calculateWeightAndCarton = (item) => {
+    const quantity = item.quantity || 0;
+    const conversion = item.unit?.conversion_to_base || 1;
+    const weight = quantity * conversion;
+    
+    // Assuming carton is calculated based on unit (you may need to adjust this logic)
+    // If unit is carton, use quantity directly, otherwise calculate
+    const unitName = item.unit?.name?.toLowerCase() || '';
+    const isCarton = unitName.includes('کارتن') || unitName.includes('carton');
+    const carton = isCarton ? quantity : 0; // Adjust based on your business logic
+    
+    return { weight, carton };
+  };
+
+  // Calculate totals
+  const totalWeight = sale.items?.reduce((sum, item) => {
+    const { weight } = calculateWeightAndCarton(item);
+    return sum + weight;
+  }, 0) || 0;
+
+  const totalCarton = sale.items?.reduce((sum, item) => {
+    const { carton } = calculateWeightAndCarton(item);
+    return sum + carton;
+  }, 0) || 0;
+
+  const printDateTime = formatPersianDateTime(new Date());
 
   return (
-    <div ref={ref} className={`bg-white p-4 ${isSmallBill ? 'w-[80mm]' : 'w-[297mm]'} print:w-full print:mx-auto`}>
-      {/* Header */}
-      <div className="text-center border-b-2 border-gray-800 pb-2 mb-3">
-        <h1 className={`font-bold ${isSmallBill ? 'text-lg' : 'text-3xl'} text-gray-900`}>
-          دیتس شاپ
-        </h1>
-        <p className={`text-gray-600 ${isSmallBill ? 'text-xs' : 'text-base'}`}>
-          Dates Shop - Fresh Dates & Nuts
-        </p>
+    <div ref={ref} className="bg-white w-full print:w-full print:mx-auto" style={{ direction: 'rtl', fontFamily: 'Arial, sans-serif' }}>
+      {/* Header - Company Banner */}
+      <div className="bg-blue-900 text-white text-center py-2">
+        <h1 className="text-2xl font-bold">شرکت تجارتی علاء الدین و شجاع الدین برادران</h1>
       </div>
 
-      {/* Bill Number and Date */}
-      <div className={`flex justify-between mb-3 ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
-        <div>
-          <span className="font-semibold">نمبر بیل:</span> {sale.billNumber}
-        </div>
-        <div>
-          <span className="font-semibold">تاریخ:</span> {formatDate(sale.saleDate)}
+      {/* Business Description */}
+      <div className="text-center py-1 border-b border-gray-300">
+        <p className="text-sm">فروشنده انواع و اقسام خرما از قبیل کلوته، مضافتی، زاهدی، پیارم و غیره</p>
+      </div>
+
+      {/* Address */}
+      <div className="text-center py-1 border-b border-gray-300">
+        <p className="text-sm">آدرس: نیمروز، زرنج، پشت کوچه قالین فروشی ها، روبروی کوچه نمایندگی سوپر کولا</p>
+      </div>
+
+      {/* Contact Information - Two Mobile Numbers */}
+      <div className="text-center py-1 border-b border-gray-300">
+        <div className="flex justify-center gap-4 text-sm">
+          <span>00989136524382 ایران</span>
+          <span>شجاع الدين 0796100157</span>
+          <span>احسان 0797365500</span>
+          <span>علاء الدين 0797661688</span>
+          <span>0702301904</span>
         </div>
       </div>
 
-      {/* Customer Info */}
-      {customer && (
-        <div className={`border-t border-gray-300 pt-2 mb-3 ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
-          <p><span className="font-semibold">مشتری:</span> {customer.name}</p>
-          {customer.phone && <p><span className="font-semibold">تماس:</span> {customer.phone}</p>}
-          {customer.address && <p><span className="font-semibold">آدرس:</span> {customer.address}</p>}
+      {/* Bill Details Section */}
+      <div className="border-b border-gray-300 py-2">
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <span className="font-semibold">اسم مشتری:</span> {customer?.name || sale.customerName?.name || sale.customerName || '-'}
+          </div>
+          <div>
+            <span className="font-semibold">تاریخ:</span> {formatPersianDate(sale.saleDate)}
+          </div>
+          <div>
+            <span className="font-semibold">شماره فاکتور:</span> {sale.billNumber || '-'}
+          </div>
+          <div>
+            <span className="font-semibold">تفصیل:</span> 
+          </div>
+          <div>
+            <span className="font-semibold">گدام:</span> {sale.placedIn?.name || '-'}
+          </div>
+          <div>
+            <span className="font-semibold">واحد پول:</span> افغانی
+          </div>
         </div>
-      )}
+        {/* Customer Account Info */}
+        {customerAccount && (
+          <div className="mt-2 pt-2 border-t border-gray-300 text-sm">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <span className="font-semibold">حساب:</span> {customerAccount.name || '-'}
+              </div>
+              <div>
+                <span className="font-semibold">موجودی حساب:</span> {customerAccount.currentBalance !== undefined ? formatCurrency(customerAccount.currentBalance) : '-'}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* Customer Account Balance */}
-      {customerAccount && customerAccount.currentBalance !== 0 && (
-        <div className={`${
-          customerAccount.currentBalance > 0 
-            ? 'bg-red-50 border border-red-200' 
-            : 'bg-green-50 border border-green-200'
-        } rounded p-2 mb-3 ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
-          <p className={`font-semibold ${
-            customerAccount.currentBalance > 0 
-              ? 'text-red-900' 
-              : 'text-green-900'
-          }`}>وضعیت حساب مشتری:</p>
-          <p className={
-            customerAccount.currentBalance > 0 
-              ? 'text-red-800' 
-              : 'text-green-800'
-          }>
-            {customerAccount.currentBalance > 0 
-              ? `باقی مانده: ${formatCurrency(Math.abs(customerAccount.currentBalance))} افغانی`
-              : `اعتبار: ${formatCurrency(Math.abs(customerAccount.currentBalance))} افغانی`
-            }
-          </p>
-        </div>
-      )}
-
-      {/* Items Table */}
-      <div className="border-t-2 border-gray-800 mb-3">
-        <table className={`w-full ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
+      {/* Product Listing Table */}
+      <div className="border-b border-gray-300">
+        <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
           <thead>
-            <tr className="border-b border-gray-800">
-              <th className="text-right py-1">محصول</th>
-              <th className="text-right py-1">تعداد</th>
-              <th className="text-right py-1">قیمت</th>
-              <th className="text-right py-1">مجموع</th>
+            <tr className="bg-blue-900 text-white">
+              <th className="border border-gray-300 py-1 px-2 text-center">شماره</th>
+              <th className="border border-gray-300 py-1 px-2 text-center">نام محصول</th>
+              <th className="border border-gray-300 py-1 px-2 text-center">تفصیل</th>
+              <th className="border border-gray-300 py-1 px-2 text-center">وزن</th>
+              <th className="border border-gray-300 py-1 px-2 text-center">کارتن</th>
+              <th className="border border-gray-300 py-1 px-2 text-center">قیمت</th>
+              <th className="border border-gray-300 py-1 px-2 text-center">جمع کل</th>
             </tr>
           </thead>
           <tbody>
-            {sale.items?.map((item, index) => (
-              <tr key={index} className="border-b border-gray-300">
-                <td className="py-1">{item.product?.name || '-'}</td>
-                <td className="py-1 text-center">{item.quantity}</td>
-                <td className="py-1 text-left">{formatCurrency(item.unitPrice)}</td>
-                <td className="py-1 text-left">{formatCurrency(item.totalPrice)}</td>
-              </tr>
-            ))}
+            {sale.items?.map((item, index) => {
+              const { weight, carton } = calculateWeightAndCarton(item);
+              return (
+                <tr key={index}>
+                  <td className="border border-gray-300 py-1 px-2 text-center">{index + 1}</td>
+                  <td className="border border-gray-300 py-1 px-2">{item.product?.name || '-'}</td>
+                  <td className="border border-gray-300 py-1 px-2"></td>
+                  <td className="border border-gray-300 py-1 px-2 text-center">{formatNumberWithPersianDigits(weight.toFixed(1))}</td>
+                  <td className="border border-gray-300 py-1 px-2 text-center">{formatNumberWithPersianDigits(carton.toFixed(0))}</td>
+                  <td className="border border-gray-300 py-1 px-2 text-center">{formatNumberWithPersianDigits(item.unitPrice)}</td>
+                  <td className="border border-gray-300 py-1 px-2 text-center">{formatNumberWithPersianDigits(item.totalPrice)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* Totals */}
-      <div className={`border-t-2 border-gray-800 pt-2 ${isSmallBill ? 'text-xs' : 'text-sm'}`}>
-        <div className="flex justify-between mb-1">
-          <span className="font-semibold">قیمت مجموعی:</span>
-          <span>{formatCurrency(sale.totalAmount)} AFN</span>
-        </div>
-        {sale.paidAmount > 0 && (
-          <div className="flex justify-between mb-1 text-green-600">
-            <span className="font-semibold">پرداخت شده:</span>
-            <span>{formatCurrency(sale.paidAmount)} AFN</span>
+      {/* Summary Section */}
+      <div className="border-b border-gray-300 py-2">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <div className="border border-gray-300 py-1 px-2 text-sm">
+              <span className="font-semibold">مجموع فاکتور:</span> {formatNumberWithPersianDigits(sale.totalAmount)}
+            </div>
+            <div className="border border-gray-300 py-1 px-2 text-sm">
+              <span className="font-semibold">مبلغ رسید:</span> {formatNumberWithPersianDigits(sale.paidAmount)}
+            </div>
+            <div className="border border-gray-300 py-1 px-2 text-sm">
+              <span className="font-semibold">باقیمانده:</span> {formatNumberWithPersianDigits(sale.dueAmount)}
+            </div>
           </div>
-        )}
-        {sale.dueAmount > 0 && (
-          <div className="flex justify-between mb-1 text-red-600">
-            <span className="font-semibold">باقی مانده:</span>
-            <span>{formatCurrency(sale.dueAmount)} AFN</span>
+          <div className="space-y-1">
+            <div className="border border-gray-300 py-1 px-2 text-sm">
+              <span className="font-semibold">جمله وزن:</span> {formatNumberWithPersianDigits(totalWeight.toFixed(1))}
+            </div>
+            <div className="border border-gray-300 py-1 px-2 text-sm">
+              <span className="font-semibold">جمله کارتن:</span> {formatNumberWithPersianDigits(totalCarton.toFixed(0))}
+            </div>
           </div>
-        )}
-        <div className="flex justify-between text-lg font-bold border-t-2 border-gray-800 pt-2 mt-2">
-          <span>مجموع کل:</span>
-          <span>{formatCurrency(sale.totalAmount)} AFN</span>
         </div>
       </div>
 
       {/* Footer */}
-      <div className={`text-center mt-4 pt-2 border-t border-gray-300 ${isSmallBill ? 'text-xs' : 'text-sm'} text-gray-600`}>
-        <p>تشکر از خرید شما!</p>
-        <p>Thank you for your purchase!</p>
+      <div className="py-2">
+        <div className="text-center mb-2">
+          <p className="text-sm">مهر و امضاء</p>
+          <div className="h-8 border-b border-gray-300"></div>
+        </div>
+        <div className="text-center text-xs text-gray-600">
+          <p>تاریخ پرینت: {printDateTime.dayName} - {printDateTime.dateStr}</p>
+          <p>ساعت پرینت: {printDateTime.time}</p>
+        </div>
       </div>
     </div>
   );
@@ -124,4 +208,3 @@ const SaleBill = forwardRef(({ sale, customer, customerAccount }, ref) => {
 SaleBill.displayName = 'SaleBill';
 
 export default SaleBill;
-
