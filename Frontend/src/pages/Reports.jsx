@@ -4,6 +4,27 @@ import {
   DocumentArrowDownIcon,
   PrinterIcon,
   EyeIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ShoppingBagIcon,
+  CubeIcon,
+  ShoppingCartIcon,
+  BanknotesIcon,
+  ReceiptPercentIcon,
+  ChartPieIcon,
+  CurrencyDollarIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  ClockIcon,
+  HashtagIcon,
+  DocumentTextIcon,
+  WalletIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  ArrowTrendingUpIcon,
+  PlusCircleIcon,
+  MinusCircleIcon,
+  TruckIcon,
 } from "@heroicons/react/24/outline";
 import {
   useSalesReports,
@@ -17,7 +38,7 @@ import {
   useCashFlowReport,
   useStockReport,
 } from "../services/useApi";
-import { formatNumber, formatCurrency, normalizeDateToIso } from "../utilies/helper";
+import { formatNumber, formatCurrency, normalizeDateToIso, toPersianDigits, toEnglishDigits } from "../utilies/helper";
 import DateObject from "react-date-object";
 import persianCalendar from "react-date-object/calendars/persian";
 import gregorianCalendar from "react-date-object/calendars/gregorian";
@@ -110,12 +131,12 @@ const Reports = () => {
   const [selectedStockLevel, setSelectedStockLevel] = useState("low"); // "all", "low", "critical", or "out"
 
   const reportTypes = [
-    { id: "sales", name: "گزارشات فروش", icon: ChartBarIcon },
-    { id: "inventory", name: "گزارشات موجودی", icon: ChartBarIcon },
-    { id: "purchases", name: "گزارشات خرید", icon: ChartBarIcon },
-    { id: "accounts", name: "گزارشات حساب", icon: ChartBarIcon },
-    { id: "expenses", name: "گزارشات هزینه", icon: ChartBarIcon },
-    { id: "profit", name: "سود و زیان", icon: ChartBarIcon },
+    { id: "sales", name: "گزارشات فروش", icon: ShoppingBagIcon },
+    { id: "inventory", name: "گزارشات موجودی", icon: CubeIcon },
+    { id: "purchases", name: "گزارشات خرید", icon: ShoppingCartIcon },
+    { id: "accounts", name: "گزارشات حساب", icon: BanknotesIcon },
+    { id: "expenses", name: "گزارشات هزینه", icon: ReceiptPercentIcon },
+    { id: "profit", name: "سود و زیان", icon: ChartPieIcon },
   ];
 
   const updateReportFilter = (reportId, updater) => {
@@ -369,13 +390,11 @@ const Reports = () => {
         "دسمبر",
       ];
 
-      const parsedYear = parseInt(salesFilter?.year, 10);
-      const yearForGrouping = Number.isNaN(parsedYear)
-        ? new Date().getFullYear()
-        : parsedYear;
+      // Use Gregorian year from the date range (already converted from Jalali)
+      const gregorianYear = new Date(startDate).getFullYear();
 
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
+        const monthKey = `${monthNames[month]} ${gregorianYear}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -455,9 +474,10 @@ const Reports = () => {
         "دسمبر",
       ];
 
-      const year = parseInt(profitFilter?.year, 10) || new Date().getFullYear();
+      // Use Gregorian year from the date range (already converted from Jalali)
+      const gregorianYear = new Date(startDate).getFullYear();
       for (let month = 1; month <= 12; month++) {
-        const monthKey = `${year}-${String(month).padStart(2, "0")}`; // Format: YYYY-MM
+        const monthKey = `${gregorianYear}-${String(month).padStart(2, "0")}`; // Format: YYYY-MM
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           period: monthNamesPersian[month - 1],
@@ -550,13 +570,11 @@ const Reports = () => {
         "دسمبر",
       ];
 
-      const parsedYear = parseInt(purchaseFilter?.year, 10);
-      const yearForGrouping = Number.isNaN(parsedYear)
-        ? new Date().getFullYear()
-        : parsedYear;
+      // Use Gregorian year from the date range (already converted from Jalali)
+      const gregorianYear = new Date(startDate).getFullYear();
 
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
+        const monthKey = `${monthNames[month]} ${gregorianYear}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -649,13 +667,11 @@ const Reports = () => {
         "دسمبر",
       ];
 
-      const parsedYear = parseInt(expenseFilter?.year, 10);
-      const yearForGrouping = Number.isNaN(parsedYear)
-        ? new Date().getFullYear()
-        : parsedYear;
+      // Use Gregorian year from the date range (already converted from Jalali)
+      const gregorianYear = new Date(startDate).getFullYear();
 
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
+        const monthKey = `${monthNames[month]} ${gregorianYear}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -745,13 +761,11 @@ const Reports = () => {
         "دسمبر",
       ];
 
-      const parsedYear = parseInt(accountsFilter?.year, 10);
-      const yearForGrouping = Number.isNaN(parsedYear)
-        ? new Date().getFullYear()
-        : parsedYear;
+      // Use Gregorian year from the date range (already converted from Jalali)
+      const gregorianYear = new Date(startDate).getFullYear();
 
       for (let month = 0; month < 12; month++) {
-        const monthKey = `${monthNames[month]} ${yearForGrouping}`;
+        const monthKey = `${monthNames[month]} ${gregorianYear}`;
         const apiItem = apiMap.get(monthKey);
         allPeriods.push({
           date: monthNamesPersian[month],
@@ -793,7 +807,7 @@ const Reports = () => {
       </div>
 
       {/* Report type selector */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           نوع گزارش را انتخاب کنید
         </h3>
@@ -831,10 +845,10 @@ const Reports = () => {
       {/* Summary cards for Sales - Moved to top */}
       {selectedReport === "sales" && salesReportsData?.data?.totals && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-green-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <CurrencyDollarIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">مجموع فروش</p>
@@ -845,10 +859,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-blue-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <CheckCircleIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -861,10 +875,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-red-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ExclamationCircleIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">مجموع بدهی</p>
@@ -880,10 +894,10 @@ const Reports = () => {
       {/* Summary cards for Purchases - Moved to top */}
       {selectedReport === "purchases" && purchaseReportsData?.data?.totals && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-orange-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <TruckIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -898,10 +912,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-blue-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <CheckCircleIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -916,10 +930,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-red-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ClockIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">مجموع بدهی</p>
@@ -937,10 +951,10 @@ const Reports = () => {
       {/* Summary cards for Expenses - Moved to top */}
       {selectedReport === "expenses" && expenseSummaryData?.data?.totals && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-red-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ReceiptPercentIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -955,10 +969,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-gray-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <HashtagIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -976,10 +990,10 @@ const Reports = () => {
       {/* Summary cards for Account Balances - Moved to top */}
       {selectedReport === "accounts" && accountBalancesData?.data && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-green-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <WalletIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -994,10 +1008,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-red-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ArrowDownIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -1012,10 +1026,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-blue-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ArrowUpIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">
@@ -1030,7 +1044,7 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div
                 className={`p-3 rounded-full ${
@@ -1039,7 +1053,7 @@ const Reports = () => {
                     : "bg-red-500"
                 }`}
               >
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">موقعیت خالص</p>
@@ -1063,10 +1077,10 @@ const Reports = () => {
       {/* Summary cards for Profit - Moved to top (above date selector, like sales) */}
       {selectedReport === "profit" && netProfitData?.data && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-blue-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">سود ناخالص</p>
@@ -1077,10 +1091,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg  border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-green-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <PlusCircleIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">درآمد دیگر</p>
@@ -1091,10 +1105,10 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-red-500">
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <MinusCircleIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">هزینه ها</p>
@@ -1105,7 +1119,7 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center">
               <div
                 className={`p-3 rounded-full ${
@@ -1114,7 +1128,7 @@ const Reports = () => {
                     : "bg-red-500"
                 }`}
               >
-                <ChartBarIcon className="h-6 w-6 text-white" />
+                <ChartPieIcon className="h-6 w-6 text-white" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">سود خالص</p>
@@ -1135,7 +1149,7 @@ const Reports = () => {
 
       {/* Date range selector */}
       {hasDateControls && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             نوع گزارش و تاریخ را انتخاب کنید
           </h3>
@@ -1213,41 +1227,130 @@ const Reports = () => {
                   <label className="block mb-2 text-sm font-medium text-gray-700">
                     انتخاب سال
                   </label>
-                  <input
-                    type="number"
-                    min="1390"
-                    max={getCurrentJalaliYearNumber() + 1}
-                    value={activeFilter?.year || ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      updateReportFilter(selectedReport, (current) => {
-                        if (value && !Number.isNaN(parseInt(value, 10))) {
-                          return { ...current, year: value, range: "yearly" };
+                  <div className="relative inline-block">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      min="1390"
+                      max={getCurrentJalaliYearNumber() + 1}
+                      value={activeFilter?.year ? toPersianDigits(activeFilter.year) : ""}
+                      onChange={(e) => {
+                        const inputValue = e.target.value;
+                        // Convert any Persian/Arabic digits to English for processing
+                        const englishValue = toEnglishDigits(inputValue);
+                        // Only allow numeric input (remove any non-digit characters)
+                        const numericValue = englishValue.replace(/\D/g, '');
+                        
+                        updateReportFilter(selectedReport, (current) => {
+                          if (numericValue && !Number.isNaN(parseInt(numericValue, 10))) {
+                            const yearNum = parseInt(numericValue, 10);
+                            const minYear = 1390;
+                            const maxYear = getCurrentJalaliYearNumber() + 1;
+                            // Validate year range
+                            if (yearNum >= minYear && yearNum <= maxYear) {
+                              return { ...current, year: numericValue, range: "yearly" };
+                            }
+                          }
+                          // If invalid or empty, keep current year or set to default
+                          return {
+                            ...current,
+                            year: current.year || getCurrentYearValue(),
+                            range: "yearly",
+                          };
+                        });
+                      }}
+                      onBlur={(e) => {
+                        const inputValue = e.target.value;
+                        const englishValue = toEnglishDigits(inputValue);
+                        const numericValue = englishValue.replace(/\D/g, '');
+                        
+                        updateReportFilter(selectedReport, (current) => {
+                          if (numericValue && !Number.isNaN(parseInt(numericValue, 10))) {
+                            const yearNum = parseInt(numericValue, 10);
+                            const minYear = 1390;
+                            const maxYear = getCurrentJalaliYearNumber() + 1;
+                            if (yearNum >= minYear && yearNum <= maxYear) {
+                              return { ...current, year: numericValue, range: "yearly" };
+                            }
+                          }
+                          // On blur, if invalid, reset to current year
+                          return {
+                            ...current,
+                            year: getCurrentYearValue(),
+                            range: "yearly",
+                          };
+                        });
+                      }}
+                      onKeyDown={(e) => {
+                        // Handle arrow keys for increment/decrement
+                        if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const currentYear = parseInt(activeFilter?.year || getCurrentYearValue(), 10);
+                          const maxYear = getCurrentJalaliYearNumber() + 1;
+                          if (currentYear < maxYear) {
+                            updateReportFilter(selectedReport, (current) => ({
+                              ...current,
+                              year: String(currentYear + 1),
+                              range: "yearly",
+                            }));
+                          }
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const currentYear = parseInt(activeFilter?.year || getCurrentYearValue(), 10);
+                          const minYear = 1390;
+                          if (currentYear > minYear) {
+                            updateReportFilter(selectedReport, (current) => ({
+                              ...current,
+                              year: String(currentYear - 1),
+                              range: "yearly",
+                            }));
+                          }
                         }
-                        return {
-                          ...current,
-                          year: getCurrentYearValue(),
-                          range: "yearly",
-                        };
-                      });
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      updateReportFilter(selectedReport, (current) => {
-                        if (value && !Number.isNaN(parseInt(value, 10))) {
-                          return current;
-                        }
-                        return {
-                          ...current,
-                          year: getCurrentYearValue(),
-                          range: "yearly",
-                        };
-                      });
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 w-32"
-                    placeholder="سال"
-                    required
-                  />
+                      }}
+                      className="px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 w-32 text-right font-medium"
+                      placeholder={toPersianDigits(getCurrentJalaliYearNumber().toString())}
+                      required
+                      dir="rtl"
+                    />
+                    <div className="absolute left-1 top-0 bottom-0 flex flex-col justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentYear = parseInt(activeFilter?.year || getCurrentYearValue(), 10);
+                          const maxYear = getCurrentJalaliYearNumber() + 1;
+                          if (currentYear < maxYear) {
+                            updateReportFilter(selectedReport, (current) => ({
+                              ...current,
+                              year: String(currentYear + 1),
+                              range: "yearly",
+                            }));
+                          }
+                        }}
+                        className="p-0.5 hover:bg-gray-100 rounded-t text-gray-600 hover:text-gray-900 transition-colors"
+                        aria-label="Increase year"
+                      >
+                        <ChevronUpIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentYear = parseInt(activeFilter?.year || getCurrentYearValue(), 10);
+                          const minYear = 1390;
+                          if (currentYear > minYear) {
+                            updateReportFilter(selectedReport, (current) => ({
+                              ...current,
+                              year: String(currentYear - 1),
+                              range: "yearly",
+                            }));
+                          }
+                        }}
+                        className="p-0.5 hover:bg-gray-100 rounded-b text-gray-600 hover:text-gray-900 transition-colors"
+                        aria-label="Decrease year"
+                      >
+                        <ChevronDownIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -1277,7 +1380,7 @@ const Reports = () => {
       )}
 
       {/* Report content */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
             {reportTypes.find((r) => r.id === selectedReport)?.name}
@@ -1297,7 +1400,7 @@ const Reports = () => {
                         }
                       )})`;
                     })()
-                  : `سالانه (${activeFilter.year || getCurrentYearValue()})`}
+                  : `سالانه (${toPersianDigits(activeFilter.year || getCurrentYearValue())})`}
               </>
             )}
           </h3>
@@ -1593,7 +1696,7 @@ const Reports = () => {
           {selectedReport === "inventory" && (
             <div className="space-y-6">
               {/* Filter buttons */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   فیلترها
                 </h3>
@@ -1701,7 +1804,7 @@ const Reports = () => {
                   هیچ موجودی برای فیلتر انتخاب شده یافت نشد.
                 </div>
               ) : (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
