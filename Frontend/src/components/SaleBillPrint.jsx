@@ -1,30 +1,38 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import SaleBill from './SaleBill';
-import { PrinterIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BsFiletypePdf } from "react-icons/bs";
+import React, { useRef, useEffect, useCallback } from "react";
+import { useReactToPrint } from "react-to-print"; // Keep this import for potential future use
+import { PrinterIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import Invoice from "./Invoice";
 
-const SaleBillPrint = ({ sale, customer, customerAccount, onClose, autoPrint = false }) => {
+const SaleBillPrint = ({
+  sale,
+  customer,
+  customerAccount,
+  onClose,
+  autoPrint = false,
+}) => {
   const componentRef = useRef();
 
   const handlePrint = useCallback(() => {
     if (!componentRef.current) return;
-    
+
     // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    
+    const printWindow = window.open("", "_blank");
+
     if (!printWindow) {
-      alert('Please allow popups to print');
+      alert("Please allow popups to print");
       return;
     }
-    
+
     // Get the HTML content
     const printContent = componentRef.current.innerHTML;
-    
+
     // Write the print content to the new window with complete styling
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Invoice ${sale?.billNumber || ''}</title>
+          <title>Invoice ${sale?.billNumber || ""}</title>
           <style>
             * { 
               margin: 0; 
@@ -90,9 +98,9 @@ const SaleBillPrint = ({ sale, customer, customerAccount, onClose, autoPrint = f
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
-    
+
     if (onClose) {
       setTimeout(() => {
         onClose();
@@ -114,35 +122,41 @@ const SaleBillPrint = ({ sale, customer, customerAccount, onClose, autoPrint = f
   if (!sale) {
     return null;
   }
-  
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-auto">
-      <div className="bg-white w-full max-w-full max-h-[90vh] overflow-y-auto">
-        {/* Header - Clean UI with thin borders only */}
-        <div className="border-b border-gray-300 flex justify-between items-center sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-gray-900 px-4 py-2">چاپ فاکتور</h2>
-          <div className="flex gap-2 px-4 py-2">
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-3 py-1 border border-gray-300 hover:bg-gray-50"
-            >
-              <PrinterIcon className="h-5 w-5" />
-              پرینت
-            </button>
-            <button
-              onClick={onClose}
-              className="flex items-center gap-2 px-3 py-1 border border-gray-300 hover:bg-gray-50"
-            >
-              <XMarkIcon className="h-5 w-5" />
-              بستن
-            </button>
-          </div>
-        </div>
 
-        {/* Bill Preview - No padding, no shadows, just borders */}
-        <div className="flex justify-center overflow-x-auto p-4">
-          <div className="border border-gray-300">
-            <SaleBill
+  return (
+    <div className="bg-white w-full relative max-w-full max-h-[90vh] overflow-y-auto rounded-md p-4">
+      {/* Header */}
+      <div className="border-b border-gray-200 flex justify-between items-center sticky -top-4 bg-white z-10">
+        <h2 className="text-xl font-bold px-4 py-2">چاپ فاکتور</h2>
+        <div className="flex gap-2 px-4 py-2">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-sm hover:bg-gray-50"
+          >
+            <PrinterIcon className="h-5 w-5" />
+            پرینت
+          </button>
+
+          <button
+            onClick={onClose}
+            className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-sm hover:bg-gray-50"
+          >
+            <XMarkIcon className="h-5 w-5" />
+            بستن
+          </button>
+
+          <button className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-sm hover:bg-gray-50">
+            <span>PDF</span>
+            <BsFiletypePdf />
+          </button>
+        </div>
+      </div>
+
+      {/* PRINT AREA — must wrap Invoice inside a DOM node */}
+      <div className="flex justify-center overflow-x-auto p-4">
+        <div className="border border-gray-300">
+          <div>
+            <Invoice
               ref={componentRef}
               sale={sale}
               customer={customer}

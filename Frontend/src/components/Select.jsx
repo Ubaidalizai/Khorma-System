@@ -67,14 +67,14 @@ function Select({
 
       {/* Dropdown List */}
       {isOpen && (
-        <div className="absolute z-10 w-full bg-white  border border-slate-200 rounded-sm shadow-lg p-2">
+        <div className="absolute z-10 w-full bg-white  border border-slate-200 rounded-sm p-2">
           {/* Search box */}
           <input
             type="text"
             placeholder="جستجو..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full mb-2 px-3 py-1 text-sm border border-slate-200 rounded-sm focus:outline-none focus:border-slate-300 dark:bg-primary-dark-400 dark:slate-accent-300"
+            className="w-full mb-2 px-3 py-1 text-sm border border-slate-200 rounded-sm focus:outline-none focus:border-slate-300  "
           />
 
           {/* Scrollable options */}

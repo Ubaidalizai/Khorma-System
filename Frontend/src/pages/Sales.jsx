@@ -11,7 +11,7 @@ import {
   PrinterIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { formatCurrency, formatNumber } from "../utilies/helper";
 import { useForm } from "react-hook-form";
 import {
@@ -27,7 +27,11 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import SaleForm from "../components/SaleForm";
 import { XCircleIcon } from "lucide-react";
-import { recordSalePayment, fetchAccounts, fetchSale } from "../services/apiUtiles";
+import {
+  recordSalePayment,
+  fetchAccounts,
+  fetchSale,
+} from "../services/apiUtiles";
 import SaleBillPrint from "../components/SaleBillPrint";
 import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
@@ -39,7 +43,7 @@ const Sales = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const openId = searchParams.get("openId");
   const action = searchParams.get("action");
-
+  const Naivgate = useNavigate();
   // State management
   const [customerFilter, setCustomerFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -201,7 +205,7 @@ const Sales = () => {
         const saleResponse = createdSale.sale || createdSale;
         const saleId = saleResponse._id || saleResponse.id;
         const customerId = saleResponse.customer?._id || saleResponse.customer;
-        
+
         // Fetch full sale with items before printing
         let fullSale = saleResponse;
         try {
@@ -523,7 +527,9 @@ const Sales = () => {
             }`}
           >
             <PlusIcon className="h-5 w-5" />
-            {createSaleMutation?.isPending ? "در حال اضافه..." : "اضافه کردن فروش"}
+            {createSaleMutation?.isPending
+              ? "در حال اضافه..."
+              : "اضافه کردن فروش"}
           </button>
         </div>
       </div>
@@ -591,8 +597,7 @@ const Sales = () => {
                         "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {sale.employeeAccount?.name ||
-                        "-"}
+                      {sale.employeeAccount?.name || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-purple-600">
                       {formatCurrency(sale.totalAmount || 0)}
@@ -628,7 +633,9 @@ const Sales = () => {
                           <EyeIcon className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handlePrintSale(sale)}
+                          onClick={() => {
+                            handlePrintSale(sale);
+                          }}
                           className="text-purple-600 hover:text-purple-900 flex items-center gap-1"
                           title="چاپ فاکتور"
                         >
@@ -1054,20 +1061,27 @@ const Sales = () => {
       </GloableModal>
 
       {/* Print Modal */}
-      {showPrintModal && saleToPrint && (
-        <SaleBillPrint
-          sale={saleToPrint}
-          customer={customerToPrint}
-          customerAccount={customerAccountToPrint}
-          onClose={() => {
-            setShowPrintModal(false);
-            setSaleToPrint(null);
-            setCustomerToPrint(null);
-            setCustomerAccountToPrint(null);
-          }}
-          autoPrint={false}
-        />
-      )}
+      <GloableModal
+        open={showPrintModal}
+        setOpen={setShowPrintModal}
+        isClose={true}
+        isClosableByDefault={true}
+      >
+        {showPrintModal && saleToPrint && (
+          <SaleBillPrint
+            sale={saleToPrint}
+            customer={customerToPrint}
+            customerAccount={customerAccountToPrint}
+            onClose={() => {
+              setShowPrintModal(false);
+              setSaleToPrint(null);
+              setCustomerToPrint(null);
+              setCustomerAccountToPrint(null);
+            }}
+            autoPrint={false}
+          />
+        )}
+      </GloableModal>
     </div>
   );
 };
