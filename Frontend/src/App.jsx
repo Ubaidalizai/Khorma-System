@@ -22,6 +22,8 @@ import Login from "./pages/Login";
 import Purchases from "./pages/Purchases";
 import Reports from "./pages/Reports";
 import Sales from "./pages/Sales";
+import SaleBill from "./pages/SaleBill";
+import PrintSimple from "./pages/PrintSimple";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -60,6 +62,8 @@ function App() {
                 <Route path="/accounts/:id" element={<AccountDetails />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/invoice/:id" element={<SaleBill />} />
+                <Route path="/print" element={<PrintSimple />} />
               </Route>
 
               {/* Redirect to dashboard for any unmatched routes */}

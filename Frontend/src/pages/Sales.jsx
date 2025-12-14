@@ -81,7 +81,6 @@ const Sales = () => {
       items: [],
     },
   });
-
   // API hooks
   const salesQueryParams = useMemo(
     () => ({
@@ -116,9 +115,9 @@ const Sales = () => {
     return customers?.data?.find((cust) => cust._id === customerId);
   };
 
-  const findEmployee = (employeeId) => {
-    return employees?.data?.find((emp) => emp._id === employeeId);
-  };
+  // const findEmployee = (employeeId) => {
+  //   return employees?.data?.find((emp) => emp._id === employeeId);
+  // };
 
   // Handle URL parameters for modal flow
   useEffect(() => {
@@ -257,48 +256,46 @@ const Sales = () => {
   };
 
   const handlePrintSale = async (sale) => {
-    // Ensure we have the full sale detail (including items) before printing
+    // Ensure we have the full sale detail (including items) before navigating
     let fullSale = sale;
     try {
       const detail = await fetchSale(sale._id || sale.id || sale);
-      // fetchSale returns an object matching the backend shape or null
-      if (detail) {
-        // backend may return { sale: {...} } or the sale object directly
-        fullSale = detail.sale || detail;
-      }
+      if (detail) fullSale = detail.sale || detail;
     } catch (err) {
       console.error("Failed to fetch full sale detail for print:", err);
-      // fallback to provided sale object
     }
 
-    // Get customer ID (either from nested object or direct value)
     const customerId = fullSale.customer?._id || fullSale.customer;
-    const customer = customers?.data?.find((c) => c._id === customerId);
+    const customer = customers?.data?.find((c) => c._id === customerId) || null;
 
-    // Fetch customer account if exists
+    // Attempt to fetch customer account (best-effort)
+    let customerAccount = null;
     if (customerId) {
       try {
         const accountsData = await fetchAccounts({ type: "customer" });
-        const customerAccount = accountsData?.accounts?.find(
-          (acc) => acc.refId === customerId
-        );
-
-        setSaleToPrint(fullSale);
-        setCustomerToPrint(customer);
-        setCustomerAccountToPrint(customerAccount || null);
-        setShowPrintModal(true);
-      } catch {
-        setSaleToPrint(fullSale);
-        setCustomerToPrint(customer);
-        setCustomerAccountToPrint(null);
-        setShowPrintModal(true);
+        customerAccount =
+          accountsData?.accounts?.find((acc) => acc.refId === customerId) ||
+          null;
+      } catch (err) {
+        console.error("Failed to fetch customer account:", err);
       }
-    } else {
-      setSaleToPrint(fullSale);
-      setCustomerToPrint(null);
-      setCustomerAccountToPrint(null);
-      setShowPrintModal(true);
     }
+
+    // Build query params with JSON-serialized values
+    const params = new URLSearchParams();
+    try {
+      params.set("sale", JSON.stringify(fullSale));
+      if (customer) params.set("customer", JSON.stringify(customer));
+      if (customerAccount)
+        params.set("customerAccount", JSON.stringify(customerAccount));
+    } catch (err) {
+      console.error("Failed to serialize print params:", err);
+    }
+
+    // Navigate to invoice route with serialized data as query params
+    Naivgate(
+      `/invoice/${fullSale._id || fullSale.id || ""}?${params.toString()}`
+    );
   };
 
   const handleRecordPayment = async () => {
@@ -1067,6 +1064,7 @@ const Sales = () => {
         isClose={true}
         isClosableByDefault={true}
       >
+        {console.log(saleToPrint, customerToPrint, customerAccountToPrint)}
         {showPrintModal && saleToPrint && (
           <SaleBillPrint
             sale={saleToPrint}
