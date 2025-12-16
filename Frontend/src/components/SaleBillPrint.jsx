@@ -199,7 +199,7 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
           </div>
 
           {/* Company Header */}
-          <header className="rounded-md  p-6 mb-6 bg-[#7c4a2d]">
+          <header className="rounded-md  p-6 mb-6  bg-[url(/banner.png)] bg-no-repeat  bg-cover  bg-center">
             <h3 className="text-2xl font-bold text-[#ffffff] text-right mb-4">
               شرکت تجارتی برادران اصغری
             </h3>

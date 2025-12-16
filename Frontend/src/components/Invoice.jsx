@@ -103,25 +103,7 @@ const Invoice = forwardRef(({ sale, customer, customerAccount }, ref) => {
           {sale?.billNumber}
         </span>
       </div>
-      {/* 
-      <header className="flex rounded-md bg-[url(./banner.png)] bg-center bg-cover flex-col md:flex-row justify-between items-start md:items-center gap-5 p-10 ">
-        <div className=" flex flex-col justify-end items-end  w-full h-full">
-          <h3 className="text-[30px] font-semibold text-white">
-            شرکت تجارتی برادران اصغری
-          </h3>
-          <div className=" flex items-center">
-            <CiLocationOn className=" text-2xl text-white" />
-            <p className=" text-lg font-medium text-white">
-              آدرس سرک نو احمدی مارکیت دوکان نمبر3و4
-            </p>
-          </div>
-          <div className="flex items-center">
-            <SlCallIn className="text-2xl text-white" />
-            <div>0708181028 0709006272 0708471789</div>
-          </div>
-        </div>
-      </header> */}
-      <header className="rounded-md bg-[url(./banner.png)] bg-center bg-cover p-8 flex flex-col gap-4">
+      <header className="rounded-md bg-[url(banner.png)] bg-center bg-cover p-8 flex flex-col gap-4">
         {/* Company Name */}
         <h3 className="text-[30px] font-semibold text-white text-right">
           شرکت تجارتی برادران اصغری
