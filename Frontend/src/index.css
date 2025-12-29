@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+.html2canvas-fix {
+  background-color: #ffffff;
+}
+
+.html2canvas-fix * {
+  /* Only fix problematic color properties */
+  color: rgb(0, 0, 0) !important;
+  border-color: rgb(200, 200, 200) !important;
+
+  /* DO NOT override background-color */
+}
+
 @theme {
 
 
@@ -155,6 +167,13 @@ body {
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px var(--shadow);
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 .btn-secondary {

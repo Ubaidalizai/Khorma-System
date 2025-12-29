@@ -12,6 +12,7 @@ import { useAccountLedger } from "../services/useApi";
 import Pagination from "../components/Pagination";
 import JalaliDatePicker from "../components/JalaliDatePicker";
 import { normalizeDateToIso } from "../utilies/helper";
+import Spinner from "../components/Spinner";
 
 const EMPTY_LEDGER = [];
 
@@ -57,95 +58,95 @@ const AccountDetails = () => {
   }, [ledger, page, rowsPerPage]);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fa-IR').format(amount);
+    return new Intl.NumberFormat("fa-IR").format(amount);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fa-IR');
+    return new Date(dateString).toLocaleDateString("fa-IR");
   };
 
   const getBalanceInfo = (balance, accountType) => {
-    if (accountType === 'cashier' || accountType === 'safe') {
+    if (accountType === "cashier" || accountType === "safe") {
       // For cashier/safe accounts, positive balance means you have money
       return {
-        label: balance >= 0 ? 'موجودی موجود' : 'کسر موجودی',
-        color: balance >= 0 ? 'text-green-600' : 'text-red-600',
-        bgColor: balance >= 0 ? 'bg-green-50' : 'bg-red-50',
-        iconColor: balance >= 0 ? 'text-green-600' : 'text-red-600'
+        label: balance >= 0 ? "موجودی موجود" : "کسر موجودی",
+        color: balance >= 0 ? "text-green-600" : "text-red-600",
+        bgColor: balance >= 0 ? "bg-green-50" : "bg-red-50",
+        iconColor: balance >= 0 ? "text-green-600" : "text-red-600",
       };
-    } else if (accountType === 'saraf') {
+    } else if (accountType === "saraf") {
       // For saraf accounts, positive balance means you owe them money
       return {
-        label: balance >= 0 ? 'بدهی شما به صراف' : 'طلب شما از صراف',
-        color: balance >= 0 ? 'text-red-600' : 'text-green-600',
-        bgColor: balance >= 0 ? 'bg-red-50' : 'bg-green-50',
-        iconColor: balance >= 0 ? 'text-red-600' : 'text-green-600'
+        label: balance >= 0 ? "بدهی شما به صراف" : "طلب شما از صراف",
+        color: balance >= 0 ? "text-red-600" : "text-green-600",
+        bgColor: balance >= 0 ? "bg-red-50" : "bg-green-50",
+        iconColor: balance >= 0 ? "text-red-600" : "text-green-600",
       };
-    } else if (accountType === 'supplier') {
+    } else if (accountType === "supplier") {
       // For supplier accounts, positive balance means you owe them money
       return {
-        label: balance >= 0 ? 'بدهی شما به تاجر' : 'طلب شما از تاجر',
-        color: balance >= 0 ? 'text-red-600' : 'text-green-600',
-        bgColor: balance >= 0 ? 'bg-red-50' : 'bg-green-50',
-        iconColor: balance >= 0 ? 'text-red-600' : 'text-green-600'
+        label: balance >= 0 ? "بدهی شما به تاجر" : "طلب شما از تاجر",
+        color: balance >= 0 ? "text-red-600" : "text-green-600",
+        bgColor: balance >= 0 ? "bg-red-50" : "bg-green-50",
+        iconColor: balance >= 0 ? "text-red-600" : "text-green-600",
       };
-    } else if (accountType === 'customer') {
+    } else if (accountType === "customer") {
       // For customer accounts, positive balance means they owe you money
       return {
-        label: balance >= 0 ? 'طلب شما از مشتری' : 'بدهی شما به مشتری',
-        color: balance >= 0 ? 'text-green-600' : 'text-red-600',
-        bgColor: balance >= 0 ? 'bg-green-50' : 'bg-red-50',
-        iconColor: balance >= 0 ? 'text-green-600' : 'text-red-600'
+        label: balance >= 0 ? "طلب شما از مشتری" : "بدهی شما به مشتری",
+        color: balance >= 0 ? "text-green-600" : "text-red-600",
+        bgColor: balance >= 0 ? "bg-green-50" : "bg-red-50",
+        iconColor: balance >= 0 ? "text-green-600" : "text-red-600",
       };
-    } else if (accountType === 'employee') {
+    } else if (accountType === "employee") {
       // For employee accounts, positive balance means they owe you money
       return {
-        label: balance >= 0 ? 'طلب شما از کارمند' : 'بدهی شما به کارمند',
-        color: balance >= 0 ? 'text-green-600' : 'text-red-600',
-        bgColor: balance >= 0 ? 'bg-green-50' : 'bg-red-50',
-        iconColor: balance >= 0 ? 'text-green-600' : 'text-red-600'
+        label: balance >= 0 ? "طلب شما از کارمند" : "بدهی شما به کارمند",
+        color: balance >= 0 ? "text-green-600" : "text-red-600",
+        bgColor: balance >= 0 ? "bg-green-50" : "bg-red-50",
+        iconColor: balance >= 0 ? "text-green-600" : "text-red-600",
       };
     } else {
       // Default case
       return {
-        label: 'موجودی',
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-50',
-        iconColor: 'text-gray-600'
+        label: "موجودی",
+        color: "text-gray-600",
+        bgColor: "bg-gray-50",
+        iconColor: "text-gray-600",
       };
     }
   };
 
   const getTransactionTypeColor = (type) => {
     switch (type) {
-      case 'Credit':
-      case 'Transfer':
-        return 'text-green-600 bg-green-100';
-      case 'Debit':
-        return 'text-red-600 bg-red-100';
-      case 'Expense':
-        return 'text-orange-600 bg-orange-100';
+      case "Credit":
+      case "Transfer":
+        return "text-green-600 bg-green-100";
+      case "Debit":
+        return "text-red-600 bg-red-100";
+      case "Expense":
+        return "text-orange-600 bg-orange-100";
       default:
-        return 'text-gray-600 bg-gray-100';
+        return "text-gray-600 bg-gray-100";
     }
   };
 
   const getTransactionTypeLabel = (type) => {
     switch (type) {
-      case 'Credit':
-        return 'اعتبار';
-      case 'Debit':
-        return 'بدهی';
-      case 'Transfer':
-        return 'انتقال';
-      case 'Expense':
-        return 'مصرف';
-      case 'Purchase':
-        return 'خرید';
-      case 'Sale':
-        return 'فروش';
-      case 'Payment':
-        return 'پرداخت';
+      case "Credit":
+        return "اعتبار";
+      case "Debit":
+        return "بدهی";
+      case "Transfer":
+        return "انتقال";
+      case "Expense":
+        return "مصرف";
+      case "Purchase":
+        return "خرید";
+      case "Sale":
+        return "فروش";
+      case "Payment":
+        return "پرداخت";
       default:
         return type;
     }
@@ -153,10 +154,10 @@ const AccountDetails = () => {
 
   const handleTransactionClick = (transaction) => {
     if (transaction.referenceType && transaction.referenceId) {
-      if (transaction.referenceType === 'purchase') {
+      if (transaction.referenceType === "purchase") {
         // Navigate to purchases page with modal action
         navigate(`/purchases?openId=${transaction.referenceId}&action=view`);
-      } else if (transaction.referenceType === 'sale') {
+      } else if (transaction.referenceType === "sale") {
         // Navigate to sales page with view action (show details modal first)
         navigate(`/sales?openId=${transaction.referenceId}&action=view`);
       }
@@ -183,8 +184,7 @@ const AccountDetails = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">در حال بارگذاری...</p>
+          <Spinner />
         </div>
       </div>
     );
@@ -194,9 +194,11 @@ const AccountDetails = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error.message || "خطا در بارگذاری اطلاعات حساب"}</p>
+          <p className="text-red-600 mb-4">
+            {error.message || "خطا در بارگذاری اطلاعات حساب"}
+          </p>
           <button
-            onClick={() => navigate('/accounts')}
+            onClick={() => navigate("/accounts")}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
           >
             بازگشت به لیست حساب ها
@@ -212,10 +214,10 @@ const AccountDetails = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/accounts')}
+            onClick={() => navigate("/accounts")}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
+            <ArrowLeftIcon className="h-6 w-6 rotate-180 text-gray-600" />
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{account}</h1>
@@ -226,16 +228,34 @@ const AccountDetails = () => {
 
       {/* Account Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className={`rounded-lg shadow-sm border border-gray-200 p-6 ${getBalanceInfo(currentBalance, accountType).bgColor}`}>
+        <div
+          className={`rounded-lg shadow-sm border border-gray-200 p-6 ${
+            getBalanceInfo(currentBalance, accountType).bgColor
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">{getBalanceInfo(currentBalance, accountType).label}</p>
-              <p className={`text-2xl font-bold mt-1 ${getBalanceInfo(currentBalance, accountType).color}`}>
+              <p className="text-sm text-gray-600">
+                {getBalanceInfo(currentBalance, accountType).label}
+              </p>
+              <p
+                className={`text-2xl font-bold mt-1 ${
+                  getBalanceInfo(currentBalance, accountType).color
+                }`}
+              >
                 {formatCurrency(Math.abs(currentBalance))} AFN
               </p>
             </div>
-            <div className={`p-3 rounded-lg ${getBalanceInfo(currentBalance, accountType).bgColor}`}>
-              <CurrencyDollarIcon className={`h-6 w-6 ${getBalanceInfo(currentBalance, accountType).iconColor}`} />
+            <div
+              className={`p-3 rounded-lg ${
+                getBalanceInfo(currentBalance, accountType).bgColor
+              }`}
+            >
+              <CurrencyDollarIcon
+                className={`h-6 w-6 ${
+                  getBalanceInfo(currentBalance, accountType).iconColor
+                }`}
+              />
             </div>
           </div>
         </div>
@@ -272,7 +292,9 @@ const AccountDetails = () => {
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">فیلتر تراکنش ها</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            فیلتر تراکنش ها
+          </h3>
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-gray-500" />
@@ -329,26 +351,39 @@ const AccountDetails = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاریخ</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">مبلغ</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">موجودی بعد از تراکنش</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">توضیحات</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  تاریخ
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  نوع
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  مبلغ
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  موجودی بعد از تراکنش
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  توضیحات
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {ledger.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
                     تراکنشی یافت نشد
                   </td>
                 </tr>
               ) : (
                 paginatedLedger.map((transaction, index) => (
-                  <tr 
-                    key={transaction.transactionId || index} 
+                  <tr
+                    key={transaction.transactionId || index}
                     className={`hover:bg-gray-50 ${
-                      isClickable(transaction) ? 'cursor-pointer' : ''
+                      isClickable(transaction) ? "cursor-pointer" : ""
                     }`}
                     onClick={() => handleTransactionClick(transaction)}
                   >
@@ -356,22 +391,33 @@ const AccountDetails = () => {
                       {formatDate(transaction.date)}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getTransactionTypeColor(transaction.type)}`}>
+                      <span
+                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getTransactionTypeColor(
+                          transaction.type
+                        )}`}
+                      >
                         {getTransactionTypeLabel(transaction.type)}
                       </span>
                     </td>
-                    <td className={`px-6 py-4 text-sm font-semibold ${
-                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)} AFN
+                    <td
+                      className={`px-6 py-4 text-sm font-semibold ${
+                        transaction.amount > 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {transaction.amount > 0 ? "+" : ""}
+                      {formatCurrency(transaction.amount)} AFN
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {formatCurrency(transaction.balanceAfter)} AFN
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {transaction.description || '-'}
+                      {transaction.description || "-"}
                       {isClickable(transaction) && (
-                        <span className="ml-2 text-xs text-blue-600">(کلیک برای مشاهده)</span>
+                        <span className="ml-2 text-xs text-blue-600">
+                          (کلیک برای مشاهده)
+                        </span>
                       )}
                     </td>
                   </tr>

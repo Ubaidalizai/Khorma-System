@@ -11,7 +11,7 @@ import {
   PrinterIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { formatCurrency, formatNumber } from "../utilies/helper";
 import { useForm } from "react-hook-form";
 import {
@@ -27,7 +27,11 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import SaleForm from "../components/SaleForm";
 import { XCircleIcon } from "lucide-react";
-import { recordSalePayment, fetchAccounts, fetchSale } from "../services/apiUtiles";
+import {
+  recordSalePayment,
+  fetchAccounts,
+  fetchSale,
+} from "../services/apiUtiles";
 import SaleBillPrint from "../components/SaleBillPrint";
 import GloableModal from "../components/GloableModal";
 import { inputStyle } from "../components/ProductForm";
@@ -39,7 +43,7 @@ const Sales = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const openId = searchParams.get("openId");
   const action = searchParams.get("action");
-
+  const Naivgate = useNavigate();
   // State management
   const [customerFilter, setCustomerFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -77,7 +81,6 @@ const Sales = () => {
       items: [],
     },
   });
-
   // API hooks
   const salesQueryParams = useMemo(
     () => ({
@@ -112,9 +115,9 @@ const Sales = () => {
     return customers?.data?.find((cust) => cust._id === customerId);
   };
 
-  const findEmployee = (employeeId) => {
-    return employees?.data?.find((emp) => emp._id === employeeId);
-  };
+  // const findEmployee = (employeeId) => {
+  //   return employees?.data?.find((emp) => emp._id === employeeId);
+  // };
 
   // Handle URL parameters for modal flow
   useEffect(() => {
@@ -201,7 +204,7 @@ const Sales = () => {
         const saleResponse = createdSale.sale || createdSale;
         const saleId = saleResponse._id || saleResponse.id;
         const customerId = saleResponse.customer?._id || saleResponse.customer;
-        
+
         // Fetch full sale with items before printing
         let fullSale = saleResponse;
         try {
@@ -253,48 +256,46 @@ const Sales = () => {
   };
 
   const handlePrintSale = async (sale) => {
-    // Ensure we have the full sale detail (including items) before printing
+    // Ensure we have the full sale detail (including items) before navigating
     let fullSale = sale;
     try {
       const detail = await fetchSale(sale._id || sale.id || sale);
-      // fetchSale returns an object matching the backend shape or null
-      if (detail) {
-        // backend may return { sale: {...} } or the sale object directly
-        fullSale = detail.sale || detail;
-      }
+      if (detail) fullSale = detail.sale || detail;
     } catch (err) {
       console.error("Failed to fetch full sale detail for print:", err);
-      // fallback to provided sale object
     }
 
-    // Get customer ID (either from nested object or direct value)
     const customerId = fullSale.customer?._id || fullSale.customer;
-    const customer = customers?.data?.find((c) => c._id === customerId);
+    const customer = customers?.data?.find((c) => c._id === customerId) || null;
 
-    // Fetch customer account if exists
+    // Attempt to fetch customer account (best-effort)
+    let customerAccount = null;
     if (customerId) {
       try {
         const accountsData = await fetchAccounts({ type: "customer" });
-        const customerAccount = accountsData?.accounts?.find(
-          (acc) => acc.refId === customerId
-        );
-
-        setSaleToPrint(fullSale);
-        setCustomerToPrint(customer);
-        setCustomerAccountToPrint(customerAccount || null);
-        setShowPrintModal(true);
-      } catch {
-        setSaleToPrint(fullSale);
-        setCustomerToPrint(customer);
-        setCustomerAccountToPrint(null);
-        setShowPrintModal(true);
+        customerAccount =
+          accountsData?.accounts?.find((acc) => acc.refId === customerId) ||
+          null;
+      } catch (err) {
+        console.error("Failed to fetch customer account:", err);
       }
-    } else {
-      setSaleToPrint(fullSale);
-      setCustomerToPrint(null);
-      setCustomerAccountToPrint(null);
-      setShowPrintModal(true);
     }
+
+    // Build query params with JSON-serialized values
+    const params = new URLSearchParams();
+    try {
+      params.set("sale", JSON.stringify(fullSale));
+      if (customer) params.set("customer", JSON.stringify(customer));
+      if (customerAccount)
+        params.set("customerAccount", JSON.stringify(customerAccount));
+    } catch (err) {
+      console.error("Failed to serialize print params:", err);
+    }
+
+    // Navigate to invoice route with serialized data as query params
+    Naivgate(
+      `/invoice/${fullSale._id || fullSale.id || ""}?${params.toString()}`
+    );
   };
 
   const handleRecordPayment = async () => {
@@ -523,7 +524,9 @@ const Sales = () => {
             }`}
           >
             <PlusIcon className="h-5 w-5" />
-            {createSaleMutation?.isPending ? "در حال اضافه..." : "اضافه کردن فروش"}
+            {createSaleMutation?.isPending
+              ? "در حال اضافه..."
+              : "اضافه کردن فروش"}
           </button>
         </div>
       </div>
@@ -591,8 +594,7 @@ const Sales = () => {
                         "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {sale.employeeAccount?.name ||
-                        "-"}
+                      {sale.employeeAccount?.name || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-purple-600">
                       {formatCurrency(sale.totalAmount || 0)}
@@ -628,7 +630,9 @@ const Sales = () => {
                           <EyeIcon className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handlePrintSale(sale)}
+                          onClick={() => {
+                            handlePrintSale(sale);
+                          }}
                           className="text-purple-600 hover:text-purple-900 flex items-center gap-1"
                           title="چاپ فاکتور"
                         >
@@ -1054,20 +1058,28 @@ const Sales = () => {
       </GloableModal>
 
       {/* Print Modal */}
-      {showPrintModal && saleToPrint && (
-        <SaleBillPrint
-          sale={saleToPrint}
-          customer={customerToPrint}
-          customerAccount={customerAccountToPrint}
-          onClose={() => {
-            setShowPrintModal(false);
-            setSaleToPrint(null);
-            setCustomerToPrint(null);
-            setCustomerAccountToPrint(null);
-          }}
-          autoPrint={false}
-        />
-      )}
+      <GloableModal
+        open={showPrintModal}
+        setOpen={setShowPrintModal}
+        isClose={true}
+        isClosableByDefault={true}
+      >
+        {console.log(saleToPrint, customerToPrint, customerAccountToPrint)}
+        {showPrintModal && saleToPrint && (
+          <SaleBillPrint
+            sale={saleToPrint}
+            customer={customerToPrint}
+            customerAccount={customerAccountToPrint}
+            onClose={() => {
+              setShowPrintModal(false);
+              setSaleToPrint(null);
+              setCustomerToPrint(null);
+              setCustomerAccountToPrint(null);
+            }}
+            autoPrint={false}
+          />
+        )}
+      </GloableModal>
     </div>
   );
 };

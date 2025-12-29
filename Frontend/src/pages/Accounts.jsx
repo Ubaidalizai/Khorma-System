@@ -29,13 +29,16 @@ import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
 import { formatNumber } from "../utilies/helper";
 import { useSubmitLock } from "../hooks/useSubmitLock.js";
+import { usePageState } from "../contexts/PageStateContext.jsx";
 
 const Accounts = () => {
   const navigate = useNavigate();
-  const [type, setType] = useState("supplier");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  // const [type, setType] = useState("supplier");
+  // const [search, setSearch] = useState("");
+  // const [page, setPage] = useState(1);
+  // const [limit, setLimit] = useState(10);
+  const { type, setType, search, page, setPage, limit, setLimit, setSearch } =
+    usePageState();
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -135,7 +138,7 @@ const Accounts = () => {
       openingBalance: acc.openingBalance || 0,
       currency: acc.currency || "AFN",
     });
-  setAccountType(acc.type || type);
+    setAccountType(acc.type || type);
   };
 
   const handleDelete = async () => {
@@ -530,7 +533,9 @@ const Accounts = () => {
                   type="submit"
                   disabled={isAccountActionPending}
                   className={`px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 ${
-                    isAccountActionPending ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                    isAccountActionPending
+                      ? "opacity-60 cursor-not-allowed"
+                      : "cursor-pointer"
                   }`}
                 >
                   {isAccountActionPending
@@ -577,8 +582,7 @@ const Accounts = () => {
                   </h3>
                   <p className="text-sm text-blue-700">
                     موجودی فعلی:{" "}
-                    {formatNumber(selectedAccount.currentBalance ?? 0)}{" "}
-                    AFN
+                    {formatNumber(selectedAccount.currentBalance ?? 0)} AFN
                   </p>
                 </div>
 
@@ -706,10 +710,14 @@ const Accounts = () => {
                     type="submit"
                     disabled={isTransactionActionPending}
                     className={`px-4 py-2 bg-amber-600 text-white rounded-sm hover:bg-amber-700 ${
-                      isTransactionActionPending ? "opacity-60 cursor-not-allowed" : ""
+                      isTransactionActionPending
+                        ? "opacity-60 cursor-not-allowed"
+                        : ""
                     }`}
                   >
-                    {isTransactionActionPending ? "در حال افزودن..." : "افزودن تراکنش"}
+                    {isTransactionActionPending
+                      ? "در حال افزودن..."
+                      : "افزودن تراکنش"}
                   </button>
                 </div>
               </form>
