@@ -106,7 +106,9 @@ exports.createSale = asyncHandler(async (req, res, next) => {
 
     // Process each sale item (deduct stock, compute cost & profit, create saleItem)
     for (const item of items) {
-      const product = await Product.findById(item.product).session(session);
+      const product = await Product.findById(item.product)
+        .populate('baseUnit', 'name')
+        .session(session);
       if (!product)
         throw new AppError(`Invalid product ID: ${item.product}`, 400);
 

@@ -123,6 +123,40 @@ function SaleForm({
     return result;
   }, [stockData, employeeStockData, selectedEmployee]);
 
+  // Helper function to validate sale price against purchase price
+  const validateSalePrice = React.useCallback((productId, unitId, batchNumber, unitPrice) => {
+    if (!productId || !unitId || !unitPrice) return { isValid: true, purchasePrice: 0 };
+    
+    const selectedProduct = productsData?.data?.find((p) => p._id === productId);
+    const selectedUnit = units?.data?.find((u) => u._id === unitId);
+    
+    if (!selectedProduct || !selectedUnit) return { isValid: true, purchasePrice: 0 };
+    
+    const dataSource = selectedEmployee && employeeStockData
+      ? employeeStockData.data || employeeStockData
+      : stockData;
+    
+    const stockItem = Array.isArray(dataSource)
+      ? dataSource.find(
+          (s) =>
+            s.product?._id === productId &&
+            (batchNumber ? s.batchNumber === batchNumber : true)
+        )
+      : null;
+    
+    const purchasePricePerBaseUnit =
+      stockItem?.purchasePricePerBaseUnit ||
+      selectedProduct?.latestPurchasePrice ||
+      0;
+    
+    const salePricePerBaseUnit =
+      parseFloat(unitPrice) / (selectedUnit.conversion_to_base || 1);
+    
+    const isValid = purchasePricePerBaseUnit === 0 || salePricePerBaseUnit >= purchasePricePerBaseUnit;
+    
+    return { isValid, purchasePrice: purchasePricePerBaseUnit, salePrice: salePricePerBaseUnit };
+  }, [productsData, units, selectedEmployee, employeeStockData, stockData]);
+
   // Get batches for selected product - only fetch when product is selected
   // Use employee location if employee is selected
   const selectedProductId = currentItem?.product;
@@ -485,6 +519,31 @@ function SaleForm({
                 }}
                 options={products}
               ></Select>
+              {(() => {
+                if (!currentItem?.product) return null;
+                const selectedProduct = productsData?.data?.find(
+                  (p) => p._id === currentItem.product
+                );
+                const dataSource = selectedEmployee && employeeStockData
+                  ? employeeStockData.data || employeeStockData
+                  : stockData;
+                const stockItem = Array.isArray(dataSource)
+                  ? dataSource.find(
+                      (s) => s.product?._id === currentItem.product &&
+                      (currentItem.batchNumber ? s.batchNumber === currentItem.batchNumber : true)
+                    )
+                  : null;
+                const purchasePrice = stockItem?.purchasePricePerBaseUnit ||
+                  selectedProduct?.latestPurchasePrice || 0;
+                if (purchasePrice > 0) {
+                  return (
+                    <p className="text-blue-600 text-xs mt-1">
+                      💰 قیمت خرید: {purchasePrice.toLocaleString()} افغانی
+                    </p>
+                  );
+                }
+                return null;
+              })()}
             </div>
             <div className=" col-span-1">
               <Select
@@ -547,8 +606,34 @@ function SaleForm({
                 onChange={(e) =>
                   setCurrentItem((s) => ({ ...s, unitPrice: e.target.value }))
                 }
-                className="w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow"
+                className={`w-full font-custom bg-transparent placeholder:text-slate-400 text-sm border rounded-sm pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow ${
+                  (() => {
+                    const validation = validateSalePrice(
+                      currentItem?.product,
+                      currentItem?.unit,
+                      currentItem?.batchNumber,
+                      currentItem?.unitPrice
+                    );
+                    return validation.isValid ? 'border-slate-200 text-slate-700' : 'border-red-500 focus:border-red-600 text-red-600';
+                  })()
+                }`}
               />
+              {(() => {
+                const validation = validateSalePrice(
+                  currentItem?.product,
+                  currentItem?.unit,
+                  currentItem?.batchNumber,
+                  currentItem?.unitPrice
+                );
+                if (!validation.isValid && validation.purchasePrice > 0) {
+                  return (
+                    <p className="text-red-600 text-xs mt-1">
+                      ⚠️ قیمت فروش نباید کمتر از قیمت خرید باشد
+                    </p>
+                  );
+                }
+                return null;
+              })()}
             </div>
             <div className="col-span-1">
               <JalaliDatePicker
