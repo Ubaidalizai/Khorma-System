@@ -1,7 +1,7 @@
+import { AiOutlineFilePdf } from "react-icons/ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 // import { useReactToPrint } from "react-to-print";
 import { PrinterIcon, XMarkIcon } from "@heroicons/react/24/outline";
-
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import DateObject from "react-date-object";
@@ -90,39 +90,88 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
   );
 
   const printDateTime = formatPersianDateTime(new Date());
+  const patchOklabColors = (root) => {
+    if (!root) return;
+    const props = ['color', 'background', 'backgroundColor', 'borderColor'];
+    const all = root.getElementsByTagName('*');
+    for (let i = 0; i < all.length; i++) {
+      const el = all[i];
+      const styles = window.getComputedStyle(el);
+      props.forEach((prop) => {
+        const val = styles[prop];
+        if (val && val.includes('oklab')) {
+          el.style[prop] = '#222'; // fallback, you can change as needed
+        }
+      });
+    }
+  };
+
   const handlePrint = useCallback(async () => {
     if (!printRef.current) return;
+    patchOklabColors(printRef.current);
 
-    const canvas = await html2canvas(printRef.current, {
-      scale: 2,
-      backgroundColor: "#ffffff",
-      useCORS: true,
-      ignoreElements: (el) => el.classList?.contains("no-print"),
-    });
+      const canvas = await html2canvas(printRef.current, {
+        scale: 1,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        ignoreElements: (el) => el.classList?.contains("no-print"),
+      });
 
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+      const scaledWidth = pageWidth / 2;
+      const scaledHeight = (canvas.height * scaledWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = 0;
+      // Add two copies: one on left half, one on right half (side by side)
+      pdf.addImage(imgData, "PNG", 0, 0, scaledWidth, scaledHeight);
+      pdf.addImage(imgData, "PNG", scaledWidth, 0, scaledWidth, scaledHeight);
 
-    pdf.addImage(imgData, "PNG", 0, position, pageWidth, imgHeight);
-    heightLeft -= pageHeight;
+      pdf.autoPrint();
+      window.open(pdf.output("bloburl"), "_blank");
 
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
+  }, []);
+
+  const handlePdf = useCallback(async () => {
+    if (!printRef.current) return;
+    patchOklabColors(printRef.current);
+
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        foreignObjectRendering: false,
+        ignoreElements: (el) => el.classList?.contains("no-print"),
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
       pdf.addImage(imgData, "PNG", 0, position, pageWidth, imgHeight);
       heightLeft -= pageHeight;
-    }
 
-    pdf.autoPrint();
-    window.open(pdf.output("bloburl"), "_blank");
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pageWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      window.open(pdf.output("bloburl"), "_blank");
+  
   }, []);
 
   useEffect(() => {
@@ -162,7 +211,15 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
             disabled={!isContentReady}
           >
             <PrinterIcon className="h-5 w-5" />
-            پرینت
+            پرینت دو کپی
+          </button>
+          <button
+            onClick={handlePdf}
+            className="border px-3 py-1 flex items-center gap-2 hover:bg-gray-50"
+            disabled={!isContentReady}
+          >
+            <AiOutlineFilePdf className="h-5 w-5" />
+            پرینت یک کپی
           </button>
           <button
             onClick={onClose}
@@ -176,11 +233,11 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
 
       {/* ✅ FIXED: Printable content with proper ref */}
       <div
-        className=" bg-[#ffffff] border   border-[#e2e8f0] rounded-md "
         ref={printRef}
+        className=" bg-[#ffffff] border border-[#e2e8f0] rounded-md small-bill"
       >
         <div
-          className="bg-[#ffffff] py-5 px-2  rounded-md"
+          className=" bg-[url(/bg3.png)]  bg-no-repeat bg-bottom  bg-cover   py-5 px-2  rounded-md "
           style={{
             width: "215mm",
             minHeight: "297mm",
@@ -189,7 +246,7 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
           }}
         >
           {/* Header */}
-          <div className="w-full flex justify-between pb-[12px] border-b  border-[#90a1b9] mb-4">
+          <div className="w-full flex justify-between pb-[12px]">
             <span className="font-semibold">
               {formatPersianDate(sale?.saleDate)}
             </span>
@@ -199,7 +256,7 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
           </div>
 
           {/* Company Header */}
-          <header className="rounded-md  p-6 mb-6  bg-[url(/banner.png)] bg-no-repeat  bg-cover  bg-center">
+          <header className="rounded-md  p-6 mb-2  bg-[url(/banner.png)] bg-no-repeat  bg-cover  bg-center">
             <h3 className="text-2xl font-bold text-[#ffffff] text-right mb-4">
               شرکت تجارتی برادران اصغری
             </h3>
@@ -215,8 +272,8 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
 
               {/* Phone Numbers */}
               <div className="flex items-center gap-2">
-                <SlCallIn className="text-xl text-[#fff]" />
-                <div className="text-[#fff] text-sm flex gap-3">
+                <SlCallIn className="text-xl text-[#ffffff]" />
+                <div className="text-[#ffffff] text-sm flex gap-3">
                   <span>0708181028</span>
                   <span>0709006272</span>
                   <span>0708471789</span>
@@ -226,7 +283,7 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
           </header>
 
           {/* Invoice Details */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-6 py-5 px-4 border mb-6 rounded border-[#e5e7eb]">
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6 py-5 px-4 border mb-2 rounded border-[#e5e7eb]">
             {/* Invoice To */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -270,7 +327,7 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
           </section>
 
           {/* Services Table */}
-          <section className="mb-8">
+          <section className="mb-2">
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse border border-[#d1d5dc]">
                 <thead>
@@ -289,7 +346,11 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
                   {services.map((curr, index) => {
                     const { weight, carton } = calculateWeightAndCarton(curr);
                     return (
-                      <tr key={index} className="hover:bg-[#f9fafb]">
+                      <tr
+                        key={index}
+                        className=""
+                        style={{ textAlign: "center" }}
+                      >
                         <td className="border border-[#d1d5dc] px-4 py-2 text-center">
                           {index + 1}
                         </td>
@@ -359,14 +420,14 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
             <div className="w-full md:w-[300px] space-y-3">
               {sale && (
                 <>
-                  <div className="flex justify-between border-b pb-[12px] border-[#45556c]">
+                  <div className="flex justify-between border pb-[12px] border-[#d1d5dc]">
                     <span>مبلغ رسید:</span>
                     <span>
                       {formatNumberWithPersianDigits(sale?.paidAmount || 0)}{" "}
                       افغانی
                     </span>
                   </div>
-                  <div className="flex justify-between border-b pb-[12px] border-[#45556c]">
+                  <div className="flex justify-between border pb-[12px] border-[#d1d5dc]">
                     <span>باقیمانده:</span>
                     <span>
                       {formatNumberWithPersianDigits(sale?.dueAmount || 0)}{" "}
@@ -379,7 +440,7 @@ const SaleBillPrint = ({ sale, customer, onClose, autoPrint = false }) => {
           </section>
 
           {/* Footer */}
-          <footer className="border-t border-[#d1d5dc] pt-6 mt-6">
+          <footer className="border-t border-[#d1d5dc]  pt-1 mt-2">
             <div className="flex flex-col md:flex-row justify-between items-start gap-6">
               {/* Manager Signature */}
               <div className="text-right">
