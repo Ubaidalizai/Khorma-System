@@ -149,12 +149,24 @@ const Sales = () => {
     setShowDetailsModal(true);
   };
 
-  const handleEditSale = (sale) => {
+  const handleEditSale = async (sale) => {
     console.log("Edit sale:", sale);
-    setSelectedSaleId(sale._id);
-    setEditMode(true);
-    setSaleToEdit(sale);
-    setShowAddSaleModal(true);
+    // Fetch full sale details with items before editing
+    try {
+      const detail = await fetchSale(sale._id);
+      const fullSale = detail?.sale || detail || sale;
+      setSelectedSaleId(fullSale._id);
+      setEditMode(true);
+      setSaleToEdit(fullSale);
+      setShowAddSaleModal(true);
+    } catch (error) {
+      console.error("Error fetching sale details:", error);
+      // Fallback to using the sale data we have
+      setSelectedSaleId(sale._id);
+      setEditMode(true);
+      setSaleToEdit(sale);
+      setShowAddSaleModal(true);
+    }
   };
 
   const handleDeleteSale = (saleId) => {
@@ -256,7 +268,7 @@ const Sales = () => {
   };
 
   const handlePrintSale = async (sale) => {
-    // Ensure we have the full sale detail (including items) before navigating
+    // Ensure we have the full sale detail (including items) before showing modal
     let fullSale = sale;
     try {
       const detail = await fetchSale(sale._id || sale.id || sale);
@@ -281,21 +293,11 @@ const Sales = () => {
       }
     }
 
-    // Build query params with JSON-serialized values
-    const params = new URLSearchParams();
-    try {
-      params.set("sale", JSON.stringify(fullSale));
-      if (customer) params.set("customer", JSON.stringify(customer));
-      if (customerAccount)
-        params.set("customerAccount", JSON.stringify(customerAccount));
-    } catch (err) {
-      console.error("Failed to serialize print params:", err);
-    }
-
-    // Navigate to invoice route with serialized data as query params
-    Naivgate(
-      `/invoice/${fullSale._id || fullSale.id || ""}?${params.toString()}`
-    );
+    // Show print modal instead of navigating
+    setSaleToPrint(fullSale);
+    setCustomerToPrint(customer);
+    setCustomerAccountToPrint(customerAccount);
+    setShowPrintModal(true);
   };
 
   const handleRecordPayment = async () => {
@@ -842,6 +844,9 @@ const Sales = () => {
                             تعداد
                           </th>
                           <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            تعداد کارتن
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                             قیمت یک دانه
                           </th>
                           <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
@@ -853,7 +858,7 @@ const Sales = () => {
                         {selectedSale.items?.length === 0 ? (
                           <tr>
                             <td
-                              colSpan={5}
+                              colSpan={6}
                               className="px-3 py-6 text-center text-gray-500 text-sm"
                             >
                               جنس یافت نشد
@@ -870,6 +875,9 @@ const Sales = () => {
                               </td>
                               <td className="px-3 py-2 text-sm text-gray-900">
                                 {item.quantity || 0}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {item.cartonCount || "-"}
                               </td>
                               <td className="px-3 py-2 text-sm text-gray-900">
                                 {formatCurrency(item.unitPrice || 0)}
@@ -1064,7 +1072,6 @@ const Sales = () => {
         isClose={true}
         isClosableByDefault={true}
       >
-        {console.log(saleToPrint, customerToPrint, customerAccountToPrint)}
         {showPrintModal && saleToPrint && (
           <SaleBillPrint
             sale={saleToPrint}

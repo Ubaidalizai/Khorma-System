@@ -60,6 +60,12 @@ const AdminPanel = () => {
       description: "مشاهده و مدیریت اطلاعات پروفایل",
     },
     {
+      id: "users",
+      name: "مدیریت کاربران",
+      icon: UserIcon,
+      description: "مشاهده، افزودن و مدیریت کاربران سیستم",
+    },
+    {
       id: "suppliers",
       name: "مدیریت تامین‌کنندگان",
       icon: BuildingOfficeIcon,
@@ -95,6 +101,8 @@ const AdminPanel = () => {
     switch (activeSection) {
       case "profile":
         return <ProfileManagement />;
+      case "users":
+        return <UserManagement />;
       case "suppliers":
         return <SupplierManagement />;
       case "categories":
@@ -127,8 +135,7 @@ const AdminPanel = () => {
                 className="mt-1 text-lg"
                 style={{ color: "var(--text-medium)" }}
               >
-                مدیریت تامین‌کنندگان، مشتریان، کارمندان، واحدها و تنظیمات سیستم
-              </p>
+                مدیریت تامین‌کنندگان، مشتریان، کارمندان، واحدها و دسته‌بندی‌ها              </p>
             </div>
             <div className="flex items-center space-x-4 space-x-reverse">
               <div className="flex items-center space-x-2 space-x-reverse">
@@ -909,6 +916,137 @@ const ProfileManagement = () => {
         </div>
       </div>
       </GloableModal>
+    </div>
+  );
+};
+
+// User Management Component
+const UserManagement = () => {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["users", { search }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      return apiRequest(`${API_ENDPOINTS.AUTH.UPDATEUSERS}?${params.toString()}`);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) =>
+      apiRequest(`${API_ENDPOINTS.AUTH.UPDATEUSERS}/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success("کاربر حذف شد");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => toast.error(e.message || "حذف ناموفق بود"),
+  });
+
+  const users = data?.data?.results || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold" style={{ color: "var(--primary-brown)" }}>
+            مدیریت کاربران
+          </h2>
+          <p className="text-gray-600 mt-1">مشاهده و مدیریت کاربران سیستم</p>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="relative max-w-md">
+          <MagnifyingGlassIcon className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="جستجو بر اساس نام..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={`${inputStyle} pr-10`}
+          />
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">تصویر</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">نام</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">ایمیل</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">تلفن</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">نقش</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">وضعیت</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">اقدامات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-6">در حال بارگذاری...</td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-6">کاربری یافت نشد</td>
+                </tr>
+              ) : (
+                users.map((u) => (
+                  <tr key={u._id}>
+                    <td className="px-4 py-3">
+                      <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                        {u.image && u.image !== 'default-user.jpg' ? (
+                          <img
+                            src={`${BACKEND_BASE_URL}/public/images/users/${u.image}`}
+                            alt={u.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-amber-600 font-semibold">
+                            {u.name?.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">{u.name}</td>
+                    <td className="px-4 py-3">{u.email}</td>
+                    <td className="px-4 py-3">{u.phone || "-"}</td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                        u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {u.isActive ? 'فعال' : 'غیرفعال'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => {
+                          if (window.confirm("حذف شود؟"))
+                            deleteMutation.mutate(u._id);
+                        }}
+                        className="text-red-600 hover:text-red-900"
+                        title="حذف"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

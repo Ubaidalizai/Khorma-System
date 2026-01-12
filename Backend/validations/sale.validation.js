@@ -97,6 +97,12 @@ const createSaleSchema = Joi.object({
           'number.base': 'Unit price must be a number',
           'number.positive': 'Unit price must be greater than 0',
         }),
+
+        cartonCount: Joi.number().integer().min(0).optional().allow(null).messages({
+          'number.base': 'Carton count must be a number',
+          'number.integer': 'Carton count must be an integer',
+          'number.min': 'Carton count must be 0 or greater',
+        }),
       })
     )
     .min(1)
@@ -154,6 +160,12 @@ const updateSaleSchema = Joi.object({
         unitPrice: Joi.number().positive().precision(2).required().messages({
           'number.base': 'Unit price must be a number',
           'number.positive': 'Unit price must be greater than 0',
+        }),
+
+        cartonCount: Joi.number().integer().min(0).optional().allow(null).messages({
+          'number.base': 'Carton count must be a number',
+          'number.integer': 'Carton count must be an integer',
+          'number.min': 'Carton count must be 0 or greater',
         }),
       })
     )

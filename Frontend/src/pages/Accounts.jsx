@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   PlusIcon,
   PencilIcon,
@@ -29,16 +29,14 @@ import { inputStyle } from "../components/ProductForm";
 import { toast } from "react-toastify";
 import { formatNumber } from "../utilies/helper";
 import { useSubmitLock } from "../hooks/useSubmitLock.js";
-import { usePageState } from "../contexts/PageStateContext.jsx";
 
 const Accounts = () => {
   const navigate = useNavigate();
-  // const [type, setType] = useState("supplier");
-  // const [search, setSearch] = useState("");
-  // const [page, setPage] = useState(1);
-  // const [limit, setLimit] = useState(10);
-  const { type, setType, search, page, setPage, limit, setLimit, setSearch } =
-    usePageState();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [type, setType] = useState(searchParams.get("type") || "supplier");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -125,7 +123,6 @@ const Accounts = () => {
       amount: "",
       description: "",
     });
-    setAccountType(type);
   });
 
   const handleEdit = (acc) => {
@@ -138,7 +135,6 @@ const Accounts = () => {
       openingBalance: acc.openingBalance || 0,
       currency: acc.currency || "AFN",
     });
-    setAccountType(acc.type || type);
   };
 
   const handleDelete = async () => {
@@ -218,6 +214,7 @@ const Accounts = () => {
                 key={t.id}
                 onClick={() => {
                   setType(t.id);
+                  setSearchParams({ type: t.id });
                   setPage(1);
                 }}
                 className={`px-4 py-2 rounded-sm flex items-center gap-2 transition-colors ${
@@ -462,7 +459,7 @@ const Accounts = () => {
               </div>
 
               {/* Reference field - only show for entity accounts */}
-              {!isSystemAccount(watch("type")) && (
+              {!isSystemAccount(watch("type") || type) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     مرجع *
@@ -470,11 +467,11 @@ const Accounts = () => {
                   <select
                     className={inputStyle}
                     {...register("refId", {
-                      required: !isSystemAccount(watch("type")),
+                      required: !isSystemAccount(watch("type") || type),
                     })}
                   >
                     <option value="">انتخاب مرجع</option>
-                    {getReferenceOptions(watch("type")).map((entity) => (
+                    {getReferenceOptions(watch("type") || type).map((entity) => (
                       <option key={entity._id} value={entity._id}>
                         {entity.name}
                       </option>

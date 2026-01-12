@@ -268,7 +268,7 @@ const Inventory = () => {
                         {transfer.product?.name || "N/A"}
                       </TableColumn>
                       <TableColumn>
-                        {toPersianNumber(transfer.quantity)}
+                        {toPersianNumber(transfer.quantity)} {transfer.unit?.name || ""}
                       </TableColumn>
 
                       <TableColumn>

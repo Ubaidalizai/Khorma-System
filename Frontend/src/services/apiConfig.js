@@ -114,7 +114,7 @@ export const API_ENDPOINTS = {
     PROFILE: "/users/profile",
     UPDATEPASSWORD: "/users/updatePassword",
     FORGOTPASSWORD: "/users/forgotPassword",
-    UPDATEUSERS: "users/",
+    UPDATEUSERS: "/users",
   },
 
   // Products

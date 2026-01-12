@@ -92,20 +92,44 @@ exports.getAllStocks = asyncHandler(async (req, res) => {
   // Step 2️⃣ — Fetch paginated stocks (sorted by newest first)
   const stocks = await Stock.find(query)
     .populate('product', 'name')
-    .populate('unit', 'name')
+    .populate('unit', 'name conversion_to_base base_unit')
+    .populate({
+      path: 'unit',
+      populate: {
+        path: 'base_unit',
+        select: 'name'
+      }
+    })
     .sort({ createdAt: -1 }) // Newest first
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
+
+  // Step 3️⃣ — Calculate derived unit quantities
+  const stocksWithDerivedUnits = stocks.map(stock => {
+    const stockObj = stock.toObject();
+    
+    if (stock.unit && stock.unit.conversion_to_base && stock.unit.conversion_to_base > 1) {
+      // Calculate how many derived units (e.g., cartons)
+      const derivedQuantity = Math.floor(stock.quantity / stock.unit.conversion_to_base);
+      
+      stockObj.derivedQuantity = {
+        derivedUnit: derivedQuantity, // e.g., 2 cartons
+        baseUnitName: stock.unit.base_unit?.name || 'pieces' // e.g., "kg" or "pieces"
+      };
+    }
+    
+    return stockObj;
+  });
 
   const total = await Stock.countDocuments(query);
 
   res.status(200).json({
     status: 'success',
-    results: stocks.length,
+    results: stocksWithDerivedUnits.length,
     total,
     page: parseInt(page),
     limit: parseInt(limit),
-    data: stocks,
+    data: stocksWithDerivedUnits,
   });
 });
 

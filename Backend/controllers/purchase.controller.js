@@ -161,9 +161,9 @@ exports.createPurchase = asyncHandler(async (req, res, next) => {
           $inc: { quantity: item.quantity * unit.conversion_to_base },
           $set: {
             expiryDate,
-            purchasePricePerBaseUnit: item.unitPrice / unit.conversion_to_base,
+            purchasePricePerBaseUnit: basePrice,
             batchNumber: batchNum,
-            unit: item.unit,
+            unit: product.baseUnit,
             location: stockLocation,
           },
         },
@@ -462,6 +462,9 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
         const totalPrice = item.unitPrice * item.quantity;
         newTotalAmount += totalPrice;
 
+        // Calculate base price BEFORE using it
+        const basePrice = item.unitPrice / unit.conversion_to_base;
+
         // Add back new stock
         const newBatchNum = product.trackByBatch
           ? (item.batchNumber && item.batchNumber.trim() ? item.batchNumber : `AUTO-${Date.now()}-${product._id}`)
@@ -477,10 +480,9 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
             $inc: { quantity: item.quantity * unit.conversion_to_base },
             $set: {
               expiryDate: item.expiryDate || null,
-              purchasePricePerBaseUnit:
-                item.unitPrice / unit.conversion_to_base,
+              purchasePricePerBaseUnit: basePrice,
               batchNumber: newBatchNum,
-              unit: item.unit,
+              unit: product.baseUnit,
               location: stockLocation,
             },
           },
@@ -488,7 +490,6 @@ exports.updatePurchase = asyncHandler(async (req, res, next) => {
         );
 
         // Update latest purchase price (converted to base)
-        const basePrice = item.unitPrice / unit.conversion_to_base;
         product.latestPurchasePrice = basePrice;
         await product.save({ session });
 
@@ -725,6 +726,12 @@ exports.restorePurchase = asyncHandler(async (req, res, next) => {
     // 1️⃣ Restore Stock Quantities
     for (const item of items) {
       const unit = await Unit.findById(item.unit).session(session);
+      const product = await Product.findById(item.product).session(session);
+      if (!product) throw new AppError('Product not found', 404);
+      
+      // Calculate base price for restore
+      const basePrice = item.unitPrice / unit.conversion_to_base;
+      
       // Use 'DEFAULT' for non-batch-tracked products so we match the original upsert behavior
       const batchNum = item.batchNumber || 'DEFAULT';
       await Stock.findOneAndUpdate(
@@ -737,9 +744,9 @@ exports.restorePurchase = asyncHandler(async (req, res, next) => {
           $inc: { quantity: item.quantity * unit.conversion_to_base },
           $set: {
             expiryDate: item.expiryDate || null,
-            purchasePricePerBaseUnit: item.unitPrice / unit.conversion_to_base,
+            purchasePricePerBaseUnit: basePrice,
             batchNumber: batchNum,
-            unit: item.unit,
+            unit: product.baseUnit,
             location: 'warehouse', // Default to warehouse for restore
           },
         },

@@ -16,32 +16,34 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { product, fromLocation, toLocation, employee, quantity, notes } =
+    const { product, fromLocation, toLocation, employee, quantity, unit, notes } =
       req.body;
 
     if (fromLocation === toLocation)
-      throw new AppError('From and To locations cannot be the same', 400);
+      throw new AppError('مکان مبدا و مقصد نمیتواند یکسان باشد', 400);
 
     if (quantity <= 0)
-      throw new AppError('Quantity must be greater than zero', 400);
+      throw new AppError('تعداد باید بیشتر از صفر باشد', 400);
 
-    // 1️⃣ Handle deduction from source
+    const unitDoc = await Unit.findById(unit).session(session);
+    if (!unitDoc) throw new AppError('واحد نامعتبر است', 400);
+
+    const baseQuantity = quantity * unitDoc.conversion_to_base;
+
     if (fromLocation === 'employee') {
-      // deduct from employee stock
       const empStock = await EmployeeStock.findOne({
         employee,
         product,
         isDeleted: false,
       }).session(session);
 
-      if (!empStock || empStock.quantity_in_hand < quantity) {
-        throw new AppError('Insufficient stock in employee inventory', 400);
+      if (!empStock || empStock.quantity_in_hand < baseQuantity) {
+        throw new AppError('موجودی کافی در انبار کارمند موجود نیست', 400);
       }
 
-      empStock.quantity_in_hand -= quantity;
+      empStock.quantity_in_hand -= baseQuantity;
       await empStock.save({ session });
     } else {
-      // deduct from regular stock (warehouse or store)
       const fromStock = await Stock.findOne({
         product,
         location: fromLocation,
@@ -50,34 +52,30 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
 
       if (!fromStock) {
         throw new AppError(
-          `No stock found for this product in ${fromLocation}`,
+          `موجودی این محصول در ${fromLocation} یافت نشد`,
           404
         );
       }
 
-      if (fromStock.quantity < quantity) {
+      if (fromStock.quantity < baseQuantity) {
         throw new AppError(
-          `Insufficient stock in ${fromLocation}. Available: ${fromStock.quantity}, Requested: ${quantity}`,
+          `موجودی کافی در ${fromLocation} موجود نیست. موجود: ${fromStock.quantity}، درخواستی: ${baseQuantity}`,
           400
         );
       }
 
-      fromStock.quantity -= quantity;
+      fromStock.quantity -= baseQuantity;
       await fromStock.save({ session });
     }
 
-    // 2️⃣ Handle addition to destination
     if (toLocation === 'employee') {
-      // Get source stock details to copy purchasePricePerBaseUnit
       let sourceStock;
       if (fromLocation === 'employee') {
-        // For transfers from employee, find any existing stock for the product to copy details
         sourceStock = await Stock.findOne({
           product,
           isDeleted: false,
         }).session(session);
       } else {
-        // Normal transfer, get from source location
         sourceStock = await Stock.findOne({
           product,
           location: fromLocation,
@@ -85,15 +83,13 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
         }).session(session);
       }
 
-      // Get purchasePricePerBaseUnit from source stock or default to 0
       const purchasePricePerBaseUnit = sourceStock?.purchasePricePerBaseUnit || 0;
       const batchNumber = sourceStock?.batchNumber || 'DEFAULT';
 
-      // add to employee stock with purchasePricePerBaseUnit and batchNumber
-      const empStock = await EmployeeStock.findOneAndUpdate(
+      await EmployeeStock.findOneAndUpdate(
         { employee, product, batchNumber, isDeleted: false },
         { 
-          $inc: { quantity_in_hand: quantity },
+          $inc: { quantity_in_hand: baseQuantity },
           $set: { 
             purchasePricePerBaseUnit: purchasePricePerBaseUnit,
             batchNumber: batchNumber
@@ -102,16 +98,13 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
         { upsert: true, new: true, session }
       );
     } else {
-      // add to store/warehouse
       let sourceStock;
       if (fromLocation === 'employee') {
-        // For transfers from employee, find any existing stock for the product to copy details
         sourceStock = await Stock.findOne({
           product,
           isDeleted: false,
         }).session(session);
       } else {
-        // Normal transfer, get from source location
         sourceStock = await Stock.findOne({
           product,
           location: fromLocation,
@@ -121,11 +114,10 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
 
       if (!sourceStock) {
         if (fromLocation === 'employee') {
-          // If no stock exists, get product details
           const productDoc = await Product.findById(product)
             .populate('unit')
             .session(session);
-          if (!productDoc) throw new AppError('Product not found', 404);
+          if (!productDoc) throw new AppError('محصول یافت نشد', 404);
           sourceStock = {
             product,
             unit: productDoc.unit._id,
@@ -134,11 +126,10 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
             expiryDate: null,
           };
         } else {
-          throw new AppError(`Source stock not found in ${fromLocation}`, 404);
+          throw new AppError(`موجودی مبدا در ${fromLocation} یافت نشد`, 404);
         }
       }
 
-      // Check if destination stock already exists
       const existingToStock = await Stock.findOne({
         product,
         location: toLocation,
@@ -146,12 +137,9 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
       }).session(session);
 
       if (existingToStock) {
-        // Update existing stock with quantity only (preserve existing details)
-        existingToStock.quantity += quantity;
+        existingToStock.quantity += baseQuantity;
         await existingToStock.save({ session });
       } else {
-        // Create new stock record with all details from source
-        // This preserves: unit, batchNumber, purchasePricePerBaseUnit, expiryDate
         await Stock.create(
           [
             {
@@ -161,7 +149,7 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
               purchasePricePerBaseUnit: sourceStock.purchasePricePerBaseUnit,
               expiryDate: sourceStock.expiryDate,
               location: toLocation,
-              quantity: quantity,
+              quantity: baseQuantity,
             },
           ],
           { session }
@@ -169,7 +157,6 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
       }
     }
 
-    // 3️⃣ Log transfer
     const transfer = await StockTransfer.create(
       [
         {
@@ -178,6 +165,7 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
           toLocation,
           employee: employee || null,
           quantity,
+          unit,
           transferredBy: req.user._id,
           notes,
         },
@@ -185,7 +173,6 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
       { session }
     );
 
-    // Audit log
     await AuditLog.create(
       [
         {
@@ -193,7 +180,7 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
           operation: 'INSERT',
           oldData: null,
           newData: transfer[0].toObject(),
-          reason: notes || 'Stock transfer created',
+          reason: notes || 'انتقال موجودی ایجاد شد',
           changedBy: req.user?.name || 'System',
           recordId: transfer[0]._id,
         },
@@ -206,30 +193,28 @@ exports.transferStock = asyncHandler(async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Stock transferred successfully',
+      message: 'موجودی با موفقیت انتقال یافت',
       transfer: transfer[0],
     });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    throw new AppError(err.message || 'Failed to transfer stock', 500);
+    throw new AppError(err.message || 'انتقال موجودی ناموفق بود', 500);
   }
 });
 
-// @desc    Get all stock transfers (with pagination)
-// @route   GET /api/v1/stock-transfers
 exports.getAllStockTransfers = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
 
-  // Filter out soft-deleted transfers
   const query = { isDeleted: { $ne: true } };
 
   const transfers = await StockTransfer.find(query)
     .populate('product', 'name')
-    .populate('employee', 'name') // optional, only if employee transfer
+    .populate('unit', 'name')
+    .populate('employee', 'name')
     .populate('transferredBy', 'name email')
-    .sort({ createdAt: -1 }) // Newest first
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(parseInt(limit));
 
@@ -245,19 +230,18 @@ exports.getAllStockTransfers = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get single transfer
-// @route   GET /api/v1/stock-transfers/:id
 exports.getStockTransfer = asyncHandler(async (req, res) => {
   const transfer = await StockTransfer.findOne({
     _id: req.params.id,
     isDeleted: { $ne: true }
   })
     .populate('product', 'name')
+    .populate('unit', 'name')
     .populate('employee', 'name')
     .populate('transferredBy', 'name email');
 
   if (!transfer) {
-    throw new AppError('Stock transfer not found', 404);
+    throw new AppError('انتقال موجودی یافت نشد', 404);
   }
 
   res.status(200).json({
@@ -266,8 +250,6 @@ exports.getStockTransfer = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Update a stock transfer (rollback-safe)
-// @route   PATCH /api/v1/stock-transfers/:id
 exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -282,26 +264,23 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
       employee,
       reason,
     } = req.body;
-    const transfer = await StockTransfer.findById(req.params.id).session(
-      session
-    );
+    const transfer = await StockTransfer.findById(req.params.id)
+      .populate('unit', 'conversion_to_base')
+      .session(session);
 
     if (!transfer || transfer.isDeleted)
-      throw new AppError('Stock transfer not found', 404);
+      throw new AppError('انتقال موجودی یافت نشد', 404);
 
-    // take snapshot for audit
     const oldData = { ...transfer.toObject() };
+    const oldBaseQuantity = transfer.quantity * (transfer.unit?.conversion_to_base || 1);
 
-    // Reverse previous transfer effect first
     if (transfer.toLocation === 'employee') {
-      // Try to find employee stock by batchNumber, fallback to any batch
       let empStock = await EmployeeStock.findOne({
         employee: transfer.employee,
         product: transfer.product,
         batchNumber: transfer.batchNumber || 'DEFAULT',
       }).session(session);
 
-      // If not found by batch, try to find any batch for this employee/product
       if (!empStock) {
         empStock = await EmployeeStock.findOne({
           employee: transfer.employee,
@@ -310,19 +289,18 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
       }
 
       if (empStock) {
-        empStock.quantity_in_hand -= transfer.quantity;
+        empStock.quantity_in_hand -= oldBaseQuantity;
         await empStock.save({ session });
       }
     } else {
       await Stock.findOneAndUpdate(
         { product: transfer.product, location: transfer.toLocation },
-        { $inc: { quantity: -transfer.quantity } },
+        { $inc: { quantity: -oldBaseQuantity } },
         { session }
       );
     }
 
     if (transfer.fromLocation === 'employee') {
-      // Get purchasePricePerBaseUnit from destination stock or default to 0
       const destStock = await Stock.findOne({
         product: transfer.product,
         location: transfer.toLocation,
@@ -335,7 +313,7 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
       await EmployeeStock.findOneAndUpdate(
         { employee: transfer.employee, product: transfer.product, batchNumber, isDeleted: false },
         { 
-          $inc: { quantity_in_hand: transfer.quantity },
+          $inc: { quantity_in_hand: oldBaseQuantity },
           $set: { 
             purchasePricePerBaseUnit: purchasePricePerBaseUnit,
             batchNumber: batchNumber
@@ -346,26 +324,24 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
     } else {
       await Stock.findOneAndUpdate(
         { product: transfer.product, location: transfer.fromLocation },
-        { $inc: { quantity: transfer.quantity } },
+        { $inc: { quantity: oldBaseQuantity } },
         { session }
       );
     }
 
-    // Apply new transfer effect
     const updatedProduct = product || transfer.product;
     const updatedEmployee = employee || transfer.employee;
     const newQty = quantity || transfer.quantity;
     const newFrom = fromLocation || transfer.fromLocation;
     const newTo = toLocation || transfer.toLocation;
 
-    // Deduct from new source
     if (newFrom === 'employee') {
       const empStock = await EmployeeStock.findOne({
         employee: updatedEmployee,
         product: updatedProduct,
       }).session(session);
       if (!empStock || empStock.quantity_in_hand < newQty) {
-        throw new AppError('Insufficient employee stock for update', 400);
+        throw new AppError('موجودی کافی در انبار کارمند برای بروزرسانی موجود نیست', 400);
       }
       empStock.quantity_in_hand -= newQty;
       await empStock.save({ session });
@@ -375,24 +351,20 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
         location: newFrom,
       }).session(session);
       if (!srcStock || srcStock.quantity < newQty) {
-        throw new AppError('Insufficient stock in source location', 400);
+        throw new AppError('موجودی کافی در مکان مبدا موجود نیست', 400);
       }
       srcStock.quantity -= newQty;
       await srcStock.save({ session });
     }
 
-    // Add to new destination
     if (newTo === 'employee') {
-      // Get source stock details to copy purchasePricePerBaseUnit
       let sourceStock;
       if (newFrom === 'employee') {
-        // For transfers from employee, find any existing stock for the product to copy details
         sourceStock = await Stock.findOne({
           product: updatedProduct,
           isDeleted: false,
         }).session(session);
       } else {
-        // Normal transfer, get from source location
         sourceStock = await Stock.findOne({
           product: updatedProduct,
           location: newFrom,
@@ -400,7 +372,6 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
         }).session(session);
       }
 
-      // Get purchasePricePerBaseUnit from source stock or default to 0
       const purchasePricePerBaseUnit = sourceStock?.purchasePricePerBaseUnit || 0;
       const batchNumber = sourceStock?.batchNumber || 'DEFAULT';
 
@@ -416,7 +387,6 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
         { upsert: true, session }
       );
     } else {
-      // Check if destination stock already exists
       const existingToStock = await Stock.findOne({
         product: updatedProduct,
         location: newTo,
@@ -424,20 +394,16 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
       }).session(session);
 
       if (existingToStock) {
-        // Update existing stock with quantity only
         existingToStock.quantity += newQty;
         await existingToStock.save({ session });
       } else {
-        // Get source stock details to copy
         let sourceStock;
         if (newFrom === 'employee') {
-          // For transfers from employee, find any existing stock for the product to copy details
           sourceStock = await Stock.findOne({
             product: updatedProduct,
             isDeleted: false,
           }).session(session);
         } else {
-          // Normal transfer, get from source location
           sourceStock = await Stock.findOne({
             product: updatedProduct,
             location: newFrom,
@@ -446,7 +412,6 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
         }
 
         if (sourceStock) {
-          // Create new stock record with all details from source
           await Stock.create(
             [
               {
@@ -463,11 +428,10 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
           );
         } else {
           if (newFrom === 'employee') {
-            // If no stock exists, get product details
             const productDoc = await Product.findById(updatedProduct)
               .populate('unit')
               .session(session);
-            if (!productDoc) throw new AppError('Product not found', 404);
+            if (!productDoc) throw new AppError('محصول یافت نشد', 404);
             sourceStock = {
               product: updatedProduct,
               unit: productDoc.unit._id,
@@ -491,7 +455,6 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
               { session }
             );
           } else {
-            // Fallback: create with basic info
             await Stock.findOneAndUpdate(
               { product: updatedProduct, location: newTo },
               { $inc: { quantity: newQty } },
@@ -502,7 +465,6 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
       }
     }
 
-    // Update transfer record
     transfer.product = updatedProduct;
     transfer.employee = updatedEmployee;
     transfer.fromLocation = newFrom;
@@ -511,7 +473,6 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
     transfer.notes = notes || transfer.notes;
     await transfer.save({ session });
 
-    // Audit log
     await AuditLog.create(
       [
         {
@@ -520,7 +481,7 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
           operation: 'UPDATE',
           oldData,
           newData: transfer.toObject(),
-          reason: reason || 'Stock transfer updated',
+          reason: reason || 'انتقال موجودی بروزرسانی شد',
           changedBy: req.user?.name || 'System',
         },
       ],
@@ -532,41 +493,37 @@ exports.updateStockTransfer = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Stock transfer updated successfully',
+      message: 'انتقال موجودی با موفقیت بروزرسانی شد',
       transfer,
     });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    throw new AppError(err.message || 'Failed to update stock transfer', 500);
+    throw new AppError(err.message || 'بروزرسانی انتقال موجودی ناموفق بود', 500);
   }
 });
 
-// @desc    Soft delete a stock transfer (rollback-safe)
-// @route   DELETE /api/v1/stock-transfers/:id
 exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const transfer = await StockTransfer.findById(req.params.id).session(
-      session
-    );
+    const transfer = await StockTransfer.findById(req.params.id)
+      .populate('unit', 'conversion_to_base')
+      .session(session);
     if (!transfer || transfer.isDeleted)
-      throw new AppError('Stock transfer not found', 404);
+      throw new AppError('انتقال موجودی یافت نشد', 404);
 
     const oldData = { ...transfer.toObject() };
+    const baseQuantity = transfer.quantity * (transfer.unit?.conversion_to_base || 1);
 
-    // Reverse stock movement
     if (transfer.toLocation === 'employee') {
-      // Try to find employee stock by batchNumber, fallback to any batch
       let empStock = await EmployeeStock.findOne({
         employee: transfer.employee,
         product: transfer.product,
         batchNumber: transfer.batchNumber || 'DEFAULT',
       }).session(session);
 
-      // If not found by batch, try to find any batch for this employee/product
       if (!empStock) {
         empStock = await EmployeeStock.findOne({
           employee: transfer.employee,
@@ -574,13 +531,13 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
         }).session(session);
       }
 
-      if (!empStock || empStock.quantity_in_hand < transfer.quantity) {
+      if (!empStock || empStock.quantity_in_hand < baseQuantity) {
         throw new AppError(
-          'Insufficient employee stock to delete transfer',
+          'موجودی کافی در انبار کارمند برای حذف انتقال موجود نیست',
           400
         );
       }
-      empStock.quantity_in_hand -= transfer.quantity;
+      empStock.quantity_in_hand -= baseQuantity;
       await empStock.save({ session });
     } else {
       const destStock = await Stock.findOne({
@@ -588,18 +545,17 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
         location: transfer.toLocation,
       }).session(session);
 
-      if (!destStock || destStock.quantity < transfer.quantity) {
+      if (!destStock || destStock.quantity < baseQuantity) {
         throw new AppError(
-          'Insufficient destination stock to delete transfer',
+          'موجودی کافی در مقصد برای حذف انتقال موجود نیست',
           400
         );
       }
-      destStock.quantity -= transfer.quantity;
+      destStock.quantity -= baseQuantity;
       await destStock.save({ session });
     }
 
     if (transfer.fromLocation === 'employee') {
-      // Get purchasePricePerBaseUnit from destination stock or default to 0
       const destStock = await Stock.findOne({
         product: transfer.product,
         location: transfer.toLocation,
@@ -612,7 +568,7 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
       await EmployeeStock.findOneAndUpdate(
         { employee: transfer.employee, product: transfer.product, batchNumber, isDeleted: false },
         { 
-          $inc: { quantity_in_hand: transfer.quantity },
+          $inc: { quantity_in_hand: baseQuantity },
           $set: { 
             purchasePricePerBaseUnit: purchasePricePerBaseUnit,
             batchNumber: batchNumber
@@ -623,16 +579,14 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
     } else {
       await Stock.findOneAndUpdate(
         { product: transfer.product, location: transfer.fromLocation },
-        { $inc: { quantity: transfer.quantity } },
+        { $inc: { quantity: baseQuantity } },
         { upsert: true, session }
       );
     }
 
-    // Mark deleted
     transfer.isDeleted = true;
     await transfer.save({ session });
 
-    // Audit log
     await AuditLog.create(
       [
         {
@@ -641,7 +595,7 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
           operation: 'DELETE',
           oldData,
           newData: null,
-          reason: req.body.reason || 'Stock transfer soft deleted',
+          reason: req.body.reason || 'انتقال موجودی حذف شد',
           changedBy: req.user?.name || 'System',
         },
       ],
@@ -653,47 +607,44 @@ exports.softDeleteStockTransfer = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Stock transfer deleted successfully',
+      message: 'انتقال موجودی با موفقیت حذف شد',
     });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    throw new AppError(err.message || 'Failed to delete stock transfer', 500);
+    throw new AppError(err.message || 'حذف انتقال موجودی ناموفق بود', 500);
   }
 });
 
-// @desc    Restore a soft-deleted stock transfer (rollback-safe)
-// @route   PATCH /api/v1/stock-transfers/:id/restore
 exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const transfer = await StockTransfer.findById(req.params.id).session(
-      session
-    );
+    const transfer = await StockTransfer.findById(req.params.id)
+      .populate('unit', 'conversion_to_base')
+      .session(session);
     if (!transfer || !transfer.isDeleted)
-      throw new AppError('Stock transfer not found or not deleted', 404);
+      throw new AppError('انتقال موجودی یافت نشد یا حذف نشده است', 404);
 
     const oldData = { ...transfer.toObject() };
-
     const { product, fromLocation, toLocation, quantity, employee } = transfer;
+    const baseQuantity = quantity * (transfer.unit?.conversion_to_base || 1);
 
-    // Deduct again from the source (re-apply original movement)
     if (fromLocation === 'employee') {
       const empStock = await EmployeeStock.findOne({
         employee,
         product,
       }).session(session);
 
-      if (!empStock || empStock.quantity_in_hand < quantity) {
+      if (!empStock || empStock.quantity_in_hand < baseQuantity) {
         throw new AppError(
-          'Insufficient employee stock to restore transfer',
+          'موجودی کافی در انبار کارمند برای بازیابی انتقال موجود نیست',
           400
         );
       }
 
-      empStock.quantity_in_hand -= quantity;
+      empStock.quantity_in_hand -= baseQuantity;
       await empStock.save({ session });
     } else {
       const sourceStock = await Stock.findOne({
@@ -701,34 +652,31 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
         location: fromLocation,
       }).session(session);
 
-      if (!sourceStock || sourceStock.quantity < quantity) {
+      if (!sourceStock || sourceStock.quantity < baseQuantity) {
         throw new AppError(
-          'Insufficient source stock to restore transfer',
+          'موجودی کافی در مبدا برای بازیابی انتقال موجود نیست',
           400
         );
       }
 
-      sourceStock.quantity -= quantity;
+      sourceStock.quantity -= baseQuantity;
       await sourceStock.save({ session });
     }
 
-    // Add again to the destination
     if (toLocation === 'employee') {
-      // Get source stock details to copy purchasePricePerBaseUnit
       const sourceStock = await Stock.findOne({
         product,
         location: fromLocation,
         isDeleted: false,
       }).session(session);
 
-      // Get purchasePricePerBaseUnit from source stock or default to 0
       const purchasePricePerBaseUnit = sourceStock?.purchasePricePerBaseUnit || 0;
       const batchNumber = sourceStock?.batchNumber || 'DEFAULT';
 
       await EmployeeStock.findOneAndUpdate(
         { employee, product, batchNumber, isDeleted: false },
         { 
-          $inc: { quantity_in_hand: quantity },
+          $inc: { quantity_in_hand: baseQuantity },
           $set: { 
             purchasePricePerBaseUnit: purchasePricePerBaseUnit,
             batchNumber: batchNumber
@@ -737,7 +685,6 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
         { upsert: true, session }
       );
     } else {
-      // Check if destination stock already exists
       const existingToStock = await Stock.findOne({
         product,
         location: toLocation,
@@ -745,11 +692,9 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
       }).session(session);
 
       if (existingToStock) {
-        // Update existing stock with quantity only
-        existingToStock.quantity += quantity;
+        existingToStock.quantity += baseQuantity;
         await existingToStock.save({ session });
       } else {
-        // Get source stock details to copy
         const sourceStock = await Stock.findOne({
           product,
           location: fromLocation,
@@ -757,7 +702,6 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
         }).session(session);
 
         if (sourceStock) {
-          // Create new stock record with all details from source
           await Stock.create(
             [
               {
@@ -767,27 +711,24 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
                 purchasePricePerBaseUnit: sourceStock.purchasePricePerBaseUnit,
                 expiryDate: sourceStock.expiryDate,
                 location: toLocation,
-                quantity: quantity,
+                quantity: baseQuantity,
               },
             ],
             { session }
           );
         } else {
-          // Fallback: create with basic info
           await Stock.findOneAndUpdate(
             { product, location: toLocation },
-            { $inc: { quantity } },
+            { $inc: { quantity: baseQuantity } },
             { upsert: true, session }
           );
         }
       }
     }
 
-    // Restore the record
     transfer.isDeleted = false;
     await transfer.save({ session });
 
-    // Audit log
     await AuditLog.create(
       [
         {
@@ -796,7 +737,7 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
           operation: 'UPDATE',
           oldData: null,
           newData: transfer.toObject(),
-          reason: 'Stock transfer restored',
+          reason: 'انتقال موجودی بازیابی شد',
           changedBy: req.user?.name || 'System',
         },
       ],
@@ -808,32 +749,30 @@ exports.restoreStockTransfer = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Stock transfer restored successfully',
+      message: 'انتقال موجودی با موفقیت بازیابی شد',
       transfer,
     });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    throw new AppError(err.message || 'Failed to restore stock transfer', 500);
+    throw new AppError(err.message || 'بازیابی انتقال موجودی ناموفق بود', 500);
   }
 });
 
-// @desc Rollback a stock transfer (reverse)
-// @route DELETE /api/v1/stock-transfers/:id
 exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const transfer = await StockTransfer.findById(req.params.id).session(
-      session
-    );
+    const transfer = await StockTransfer.findById(req.params.id)
+      .populate('unit', 'conversion_to_base')
+      .session(session);
     if (!transfer || transfer.isDeleted)
-      throw new AppError('Transfer not found', 404);
+      throw new AppError('انتقال یافت نشد', 404);
 
     const { product, fromLocation, toLocation, quantity, employee } = transfer;
+    const baseQuantity = quantity * (transfer.unit?.conversion_to_base || 1);
 
-    // 🔹 STEP 1: Check destination has enough to reverse
     if (toLocation === 'employee') {
       const empStock = await EmployeeStock.findOne({
         employee,
@@ -841,14 +780,14 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
         isDeleted: false,
       }).session(session);
 
-      if (!empStock || empStock.quantity_in_hand < quantity) {
+      if (!empStock || empStock.quantity_in_hand < baseQuantity) {
         throw new AppError(
-          'Cannot rollback — insufficient employee stock',
+          'امکان برگشت وجود ندارد - موجودی کافی در انبار کارمند موجود نیست',
           400
         );
       }
 
-      empStock.quantity_in_hand -= quantity;
+      empStock.quantity_in_hand -= baseQuantity;
       await empStock.save({ session });
     } else {
       const toStock = await Stock.findOne({
@@ -857,34 +796,31 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
         isDeleted: false,
       }).session(session);
 
-      if (!toStock || toStock.quantity < quantity) {
+      if (!toStock || toStock.quantity < baseQuantity) {
         throw new AppError(
-          `Cannot rollback — insufficient ${toLocation} stock`,
+          `امکان برگشت وجود ندارد - موجودی کافی در ${toLocation} موجود نیست`,
           400
         );
       }
 
-      toStock.quantity -= quantity;
+      toStock.quantity -= baseQuantity;
       await toStock.save({ session });
     }
 
-    // 🔹 STEP 2: Add quantity back to source
     if (fromLocation === 'employee') {
-      // Get destination stock details to copy purchasePricePerBaseUnit (since we're rolling back)
       const destStock = await Stock.findOne({
         product,
         location: toLocation,
         isDeleted: false,
       }).session(session);
 
-      // Get purchasePricePerBaseUnit from destination stock or default to 0
       const purchasePricePerBaseUnit = destStock?.purchasePricePerBaseUnit || 0;
       const batchNumber = destStock?.batchNumber || 'DEFAULT';
 
       await EmployeeStock.findOneAndUpdate(
         { employee, product, batchNumber, isDeleted: false },
         { 
-          $inc: { quantity_in_hand: quantity },
+          $inc: { quantity_in_hand: baseQuantity },
           $set: { 
             purchasePricePerBaseUnit: purchasePricePerBaseUnit,
             batchNumber: batchNumber
@@ -893,7 +829,6 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
         { upsert: true, session }
       );
     } else {
-      // Check if source stock already exists
       const existingFromStock = await Stock.findOne({
         product,
         location: fromLocation,
@@ -901,11 +836,9 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
       }).session(session);
 
       if (existingFromStock) {
-        // Update existing stock with quantity only
-        existingFromStock.quantity += quantity;
+        existingFromStock.quantity += baseQuantity;
         await existingFromStock.save({ session });
       } else {
-        // Get destination stock details to copy (since we're rolling back)
         const destStock = await Stock.findOne({
           product,
           location: toLocation,
@@ -913,7 +846,6 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
         }).session(session);
 
         if (destStock) {
-          // Create new stock record with all details from destination
           await Stock.create(
             [
               {
@@ -923,27 +855,24 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
                 purchasePricePerBaseUnit: destStock.purchasePricePerBaseUnit,
                 expiryDate: destStock.expiryDate,
                 location: fromLocation,
-                quantity: quantity,
+                quantity: baseQuantity,
               },
             ],
             { session }
           );
         } else {
-          // Fallback: create with basic info
           await Stock.findOneAndUpdate(
             { product, location: fromLocation, isDeleted: false },
-            { $inc: { quantity } },
+            { $inc: { quantity: baseQuantity } },
             { upsert: true, session }
           );
         }
       }
     }
 
-    // 🔹 STEP 3: Mark as rolled back
     transfer.isDeleted = true;
     await transfer.save({ session });
 
-    // 🔹 STEP 4: Audit log
     await AuditLog.create(
       [
         {
@@ -952,7 +881,7 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
           operation: 'DELETE',
           oldData: transfer,
           newData: null,
-          reason: 'Stock transfer rolled back',
+          reason: 'انتقال موجودی برگشت داده شد',
           changedBy: req.user?.name || 'System',
         },
       ],
@@ -964,11 +893,11 @@ exports.rollbackStockTransfer = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Stock transfer rolled back successfully',
+      message: 'انتقال موجودی با موفقیت برگشت داده شد',
     });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    throw new AppError(err.message || 'Failed to rollback transfer', 500);
+    throw new AppError(err.message || 'برگشت انتقال ناموفق بود', 500);
   }
 });

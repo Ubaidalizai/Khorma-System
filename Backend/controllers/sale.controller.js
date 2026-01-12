@@ -296,6 +296,7 @@ exports.createSale = asyncHandler(async (req, res, next) => {
             batchesUsed,
             batchNumber:
               batchesUsed.length === 1 ? batchesUsed[0].batchNumber : 'MULTI',
+            cartonCount: item.cartonCount || undefined,
           },
         ],
         { session }

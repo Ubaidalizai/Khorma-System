@@ -28,6 +28,8 @@ const UnitManagement = () => {
     description: "",
     conversion_to_base: 1,
     is_base_unit: false,
+    base_unit: "",
+    unit_type: "",
   });
 
   const { data: units, isLoading, error, refetch } = useUnits();
@@ -75,6 +77,8 @@ const UnitManagement = () => {
       description: "",
       conversion_to_base: 1,
       is_base_unit: false,
+      base_unit: "",
+      unit_type: "",
     });
   };
 
@@ -85,6 +89,8 @@ const UnitManagement = () => {
       description: unit.description || "",
       conversion_to_base: unit.conversion_to_base || 1,
       is_base_unit: unit.is_base_unit || false,
+      base_unit: unit.base_unit?._id || "",
+      unit_type: unit.unit_type || "",
     });
     setIsModalOpen(true);
   };
@@ -100,6 +106,8 @@ const UnitManagement = () => {
       description: "",
       conversion_to_base: 1,
       is_base_unit: false,
+      base_unit: "",
+      unit_type: "",
     });
     setIsModalOpen(true);
   };
@@ -193,13 +201,16 @@ const UnitManagement = () => {
                   نام واحد
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  توضیحات
+                  نوع واحد
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  واحد پایه
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ضریب تبدیل
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  نوع واحد
+                  حالت
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   عملیات
@@ -210,7 +221,7 @@ const UnitManagement = () => {
               {filteredUnits.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="6"
                     className="px-6 py-12 text-center text-gray-500"
                   >
                     <ScaleIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
@@ -227,17 +238,30 @@ const UnitManagement = () => {
                           <div className="text-sm font-medium text-gray-900">
                             {unit.name}
                           </div>
+                          <div className="text-xs text-gray-500">
+                            {unit.description || "-"}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      <div className="max-w-xs truncate">
-                        {unit.description || "-"}
-                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        unit.unit_type === 'weight' ? 'bg-blue-100 text-blue-800' :
+                        unit.unit_type === 'count' ? 'bg-green-100 text-green-800' :
+                        unit.unit_type === 'volume' ? 'bg-purple-100 text-purple-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {unit.unit_type === 'weight' ? 'وزن' :
+                         unit.unit_type === 'count' ? 'تعداد' :
+                         unit.unit_type === 'volume' ? 'حجم' : unit.unit_type || '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {unit.base_unit?.name || (unit.is_base_unit ? 'خودش' : '-')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {unit.conversion_to_base}
+                        {unit.conversion_to_base} {unit.base_unit?.name || ''}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -312,44 +336,105 @@ const UnitManagement = () => {
 
               <form
                 onSubmit={handleSubmit}
-                className="space-y-2 grid grid-cols-2 gap-x-2"
+                className="space-y-3"
               >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    نام واحد *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className={inputStyle}
-                    placeholder="مثال: کیلوگرم، کارتن، بسته"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      نام واحد *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className={inputStyle}
+                      placeholder="مثال: کیلوگرم، کارتن، بسته"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      نوع واحد *
+                    </label>
+                    <select
+                      name="unit_type"
+                      value={formData.unit_type}
+                      onChange={handleInputChange}
+                      required
+                      className={inputStyle}
+                    >
+                      <option value="">انتخاب نوع واحد</option>
+                      <option value="weight">وزن</option>
+                      <option value="count">تعداد</option>
+                      <option value="volume">حجم</option>
+                      <option value="length">طول</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ضریب تبدیل به واحد پایه *
-                  </label>
+                <div className="flex items-center">
                   <input
-                    type="number"
-                    name="conversion_to_base"
-                    value={formData.conversion_to_base}
+                    type="checkbox"
+                    name="is_base_unit"
+                    checked={formData.is_base_unit}
                     onChange={handleInputChange}
-                    min="0.0001"
-                    step="0.0001"
-                    required
-                    className={inputStyle}
-                    placeholder="1"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    برای واحد پایه: 1، برای واحدهای فرعی: تعداد واحدهای فرعی در
-                    یک واحد پایه
-                  </p>
+                  <label className="mr-2 block text-sm text-gray-700">
+                    این واحد، واحد پایه است
+                  </label>
                 </div>
-                <div className=" col-span-2">
+
+                {!formData.is_base_unit && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        واحد پایه *
+                      </label>
+                      <select
+                        name="base_unit"
+                        value={formData.base_unit}
+                        onChange={handleInputChange}
+                        required={!formData.is_base_unit}
+                        className={inputStyle}
+                      >
+                        <option value="">انتخاب واحد پایه</option>
+                        {units?.data?.filter(u => u.is_base_unit && u.unit_type === formData.unit_type).map(unit => (
+                          <option key={unit._id} value={unit._id}>{unit.name}</option>
+                        ))}
+                      </select>
+                      {formData.unit_type && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          واحدهای پایه موجود: {units?.data?.filter(u => u.is_base_unit && u.unit_type === formData.unit_type).length}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        ضریب تبدیل *
+                      </label>
+                      <input
+                        type="number"
+                        name="conversion_to_base"
+                        value={formData.conversion_to_base}
+                        onChange={handleInputChange}
+                        min="0.0001"
+                        step="0.0001"
+                        required
+                        className={inputStyle}
+                        placeholder="10"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        مثال: 1 کارتن = 10 قطعه
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     توضیحات
                   </label>
@@ -361,18 +446,6 @@ const UnitManagement = () => {
                     className={inputStyle}
                     placeholder="توضیحات واحد (اختیاری)"
                   />
-                </div>
-                <div className="flex col-span-2 items-center">
-                  <input
-                    type="checkbox"
-                    name="is_base_unit"
-                    checked={formData.is_base_unit}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label className="mr-2 block text-sm text-gray-700">
-                    این واحد، واحد پایه است
-                  </label>
                 </div>
 
                 {formData.is_base_unit && (

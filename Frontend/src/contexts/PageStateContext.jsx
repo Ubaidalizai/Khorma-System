@@ -6,7 +6,11 @@ const PageStateContext = createContext();
 // Custom hook to use the context
 // eslint-disable-next-line react-refresh/only-export-components
 export const usePageState = () => {
-  return useContext(PageStateContext);
+  const context = useContext(PageStateContext);
+  if (!context) {
+    throw new Error('usePageState must be used within a PageStateProvider');
+  }
+  return context;
 };
 
 // Provider component to wrap around your page

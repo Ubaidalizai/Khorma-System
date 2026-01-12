@@ -81,9 +81,13 @@ app.use(
 );
 
 // Configure CORS middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173', 'http://localhost:3000'];
+
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], // Frontend URLs
+    origin: allowedOrigins,
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );

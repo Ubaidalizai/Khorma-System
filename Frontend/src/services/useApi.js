@@ -991,10 +991,10 @@ export const useDeleteEmployee = () => {
 };
 
 // Units
-export const useUnits = () => {
+export const useUnits = (params = {}) => {
   return useQuery({
-    queryKey: ["allUnits"],
-    queryFn: fetchUnits,
+    queryKey: ["allUnits", params],
+    queryFn: () => fetchUnits(params),
   });
 };
 

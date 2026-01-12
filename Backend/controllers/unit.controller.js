@@ -1,32 +1,42 @@
 const Unit = require('../models/unit.model.js');
 const asyncHandler = require('../middlewares/asyncHandler.js');
-const AppError = require('../utils/appError.js');
+const AppError = require('../utils/AppError.js');
 
 // @desc    Create new unit
 // @route   POST /api/v1/unit
 // @access  Private/Admin
 const createUnit = asyncHandler(async (req, res, next) => {
-  const { name, description, conversion_to_base, is_base_unit } = req.body;
+  const { name, description, conversion_to_base, is_base_unit, base_unit, unit_type } = req.body;
 
   const unitExists = await Unit.findOne({ name, isDeleted: false });
   if (unitExists) {
     throw new AppError('Unit with this name already exists', 400);
   }
 
-  // If this is marked as base unit, ensure conversion_to_base is 1
-  if (is_base_unit && conversion_to_base !== 1) {
-    throw new AppError(
-      'Base unit must have conversion_to_base equal to 1',
-      400
-    );
+  // If this is marked as base unit, ensure conversion_to_base is 1 and no base_unit
+  if (is_base_unit) {
+    if (conversion_to_base !== 1) {
+      throw new AppError('Base unit must have conversion_to_base equal to 1', 400);
+    }
+    if (base_unit) {
+      throw new AppError('Base unit cannot have a base_unit reference', 400);
+    }
   }
 
-  // If this is not a base unit, ensure conversion_to_base is provided and > 0
-  if (!is_base_unit && (!conversion_to_base || conversion_to_base <= 0)) {
-    throw new AppError(
-      'Non-base unit must have conversion_to_base greater than 0',
-      400
-    );
+  // If this is not a base unit, ensure conversion_to_base and base_unit are provided
+  if (!is_base_unit) {
+    if (!conversion_to_base || conversion_to_base <= 0) {
+      throw new AppError('Non-base unit must have conversion_to_base greater than 0', 400);
+    }
+    if (!base_unit) {
+      throw new AppError('Non-base unit must have a base_unit reference', 400);
+    }
+    
+    // Verify base_unit exists and is actually a base unit
+    const baseUnitDoc = await Unit.findById(base_unit);
+    if (!baseUnitDoc || !baseUnitDoc.is_base_unit) {
+      throw new AppError('base_unit must reference a valid base unit', 400);
+    }
   }
 
   const unit = await Unit.create({
@@ -34,6 +44,8 @@ const createUnit = asyncHandler(async (req, res, next) => {
     description,
     conversion_to_base: conversion_to_base || 1,
     is_base_unit: is_base_unit || false,
+    base_unit: is_base_unit ? undefined : base_unit,
+    unit_type
   });
 
   res.status(201).json({
@@ -47,10 +59,11 @@ const createUnit = asyncHandler(async (req, res, next) => {
 // @access  Private/Admin
 const getAllUnits = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
+  const limit = Number(req.query.limit) || 1000; // Increased default for dropdown usage
   const skip = (page - 1) * limit;
 
   const Units = await Unit.find({ isDeleted: false })
+    .populate('base_unit', 'name is_base_unit')
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
@@ -76,7 +89,7 @@ const getUnit = asyncHandler(async (req, res, next) => {
   const unit = await Unit.findOne({
     _id: req.params.id,
     isDeleted: false,
-  });
+  }).populate('base_unit', 'name is_base_unit');
 
   if (!unit) {
     throw new AppError('Unit not found', 404);

@@ -31,6 +31,11 @@ const stockTransferSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
+    unit: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Unit',
+      required: true,
+    },
     transferDate: {
       type: Date,
       default: Date.now,

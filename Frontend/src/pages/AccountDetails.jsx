@@ -178,6 +178,19 @@ const AccountDetails = () => {
     setEndDate(iso || "");
   };
 
+  const handleBackClick = () => {
+    const accountTypeMap = {
+      supplier: "supplier",
+      customer: "customer",
+      employee: "employee",
+      cashier: "cashier",
+      safe: "safe",
+      saraf: "saraf",
+    };
+    const typeParam = accountTypeMap[accountType] || "supplier";
+    navigate(`/accounts?type=${typeParam}`);
+  };
+
   const isInitialLoading = isLoading && !ledgerData;
 
   if (isInitialLoading) {
@@ -214,7 +227,7 @@ const AccountDetails = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate("/accounts")}
+            onClick={handleBackClick}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeftIcon className="h-6 w-6 rotate-180 text-gray-600" />

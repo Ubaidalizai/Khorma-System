@@ -39,6 +39,7 @@ const productHeader = [
   { title: "واحد" },
   { title: "Batch" },
   { title: "تعداد" },
+  { title: "تعداد کارتن" },
   { title: "قیمت یک" },
   { title: "مجموع" },
 ];
@@ -260,8 +261,9 @@ function Sale({ getBillTypeColor, getPaymentStatusColor }) {
                       <TableRow key={index}>
                         <TableColumn>{item.product}</TableColumn>
                         <TableColumn>{item.unit}</TableColumn>
-                        <TableColumn>{item.quantity}</TableColumn>
                         <TableColumn>{item.batchNumber}</TableColumn>
+                        <TableColumn>{item.quantity}</TableColumn>
+                        <TableColumn>{item.cartonCount || "-"}</TableColumn>
                         <TableColumn>{item.unitPrice}</TableColumn>
                         <TableColumn>{item.totalPrice}</TableColumn>
                       </TableRow>

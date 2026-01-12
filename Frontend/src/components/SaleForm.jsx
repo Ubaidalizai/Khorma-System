@@ -12,6 +12,7 @@ import {
   useUnits,
 } from "../services/useApi";
 import { formatCurrency, normalizeDateToIso } from "../utilies/helper";
+import { formatUnitDisplay, formatPurchasePriceDisplay } from "../utilies/unitHelper";
 import JalaliDatePicker from "./JalaliDatePicker";
 import Select from "./Select";
 import Table from "./Table";
@@ -22,10 +23,10 @@ import TableRow from "./TableRow";
 
 const productHeader = [
   { title: "محصول" },
-  { title: "واحد" },
+  { title: "تعداد (واحد)" },
   { title: "نمبر بچ" },
   { title: "تاریخ انقضا" },
-  { title: "تعداد" },
+  { title: "تعداد کارتن" },
   { title: "قیمت واحد" },
   { title: "قیمت مجموعی" },
   { title: "عملیات" },
@@ -53,6 +54,7 @@ function SaleForm({
     quantity: null,
     unitPrice: null,
     expiryDate: "",
+    cartonCount: null,
   });
   const [saleType, setSaleType] = useState("customer"); // "customer", "employee", "walkin"
   const [loading, setLoading] = useState(false);
@@ -167,16 +169,74 @@ function SaleForm({
   );
   const batches = Array.isArray(batchesData) ? batchesData : [];
 
+  // Filter units based on selected product
+  const availableUnits = React.useMemo(() => {
+    if (!currentItem?.product || !units?.data || !productsData?.data) return [];
+
+    const selectedProduct = productsData.data.find((p) => p._id === currentItem.product);
+    if (!selectedProduct) return [];
+
+    // Find the unit assigned to the product
+    const productUnit = units.data.find((u) =>
+      u._id === selectedProduct.baseUnit?._id || u._id === selectedProduct.baseUnit
+    );
+
+    if (!productUnit) return [];
+
+    // If product unit is a base unit, find all derived units
+    if (productUnit.is_base_unit) {
+      const derivedUnits = units.data.filter((u) =>
+        (u.base_unit?._id === productUnit._id || u.base_unit === productUnit._id) && u._id !== productUnit._id
+      );
+      return [productUnit, ...derivedUnits];
+    }
+
+    // If product unit is derived, find its base unit and all siblings
+    const baseUnit = units.data.find((u) =>
+      u._id === productUnit.base_unit?._id || u._id === productUnit.base_unit
+    );
+
+    if (!baseUnit) return [productUnit];
+
+    // Get all units that share the same base unit (including the product unit itself)
+    const relatedUnits = units.data.filter((u) =>
+      u._id === baseUnit._id ||
+      u.base_unit?._id === baseUnit._id ||
+      u.base_unit === baseUnit._id
+    );
+
+    return relatedUnits;
+  }, [currentItem?.product, units?.data, productsData?.data]);
+
+  // Auto-select product unit when product changes
+  useEffect(() => {
+    if (currentItem.product && availableUnits.length > 0) {
+      const productUnit = productsData?.data?.find((p) => p._id === currentItem.product);
+      const productUnitId = productUnit?.baseUnit?._id || productUnit?.baseUnit;
+
+      if (productUnitId && availableUnits.find((u) => u._id === productUnitId)) {
+        setCurrentItem((prev) => ({ ...prev, unit: productUnitId }));
+      } else if (!currentItem.unit || !availableUnits.find((u) => u._id === currentItem.unit)) {
+        setCurrentItem((prev) => ({ ...prev, unit: availableUnits[0]._id }));
+      }
+    }
+  }, [currentItem.product, availableUnits, productsData?.data]);
+
   // Populate form when editing
   useEffect(() => {
     if (editMode && saleToEdit) {
-      // Set sale type based on customer/employee
-      if (saleToEdit.customer) {
+      // Set sale type and customer/employee based on available data
+      const customerRefId = saleToEdit.customerAccount?.refId || saleToEdit.customer?._id || saleToEdit.customer;
+      const employeeRefId = saleToEdit.employeeAccount?.refId || saleToEdit.employee?._id || saleToEdit.employee;
+      
+      if (customerRefId) {
         setSaleType("customer");
-        setValue("customer", saleToEdit.customer._id || saleToEdit.customer);
-      } else if (saleToEdit.employee) {
+        setValue("customer", customerRefId);
+      } else if (employeeRefId) {
         setSaleType("employee");
-        setValue("employee", saleToEdit.employee._id || saleToEdit.employee);
+        setValue("employee", employeeRefId);
+      } else {
+        setSaleType("walkin");
       }
 
       // Set items from sale
@@ -188,6 +248,7 @@ function SaleForm({
           expiryDate: item.expiryDate || "",
           quantity: item.quantity || 0,
           unitPrice: item.unitPrice || 0,
+          cartonCount: item.cartonCount || null,
         }));
         setItems(formattedItems);
       }
@@ -203,9 +264,12 @@ function SaleForm({
         setValue("paidAmount", saleToEdit.paidAmount);
       }
       if (saleToEdit.saleDate) {
+        const dateValue = typeof saleToEdit.saleDate === 'string' && saleToEdit.saleDate.includes('T')
+          ? saleToEdit.saleDate.split('T')[0]
+          : saleToEdit.saleDate;
         setValue(
           "saleDate",
-          normalizeDateToIso(saleToEdit.saleDate) ||
+          normalizeDateToIso(dateValue) ||
             new Date().toISOString().slice(0, 10)
         );
       }
@@ -226,6 +290,7 @@ function SaleForm({
         quantity: null,
         unitPrice: null,
         expiryDate: "",
+        cartonCount: null,
       });
     }
   };
@@ -263,6 +328,7 @@ function SaleForm({
             unit: item.unit,
             quantity: parseFloat(item.quantity),
             unitPrice: parseFloat(item.unitPrice),
+            cartonCount: item.cartonCount || undefined,
           })),
         paidAmount: data.paidAmount || 0,
         placedIn: data.placedIn || accounts?.[0]?._id,
@@ -451,6 +517,8 @@ function SaleForm({
               min="0"
             />
           </div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 mb-5">
           {/* Sale Date */}
           <div>
             <JalaliDatePicker
@@ -501,7 +569,7 @@ function SaleForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-2  md:grid-cols-3 lg:grid-cols-6  gap-4 w-full rounded-lg ">
+          <div className="grid grid-cols-2  md:grid-cols-3 lg:grid-cols-7  gap-4 w-full rounded-lg ">
             <div className="col-span-1">
               <Select
                 id={"product"}
@@ -515,6 +583,7 @@ function SaleForm({
                     ...currentItem,
                     product: value,
                     unit: selectedProduct?.baseUnit?._id || "",
+                    batchNumber: "",
                   });
                 }}
                 options={products}
@@ -533,12 +602,11 @@ function SaleForm({
                       (currentItem.batchNumber ? s.batchNumber === currentItem.batchNumber : true)
                     )
                   : null;
-                const purchasePrice = stockItem?.purchasePricePerBaseUnit ||
-                  selectedProduct?.latestPurchasePrice || 0;
-                if (purchasePrice > 0) {
+                const priceDisplay = formatPurchasePriceDisplay(stockItem, selectedProduct);
+                if (priceDisplay) {
                   return (
                     <p className="text-blue-600 text-xs mt-1">
-                      💰 قیمت خرید: {purchasePrice.toLocaleString()} افغانی
+                      💰 قیمت خرید: {priceDisplay}
                     </p>
                   );
                 }
@@ -546,20 +614,26 @@ function SaleForm({
               })()}
             </div>
             <div className=" col-span-1">
-              <Select
-                id={"unit"}
-                label={" واحد اندازه گیری "}
+              <label className="block text-[12px] font-medium text-gray-700 mb-2">
+                واحد اندازه گیری
+              </label>
+              <select
                 value={currentItem?.unit}
-                onChange={(value) =>
-                  setCurrentItem((s) => ({ ...s, unit: value }))
+                onChange={(e) =>
+                  setCurrentItem((s) => ({ ...s, unit: e.target.value }))
                 }
-                options={
-                  units?.data?.map((u) => ({
-                    value: u._id,
-                    label: u.name,
-                  })) || []
-                }
-              />
+                className="w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow"
+                disabled={!currentItem?.product || availableUnits.length === 0}
+              >
+                <option value="">
+                  {!currentItem?.product ? "ابتدا محصول را انتخاب کنید" : "انتخاب واحد"}
+                </option>
+                {availableUnits.map((u) => (
+                  <option key={u._id} value={u._id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="col-span-1">
               <Select
@@ -594,7 +668,21 @@ function SaleForm({
                 className="w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow"
               />
             </div>
-            <div className="-col-span-1">
+            <div className="col-span-1">
+              <label className="block text-[12px] font-medium text-gray-700 mb-2">
+                تعداد کارتن
+              </label>
+              <input
+                type="number"
+                placeholder="اختیاری"
+                value={currentItem?.cartonCount || ""}
+                onChange={(e) =>
+                  setCurrentItem((s) => ({ ...s, cartonCount: e.target.value }))
+                }
+                className="w-full font-custom dark:text-slate-500 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-sm pr-3 pl-3 py-2.5 transition duration-300 ease focus:outline-none focus:border-slate-300 hover:border-slate-300 shadow-sm focus:shadow"
+              />
+            </div>
+            <div className="col-span-1">
               <label className="block text-[12px] font-medium text-gray-700 mb-2">
                 قیمت یک
               </label>
@@ -659,12 +747,14 @@ function SaleForm({
                           ?.label || item.product}
                       </TableColumn>
                       <TableColumn>
-                        {units?.data?.find((u) => u._id === item.unit)?.name ||
-                          item.unit}
+                        {formatUnitDisplay(
+                          item.quantity,
+                          units?.data?.find((u) => u._id === item.unit)
+                        )}
                       </TableColumn>
                       <TableColumn>{item.batchNumber}</TableColumn>
                       <TableColumn>{item.expiryDate}</TableColumn>
-                      <TableColumn>{item.quantity}</TableColumn>
+                      <TableColumn>{item.cartonCount || "-"}</TableColumn>
                       <TableColumn>
                         {formatCurrency(item.unitPrice)}
                       </TableColumn>

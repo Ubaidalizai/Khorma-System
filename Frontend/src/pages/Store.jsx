@@ -35,7 +35,7 @@ const storeHeader = [
   { title: "موقعیت" },
   { title: "محصول" },
   { title: "تاریخ انقضا" },
-  { title: "قیمت خرید/واحد" },
+  { title: "قیمت خرید" },
   { title: "واحد" },
   { title: "تعداد" },
   { title: "حداقل موجودی" },
@@ -77,6 +77,7 @@ function Store() {
   const transferType = watch("transferType") || "store-warehouse";
   const quantity = watch("quantity");
   const employee = watch("employee");
+  const selectedUnit = watch("unit");
 
   // Example fromLocation/toLocation logic
   const [selectedData, setSelectedData] = useState(null);
@@ -127,6 +128,7 @@ function Store() {
       toLocation: toLocation,
       employee: needsEmployee ? employee : undefined,
       quantity: Number(quantity),
+      unit: selectedUnit || selectedData.unit?._id,
       transferDate: new Date(),
       transferredBy: "currentUserId", // replace if you have user context
     };
@@ -136,6 +138,7 @@ function Store() {
       transferType: "store-warehouse",
       quantity: "",
       employee: "",
+      unit: "",
     });
   });
   const handleEdit = editSubmitLock.wrapSubmit(async (data) => {
@@ -178,7 +181,15 @@ function Store() {
               </TableColumn>
               <TableColumn>{el?.unit?.name || el?.unit}</TableColumn>
               <TableColumn className="font-semibold">
-                {el?.quantity}
+                <div className="flex flex-col">
+                  {el?.derivedQuantity ? (
+                    <div>
+                      {formatNumber(el.derivedQuantity.derivedUnit)} {formatNumber(el?.quantity)}/{el?.derivedQuantity?.baseUnitName}
+                    </div>
+                  ) : (
+                    <div>{formatNumber(el?.quantity)} {el?.unit?.name}</div>
+                  )}
+                </div>
               </TableColumn>
               <TableColumn>{el?.minLevel}</TableColumn>
               <TableColumn>
@@ -208,6 +219,7 @@ function Store() {
                         transferType: "store-warehouse",
                         quantity: "",
                         employee: "",
+                        unit: "",
                       });
                     }}
                   />
@@ -400,17 +412,37 @@ function Store() {
                 </span>
               </label>
             </div>
-            <div className=" py-1">
-              <label className="block text-sm font-[400] text-gray-700 mb-2">
-                تعداد (واحد پایه)
+            <div className="flex flex-col md:flex-row gap-4">
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  واحد انتقال
+                </span>
+                <select
+                  className={inputStyle}
+                  {...register("unit")}
+                >
+                  <option value={selectedData?.unit?._id}>
+                    {selectedData?.unit?.name} (پیشفرض)
+                  </option>
+                  {selectedData?.unit?.base_unit && (
+                    <option value={selectedData.unit.base_unit._id}>
+                      {selectedData.unit.base_unit.name} (واحد پایه)
+                    </option>
+                  )}
+                </select>
               </label>
-              <input
-                className={inputStyle}
-                type="number"
-                placeholder="تعداد مورد نظر"
-                min="1"
-                {...register("quantity", { required: true, min: 1 })}
-              />
+              <label className="flex-1">
+                <span className="block text-sm font-medium text-gray-700 mb-2">
+                  تعداد
+                </span>
+                <input
+                  className={inputStyle}
+                  type="number"
+                  placeholder="تعداد مورد نظر"
+                  min="1"
+                  {...register("quantity", { required: true, min: 1 })}
+                />
+              </label>
             </div>
           </div>
           <div className="p-6 border-t border-gray-200 flex justify-end gap-4">

@@ -56,6 +56,11 @@ const saleItemSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    cartonCount: {
+      type: Number,
+      required: false,
+      min: 0,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

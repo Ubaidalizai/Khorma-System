@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import {
   XMarkIcon,
@@ -52,6 +52,59 @@ const PurchaseModal = ({ isOpen, onClose }) => {
   });
 
   const watchedValues = watch();
+
+  // Filter units based on selected product
+  const availableUnits = useMemo(() => {
+    if (!currentItem.product || !units?.data) return [];
+    
+    const selectedProduct = products?.data?.find(p => p._id === currentItem.product);
+    if (!selectedProduct) return [];
+    
+    // Find the unit assigned to the product
+    const productUnit = units.data.find(u => 
+      u._id === selectedProduct.baseUnit?._id || u._id === selectedProduct.baseUnit
+    );
+    
+    if (!productUnit) return [];
+
+    // If product unit is a base unit, find all derived units
+    if (productUnit.is_base_unit) {
+      const derivedUnits = units.data.filter(u => 
+        (u.base_unit?._id === productUnit._id || u.base_unit === productUnit._id) && u._id !== productUnit._id
+      );
+      return [productUnit, ...derivedUnits];
+    }
+    
+    // If product unit is derived, find its base unit and all siblings
+    const baseUnit = units.data.find(u => 
+      u._id === productUnit.base_unit?._id || u._id === productUnit.base_unit
+    );
+    
+    if (!baseUnit) return [productUnit];
+    
+    // Get all units that share the same base unit (including the product unit itself)
+    const relatedUnits = units.data.filter(u => 
+      u._id === baseUnit._id || 
+      u.base_unit?._id === baseUnit._id || 
+      u.base_unit === baseUnit._id
+    );
+
+    return relatedUnits;
+  }, [currentItem.product, products?.data, units?.data]);
+
+  // Auto-select product unit when product changes
+  useEffect(() => {
+    if (currentItem.product && availableUnits.length > 0) {
+      const productUnit = products?.data?.find(p => p._id === currentItem.product);
+      const productUnitId = productUnit?.baseUnit?._id || productUnit?.baseUnit;
+      
+      if (productUnitId && availableUnits.find(u => u._id === productUnitId)) {
+        setCurrentItem(prev => ({ ...prev, unit: productUnitId }));
+      } else if (!currentItem.unit || !availableUnits.find(u => u._id === currentItem.unit)) {
+        setCurrentItem(prev => ({ ...prev, unit: availableUnits[0]._id }));
+      }
+    }
+  }, [currentItem.product, availableUnits, products?.data]);
 
   // Calculate totals
   const subtotal = items.reduce(
@@ -303,20 +356,26 @@ const PurchaseModal = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <Select
-                  label=" واحد *"
-                  options={
-                    units?.data?.map((unit) => ({
-                      value: unit._id,
-                      label: unit.name,
-                    })) || []
-                  }
+                <label className="block mb-[7px] text-[12px] font-medium text-gray-700">
+                  واحد *
+                </label>
+                <select
                   value={currentItem.unit}
-                  onChange={(value) =>
-                    setCurrentItem({ ...currentItem, unit: value })
+                  onChange={(e) =>
+                    setCurrentItem({ ...currentItem, unit: e.target.value })
                   }
-                  defaultSelected="انتخاب واحد"
-                />
+                  className={inputStyle}
+                  disabled={!currentItem.product || availableUnits.length === 0}
+                >
+                  <option value="">
+                    {!currentItem.product ? "ابتدا محصول را انتخاب کنید" : "انتخاب واحد"}
+                  </option>
+                  {availableUnits.map((u) => (
+                    <option key={u._id} value={u._id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

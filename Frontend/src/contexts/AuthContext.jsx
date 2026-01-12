@@ -43,8 +43,6 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      console.log('Attempting login with credentials:', credentials);
-      console.log('Login URL:', `${BASE_URL}/users/login`);
       
       const response = await fetch(`${BASE_URL}/users/login`, {
         method: 'POST',
@@ -55,17 +53,12 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify(credentials),
       });
       
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Error data:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
 
       const data = await response.json();
-      console.log('Login response data:', data);
       
       // Store tokens if provided in response
       if (data.accessToken) {
@@ -73,12 +66,10 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Use the user data directly from login response
-      console.log('Using login response user data:', data.user);
       setUser(data.user);
       setIsAuthenticated(true);
       return { success: true, user: data.user };
     } catch (error) {
-      console.error('Login error:', error);
       clearAuthTokens();
       setIsAuthenticated(false);
       throw error;
